@@ -1,0 +1,493 @@
+# ============================================================
+# SpellChecker
+# Flutter, Dart, Android, iOS, macOS, Windows and Linux
+# Made by Sanskar
+# ============================================================
+
+
+# ============================================================
+# Dart and Flutter
+# ============================================================
+
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+flutter_export_environment.sh
+
+# Generated plugin files
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Generated Dart files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+*.gr.dart
+*.config.dart
+
+# Uncomment these only if generated files should not be committed.
+# In many Flutter projects, generated source files are committed.
+# **/*.g.dart
+# **/*.freezed.dart
+
+
+# ============================================================
+# Flutter build files
+# ============================================================
+
+**/doc/api/
+**/ios/Flutter/.last_build_id
+**/android/.gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+
+
+# ============================================================
+# Environment variables and secrets
+# ============================================================
+
+.env
+.env.*
+!.env.example
+
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+*.cer
+*.crt
+
+secrets.json
+credentials.json
+service-account.json
+google-services-private.json
+
+# Local API configuration
+lib/config/private_config.dart
+lib/config/secrets.dart
+lib/constants/api_keys.dart
+
+
+# ============================================================
+# Android
+# ============================================================
+
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/key.properties
+
+android/app/*.jks
+android/app/*.keystore
+
+# Keep public Firebase configuration only when intentionally used.
+# android/app/google-services.json
+
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+
+# ============================================================
+# iOS
+# ============================================================
+
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/flutter_export_environment.sh
+
+ios/Runner/GeneratedPluginRegistrant.*
+
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+
+# ============================================================
+# macOS
+# ============================================================
+
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/Flutter-Generated.xcconfig
+macos/Flutter/flutter_export_environment.sh
+
+
+# ============================================================
+# CocoaPods
+# ============================================================
+
+Pods/
+Podfile.lock
+
+# For applications, Podfile.lock may be committed to ensure
+# reproducible dependency versions. Remove the previous line
+# if you want to commit Podfile.lock.
+
+
+# ============================================================
+# Xcode
+# ============================================================
+
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+xcuserdata/
+DerivedData/
+.idea/
+
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+
+*.mode1v3
+!default.mode1v3
+
+*.mode2v3
+!default.mode2v3
+
+*.perspectivev3
+!default.perspectivev3
+
+
+# ============================================================
+# Windows
+# ============================================================
+
+windows/flutter/ephemeral/
+windows/runner/GeneratedPluginRegistrant.*
+windows/runner/generated_plugin_registrant.*
+
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.obj
+*.iobj
+*.ipdb
+*.tlog
+*.lastbuildstate
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+Debug/
+Release/
+x64/
+x86/
+ARM/
+ARM64/
+
+
+# ============================================================
+# Linux
+# ============================================================
+
+linux/flutter/ephemeral/
+linux/flutter/generated_plugin_registrant.*
+linux/flutter/generated_plugins.cmake
+
+*.o
+*.so
+*.a
+*.out
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+
+# ============================================================
+# CMake
+# ============================================================
+
+.cmake/
+cmake-build-*/
+compile_commands.json
+
+
+# ============================================================
+# Visual Studio Code
+# ============================================================
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+*.code-workspace
+
+
+# ============================================================
+# Android Studio and IntelliJ IDEA
+# ============================================================
+
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+
+# ============================================================
+# Visual Studio
+# ============================================================
+
+.vs/
+.vscode/
+TestResults/
+packages/
+[Bb]in/
+[Oo]bj/
+
+
+# ============================================================
+# Operating-system files
+# ============================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+
+# ============================================================
+# Logs
+# ============================================================
+
+*.log
+logs/
+log/
+crash_logs/
+debug_logs/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# ============================================================
+# Testing and coverage
+# ============================================================
+
+coverage/
+test-results/
+integration-test-results/
+screenshots/failures/
+
+lcov.info
+*.lcov
+
+
+# ============================================================
+# Temporary files
+# ============================================================
+
+tmp/
+temp/
+.cache/
+.cache-loader/
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+
+
+# ============================================================
+# Package and release outputs
+# ============================================================
+
+dist/
+release/
+releases/
+artifacts/
+packages-output/
+
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# Mobile release files
+*.apk
+*.aab
+*.ipa
+
+# Desktop installers
+*.msi
+*.msix
+*.appx
+*.appxbundle
+*.deb
+*.rpm
+*.AppImage
+*.dmg
+*.pkg
+
+
+# ============================================================
+# Generated documentation
+# ============================================================
+
+docs/generated/
+site/
+public/api/
+
+
+# ============================================================
+# Local databases and user-generated data
+# ============================================================
+
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+local_data/
+user_data/
+app_data/
+backups/
+exports/
+
+# Keep intentionally bundled application databases.
+!assets/databases/*.db
+!assets/databases/*.sqlite
+!assets/databases/*.sqlite3
+
+
+# ============================================================
+# Downloaded dictionaries and language packs
+# ============================================================
+
+downloaded_dictionaries/
+downloaded_language_packs/
+runtime_dictionaries/
+runtime_language_packs/
+
+# Keep dictionaries intentionally included with the application.
+!assets/dictionaries/**
+!assets/languages/**
+
+
+# ============================================================
+# SpellChecker-specific generated files
+# ============================================================
+
+spellchecker_debug_report.txt
+spellchecker_crash_report.txt
+spellchecker_local_settings.json
+spellchecker_test_documents/
+spellchecker_exports/
+spellchecker_backups/
+
+
+# ============================================================
+# Firebase and third-party services
+# ============================================================
+
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Decide whether public client configuration should be committed.
+# google-services.json
+# GoogleService-Info.plist
+
+
+# ============================================================
+# Fastlane
+# ============================================================
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/readme.md
+
+
+# ============================================================
+# Code-signing and store credentials
+# ============================================================
+
+signing/
+certificates/
+private_keys/
+store_credentials/
+play-store-credentials.json
+app-store-connect-key.json
+microsoft-store-credentials.json
+
+
+# ============================================================
+# AI coding assistants and local tools
+# ============================================================
+
+.cursor/
+.windsurf/
+.claude/
+.codex/
+.copilot/
+.ai/
+assistant_workspace/
+
+# Remove an entry when you intentionally want to share its
+# project-level configuration with contributors.
+
+
+# ============================================================
+# Local development overrides
+# ============================================================
+
+local/
+dev_local/
+config/local.*
+settings.local.*
+*.local.json
