@@ -1,80 +1,191 @@
 # SpellChecker
 
-SpellChecker is a lightweight, open-source Flutter writing utility that checks text for possible spelling mistakes.
+[![CI](https://github.com/sanskarIN/SpellChecker/actions/workflows/ci.yml/badge.svg)](https://github.com/sanskarIN/SpellChecker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Current status
+SpellChecker is a privacy-first, open-source Flutter spelling utility and writing assistant. It checks text locally, identifies unknown words, ranks correction suggestions, lets users replace mistakes, and supports temporary personal and ignored-word dictionaries for the current session.
 
-Version 1.0 foundation is under development. The project currently includes a Flutter interface, a small built-in English dictionary, a reusable spell-checking engine, automated tests, and continuous integration.
+## Highlights
 
-## Features
+- Local spell checking: typed text is not sent to a remote spelling service.
+- Ranked spelling suggestions using Damerau-Levenshtein edit distance.
+- Case-insensitive matching with case-preserving replacements.
+- Personal dictionary for session-specific vocabulary.
+- Ignore-word support for temporary exceptions.
+- Word, character, and sentence statistics.
+- Responsive Material 3 editor UI.
+- System light/dark theme support.
+- Web entry point committed in the repository.
+- Unit and widget tests.
+- GitHub Actions analysis, formatting, and test checks.
+- Open-source contribution, security, governance, support, and release documentation.
 
-- Write or paste text into a simple editor.
-- Detect words that are not present in the current dictionary.
-- Case-insensitive checking.
-- Unit-tested spell-checking engine separated from the UI.
-- Flutter support as the basis for Android, iOS, web, and desktop builds.
+## Current release
 
-## Getting started
+`1.0.0+1`
 
-### Requirements
+Version 1.0 provides a complete local spelling-check workflow and the project foundation needed for future dictionary expansion, persistent preferences, and additional language packs.
+
+## Screens and workflow
+
+1. Type or paste text into the editor.
+2. Select **Check spelling**.
+3. Review unknown words in the Results panel.
+4. Choose a suggestion to replace a word, add the word to the session dictionary, or ignore it for the session.
+5. Use the reset action in the app bar to clear session dictionary entries and ignored words.
+
+## Requirements
 
 - Flutter stable
-- Dart SDK compatible with the version declared in `pubspec.yaml`
+- Dart SDK `>=3.4.0 <4.0.0`
+- A supported Flutter development environment
 
-### Run locally
+Check your environment:
 
 ```bash
-flutter pub get
-flutter run
+flutter doctor
+flutter --version
 ```
 
-### Quality checks
+## Clone and run
 
 ```bash
+git clone https://github.com/sanskarIN/SpellChecker.git
+cd SpellChecker
+flutter pub get
+flutter run -d chrome
+```
+
+The repository includes the Flutter web host files. The Dart/Flutter application code is platform-neutral and can be used with other Flutter host platforms after generating the desired platform runner with Flutter tooling.
+
+## Quality checks
+
+Run the same checks used by CI:
+
+```bash
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
+```
+
+Format code locally with:
+
+```bash
+dart format lib test
 ```
 
 ## Project structure
 
 ```text
-lib/
-  main.dart            Flutter application UI
-  spell_checker.dart   Core spell-checking engine
-test/
-  spell_checker_test.dart
-.github/workflows/
-  ci.yml               Automated analysis and tests
+SpellChecker/
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   ├── workflows/
+│   └── pull_request_template.md
+├── docs/
+│   ├── API.md
+│   ├── ARCHITECTURE.md
+│   ├── DEVELOPMENT.md
+│   ├── PRIVACY.md
+│   ├── RELEASING.md
+│   ├── ROADMAP.md
+│   ├── TESTING.md
+│   ├── TROUBLESHOOTING.md
+│   └── USER_GUIDE.md
+├── lib/
+│   ├── app.dart
+│   ├── main.dart
+│   ├── spell_checker.dart
+│   ├── core/
+│   │   ├── edit_distance.dart
+│   │   ├── spell_checker_engine.dart
+│   │   ├── spell_issue.dart
+│   │   └── text_statistics.dart
+│   ├── data/
+│   │   └── english_dictionary.dart
+│   └── features/
+│       └── editor/
+│           └── spell_checker_page.dart
+├── test/
+│   ├── edit_distance_test.dart
+│   ├── spell_checker_test.dart
+│   ├── text_statistics_test.dart
+│   └── widget_test.dart
+├── web/
+│   ├── index.html
+│   └── manifest.json
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── GOVERNANCE.md
+├── LICENSE
+├── SECURITY.md
+├── SUPPORT.md
+├── analysis_options.yaml
+└── pubspec.yaml
 ```
 
-## Roadmap
+## Architecture
 
-### v1.0 — Foundation
+The application separates presentation from spelling logic:
 
-- [x] Open-source license
-- [x] Flutter/Dart ignore rules
-- [x] Core spell-checking engine
-- [x] Initial editor interface
-- [x] Unit tests
-- [x] CI
-- [x] Contributor documentation
-- [ ] Expand dictionary coverage
-- [ ] Add suggestions for misspelled words
-- [ ] Add custom user dictionary
-- [ ] Improve accessibility and keyboard support
+- `lib/features/editor/` contains the user interface and interaction workflow.
+- `lib/core/` contains reusable spelling, distance, issue-model, and text-statistics logic.
+- `lib/data/` contains bundled dictionary data.
+- `lib/spell_checker.dart` is the public library entry point for core functionality.
 
-### v1.1 — Suggestions and dictionaries
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design and data flow.
 
-Planned work includes ranked spelling suggestions, importable dictionaries, personal words, and improved text highlighting.
+## Core API example
 
-### v1.2 — Writing experience
+```dart
+import 'package:spellchecker/spell_checker.dart';
 
-Planned work includes richer editor feedback, statistics, additional language support, and platform polish.
+final engine = SpellCheckerEngine();
+final issues = engine.check('Helo world');
+
+for (final issue in issues) {
+  print(issue.word);
+  print(issue.suggestions);
+}
+```
+
+See [docs/API.md](docs/API.md) for supported public APIs and behavior.
+
+## Privacy
+
+Spell checking is local. The application does not contain analytics, advertising SDKs, cloud spelling APIs, authentication, or telemetry. Session dictionary entries remain in memory only and are cleared when the app process ends or the user resets the session.
+
+See [docs/PRIVACY.md](docs/PRIVACY.md).
+
+## Documentation
+
+- [User guide](docs/USER_GUIDE.md)
+- [API reference](docs/API.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Development setup](docs/DEVELOPMENT.md)
+- [Testing](docs/TESTING.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Release procedure](docs/RELEASING.md)
+- [Privacy](docs/PRIVACY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Support](SUPPORT.md)
+- [Security policy](SECURITY.md)
+- [Governance](GOVERNANCE.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Changelog](CHANGELOG.md)
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. For security-sensitive reports, follow [SECURITY.md](SECURITY.md).
+Contributions are welcome. Before opening a pull request, read [CONTRIBUTING.md](CONTRIBUTING.md). Keep spelling logic testable and independent from UI code, include tests for behavior changes, and update documentation for user-visible changes.
+
+## Security
+
+Do not publish exploitable security details in normal public issues. Follow [SECURITY.md](SECURITY.md) for responsible reporting guidance.
 
 ## License
 
 SpellChecker is released under the [MIT License](LICENSE).
+
+Copyright © 2026 Sanskar.

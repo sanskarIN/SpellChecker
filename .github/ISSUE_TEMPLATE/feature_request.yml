@@ -1,0 +1,50 @@
+name: Feature request
+description: Propose an improvement to SpellChecker
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the writing problem first, then the proposed behavior.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem would this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed behavior
+      description: Describe what SpellChecker should do.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Spell-checking engine
+        - Dictionary
+        - Suggestions
+        - Editor UI
+        - Accessibility
+        - Documentation
+        - Build/release
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy impact
+      options:
+        - label: This proposal does not require transmitting user text to a remote service.
+          required: false

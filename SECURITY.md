@@ -2,29 +2,54 @@
 
 ## Supported versions
 
-SpellChecker is currently in early development. Security fixes are applied to the latest code on the default branch and the newest supported release.
+Security fixes are applied to the latest code on `main` and, when applicable, the newest tagged release.
+
+| Version | Supported |
+| --- | --- |
+| Latest `main` | Yes |
+| Latest release | Yes |
+| Older releases | Best effort |
 
 ## Reporting a vulnerability
 
-Please do not publish exploitable security details in a public issue.
+Do not publish exploitable security details, secrets, or private user data in a normal public issue.
 
-If GitHub private vulnerability reporting is enabled for this repository, use it to report security problems. Otherwise, contact the maintainer privately through an available GitHub contact channel and provide only the information needed to reproduce and understand the issue.
+Preferred reporting method:
+
+1. Use GitHub Private Vulnerability Reporting if it is enabled for the repository.
+2. If private reporting is unavailable, contact the maintainer through a private contact method listed on the maintainer's GitHub profile.
 
 A useful report includes:
 
-- The affected component and version or commit.
-- Steps needed to reproduce the problem.
-- The security impact.
-- Any suggested mitigation, if known.
+- Affected version or commit.
+- Affected component.
+- Reproduction steps using non-sensitive test data.
+- Expected and actual behavior.
+- Security impact.
+- Suggested mitigation, if known.
 
-Please avoid including real secrets, credentials, or private user data in reports or test cases.
+Do not send real credentials, private documents, or personal user content as test data.
 
 ## Security principles
 
-SpellChecker should:
+SpellChecker is designed to:
 
-- Avoid committing credentials and signing keys.
-- Minimize collection or transmission of user text.
-- Keep spell-checking functionality local by default unless a future feature clearly documents otherwise.
-- Review dependencies before adding them.
-- Keep automated analysis and tests enabled for proposed changes.
+- Perform spelling analysis locally.
+- Avoid transmitting user text by default.
+- Avoid storing session words permanently in version 1.0.
+- Avoid embedding secrets in source code.
+- Minimize dependencies.
+- Run automated formatting, analysis, and tests on changes.
+
+## Dependency and secret hygiene
+
+Contributors must not commit:
+
+- API keys.
+- Passwords.
+- Signing certificates.
+- Service-account credentials.
+- Access tokens.
+- Private user documents.
+
+The repository `.gitignore` contains common secret and build-output patterns, but contributors remain responsible for reviewing every commit before pushing it.
