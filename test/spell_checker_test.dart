@@ -21,13 +21,25 @@ void main() {
       expect(issues.single.end, 10);
     });
 
-    test('returns ranked suggestions for a misspelling', () {
-      final engine = SpellCheckerEngine(dictionary: <String>{'hello', 'help', 'shell'});
+    test('returns close suggestions for a misspelling', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{'hello', 'help', 'shell'},
+      );
 
       final suggestions = engine.suggestionsFor('helo');
 
       expect(suggestions, contains('hello'));
-      expect(suggestions.first, 'hello');
+      expect(suggestions, isNotEmpty);
+    });
+
+    test('orders lower edit-distance suggestions first', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{'spell', 'spelling', 'world'},
+      );
+
+      final suggestions = engine.suggestionsFor('spel');
+
+      expect(suggestions.first, 'spell');
     });
 
     test('accepts words added to the personal dictionary', () {
