@@ -37,7 +37,7 @@ Version 1.0 provides a complete local spelling-check workflow and the project fo
 ## Requirements
 
 - Flutter stable
-- Dart SDK `>=3.4.0 <4.0.0`
+- Dart SDK `>=3.5.0 <4.0.0`
 - A supported Flutter development environment
 
 Check your environment:
