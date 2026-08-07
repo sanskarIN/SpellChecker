@@ -3,27 +3,68 @@ import 'package:spellchecker/spell_checker.dart';
 
 void main() {
   group('SpellCheckerEngine', () {
-    test('accepts known words case-insensitively', () {
-      final engine = SpellCheckerEngine();
+    test('accepts dictionary words case-insensitively', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello', 'world'});
 
-      expect(engine.isCorrect('Hello'), isTrue);
-      expect(engine.isCorrect('WORLD'), isTrue);
+      expect(engine.isCorrect('HELLO'), isTrue);
+      expect(engine.isCorrect('World'), isTrue);
     });
 
-    test('reports unknown words with positions', () {
-      final engine = SpellCheckerEngine(dictionary: {'hello'});
+    test('returns unknown words with source positions', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
+
       final issues = engine.check('hello wrld');
 
       expect(issues, hasLength(1));
-      expect(issues.first.word, 'wrld');
-      expect(issues.first.start, 6);
-      expect(issues.first.end, 10);
+      expect(issues.single.word, 'wrld');
+      expect(issues.single.start, 6);
+      expect(issues.single.end, 10);
     });
 
-    test('ignores punctuation around known words', () {
-      final engine = SpellCheckerEngine(dictionary: {'hello', 'world'});
+    test('returns ranked suggestions for a misspelling', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello', 'help', 'shell'});
 
-      expect(engine.check('Hello, world!'), isEmpty);
+      final suggestions = engine.suggestionsFor('helo');
+
+      expect(suggestions, contains('hello'));
+      expect(suggestions.first, 'hello');
+    });
+
+    test('accepts words added to the personal dictionary', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
+
+      engine.addToPersonalDictionary('OpenAI');
+
+      expect(engine.isCorrect('openai'), isTrue);
+      expect(engine.personalDictionary, contains('openai'));
+    });
+
+    test('ignores a word for the current session', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
+
+      engine.ignoreWord('wrld');
+
+      expect(engine.check('hello wrld'), isEmpty);
+      expect(engine.ignoredWords, contains('wrld'));
+    });
+
+    test('resetSession clears personal and ignored words', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
+      engine.addToPersonalDictionary('custom');
+      engine.ignoreWord('temporary');
+
+      engine.resetSession();
+
+      expect(engine.personalDictionary, isEmpty);
+      expect(engine.ignoredWords, isEmpty);
+      expect(engine.isCorrect('custom'), isFalse);
+      expect(engine.isCorrect('temporary'), isFalse);
+    });
+
+    test('treats apostrophes as part of a word', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{"don't", 'stop'});
+
+      expect(engine.check("Don't stop."), isEmpty);
     });
   });
 }

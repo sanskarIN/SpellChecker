@@ -1,0 +1,10 @@
+{
+  "name": "SpellChecker",
+  "short_name": "SpellChecker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#4458D8",
+  "description": "A privacy-first open-source spelling utility.",
+  "orientation": "any"
+}
