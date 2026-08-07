@@ -63,9 +63,14 @@ The CI workflow runs:
 
 ```bash
 flutter pub get
-dart format --output=none --set-exit-if-changed lib test
 flutter analyze
-flutter test
+flutter test --reporter expanded
+```
+
+Formatting should also be checked locally before a pull request:
+
+```bash
+dart format --output=none --set-exit-if-changed lib test
 ```
 
 ## Regression tests

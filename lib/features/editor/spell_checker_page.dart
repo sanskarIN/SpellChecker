@@ -51,23 +51,24 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   }
 
   void _replaceIssue(SpellIssue issue, String suggestion) {
-    final currentText = _controller.text;
-    if (issue.start < 0 || issue.end > currentText.length || issue.start >= issue.end) {
+    final text = _controller.text;
+    if (issue.start < 0 || issue.end > text.length || issue.start >= issue.end) {
       _checkText();
       return;
     }
 
-    final currentWord = currentText.substring(issue.start, issue.end);
-    if (currentWord != issue.word) {
+    if (text.substring(issue.start, issue.end) != issue.word) {
       _checkText();
       return;
     }
 
     final replacement = _matchCase(issue.word, suggestion);
-    final updatedText = currentText.replaceRange(issue.start, issue.end, replacement);
+    final updated = text.replaceRange(issue.start, issue.end, replacement);
     _controller.value = TextEditingValue(
-      text: updatedText,
-      selection: TextSelection.collapsed(offset: issue.start + replacement.length),
+      text: updated,
+      selection: TextSelection.collapsed(
+        offset: issue.start + replacement.length,
+      ),
     );
     _checkText();
   }
@@ -106,8 +107,8 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     return suggestion;
   }
 
-  Future<void> _showAbout() async {
-    await showAboutDialog(
+  void _showAbout() {
+    showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
       applicationVersion: '1.0.0',
@@ -270,9 +271,7 @@ class _StatChip extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) {
-    return Chip(label: Text(label));
-  }
+  Widget build(BuildContext context) => Chip(label: Text(label));
 }
 
 class _ResultsPanel extends StatelessWidget {
@@ -302,7 +301,10 @@ class _ResultsPanel extends StatelessWidget {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: Text('Results', style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    'Results',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
                 if (hasChecked)
                   Badge(
@@ -438,7 +440,11 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(icon, size: 48, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              icon,
+              size: 48,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(height: 12),
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 6),
