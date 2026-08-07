@@ -24,8 +24,15 @@ The project follows semantic versioning for public releases where practical.
 - Widget test for the main spelling workflow.
 - GitHub Actions continuous integration.
 - Release workflow for tagged web builds.
-- Complete contributor, security, privacy, architecture, testing, release, support, governance, roadmap, and user documentation.
+- Complete contributor, security, privacy, accessibility, architecture, testing, release, support, governance, roadmap, and user documentation.
 - GitHub bug report, feature request, pull request, and configuration templates.
+
+### Fixed
+
+- Corrected about-dialog handling in the Flutter UI.
+- Aligned suggestion tests with the documented deterministic ranking contract.
+- Aligned the Dart SDK lower bound with the configured lint tooling.
+- Aligned README and testing documentation with the actual CI commands.
 
 ### Security and privacy
 
