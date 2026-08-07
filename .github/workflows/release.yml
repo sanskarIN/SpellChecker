@@ -1,24 +1,19 @@
-name: CI
+name: Release build
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  quality:
-    name: Analyze and test
+  web-release:
+    name: Validate and build web release
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Check out repository
@@ -30,11 +25,6 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Show tool versions
-        run: |
-          flutter --version
-          dart --version
-
       - name: Install dependencies
         run: flutter pub get
 
@@ -43,3 +33,14 @@ jobs:
 
       - name: Test
         run: flutter test --reporter expanded
+
+      - name: Build web
+        run: flutter build web --release
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spellchecker-web-${{ github.ref_name }}
+          path: build/web
+          if-no-files-found: error
+          retention-days: 14

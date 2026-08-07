@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/sanskarIN/SpellChecker/security
+    about: Use private security reporting when available instead of a public issue.
+  - name: Support documentation
+    url: https://github.com/sanskarIN/SpellChecker/blob/main/SUPPORT.md
+    about: Read support and troubleshooting guidance before opening an issue.
