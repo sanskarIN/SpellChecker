@@ -17,8 +17,8 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - System light/dark theme support.
 - Web entry point committed in the repository.
 - Unit and widget tests.
-- GitHub Actions analysis, formatting, and test checks.
-- Open-source contribution, security, governance, support, and release documentation.
+- GitHub Actions analysis and test checks.
+- Open-source contribution, security, accessibility, governance, support, and release documentation.
 
 ## Current release
 
@@ -60,15 +60,21 @@ The repository includes the Flutter web host files. The Dart/Flutter application
 
 ## Quality checks
 
-Run the same checks used by CI:
+Run the CI validation commands locally:
+
+```bash
+flutter pub get
+flutter analyze
+flutter test --reporter expanded
+```
+
+Check formatting separately before committing:
 
 ```bash
 dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test
 ```
 
-Format code locally with:
+Apply formatting with:
 
 ```bash
 dart format lib test
@@ -83,6 +89,7 @@ SpellChecker/
 │   ├── workflows/
 │   └── pull_request_template.md
 ├── docs/
+│   ├── ACCESSIBILITY.md
 │   ├── API.md
 │   ├── ARCHITECTURE.md
 │   ├── DEVELOPMENT.md
@@ -165,6 +172,7 @@ See [docs/PRIVACY.md](docs/PRIVACY.md).
 - [Architecture](docs/ARCHITECTURE.md)
 - [Development setup](docs/DEVELOPMENT.md)
 - [Testing](docs/TESTING.md)
+- [Accessibility](docs/ACCESSIBILITY.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Release procedure](docs/RELEASING.md)
