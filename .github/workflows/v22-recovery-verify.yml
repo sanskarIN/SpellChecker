@@ -1,0 +1,177 @@
+name: V2.2 recovery verify and merge
+
+on:
+  pull_request:
+    branches:
+      - v2.2-recovery-gate-base
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out V2.2 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.2-writing-review-management
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Reconcile any remaining V2.2 integration state
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import runpy
+
+          pubspec_path = Path('pubspec.yaml')
+          pubspec = pubspec_path.read_text()
+          if 'version: 2.1.0+6' in pubspec:
+              helper = Path('tools/v22_apply.py')
+              if not helper.exists():
+                  raise RuntimeError('Missing V2.2 page/version helper on a pre-V2.2 tree.')
+              runpy.run_path(str(helper), run_name='__main__')
+          elif 'version: 2.2.0+7' not in pubspec:
+              raise RuntimeError('Feature branch is neither V2.1 nor V2.2.')
+
+          widget_path = Path('test/writing_widget_test.dart')
+          widget = widget_path.read_text()
+          final_scroll = "await tester.drag(insightsList, const Offset(0, -420));"
+          legacy = [
+              value for value in (
+                  "await tester.drag(insightsList, const Offset(0, -900));",
+                  "await tester.drag(insightsList, const Offset(0, -600));",
+              ) if value in widget
+          ]
+          if final_scroll not in widget:
+              if len(legacy) != 1:
+                  raise RuntimeError('Unrecognized Writing insights test-scroll state.')
+              widget_path.write_text(widget.replace(legacy[0], final_scroll, 1))
+          elif legacy:
+              raise RuntimeError('Both final and legacy Writing insights scroll states exist.')
+
+          readme = Path('README.md').read_text()
+          docs_done = (
+              '`2.2.0+7`' in readme
+              and '### Review filters — V2.2' in readme
+              and '## [2.2.0] - 2026-08-08' in Path('CHANGELOG.md').read_text()
+              and '## 2.2 — Writing review and rule management' in Path('docs/ROADMAP.md').read_text()
+              and '## V2.2 rule categories' in Path('docs/WRITING_RULES.md').read_text()
+          )
+          if not docs_done:
+              helper = Path('tools/v22_docs_apply.py')
+              if not helper.exists():
+                  raise RuntimeError('Missing V2.2 docs helper on an incomplete documentation tree.')
+              runpy.run_path(str(helper), run_name='__main__')
+
+          required = {
+              'lib/features/editor/spell_checker_page.dart': (
+                  "applicationVersion: '2.2.0'",
+                  'if (result.resetRulePreferences)',
+                  'clearWritingRuleIds(languageId: _languagePack.id)',
+              ),
+              'lib/features/editor/writing_insights_dialog.dart': (
+                  "ValueKey<String>('writing-review-search')",
+                  "ValueKey<String>('automatic-fixes-only')",
+                  "ValueKey<String>('reset-writing-rules')",
+                  'Apply visible safe fixes',
+              ),
+              'README.md': ('`2.2.0+7`', '### Reset rules to defaults — V2.2'),
+              'docs/WRITING_RULES.md': ('## V2.2 reusable review query',),
+          }
+          for path, markers in required.items():
+              text = Path(path).read_text()
+              missing = [marker for marker in markers if marker not in text]
+              if missing:
+                  raise RuntimeError(f'{path} missing V2.2 markers: {missing}')
+          PY
+
+      - name: Remove V2.2 helpers
+        run: |
+          rm -f tools/v22_apply.py tools/v22_docs_apply.py tools/v22_test_viewport.py
+          rmdir tools 2>/dev/null || true
+
+      - name: Format source and tests
+        run: dart format lib test
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test review query
+        run: flutter test test/writing_review_query_test.dart --reporter expanded
+
+      - name: Test Writing insights workflow
+        run: flutter test test/writing_widget_test.dart --reporter expanded
+
+      - name: Test complete suite
+        run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
+
+      - name: Commit exact validated feature tree if needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "feat: finalize and validate v2.2 review management"
+            git push origin HEAD:v2.2-writing-review-management
+          fi
+          echo "FINAL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Merge PR 16 if still open
+        run: |
+          state="$(gh pr view 16 --repo sanskarIN/SpellChecker --json state --jq .state)"
+          if [ "$state" = "OPEN" ]; then
+            gh pr merge 16 \
+              --repo sanskarIN/SpellChecker \
+              --merge \
+              --match-head-commit "$FINAL_SHA"
+          elif [ "$state" = "MERGED" ]; then
+            echo "PR #16 is already merged."
+          else
+            echo "Unexpected PR #16 state: $state" >&2
+            exit 1
+          fi
+
+      - name: Verify merged main is V2.2
+        run: |
+          git fetch origin main
+          version="$(git show origin/main:pubspec.yaml | grep '^version: ')"
+          test "$version" = "version: 2.2.0+7"
+          git show origin/main:README.md | grep -F '`2.2.0+7`'
+          git show origin/main:docs/ROADMAP.md | grep -F '## 2.2 — Writing review and rule management'
+          if git ls-tree -r --name-only origin/main | grep -E '^tools/v22_|^\.github/workflows/v22-'; then
+            echo "Temporary V2.2 helper/workflow found in main." >&2
+            exit 1
+          fi
+
+      - name: Close temporary recovery PR
+        if: success()
+        run: |
+          gh pr close "${{ github.event.pull_request.number }}" \
+            --repo sanskarIN/SpellChecker \
+            --comment "V2.2 exact-tree validation succeeded and merged main was verified as 2.2.0+7. Closing this temporary recovery PR unmerged."
+
+      - name: Reset temporary recovery base to merged main
+        if: success()
+        run: |
+          git fetch origin main
+          git push origin refs/remotes/origin/main:refs/heads/v2.2-recovery-gate-base --force
