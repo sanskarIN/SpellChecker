@@ -58,7 +58,7 @@ jobs:
       - name: Apply V2.0 documentation integration
         run: python3 tools/v20_docs_apply.py
 
-      - name: Fix analyzer findings in reconciled tree
+      - name: Fix reconciled source and layout findings
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -68,7 +68,7 @@ jobs:
               text = file.read_text()
               count = text.count(old)
               if count != 1:
-                  raise RuntimeError(f'{path}: expected one analyzer-fix match, found {count}')
+                  raise RuntimeError(f'{path}: expected one reconciliation-fix match, found {count}')
               file.write_text(text.replace(old, new, 1))
 
           replace_once(
@@ -90,6 +90,98 @@ jobs:
               'lib/features/editor/writing_insights_dialog.dart',
               "      title: Row(\n        children: <Widget>[\n          const Icon(Icons.auto_fix_high_outlined),\n          const SizedBox(width: 10),\n          const Expanded(child: Text('Writing insights')),\n        ],\n      ),",
               "      title: const Row(\n        children: <Widget>[\n          Icon(Icons.auto_fix_high_outlined),\n          SizedBox(width: 10),\n          Expanded(child: Text('Writing insights')),\n        ],\n      ),",
+          )
+
+          # Keep language selection explicit without increasing the editor card's
+          # vertical fixed footprint. The original V1.3 transform inserted a
+          # dedicated selector row above the expanding text field, which caused
+          # a 49px overflow on standard 800x600 layouts.
+          page = 'lib/features/editor/spell_checker_page.dart'
+          replace_once(
+              page,
+              """            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    'Editor',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                if (!preferencesLoaded)
+                  const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),""",
+              """            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    'Editor',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                SizedBox(
+                  width: 170,
+                  child: Semantics(
+                    label: 'Spelling language',
+                    child: DropdownButton<String>(
+                      key: const ValueKey<String>('language-selector'),
+                      value: languagePack.id,
+                      isDense: true,
+                      isExpanded: true,
+                      items: languagePacks
+                          .map(
+                            (SpellLanguagePack pack) => DropdownMenuItem<String>(
+                              value: pack.id,
+                              child: Text(pack.displayName),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: preferencesLoaded ? onLanguageChanged : null,
+                    ),
+                  ),
+                ),
+                if (!preferencesLoaded) ...<Widget>[
+                  const SizedBox(width: 8),
+                  const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ],
+              ],
+            ),""",
+          )
+          replace_once(
+              page,
+              """            const SizedBox(height: 10),
+            Row(
+              children: <Widget>[
+                const Icon(Icons.language, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButton<String>(
+                    key: const ValueKey<String>('language-selector'),
+                    value: languagePack.id,
+                    isExpanded: true,
+                    items: languagePacks
+                        .map(
+                          (SpellLanguagePack pack) => DropdownMenuItem<String>(
+                            value: pack.id,
+                            child: Text(pack.displayName),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: preferencesLoaded ? onLanguageChanged : null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(""",
+              """            const SizedBox(height: 12),
+            Expanded(""",
           )
           PY
 
