@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Describe the writing problem first, then the proposed behavior. Do not include private documents, sensitive personal vocabulary, or real user text.
+        Describe the writing/spelling problem first, then the proposed behavior. Do not include private documents, sensitive personal vocabulary, writing-finding excerpts, or real user text.
   - type: textarea
     id: problem
     attributes:
@@ -19,7 +19,7 @@ body:
     id: solution
     attributes:
       label: Proposed behavior
-      description: Describe what SpellChecker should do, including keyboard/accessibility behavior when relevant.
+      description: Describe what SpellChecker should do, including keyboard/accessibility behavior, language scope, correction grouping, and persistence semantics when relevant.
     validations:
       required: true
   - type: textarea
@@ -34,27 +34,38 @@ body:
         - Spell-checking engine
         - Dictionary or language packs
         - Language selection / Unicode rules
-        - Writing rules / writing insights
+        - Writing rules / Writing insights
+        - Writing rule preferences / rule management
+        - Writing batch correction / conflict handling
         - Suggestions or ranking
-        - Text correction / replace all
+        - Text correction / spelling replace all
         - Editor highlighting
         - Keyboard navigation / shortcuts
-        - Undo / document workflow
+        - Undo / correction workflow
         - Persistence / import-export
         - Accessibility / semantics
         - Documentation
-        - Build / release
+        - Build / release / packaging
         - Other
     validations:
       required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and state
+      description: If relevant, describe existing public APIs, rule IDs, language IDs, transfer formats, preference keys, explicit-empty/default behavior, or undo grouping that the change must preserve or migrate.
   - type: checkboxes
     id: considerations
     attributes:
       label: Design considerations
       options:
-        - label: This proposal can preserve local-first spelling behavior without transmitting editor text to a remote service.
+        - label: This proposal can preserve local-first spelling/writing behavior without transmitting editor text to a remote service.
           required: false
-        - label: I described any new persisted data, network access, permissions, analytics, synchronization, or account requirement.
+        - label: I described any new persisted data, migration, network access, permissions, analytics, synchronization, or account requirement.
+          required: false
+        - label: I considered per-language state isolation when language-specific behavior is involved.
+          required: false
+        - label: I considered stale-range, overlap, and one-step undo behavior for automatic or bulk corrections.
           required: false
         - label: I considered keyboard-only and screen-reader access for new editor controls.
           required: false
