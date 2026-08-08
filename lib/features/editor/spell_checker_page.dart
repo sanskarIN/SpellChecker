@@ -493,7 +493,7 @@ class _ResultsPanel extends StatelessWidget {
 
     return ListView.separated(
       itemCount: issues.length,
-      separatorBuilder: (_, __) => const Divider(height: 24),
+      separatorBuilder: (_, _) => const Divider(height: 24),
       itemBuilder: (BuildContext context, int index) {
         final issue = issues[index];
         return _IssueTile(
