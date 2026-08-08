@@ -13,8 +13,8 @@ class WritingInsightsDialogResult {
     this.issueToFix,
     Iterable<WritingIssue> issuesToFix = const <WritingIssue>[],
     this.resetRulePreferences = false,
-  })  : enabledRuleIds = Set<String>.unmodifiable(enabledRuleIds),
-        issuesToFix = List<WritingIssue>.unmodifiable(issuesToFix);
+  }) : enabledRuleIds = Set<String>.unmodifiable(enabledRuleIds),
+       issuesToFix = List<WritingIssue>.unmodifiable(issuesToFix);
 
   final Set<String> enabledRuleIds;
   final WritingIssue? issueToFix;
@@ -60,20 +60,20 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
   }
 
   WritingAnalysisResult get _analysis => widget.analyzer.analyze(
-        widget.text,
-        languagePack: widget.languagePack,
-        enabledRuleIds: _enabledRuleIds,
-      );
+    widget.text,
+    languagePack: widget.languagePack,
+    enabledRuleIds: _enabledRuleIds,
+  );
 
   List<WritingRule> get _supportedRules => widget.analyzer.rules
       .where((WritingRule rule) => rule.supports(widget.languagePack))
       .toList(growable: false);
 
   WritingReviewQuery get _query => WritingReviewQuery(
-        search: _searchController.text,
-        categories: _categories,
-        automaticFixesOnly: _automaticFixesOnly,
-      );
+    search: _searchController.text,
+    categories: _categories,
+    automaticFixesOnly: _automaticFixesOnly,
+  );
 
   void _toggleRule(String ruleId, bool enabled) {
     setState(() {
@@ -269,8 +269,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                 const SizedBox(height: 10),
                 FilledButton.tonalIcon(
                   key: const ValueKey<String>('apply-all-writing-fixes'),
-                  onPressed: () =>
-                      _close(issuesToFix: visibleAutomaticIssues),
+                  onPressed: () => _close(issuesToFix: visibleAutomaticIssues),
                   icon: const Icon(Icons.auto_fix_high),
                   label: Text(
                     query.isEmpty
@@ -308,7 +307,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                     total: visibleIssues.length,
                     category:
                         ruleById[visibleIssues[index].ruleId]?.category ??
-                            WritingRuleCategory.mechanics,
+                        WritingRuleCategory.mechanics,
                     onFix: visibleIssues[index].hasAutomaticFix
                         ? () => _close(issueToFix: visibleIssues[index])
                         : null,

@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.1 release:
+Current V2.2 release:
 
 ```text
-2.1.0+6
+2.2.0+7
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -124,6 +124,21 @@ flutter build web --release
 
 Verify printed Flutter/Dart versions satisfy `pubspec.yaml`.
 
+# V2.2 review-management smoke additions
+
+1. Open Writing insights and verify rule categories/visible counts.
+2. Search `clarity` and confirm repeated-word review remains while Mechanics rules are hidden.
+3. Clear filters and confirm the complete enabled-rule review returns.
+4. Select Mechanics only on synthetic text containing Mechanics and Clarity findings.
+5. Use **Apply visible safe fixes** and verify only visible automatic fixes are applied.
+6. Undo once and verify the exact pre-batch document returns.
+7. Disable a rule so a language-specific override exists.
+8. Use **Reset rules to defaults**.
+9. Verify the rule preference key is removed/unset rather than stored as a concrete list.
+10. Reopen Writing insights and verify current registry defaults are active.
+11. Verify review search/chips/automatic-only state do not persist after closing/reopening the dialog.
+12. Exercise a reset storage-failure test/path and verify session defaults remain active while durability failure is reported.
+
 # V2.1 smoke test
 
 Use synthetic text/vocabulary only.
@@ -213,8 +228,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.1.0 -m "SpellChecker v2.1.0"
-git push origin v2.1.0
+git tag -a v2.2.0 -m "SpellChecker v2.2.0"
+git push origin v2.2.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -236,7 +251,7 @@ After the tagged workflow passes:
 
 1. Create a GitHub Release for that tag.
 2. Use the matching changelog section as the release-note foundation.
-3. Highlight V2.1 persisted per-language rule choices, batch safe fixes, one-step batch undo, and Writing insights shortcut.
+3. Highlight V2.2 review categories/search/filters, filtered batch fixes, reset-to-defaults semantics, plus the retained V2.1 persistence/batch/undo/shortcut foundation.
 4. Mention persistent-data/privacy behavior.
 5. Attach approved artifacts where appropriate.
 6. Verify links/version text.

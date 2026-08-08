@@ -193,6 +193,20 @@ Keep these invariants:
 
 Add/update `test/text_correction_test.dart`.
 
+# Changing V2.2 writing review metadata/query
+
+`WritingRuleCategory` and `WritingReviewQuery` are public APIs under `lib/writing/`.
+
+Category changes must preserve source compatibility where practical. The concrete `WritingRule.category` Mechanics default exists so pre-V2.2 external rules do not become uncompilable just because categories were added.
+
+Review-query changes belong in `writing_review_query.dart`, not `WritingInsightsDialog`. Add/update `test/writing_review_query_test.dart` for search, category, automatic-fix, unknown-rule, and source-compatibility behavior.
+
+Review filters are transient UI state. Do not add them to `DictionaryPreferences` without an explicit product/privacy decision.
+
+Filtered batch actions must pass only the intended visible automatic issues to `WritingCorrection.applyAll`; do not create a separate filtering-specific correction implementation.
+
+`Reset rules to defaults` must clear the stored language-specific rule override. Do not implement reset by saving `WritingRuleRegistry.defaultEnabledRuleIds`, because that would freeze today's defaults into an explicit preference.
+
 # Changing writing rules
 
 Implement `WritingRule`; do not add rule matching logic to widgets.

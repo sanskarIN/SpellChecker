@@ -4,6 +4,39 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.2.0] - 2026-08-08
+
+### Added
+
+- Public `WritingRuleCategory` review metadata with **Mechanics** and **Clarity** categories.
+- Source-compatible default `WritingRule.category` implementation so existing V2 external rules continue compiling and default to Mechanics.
+- Built-in repeated-word rule classified as Clarity; existing mechanics-oriented built-ins retain the source-compatible Mechanics default.
+- Public `WritingReviewQuery` for reusable search, category, and automatic-fix filtering outside Flutter widgets.
+- Writing insights search field covering rule metadata and finding text/replacement metadata.
+- Mechanics/Clarity `FilterChip` review controls.
+- **Automatic fixes only** review toggle.
+- **Clear review filters** action.
+- Visible/total rule and finding counts.
+- Category labels in rule descriptions and finding semantics/cards.
+- **Apply visible safe fixes (N)** when review filters are active.
+- **Reset rules to defaults** action that returns the selected language to the unset/default rule-preference state.
+- `writing_review_query_test.dart` and expanded Writing insights widget tests for categories, search, filtered batch/undo, and reset-to-defaults.
+
+### Changed
+
+- Package version advances to `2.2.0+7`.
+- About/web metadata describes categorized review and reset-to-default behavior.
+- Filtered batch correction reuses the V2.1 stale/advisory/overlap/end-to-start safety contract and remains one undo entry.
+- Finding category lookup uses the dialog's actual `WritingAnalyzer` rule set so custom analyzers preserve custom rule categories.
+- Review filters are dialog-local and do not alter per-language persisted rule preferences.
+
+### Persistence, security, and privacy
+
+- Search text, selected categories, automatic-fixes-only state, visible finding sets, and review counts are not persisted.
+- Resetting rules clears `spellchecker.writing_rule_ids.v1.<language-id>` instead of storing a copy of current defaults.
+- A reset persistence failure keeps current-session defaults active while reporting that the saved override could not be cleared.
+- No editor text, finding source excerpts, review queries, filtered batch plans, analytics, telemetry, cloud grammar service, or new runtime dependency was added.
+
 ## [2.1.0] - 2026-08-08
 
 ### Added

@@ -36,6 +36,9 @@ body:
         - Language selection / Unicode rules
         - Writing rules / Writing insights
         - Writing rule preferences / rule management
+        - Writing review search / categories / filters
+        - Writing rule reset/default management
+
         - Writing batch correction / conflict handling
         - Suggestions or ranking
         - Text correction / spelling replace all

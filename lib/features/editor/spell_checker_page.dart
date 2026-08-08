@@ -131,6 +131,31 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       return;
     }
 
+    if (result.resetRulePreferences) {
+      final defaultRuleIds = _effectiveWritingRuleIds(null, _languagePack);
+      setState(() {
+        _enabledWritingRuleIds = defaultRuleIds;
+      });
+
+      try {
+        await _preferences.clearWritingRuleIds(languageId: _languagePack.id);
+        if (mounted) {
+          setState(() => _storageAvailable = true);
+          _showMessage(
+            'Writing rules reset to built-in defaults for ${_languagePack.displayName}.',
+          );
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() => _storageAvailable = false);
+          _showMessage(
+            'Built-in writing rule defaults are active for this session but the saved override could not be cleared.',
+          );
+        }
+      }
+      return;
+    }
+
     final nextRuleIds = _effectiveWritingRuleIds(
       result.enabledRuleIds,
       _languagePack,
@@ -584,12 +609,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '2.1.0',
+      applicationVersion: '2.2.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, optional local writing-rule plugins, persistent per-language vocabulary and rule choices, batch-safe writing fixes, inline issue review, keyboard workflows, and undo-friendly corrections.',
+          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, categorized local writing rules, temporary review search and filters, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows, and undo-friendly corrections.',
         ),
       ],
     );

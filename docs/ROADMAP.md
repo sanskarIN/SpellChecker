@@ -112,6 +112,26 @@ Status: implemented.
 - [x] Persistent rule-choice, batch-correction, startup, undo, and keyboard regression tests.
 - [x] Full V2.1 documentation and release metadata.
 
+## 2.2 — Writing review and rule management
+
+Status: implemented.
+
+- [x] Public writing-rule categories.
+- [x] Source-compatible category default for existing V2 rule implementations.
+- [x] Clarity classification for repeated-word review.
+- [x] Public reusable `WritingReviewQuery`.
+- [x] Rule/finding text search.
+- [x] Mechanics/Clarity category filters.
+- [x] Automatic-fixes-only finding filter.
+- [x] Clear-review-filters workflow.
+- [x] Visible/total rule and finding counts.
+- [x] Category labels in Writing insights findings and rule metadata.
+- [x] Apply-visible-safe-fixes workflow using V2.1 batch safety and one-step undo.
+- [x] True reset-to-defaults that clears the per-language stored override.
+- [x] Transient/non-persisted review-filter privacy boundary.
+- [x] Query/filter/reset/filtered-batch regression tests.
+- [x] Complete V2.2 documentation and release metadata.
+
 ## Future 2.x direction
 
 Possible future work includes:

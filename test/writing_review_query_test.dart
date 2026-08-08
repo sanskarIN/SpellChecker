@@ -22,10 +22,7 @@ void main() {
         ).isEmpty,
         isFalse,
       );
-      expect(
-        WritingReviewQuery(automaticFixesOnly: true).isEmpty,
-        isFalse,
-      );
+      expect(WritingReviewQuery(automaticFixesOnly: true).isEmpty, isFalse);
     });
 
     test('repeated word is categorized as clarity', () {
@@ -41,30 +38,28 @@ void main() {
 
     test('search filters rules by id, label, description, or category', () {
       expect(
-        WritingReviewQuery(search: 'repeated-space')
-            .filterRules(rules)
-            .map((WritingRule rule) => rule.id),
+        WritingReviewQuery(
+          search: 'repeated-space',
+        ).filterRules(rules).map((WritingRule rule) => rule.id),
         contains('repeated-space'),
       );
       expect(
-        WritingReviewQuery(search: 'capital')
-            .filterRules(rules)
-            .map((WritingRule rule) => rule.id),
+        WritingReviewQuery(
+          search: 'capital',
+        ).filterRules(rules).map((WritingRule rule) => rule.id),
         contains('sentence-capitalization'),
       );
       expect(
-        WritingReviewQuery(search: 'clarity')
-            .filterRules(rules)
-            .map((WritingRule rule) => rule.id),
+        WritingReviewQuery(
+          search: 'clarity',
+        ).filterRules(rules).map((WritingRule rule) => rule.id),
         <String>['repeated-word'],
       );
     });
 
     test('category filters rules and findings consistently', () {
       final query = WritingReviewQuery(
-        categories: const <WritingRuleCategory>{
-          WritingRuleCategory.clarity,
-        },
+        categories: const <WritingRuleCategory>{WritingRuleCategory.clarity},
       );
 
       expect(
@@ -140,9 +135,7 @@ void main() {
       );
 
       final filtered = WritingReviewQuery(
-        categories: const <WritingRuleCategory>{
-          WritingRuleCategory.mechanics,
-        },
+        categories: const <WritingRuleCategory>{WritingRuleCategory.mechanics},
       ).filterIssues(const <WritingIssue>[issue], rules: rules);
 
       expect(filtered, isEmpty);
@@ -166,8 +159,6 @@ class _UncategorizedRule extends WritingRule {
   Set<String> get supportedLanguageIds => const <String>{'en'};
 
   @override
-  Iterable<WritingIssue> analyze(
-    String text,
-    SpellLanguagePack languagePack,
-  ) => const <WritingIssue>[];
+  Iterable<WritingIssue> analyze(String text, SpellLanguagePack languagePack) =>
+      const <WritingIssue>[];
 }

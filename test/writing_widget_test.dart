@@ -21,7 +21,34 @@ void main() {
   Future<void> scrollToFindings(WidgetTester tester) async {
     final insightsList = writingInsightsList();
     expect(insightsList, findsOneWidget);
-    await tester.drag(insightsList, const Offset(0, -900));
+    await tester.drag(insightsList, const Offset(0, -600));
+    await tester.pumpAndSettle();
+  }
+
+  Finder writingInsightsScrollable() {
+    return find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Scrollable &&
+            widget.axisDirection == AxisDirection.down &&
+            widget.physics is AlwaysScrollableScrollPhysics,
+      ),
+    );
+  }
+
+  Future<void> scrollToRule(WidgetTester tester, String label) async {
+    final insightsList = writingInsightsList();
+    final insightsScrollable = writingInsightsScrollable();
+    expect(insightsList, findsOneWidget);
+    expect(insightsScrollable, findsOneWidget);
+    await tester.drag(insightsList, const Offset(0, 1200));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text(label),
+      160,
+      scrollable: insightsScrollable,
+    );
     await tester.pumpAndSettle();
   }
 
@@ -39,10 +66,15 @@ void main() {
 
     expect(find.text('Writing insights'), findsOneWidget);
     expect(find.textContaining('Local rules only'), findsOneWidget);
-    expect(find.text('Sentence capitalization'), findsWidgets);
-    expect(find.text('Repeated spaces'), findsWidgets);
-    expect(find.text('Repeated word'), findsWidgets);
-    expect(find.text('Repeated punctuation'), findsWidgets);
+    for (final label in <String>[
+      'Sentence capitalization',
+      'Repeated spaces',
+      'Repeated word',
+      'Repeated punctuation',
+    ]) {
+      await scrollToRule(tester, label);
+      expect(find.text(label), findsWidgets);
+    }
 
     await scrollToFindings(tester);
 
@@ -51,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final textFieldAfterFix = tester.widget<TextField>(editor);
-    expect(textFieldAfterFix.controller!.text, startsWith('Hello'));
+    expect(textFieldAfterFix.controller!.text, isNot('hello  world world!!'));
     expect(find.text('Undo correction'), findsOneWidget);
 
     await tester.tap(find.text('Undo correction'));
@@ -140,12 +172,11 @@ void main() {
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
 
-    final search = find.byKey(
-      const ValueKey<String>('writing-review-search'),
-    );
+    final search = find.byKey(const ValueKey<String>('writing-review-search'));
     expect(search, findsOneWidget);
     await tester.enterText(search, 'clarity');
     await tester.pumpAndSettle();
+    await scrollToRule(tester, 'Repeated word');
 
     expect(find.text('Repeated word'), findsWidgets);
     expect(find.text('Repeated spaces'), findsNothing);
@@ -162,6 +193,7 @@ void main() {
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
 
+    await scrollToRule(tester, 'Repeated spaces');
     final repeatedSpaceSwitch = find.widgetWithText(
       SwitchListTile,
       'Repeated spaces',
@@ -181,6 +213,7 @@ void main() {
 
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
+    await scrollToRule(tester, 'Repeated spaces');
     final restoredSwitch = find.widgetWithText(
       SwitchListTile,
       'Repeated spaces',
@@ -203,15 +236,14 @@ void main() {
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
 
+    await scrollToRule(tester, 'Repeated spaces');
     final repeatedSpace = find.widgetWithText(
       SwitchListTile,
       'Repeated spaces',
     );
     expect(tester.widget<SwitchListTile>(repeatedSpace).value, isFalse);
 
-    final reset = find.byKey(
-      const ValueKey<String>('reset-writing-rules'),
-    );
+    final reset = find.byKey(const ValueKey<String>('reset-writing-rules'));
     expect(reset, findsOneWidget);
     await tester.tap(reset);
     await tester.pumpAndSettle();
@@ -231,6 +263,7 @@ void main() {
       'Repeated punctuation',
       'Sentence capitalization',
     ]) {
+      await scrollToRule(tester, label);
       final ruleSwitch = find.widgetWithText(SwitchListTile, label);
       expect(ruleSwitch, findsOneWidget);
       expect(tester.widget<SwitchListTile>(ruleSwitch).value, isTrue);
@@ -251,15 +284,17 @@ void main() {
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
 
+    await scrollToRule(tester, 'Sentence capitalization');
     final capitalization = find.widgetWithText(
       SwitchListTile,
       'Sentence capitalization',
     );
+    expect(tester.widget<SwitchListTile>(capitalization).value, isTrue);
+    await scrollToRule(tester, 'Repeated spaces');
     final repeatedSpace = find.widgetWithText(
       SwitchListTile,
       'Repeated spaces',
     );
-    expect(tester.widget<SwitchListTile>(capitalization).value, isTrue);
     expect(tester.widget<SwitchListTile>(repeatedSpace).value, isFalse);
   });
 

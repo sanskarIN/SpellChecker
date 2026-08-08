@@ -77,6 +77,16 @@ The application does not persist:
 
 Treat persisted personal vocabulary as user data and avoid logging/exposing it unnecessarily.
 
+## V2.2 review-query security/privacy boundary
+
+Review search/category/automatic-only controls operate only on already-local rule metadata and in-memory findings. They do not trigger remote search, external rule loading, or background document indexing.
+
+Search text can contain words copied from a finding/document, so it must remain memory-only and must not be added to preference keys, logs, analytics, crash metadata, or network requests.
+
+Filtered batch actions still pass through `WritingCorrection.applyAll`; filtering does not grant permission to bypass stale-range or overlap checks.
+
+**Reset rules to defaults** removes only the selected language's writing-rule preference key. It must not clear unrelated language vocabulary/settings or execute/load rules based on untrusted stored IDs.
+
 ## Writing-rule preference integrity
 
 V2.1 preserves three distinct states:

@@ -459,6 +459,61 @@ The Flutter editor records one successful `applyAll` result as one correction-hi
 
 See [WRITING_RULES.md](WRITING_RULES.md) for the full rule and batch-correction specification.
 
+# V2.2 writing review APIs
+
+## `WritingRuleCategory`
+
+Public review categories currently include:
+
+```dart
+WritingRuleCategory.mechanics
+WritingRuleCategory.clarity
+```
+
+Each category exposes `displayName`.
+
+`WritingRule.category` is a concrete getter defaulting to Mechanics so rules written against the original V2.0 contract remain source-compatible. Rules can override the getter.
+
+## `WritingReviewQuery`
+
+```dart
+final query = WritingReviewQuery(
+  search: 'space',
+  categories: <WritingRuleCategory>{WritingRuleCategory.mechanics},
+  automaticFixesOnly: true,
+);
+```
+
+Public fields:
+
+```text
+search
+categories
+automaticFixesOnly
+isEmpty
+```
+
+Methods:
+
+```dart
+List<WritingRule> filterRules(Iterable<WritingRule> rules)
+
+List<WritingIssue> filterIssues(
+  Iterable<WritingIssue> issues, {
+  required Iterable<WritingRule> rules,
+})
+```
+
+Search is case-insensitive after trimming/lowercasing and covers rule/finding metadata. Category filtering requires a matching supplied rule. `automaticFixesOnly` affects findings and leaves the rule list available for management.
+
+Review queries have no persistence/network behavior. The Flutter dialog stores search/categories/automatic-only state in memory only.
+
+## Reset-to-default application contract
+
+`WritingInsightsDialog` is internal UI, but its V2.2 user-visible contract is documented: **Reset rules to defaults** clears the selected language's stored rule-ID override through `DictionaryPreferences.clearWritingRuleIds` and resolves current registry defaults instead of storing a concrete default list.
+
+This preserves the application persistence distinction between missing/unset and explicit stored values.
+
 # Application persistence boundary
 
 `DictionaryPreferences` is an application-internal adapter under `lib/storage/`; it is intentionally not exported from the public core/writing barrels.

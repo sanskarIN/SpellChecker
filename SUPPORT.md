@@ -92,6 +92,21 @@ For **Apply all safe fixes** issues, include:
 
 The expected V2.1 overlap policy is deterministic: earliest safe source range wins; later overlapping fixes are skipped.
 
+# V2.2 review-management reports
+
+For search/filter problems include synthetic text plus:
+
+- Search query (synthetic/non-sensitive).
+- Selected category chips.
+- Automatic-fixes-only state.
+- Visible/total finding counts.
+- Whether **Clear review filters** restores the expected finding.
+- Whether the problem affects rule switches, findings, or both.
+
+For **Apply visible safe fixes** bugs include expected/actual synthetic final text, visible automatic finding count, applied/skipped feedback, and whether one Undo restores the exact pre-batch text.
+
+For **Reset rules to defaults** bugs state the selected language, prior enabled rule IDs, whether the stored per-language rule key was removed, whether defaults became active immediately, and whether an old override reappeared after restart. Do not post private editor text or a full preference dump.
+
 # Language-pack reports
 
 Include the selected pack ID/display name and synthetic sample.

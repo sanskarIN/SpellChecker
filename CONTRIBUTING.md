@@ -205,6 +205,18 @@ V2.1 locally persists:
 
 It does not persist editor text, issue/finding lists, ignored words, or correction history.
 
+# V2.2 review management compatibility
+
+`WritingRule.category` is public API with a source-compatible Mechanics default. New category behavior should not force existing V2 external rules to implement a new abstract member unless a deliberate breaking release documents that change.
+
+`WritingReviewQuery` is the reusable filtering authority. Search/category/fix-only matching should not be duplicated inside widgets.
+
+Review filters are temporary and must not be persisted without explicit privacy/product review.
+
+Filtered batch fixes must reuse `WritingCorrection.applyAll` and preserve V2.1 stale/advisory/overlap/end-to-start/one-step-undo behavior.
+
+**Reset rules to defaults** must clear the current language's stored override rather than save the registry's current default set. Add tests proving the key becomes missing/unset and defaults are resolved on the next dialog/session.
+
 # Writing-rule preference compatibility
 
 Current key shape:

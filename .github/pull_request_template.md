@@ -54,6 +54,15 @@ Complete when changing rule settings/persistence.
 - [ ] Unknown/stale rule IDs are handled safely.
 - [ ] Migration is documented/tested if stable IDs or key meaning changes.
 
+## Writing review management
+
+- [ ] Writing-rule categories preserve intended public/source compatibility.
+- [ ] Search/category/automatic-fix filtering is implemented in reusable query code rather than duplicated in widgets.
+- [ ] Review filter state remains transient unless persistence is explicitly reviewed/documented.
+- [ ] Filtered batches still use the shared writing-correction safety/undo contract.
+- [ ] Reset-to-defaults clears the language override rather than storing today's defaults.
+- [ ] Query/filter/reset behavior has unit/widget regression tests.
+
 ## Batch correction safety
 
 Complete for automatic bulk-writing changes.

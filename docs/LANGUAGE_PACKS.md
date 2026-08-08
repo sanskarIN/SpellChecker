@@ -227,6 +227,19 @@ If a version-2 document names a different language from the selected UI pack, Sp
 
 Unsupported language IDs and document versions are rejected explicitly.
 
+## Resetting language-specific writing rules — V2.2
+
+**Reset rules to defaults** removes the active language's `spellchecker.writing_rule_ids.v1.<language-id>` key and resolves current registry defaults for that pack. It does not write a copy of today's default IDs.
+
+That distinction preserves language isolation and forward-compatible defaults:
+
+```text
+en-US override cleared -> en-US follows registry defaults
+en-GB override remains -> en-GB keeps its explicit choices
+```
+
+Review search/category/automatic-only filters are not language preferences and are never stored in either namespace.
+
 # Writing-rule eligibility
 
 `WritingRule.supports(pack)` is the authority for language eligibility.
