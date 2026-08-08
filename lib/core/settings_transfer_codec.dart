@@ -161,7 +161,7 @@ class SpellCheckerSettingsCodec {
 
   static void _validateSuggestionLimit(int value) {
     if (value < minSuggestionLimit || value > maxSuggestionLimit) {
-      throw FormatException(
+      throw const FormatException(
         'suggestionLimit must be between $minSuggestionLimit and '
         '$maxSuggestionLimit.',
       );
