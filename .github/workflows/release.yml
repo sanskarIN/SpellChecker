@@ -25,8 +25,16 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Show tool versions
+        run: |
+          flutter --version
+          dart --version
+
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze
         run: flutter analyze
