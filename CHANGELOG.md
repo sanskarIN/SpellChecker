@@ -4,6 +4,52 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [1.2.0] - 2026-08-08
+
+### Added
+
+- Inline wavy-underlined spelling issue highlighting inside the editable text.
+- Stronger inline and Results-panel styling for the active issue.
+- `F7` next-issue and `Shift+F7` previous-issue keyboard navigation.
+- `Ctrl+Enter` / `Cmd+Enter` spelling-check shortcuts.
+- Previous/next issue controls in the app bar and Results header.
+- Active issue synchronization with editor text selection.
+- Automatic Results-panel scrolling toward the active issue.
+- Public `TextCorrection` and `TextCorrectionResult` APIs.
+- Replace-all for repeated checked occurrences of the same unknown word.
+- Bounded in-memory spelling-correction undo history.
+- Snackbar **Undo** and persistent **Undo correction** controls.
+- Dedicated blank-input state.
+- Explicit local-storage-unavailable warning while session spelling remains usable.
+- Live-region semantics for important results and warning states.
+- Selected-state semantics and descriptive labels for spelling issue cards.
+- Unit tests for validated correction primitives and inline highlighting.
+- Widget tests for blank-state behavior, keyboard navigation, replace-all, undo, and existing persistence workflows.
+
+### Changed
+
+- Single replacements now use the same offset-validation and case-preservation primitive as replace-all.
+- Spelling results refuse stale source ranges and refresh instead of mutating changed text.
+- Results cards expose repeated-occurrence counts and a replace-all menu when appropriate.
+- Manual text edits clear checked highlights and the spelling-specific correction undo stack.
+- Package version advanced to `1.2.0+3`.
+- About dialog updated to version 1.2.0.
+
+### Accessibility
+
+- Standard keyboard-first issue navigation is available without pointer interaction.
+- Editor semantics explain checked inline issue highlighting.
+- Active issue cards expose selected state and issue position/count semantics.
+- Empty, clean, and storage-warning states expose descriptive live-region content.
+- Essential state is not communicated only by inline underline color or badges.
+
+### Security and privacy
+
+- V1.2 adds no new runtime dependency, network service, analytics, authentication, advertising, or telemetry.
+- Editor text remains unpersisted by SpellChecker.
+- Correction undo snapshots are held only in memory and are discarded when the application session ends or manual editing starts a new correction history.
+- Existing personal dictionary and suggestion-count persistence remains unchanged.
+
 ## [1.1.0] - 2026-08-08
 
 ### Added
