@@ -1,17 +1,17 @@
 # Language Packs
 
-SpellChecker 1.3 introduces an explicit language-pack architecture. A language pack owns the data and rules needed to tokenize, normalize, validate, check, and rank words for one language/variant without changing the editor or correction layers.
+SpellChecker uses an explicit language-pack architecture. A language pack owns the language-specific data and rules needed to tokenize, normalize, validate, check, and rank words without moving those concerns into editor widgets.
+
+V2.1 extends language isolation beyond spelling vocabulary: enabled writing-rule preferences are also stored per language.
 
 ## Built-in packs
-
-Version 1.3 ships with:
 
 | ID | Display name | Language | Region |
 | --- | --- | --- | --- |
 | `en-US` | English (US) | English | United States |
 | `en-GB` | English (UK) | English | United Kingdom |
 
-`en-US` remains the default for backward compatibility with SpellChecker 1.0–1.2.
+`en-US` remains the default for backward compatibility with the original 1.x spelling behavior.
 
 ## Explicit selection
 
@@ -26,31 +26,32 @@ final engine = SpellCheckerEngine(
 );
 ```
 
-The Flutter application exposes the same built-in registry through the editor's language selector. The selected pack is stored locally and restored on a later launch.
+The Flutter application exposes the same built-in registry through the editor language selector. The selected pack is stored locally and restored later.
 
-SpellChecker does not perform automatic language detection in V1.3. Explicit selection avoids silently changing spelling rules based on short or ambiguous text.
+SpellChecker does not perform automatic language detection. Explicit selection avoids silently changing spelling/writing assumptions on short or ambiguous text.
 
 ## `SpellLanguagePack`
 
 A pack contains:
 
-- `id` — stable BCP-47-style project identifier such as `en-US`.
+- `id` — stable project language identifier such as `en-US`.
 - `languageCode` — base language code.
-- `regionCode` — variant/region code.
+- `regionCode` — region/variant code.
 - `displayName` — user-facing label.
 - `dictionary` — normalized accepted words.
-- `wordFrequencies` — optional deterministic suggestion tie-break ranks.
-- `tokenPattern` — regular expression used to identify candidate word tokens.
-- `validWordPattern` — whole-word validation used for personal dictionary entries.
-- `normalizer` — language-specific canonicalization function.
-- `recognizedSuffixes` — pack-specific regular suffix handling.
-- `suggestionSource` — source label carried into detailed suggestion metadata.
+- `wordFrequencies` — deterministic suggestion tie-break metadata.
+- `tokenPattern` — candidate token regular expression.
+- `validWordPattern` — whole-word personal-vocabulary validation.
+- `normalizer` — language-specific canonicalization.
+- `recognizedSuffixes` — deterministic suffix handling.
+- `suggestionSource` — metadata source label.
+- Suggestion edit-distance policy.
 
-The engine delegates tokenization, normalization, personal-word validation, suffix rules, and suggestion-distance thresholds to the selected pack.
+The engine delegates tokenization, normalization, personal-word validation, suffix handling, and suggestion threshold behavior to the selected pack.
 
 ## Unicode tokenization
 
-The built-in English packs use Unicode letter properties instead of `[A-Za-z]`-only tokenization. This allows a complete token such as:
+The built-in English packs use Unicode letter properties instead of ASCII-only `[A-Za-z]` matching, so tokens such as:
 
 ```text
 café
@@ -60,35 +61,30 @@ façade
 jalapeño
 ```
 
-to remain one word token rather than being split at the accented letter.
+remain complete words.
 
-Internal punctuation accepted by the built-in pattern includes:
+Supported internal punctuation includes straight/curly apostrophes and the supported ASCII/Unicode hyphen forms normalized by the pack.
 
-- Straight apostrophe `'`.
-- Curly apostrophe `’`.
-- ASCII hyphen `-`.
-- Common Unicode hyphen forms that normalize to ASCII `-`.
+The English normalizer lowercases text, converts curly apostrophes to straight apostrophes, and converts supported Unicode hyphens to ASCII `-`.
 
-The English normalizer lowercases text, converts curly apostrophes to straight apostrophes, and converts supported Unicode hyphen characters to ASCII hyphen.
-
-Unicode-aware tokenization is architecture, not a claim that the English dictionary contains every Unicode word. A correctly tokenized word can still be unknown if it is not in the selected pack or its personal dictionary.
+Unicode-aware tokenization is not a claim that every Unicode word is present in the bundled dictionary.
 
 ## US and UK variant behavior
 
-The two English packs deliberately differ for common variant-specific spellings. Examples include:
+The packs deliberately differ for curated variant spellings, for example:
 
 ```text
-US: color       UK: colour
-US: behavior    UK: behaviour
-US: center      UK: centre
-US: organization UK: organisation
-US: theater     UK: theatre
-US: traveler    UK: traveller
+US: color          UK: colour
+US: behavior       UK: behaviour
+US: center         UK: centre
+US: organization   UK: organisation
+US: theater        UK: theatre
+US: traveler       UK: traveller
 ```
 
-Words widely accepted in both variants are intentionally not forced into an artificial difference.
+Each variant pack removes the opposite curated variant list before adding its own so these differences remain deterministic even when the shared dictionary grows.
 
-Changing the selected language re-runs the current spelling check with the new pack. It does not rewrite the user's text automatically.
+Changing selected language re-checks non-blank text. It never rewrites the user's document automatically.
 
 ## Suggestion metadata
 
@@ -99,61 +95,99 @@ Changing the selected language re-runs the current spelling check with the new p
 - Frequency rank.
 - Language ID.
 - Language display name.
-- Source description.
+- Suggestion source.
 
-The older `suggestionsFor` API remains available and returns only candidate strings.
+The backward-compatible `suggestionsFor` method returns candidate strings only.
 
-Detailed metadata lets future UI/plugin layers explain where a suggestion came from without changing the deterministic string-suggestion contract used by existing callers.
+## Language-tagged spelling issues
 
-## Language-tagged issues
+`SpellIssue.languageId` identifies the pack that produced an issue when available.
 
-`SpellIssue.languageId` identifies the pack that produced an issue. It is optional for source compatibility with manually constructed 1.x issues and tests.
+Issue offsets still belong only to the exact checked text snapshot. Changing language invalidates old spelling issues/highlights and produces new language-tagged results.
 
-Issues/offsets are still valid only for the exact text snapshot that was checked. Changing language invalidates the current issue set and creates new issues.
+# Per-language application state
 
-## Personal dictionary isolation
+V2.1 treats language as a namespace boundary for multiple state categories.
 
-Saved personal words are namespaced by language pack.
+## Personal dictionary
 
 Conceptually:
 
 ```text
-en-US -> {custom US vocabulary}
-en-GB -> {custom UK vocabulary}
+en-US -> {US personal vocabulary}
+en-GB -> {UK personal vocabulary}
 ```
 
-A personal word saved for `en-US` is not automatically accepted in `en-GB`. This prevents user vocabulary and preference assumptions from leaking across language selections.
+A saved word in one pack is not automatically accepted in another.
 
-Temporary ignored words are also isolated because switching language creates a new engine/session state for the selected pack.
+## Ignored words
 
-## Preference keys and migration
+Ignored words are engine/session state. Switching language constructs a fresh spelling engine, preventing temporary ignores from leaking across packs.
 
-SpellChecker 1.3 stores personal words under version-2 language-specific keys:
+## Writing-rule preferences — V2.1
+
+Enabled writing-rule IDs are also language-specific:
 
 ```text
-spellchecker.personal_words.v2.en-US
-spellchecker.personal_words.v2.en-GB
+en-US -> {enabled writing rule IDs for US}
+en-GB -> {enabled writing rule IDs for UK}
 ```
 
-The selected language is stored under:
+A rule disabled in US mode remains independent from UK mode.
+
+The editor resolves effective rule IDs by intersecting stored/default IDs with rules that currently exist and support the selected pack.
+
+## Language switch restoration
+
+A normal language switch restores:
+
+1. Target pack identity.
+2. Target pack personal words.
+3. Target pack writing-rule IDs.
+4. A fresh spelling engine/session state.
+5. Fresh spelling issues for non-blank current editor text.
+
+The document text itself is not changed or persisted as part of the switch.
+
+# Preference keys and migration
+
+Current language-related local keys include:
 
 ```text
 spellchecker.language_id.v1
+spellchecker.personal_words.v2.en-US
+spellchecker.personal_words.v2.en-GB
+spellchecker.writing_rule_ids.v1.en-US
+spellchecker.writing_rule_ids.v1.en-GB
 ```
 
-The old SpellChecker 1.1/1.2 personal-word key:
+The old personal-word key:
 
 ```text
 spellchecker.personal_words.v1
 ```
 
-is treated as `en-US` data. On first US load, those words are normalized and migrated into the US V2 namespace. During the 1.x compatibility period, US saves can keep the legacy mirror synchronized so existing upgrades remain safe.
+is treated as default `en-US` vocabulary during migration/compatibility handling.
 
-An unsupported stored language ID falls back to `en-US`.
+An unsupported stored selected-language ID falls back to the default pack.
 
-## Personal dictionary document format
+## Writing-rule preference states
 
-### Version 2
+For each language V2.1 preserves:
+
+```text
+missing writing-rule key -> current registry default IDs
+stored non-empty list     -> explicit enabled IDs
+stored empty list         -> explicit disable-all
+```
+
+The explicit empty state must not be converted into the missing/default state.
+
+Unknown stored rule IDs are ignored by effective-rule resolution rather than causing a language switch failure.
+
+# Personal dictionary transfer format
+
+## Version 2
 
 Language-aware exports use:
 
@@ -170,9 +204,9 @@ Language-aware exports use:
 
 The language ID is part of the portable data contract.
 
-### Version 1 compatibility
+## Version 1 compatibility
 
-SpellChecker continues to decode the previous format:
+Legacy format remains decodable:
 
 ```json
 {
@@ -181,58 +215,80 @@ SpellChecker continues to decode the previous format:
 }
 ```
 
-Because V1 has no language metadata, it is interpreted using the language selected by the importing caller/UI.
+Version 1 has no language metadata and is interpreted in the importing caller's currently selected language.
 
-JSON arrays and plain comma/newline word lists are also treated as legacy/current-selection imports.
+JSON arrays and plain comma/newline lists behave as current-language legacy imports.
 
-The legacy `PersonalDictionaryCodec.encode` method remains version-1-compatible. New language-aware callers should use `encodeForLanguage`.
+`PersonalDictionaryCodec.encode` remains the legacy version-1 encoder; new application exports should use language-aware encoding.
 
 ## Cross-language imports
 
-When a Version-2 export names a language different from the currently selected UI pack, SpellChecker does not silently merge it into the wrong personal dictionary. The user is asked to switch to the export's language first.
+If a version-2 document names a different language from the selected UI pack, SpellChecker does not silently merge it into the wrong namespace. The user must switch to the tagged language first.
 
-Unknown language IDs and unsupported document versions are rejected explicitly.
+Unsupported language IDs and document versions are rejected explicitly.
 
-## Adding a new built-in language pack
+# Writing-rule eligibility
 
-A contribution adding a language should include:
+`WritingRule.supports(pack)` is the authority for language eligibility.
 
-1. A stable language-pack ID.
-2. A clear user-facing display name.
-3. Unicode-aware tokenizer appropriate for that language.
-4. Whole-word personal-entry validation.
-5. Normalization rules documented and tested.
-6. A curated dictionary with clear licensing/provenance suitable for MIT repository distribution.
-7. Suggestion-frequency metadata or an explicit rationale for omitting it.
-8. Suffix/morphology rules only when they are deterministic enough for the current engine abstraction.
-9. Unit tests for native-script/diacritic tokens.
-10. Tests proving personal/ignored state does not leak to other packs.
-11. UI selection/restoration tests.
-12. Documentation and changelog updates.
-13. Privacy/security review if the pack requires downloading data or any runtime network behavior.
+A rule can target a full pack ID or a base language code. Current built-in writing rules target English generally and therefore support both built-in English packs.
 
-Do not copy a dictionary whose license is incompatible with this repository.
+When adding a new language pack, writing rules must not be assumed compatible merely because the editor can select that language. Each rule's support declaration must be reviewed.
 
-## Pack isolation requirements
+# Adding a built-in language pack
+
+A language-pack contribution should include:
+
+1. Stable pack ID.
+2. Clear display name.
+3. Language/region identity.
+4. Unicode-aware tokenizer.
+5. Whole-word personal-entry validation.
+6. Documented/tested normalization.
+7. Dictionary data with compatible licensing/provenance.
+8. Frequency/suggestion policy or rationale for omission.
+9. Deterministic suffix/morphology rules only when appropriate.
+10. Native-script/diacritic tests.
+11. Personal/ignored isolation tests.
+12. Selected-language persistence tests.
+13. Writing-rule eligibility review.
+14. Per-language writing-rule preference isolation tests when rules support the pack.
+15. UI selector/restoration tests.
+16. Documentation/changelog updates.
+17. Privacy/security review for any runtime network/download requirement.
+
+Do not add a dictionary whose license is incompatible with this repository.
+
+# Pack isolation requirements
 
 For every pair of packs A/B, tests should establish:
 
-- A personal word added to A is not automatically accepted by B.
+- A personal word added/saved to A is not automatically accepted by B.
 - An ignored word in A is not automatically ignored by B.
-- Saved A vocabulary uses an A-specific preference namespace.
-- Selecting B creates issues/suggestions tagged as B.
-- Pack switch invalidates old issue offsets/highlights.
-- Import metadata cannot silently place an A export into B.
+- Saved A vocabulary uses an A-specific namespace.
+- Writing-rule preference A does not silently change preference B.
+- Selecting B produces B-tagged issues/suggestions.
+- Pack switching invalidates old issue/highlight state.
+- Version-2 transfer metadata cannot silently place an A export into B.
 
-## Non-goals in 1.3
+# Privacy boundary
 
-Version 1.3 does not provide:
+Language selection, language-specific personal vocabulary, and language-specific writing-rule IDs are local settings.
+
+SpellChecker does not send the selected language, personal vocabulary, rule IDs, or editor text to a SpellChecker server.
+
+Changing language does not enable automatic language detection or keyboard telemetry.
+
+# Non-goals
+
+The current language architecture does not provide:
 
 - Automatic language detection.
 - Cloud language-pack download.
-- Account-based dictionary synchronization.
-- Grammar checking.
+- Account-based dictionary/rule synchronization.
+- Full grammar parsing for every selected language.
 - Full morphological analyzers.
-- A claim of complete dictionary coverage for either English variant.
+- Complete dictionary coverage.
+- Automatic compatibility of writing rules with future language packs.
 
-The V1.3 goal is a stable, testable language boundary that later versions can extend without moving language-specific rules into widgets or storage code.
+The goal is a stable, explicit, testable language boundary that can be extended without moving language-specific behavior into widgets or weakening local state isolation.
