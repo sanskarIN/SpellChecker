@@ -80,7 +80,7 @@ class TextCorrection {
 
     return TextCorrectionResult(
       text: updated,
-      caretOffset: earliestCaret.clamp(0, updated.length),
+      caretOffset: _safeCaret(earliestCaret, updated.length),
       replacements: matching.length,
     );
   }
