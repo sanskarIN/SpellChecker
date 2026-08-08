@@ -2,23 +2,28 @@ import 'edit_distance.dart';
 import 'spell_issue.dart';
 import 'spell_language_pack.dart';
 import 'spell_suggestion.dart';
+import 'spell_suggestion_ranker.dart';
 
 class SpellCheckerEngine {
   factory SpellCheckerEngine({
     Set<String>? dictionary,
     Map<String, int>? wordFrequencies,
     SpellLanguagePack? languagePack,
+    SpellSuggestionRanker suggestionRanker =
+        const DefaultSpellSuggestionRanker(),
   }) {
     final pack = languagePack ?? SpellLanguageRegistry.defaultPack;
     return SpellCheckerEngine._(
       languagePack: pack,
       dictionary: dictionary,
       wordFrequencies: wordFrequencies,
+      suggestionRanker: suggestionRanker,
     );
   }
 
   SpellCheckerEngine._({
     required this.languagePack,
+    required this.suggestionRanker,
     Set<String>? dictionary,
     Map<String, int>? wordFrequencies,
   }) : _baseDictionary = Set<String>.unmodifiable(
@@ -31,6 +36,13 @@ class SpellCheckerEngine {
        );
 
   final SpellLanguagePack languagePack;
+
+  /// Ranking strategy used after candidate eligibility/distance filtering.
+  ///
+  /// The engine assumes the strategy remains deterministic for its lifetime so
+  /// suggestion-cache entries remain valid.
+  final SpellSuggestionRanker suggestionRanker;
+
   final Set<String> _baseDictionary;
   final Map<String, int> _wordFrequencies;
   final Set<String> _personalDictionary = <String>{};
@@ -105,7 +117,7 @@ class SpellCheckerEngine {
     final target = parts?.stem ?? normalized;
     final suffix = parts?.suffix ?? '';
     final maxDistance = languagePack.maximumSuggestionDistance(target.length);
-    final candidates = <_Candidate>[];
+    final candidates = <SpellSuggestionCandidate>[];
 
     for (final candidate in _baseDictionary) {
       _addCandidate(
@@ -130,29 +142,21 @@ class SpellCheckerEngine {
       );
     }
 
-    candidates.sort((_Candidate a, _Candidate b) {
-      final byDistance = a.distance.compareTo(b.distance);
-      if (byDistance != 0) {
-        return byDistance;
-      }
-      final byPrefix = a.prefixPenalty.compareTo(b.prefixPenalty);
-      if (byPrefix != 0) {
-        return byPrefix;
-      }
-      final byFrequency = a.frequencyRank.compareTo(b.frequencyRank);
-      if (byFrequency != 0) {
-        return byFrequency;
-      }
-      final byLength = a.word.length.compareTo(b.word.length);
-      if (byLength != 0) {
-        return byLength;
+    final rankingContext = SpellSuggestionRankingContext(
+      target: target,
+      languagePack: languagePack,
+    );
+    candidates.sort((SpellSuggestionCandidate a, SpellSuggestionCandidate b) {
+      final byRanker = suggestionRanker.compare(rankingContext, a, b);
+      if (byRanker != 0) {
+        return byRanker;
       }
       return a.word.compareTo(b.word);
     });
 
     final result = candidates
         .map(
-          (_Candidate candidate) => SpellSuggestion(
+          (SpellSuggestionCandidate candidate) => SpellSuggestion(
             word: '${candidate.word}$suffix',
             distance: candidate.distance,
             frequencyRank: candidate.frequencyRank,
@@ -224,7 +228,7 @@ class SpellCheckerEngine {
   }
 
   void _addCandidate({
-    required List<_Candidate> candidates,
+    required List<SpellSuggestionCandidate> candidates,
     required String target,
     required String candidate,
     required int maxDistance,
@@ -248,7 +252,7 @@ class SpellCheckerEngine {
         ? 0
         : 1;
     candidates.add(
-      _Candidate(
+      SpellSuggestionCandidate(
         word: candidate,
         distance: distance,
         prefixPenalty: prefixPenalty,
@@ -278,22 +282,6 @@ class SpellCheckerEngine {
   }
 
   String _normalize(String word) => languagePack.normalizeWord(word);
-}
-
-class _Candidate {
-  const _Candidate({
-    required this.word,
-    required this.distance,
-    required this.prefixPenalty,
-    required this.frequencyRank,
-    required this.source,
-  });
-
-  final String word;
-  final int distance;
-  final int prefixPenalty;
-  final int frequencyRank;
-  final String source;
 }
 
 class _WordParts {

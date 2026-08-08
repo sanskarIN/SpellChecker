@@ -151,6 +151,21 @@ Status: implemented.
 - [x] Complete V2.3 documentation, privacy, release, and repository metadata.
 
 
+## 2.4 — Suggestion ranking extensibility and determinism
+
+Status: implemented.
+
+- [x] Public eligible-candidate ranking metadata.
+- [x] Public normalized target/language ranking context.
+- [x] Injectable `SpellSuggestionRanker` engine strategy.
+- [x] Source-compatible default ranker preserving the pre-V2.4 order.
+- [x] Engine-owned lexical tie-break for deterministic custom-ranker ties.
+- [x] Candidate eligibility/edit-distance filtering remains authoritative before ranking.
+- [x] Existing suffix reattachment, personal-dictionary candidates, detailed suggestion metadata, caching, and suggestion limits remain compatible.
+- [x] Focused custom/default/tie/context/eligibility regression coverage.
+- [x] API/architecture/development/testing/privacy/security/release documentation.
+
+
 ## Future 2.x direction
 
 Possible future work includes:
@@ -159,7 +174,7 @@ Possible future work includes:
 - Additional language-specific writing rules.
 - Additional review presets/categories driven by demonstrated workflows.
 - Additional portable non-document preferences with explicit compatibility/version review.
-- Extensible spelling suggestion rankers.
+- Additional built-in ranker implementations driven by demonstrated ranking needs.
 - Trusted plugin-loading designs with explicit security boundaries.
 - Cross-platform packaging and signing automation.
 - Performance profiling for very large documents.

@@ -217,3 +217,7 @@ If saved data disappears unexpectedly, follow [docs/TROUBLESHOOTING.md](docs/TRO
 ## V2.3 portable settings reports
 
 For review-preset issues, include the preset name/ID, selected language, synthetic review text, and whether a search/category/automatic-fix filter was also active. For portable-settings issues, include a minimized synthetic JSON document with any private vocabulary/text removed, whether the failure happened during validation or persistence, the selected platform, and whether existing language/rule/suggestion preferences were restored. Do not post real documents, personal dictionaries, credentials, or sensitive clipboard content.
+
+## V2.4 custom ranker reports
+
+For custom-ranker issues, include the ranker policy in pseudocode, a small synthetic dictionary/input, active language ID, expected/actual ordered candidate words, and whether the behavior reproduces with `DefaultSpellSuggestionRanker`. Do not include private document text or sensitive personal dictionaries.

@@ -412,3 +412,7 @@ Correction snapshots can contain full editor text. They must remain memory-only.
 ## Test data privacy
 
 Use synthetic test data. Never commit private documents, credentials, account identifiers, personal communications, or sensitive personal-dictionary exports.
+
+## V2.4 focused suggestion-ranking coverage
+
+Run `flutter test test/suggestion_ranker_test.dart --reporter expanded` when changing ranking behavior. The suite protects historical default frequency ordering, optional custom ordering, engine lexical tie stability, normalized target/language context, distance/prefix/frequency/source candidate metadata, and the rule that ranking cannot bypass eligibility/edit-distance filtering. The complete suite must remain green because suggestion order is consumed by full spelling checks and editor widgets.

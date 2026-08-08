@@ -433,3 +433,7 @@ Follow [RELEASING.md](RELEASING.md).
 ## V2.3 development contracts
 
 When changing review presets, keep IDs stable, keep preset behavior as a projection into `WritingReviewQuery`, and add focused preset/query/widget tests. When changing `SpellCheckerSettingsCodec`, treat `format`, `version`, language IDs, suggestion bounds, rule-ID validation, deterministic ordering, and unset-versus-explicit-empty semantics as compatibility-sensitive. Portable settings must remain non-document unless a future release explicitly redesigns the privacy boundary. Storage changes must test failure and best-effort rollback behavior; do not claim `shared_preferences` writes are transactional.
+
+## V2.4 suggestion-ranker contracts
+
+Custom `SpellSuggestionRanker` implementations must be deterministic and side-effect free for a `SpellCheckerEngine` lifetime. Do not move candidate eligibility, maximum edit distance, token exclusions, suffix handling, or language normalization into a ranker. Return zero for genuinely equal custom scores and let the engine-owned lexical fallback provide stable ordering. Add focused tests whenever candidate metadata, ranking context, default ordering, cache assumptions, or tie semantics change.
