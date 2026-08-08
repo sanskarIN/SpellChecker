@@ -9,10 +9,13 @@ class WritingInsightsDialogResult {
   WritingInsightsDialogResult({
     required Iterable<String> enabledRuleIds,
     this.issueToFix,
-  }) : enabledRuleIds = Set<String>.unmodifiable(enabledRuleIds);
+    Iterable<WritingIssue> issuesToFix = const <WritingIssue>[],
+  })  : enabledRuleIds = Set<String>.unmodifiable(enabledRuleIds),
+        issuesToFix = List<WritingIssue>.unmodifiable(issuesToFix);
 
   final Set<String> enabledRuleIds;
   final WritingIssue? issueToFix;
+  final List<WritingIssue> issuesToFix;
 }
 
 class WritingInsightsDialog extends StatefulWidget {
@@ -43,10 +46,10 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
   }
 
   WritingAnalysisResult get _analysis => widget.analyzer.analyze(
-    widget.text,
-    languagePack: widget.languagePack,
-    enabledRuleIds: _enabledRuleIds,
-  );
+        widget.text,
+        languagePack: widget.languagePack,
+        enabledRuleIds: _enabledRuleIds,
+      );
 
   List<WritingRule> get _supportedRules => widget.analyzer.rules
       .where((WritingRule rule) => rule.supports(widget.languagePack))
@@ -62,11 +65,15 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
     });
   }
 
-  void _close({WritingIssue? issueToFix}) {
+  void _close({
+    WritingIssue? issueToFix,
+    Iterable<WritingIssue> issuesToFix = const <WritingIssue>[],
+  }) {
     Navigator.of(context).pop(
       WritingInsightsDialogResult(
         enabledRuleIds: _enabledRuleIds,
         issueToFix: issueToFix,
+        issuesToFix: issuesToFix,
       ),
     );
   }
@@ -75,6 +82,9 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
   Widget build(BuildContext context) {
     final analysis = _analysis;
     final rules = _supportedRules;
+    final automaticIssues = analysis.issues
+        .where((WritingIssue issue) => issue.hasAutomaticFix)
+        .toList(growable: false);
 
     return AlertDialog(
       title: const Row(
@@ -97,7 +107,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Writing rules run on the current editor text in memory. Disable any rule you do not want to use for this session.',
+                'Writing rules run on the current editor text in memory. Rule choices are stored locally for the selected language.',
               ),
               const SizedBox(height: 16),
               Text('Rules', style: Theme.of(context).textTheme.titleSmall),
@@ -126,6 +136,17 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                   ),
                 ],
               ),
+              if (automaticIssues.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 10),
+                FilledButton.tonalIcon(
+                  key: const ValueKey<String>('apply-all-writing-fixes'),
+                  onPressed: () => _close(issuesToFix: automaticIssues),
+                  icon: const Icon(Icons.auto_fix_high),
+                  label: Text(
+                    'Apply all safe fixes (${automaticIssues.length})',
+                  ),
+                ),
+              ],
               const SizedBox(height: 8),
               if (widget.text.trim().isEmpty)
                 const _WritingEmptyState(
