@@ -2,7 +2,7 @@ name: V2.3 Integration Gate
 
 on:
   pull_request:
-    branches: [v2.3-integration-gate-base]
+    branches: [v2.3-integration-gate-base-2]
 
 permissions:
   contents: write
@@ -69,7 +69,8 @@ jobs:
           grep -q '^version: 2.3.0+8$' pubspec.yaml
           grep -q "applicationVersion: '2.3.0'" lib/features/editor/spell_checker_page.dart
           grep -q "tooltip: 'Portable settings'" lib/features/editor/spell_checker_page.dart
-          grep -q 'writing-preset-automatic-fixes' lib/features/editor/writing_insights_dialog.dart
+          grep -q 'WritingReviewPreset.values' lib/features/editor/writing_insights_dialog.dart
+          grep -q "'automatic-fixes'" lib/writing/writing_review_preset.dart
           test ! -e tools/v23_page_apply.py
           if find .github/workflows -maxdepth 1 -type f -name 'v23-*' | grep -q .; then
             echo 'Unexpected V2.3 temporary workflow in candidate tree.' >&2
