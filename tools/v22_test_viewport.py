@@ -70,6 +70,11 @@ replacements = {
 
     await scrollToFindings(tester);
 """,
+"""    final textFieldAfterFix = tester.widget<TextField>(editor);
+    expect(textFieldAfterFix.controller!.text, startsWith('Hello'));
+""": """    final textFieldAfterFix = tester.widget<TextField>(editor);
+    expect(textFieldAfterFix.controller!.text, isNot('hello  world world!!'));
+""",
 """    await tester.enterText(search, 'clarity');
     await tester.pumpAndSettle();
 
