@@ -43,10 +43,10 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
   }
 
   WritingAnalysisResult get _analysis => widget.analyzer.analyze(
-        widget.text,
-        languagePack: widget.languagePack,
-        enabledRuleIds: _enabledRuleIds,
-      );
+    widget.text,
+    languagePack: widget.languagePack,
+    enabledRuleIds: _enabledRuleIds,
+  );
 
   List<WritingRule> get _supportedRules => widget.analyzer.rules
       .where((WritingRule rule) => rule.supports(widget.languagePack))
@@ -77,11 +77,11 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
     final rules = _supportedRules;
 
     return AlertDialog(
-      title: Row(
+      title: const Row(
         children: <Widget>[
-          const Icon(Icons.auto_fix_high_outlined),
-          const SizedBox(width: 10),
-          const Expanded(child: Text('Writing insights')),
+          Icon(Icons.auto_fix_high_outlined),
+          SizedBox(width: 10),
+          Expanded(child: Text('Writing insights')),
         ],
       ),
       content: SizedBox(
@@ -137,7 +137,8 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                 const _WritingEmptyState(
                   icon: Icons.check_circle_outline,
                   title: 'No enabled-rule findings',
-                  message: 'No local writing rule reported an issue in this text.',
+                  message:
+                      'No local writing rule reported an issue in this text.',
                 )
               else
                 for (var index = 0; index < analysis.issues.length; index++)
@@ -154,10 +155,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton(
-          onPressed: () => _close(),
-          child: const Text('Close'),
-        ),
+        TextButton(onPressed: () => _close(), child: const Text('Close')),
       ],
     );
   }

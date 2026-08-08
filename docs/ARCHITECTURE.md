@@ -140,6 +140,28 @@ Issue offsets are valid only for the checked text snapshot.
 - Word count.
 - Sentence count.
 
+### Writing-rules layer
+
+Locations: `lib/writing/` and `lib/writing.dart`.
+
+`WritingRule` plugins analyse text without side effects. `WritingAnalyzer` chooses rules by language eligibility and enabled-rule IDs, combines findings, and sorts them deterministically. `WritingCorrection` is the only reusable automatic-fix mutation primitive and validates stale source ranges before changing text.
+
+The editor's Writing insights dialog is presentation-only: it displays supported rules/findings and returns a selected issue to the page. The page then validates/applies the fix and stores the pre-fix `TextEditingValue` in the existing bounded correction stack. Rule switches remain session-only.
+
+This layer deliberately has no storage/network dependency.
+
+### Language layer
+
+Location: `lib/core/spell_language_pack.dart` plus language-specific data under `lib/data/`.
+
+`SpellLanguagePack` is the boundary between language-independent engine/editor behavior and language-specific tokenization, normalization, dictionaries, suffix rules, frequency metadata, and suggestion source labels.
+
+`SpellLanguageRegistry` currently supplies `en-US` and `en-GB`. The editor stores one selected pack ID and constructs a fresh engine when the selection changes, which clears temporary ignored/suggestion-cache state and loads only that pack's personal words.
+
+Built-in English packs use Unicode letter-property tokenization, normalize curly apostrophes/common Unicode hyphens, and deliberately differ on common US/UK spellings.
+
+Detailed suggestions carry pack identity through `SpellSuggestion`; issues carry optional `languageId`.
+
 ### Data layer
 
 Location: `lib/data/`
@@ -322,6 +344,23 @@ This is intentionally narrower than a full document-editor history system.
 `SpellCheckEditingController.buildTextSpan` validates every issue against its current text before styling it. Invalid or stale ranges are skipped.
 
 Manual text edits call `clearIssues()` immediately, so highlights from an old check do not remain painted against changed text.
+
+## Language switch flow
+
+```text
+Language selector
+   │
+   ├── load per-language personal words
+   ├── persist selected language ID
+   ├── construct SpellCheckerEngine(selected pack)
+   ├── restore only selected-pack personal words
+   ├── clear correction/highlight/ignored session state
+   └── re-check non-blank editor text
+```
+
+A failed preference read/write surfaces storage-unavailable state but does not introduce a remote fallback or prevent session spelling.
+
+Legacy `spellchecker.personal_words.v1` values are interpreted as `en-US` and migrated to the V2 US namespace on first load.
 
 ## Tokenization
 

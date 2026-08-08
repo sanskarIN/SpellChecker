@@ -13,15 +13,13 @@ class SpellLanguagePack {
     required this.displayName,
     required Set<String> dictionary,
     required Map<String, int> wordFrequencies,
-    required RegExp tokenPattern,
-    required RegExp validWordPattern,
+    required this.tokenPattern,
+    required this.validWordPattern,
     required this.normalizer,
     this.recognizedSuffixes = const <String>[],
     this.suggestionSource = 'bundled',
-  })  : dictionary = Set<String>.unmodifiable(dictionary),
-        wordFrequencies = Map<String, int>.unmodifiable(wordFrequencies),
-        tokenPattern = tokenPattern,
-        validWordPattern = validWordPattern;
+  }) : dictionary = Set<String>.unmodifiable(dictionary),
+       wordFrequencies = Map<String, int>.unmodifiable(wordFrequencies);
 
   final String id;
   final String languageCode;
@@ -140,8 +138,10 @@ class SpellLanguageRegistry {
     suggestionSource: 'bundled English (UK)',
   );
 
-  static List<SpellLanguagePack> get builtIns =>
-      <SpellLanguagePack>[englishUs, englishGb];
+  static List<SpellLanguagePack> get builtIns => <SpellLanguagePack>[
+    englishUs,
+    englishGb,
+  ];
 
   static SpellLanguagePack get defaultPack => englishUs;
 

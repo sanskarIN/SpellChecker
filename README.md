@@ -8,6 +8,14 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 ## Highlights
 
 - Local spell checking: editor text is not sent to a remote spelling service.
+- Explicit built-in language selection: English (US) and English (UK).
+- Unicode-aware word tokenization and punctuation normalization.
+- Per-language persisted personal dictionaries with V1 migration.
+- Language-tagged detailed suggestion metadata.
+- Optional local **Writing insights** with per-rule session switches.
+- Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
+- Built-in repeated-word, sentence-capitalization, repeated-space, and repeated-punctuation rules.
+- Stale-range-safe writing fixes integrated with **Undo correction**.
 - Inline wavy underlines for checked spelling issues.
 - Stronger visual treatment for the active spelling issue.
 - Keyboard shortcuts: `Ctrl/⌘+Enter` to check, `F7` for next issue, `Shift+F7` for previous issue.
@@ -34,9 +42,27 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`1.2.0+3`
+`2.0.0+5`
 
-Version 1.2 completes the Editor Experience milestone. It builds on V1.1 persistence with inline issue highlighting, active issue navigation, keyboard shortcuts, replace-all, correction undo, richer semantics, and clearer empty/error states. Personal words and suggestion-count preferences remain device-local; ignored words and correction history remain session-only.
+Version 2.0 adds the Advanced Writing Foundation: an optional local writing-rule plugin API, four deterministic built-in writing rules, language-pack eligibility, explicit per-session rule switches, stale-range-safe rule fixes, and a Writing insights dialog that reuses the existing correction undo history. V1.3 language selection, Unicode tokenization, per-language vocabulary, and all V1.2 spelling/editor workflows remain intact.
+
+## Language selection
+
+Use the language selector above the editor to choose **English (US)** or **English (UK)**. The selection is stored locally and restored later. Changing language re-checks non-blank editor text using the new pack and starts a separate ignored-word/session state.
+
+Saved personal vocabulary is isolated by language. A word saved in `en-US` is not automatically accepted in `en-GB`. Version-2 dictionary exports include the language ID so the application can prevent accidental cross-language imports.
+
+SpellChecker 1.3 does not auto-detect language; explicit selection is intentional. See [Language packs](docs/LANGUAGE_PACKS.md).
+
+## Writing insights
+
+Select **Writing insights** from the app bar to run optional local writing rules against the current in-memory text. The dialog shows the current language, lets you enable/disable supported rules for this session, and displays deterministic findings.
+
+Built-in V2.0 rules cover repeated words, sentence capitalization, repeated spaces, and repeated punctuation. They are intentionally lightweight and do not claim to be a full grammar parser.
+
+A finding exposes **Apply safe fix** only when it has a deterministic replacement. Before mutation, SpellChecker verifies that the source range still contains the exact analysed text. Successful writing fixes enter the same bounded correction history as spelling fixes, so **Undo correction** restores the previous document.
+
+See [Writing rules](docs/WRITING_RULES.md).
 
 ## Main workflow
 
@@ -248,6 +274,8 @@ See [docs/PRIVACY.md](docs/PRIVACY.md).
 ## Documentation
 
 - [User guide](docs/USER_GUIDE.md)
+- [Language packs](docs/LANGUAGE_PACKS.md)
+- [Writing rules](docs/WRITING_RULES.md)
 - [API reference](docs/API.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Development setup](docs/DEVELOPMENT.md)

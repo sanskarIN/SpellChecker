@@ -63,13 +63,14 @@ class SpellCheckEditingController extends TextEditingController {
       fontWeight: FontWeight.w600,
     );
 
-    final sorted = <_IndexedSpellIssue>[
-      for (var index = 0; index < _issues.length; index++)
-        _IndexedSpellIssue(index: index, issue: _issues[index]),
-    ]..sort(
-        (_IndexedSpellIssue a, _IndexedSpellIssue b) =>
-            a.issue.start.compareTo(b.issue.start),
-      );
+    final sorted =
+        <_IndexedSpellIssue>[
+          for (var index = 0; index < _issues.length; index++)
+            _IndexedSpellIssue(index: index, issue: _issues[index]),
+        ]..sort(
+          (_IndexedSpellIssue a, _IndexedSpellIssue b) =>
+              a.issue.start.compareTo(b.issue.start),
+        );
 
     final children = <InlineSpan>[];
     var cursor = 0;

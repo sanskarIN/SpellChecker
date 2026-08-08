@@ -29,13 +29,8 @@ class SpellIssue {
   }
 
   @override
-  int get hashCode => Object.hash(
-        word,
-        start,
-        end,
-        languageId,
-        Object.hashAll(suggestions),
-      );
+  int get hashCode =>
+      Object.hash(word, start, end, languageId, Object.hashAll(suggestions));
 
   static bool _listEquals(List<String> a, List<String> b) {
     if (identical(a, b)) {

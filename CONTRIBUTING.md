@@ -187,6 +187,18 @@ Update documentation when changing:
 - Released behavior → `CHANGELOG.md`
 - Repository overview/current version → `README.md`
 
+## Writing-rule contributions
+
+Follow [docs/WRITING_RULES.md](docs/WRITING_RULES.md). New rules need a stable ID, clear scope, explicit language eligibility, deterministic ranges, unit tests, stale-fix tests when applicable, and user/privacy documentation.
+
+Do not market a simple heuristic as full grammar analysis. Do not add text logging/network processing through a rule implementation.
+
+## Language-pack contributions
+
+Follow [docs/LANGUAGE_PACKS.md](docs/LANGUAGE_PACKS.md). Language-specific tokenization/normalization belongs in a pack, not widgets. New packs require compatible/licensed data, Unicode tests, state-isolation tests, selector/persistence coverage, migration considerations, and documentation.
+
+Do not add runtime dictionary downloads or network language detection without explicit privacy/security design review.
+
 ## Dictionary contributions
 
 - Use lowercase normalized entries.

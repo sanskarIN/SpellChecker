@@ -11,8 +11,8 @@ class WritingAnalysisResult {
     required Iterable<WritingIssue> issues,
     required Iterable<String> analyzedRuleIds,
     required this.languageId,
-  })  : issues = List<WritingIssue>.unmodifiable(issues),
-        analyzedRuleIds = Set<String>.unmodifiable(analyzedRuleIds);
+  }) : issues = List<WritingIssue>.unmodifiable(issues),
+       analyzedRuleIds = Set<String>.unmodifiable(analyzedRuleIds);
 
   final List<WritingIssue> issues;
   final Set<String> analyzedRuleIds;
@@ -31,9 +31,9 @@ class WritingAnalysisResult {
 
 class WritingAnalyzer {
   WritingAnalyzer({Iterable<WritingRule>? rules})
-      : _rules = List<WritingRule>.unmodifiable(
-          rules ?? WritingRuleRegistry.builtIns,
-        );
+    : _rules = List<WritingRule>.unmodifiable(
+        rules ?? WritingRuleRegistry.builtIns,
+      );
 
   final List<WritingRule> _rules;
 

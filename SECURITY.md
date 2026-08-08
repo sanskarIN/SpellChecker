@@ -98,6 +98,20 @@ SpellChecker handles local shortcut events for checking/navigation. It does not 
 
 Changes introducing global keyboard hooks, background key capture, or keyboard analytics require explicit security/privacy review.
 
+## Writing-rule safety
+
+Rules process the current document in memory, so they must not log, persist, upload, or otherwise expose source text. Automatic fixes validate exact current source text before mutation.
+
+A future third-party rule/plugin loader requires a separate trust/signing/sandbox/update threat model; `WritingRule` being a plugin interface does not mean untrusted runtime code loading is enabled in V2.0.
+
+## Language-pack safety
+
+Built-in packs are compiled local data. V1.3 does not download executable/content packs at runtime.
+
+Language-tagged dictionary imports validate the format version and supported language ID before merging. Pack switches construct isolated session state so ignored/personal vocabulary is not silently shared.
+
+Any future remote pack registry/download mechanism requires separate signature/integrity, licensing, privacy, and update-channel threat modeling.
+
 ## Import/export safety
 
 Personal dictionary import accepts only validated word entries from supported versioned JSON, JSON arrays, or plain word lists.

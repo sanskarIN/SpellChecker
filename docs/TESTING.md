@@ -32,6 +32,42 @@ flutter test test/spell_check_editing_controller_test.dart
 flutter test test/widget_test.dart
 ```
 
+## Writing-rules coverage
+
+V2.0 tests cover:
+
+- Each built-in deterministic rule.
+- Adjacent-word boundary behavior.
+- Sentence-start capitalization.
+- Space/punctuation replacement metadata.
+- Language eligibility for both built-in English packs.
+- Analyzer issue ordering/counts.
+- Per-rule enable/disable filtering.
+- Current versus stale writing corrections.
+- Writing insights dialog findings.
+- Safe writing fix integration with editor Undo correction.
+- Session rule toggling in the real widget tree.
+
+Rule tests should use synthetic text and assert the intended public contract rather than incidental widget positions.
+
+## Language architecture coverage
+
+V1.3 adds tests for:
+
+- Built-in registry IDs/default behavior.
+- Unicode tokenization and punctuation normalization.
+- US/UK variant acceptance.
+- Language-tagged issues and detailed suggestions.
+- Personal/ignored in-memory isolation between engines.
+- Version-2 language-tagged dictionary documents.
+- Legacy version-1 dictionary compatibility.
+- Selected-language persistence/fallback.
+- Per-language personal-word namespaces and V1 migration.
+- UI language switching/re-check behavior.
+- Saved-word isolation across selector changes.
+
+Language tests must prove that adding state to pack A does not change pack B.
+
 ## Core engine coverage
 
 `test/spell_checker_test.dart` covers:

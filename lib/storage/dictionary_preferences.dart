@@ -4,10 +4,13 @@ import '../core/personal_dictionary_codec.dart';
 import '../core/spell_language_pack.dart';
 
 class DictionaryPreferences {
-  DictionaryPreferences({SharedPreferences? preferences}) : _preferences = preferences;
+  DictionaryPreferences({SharedPreferences? preferences})
+    : _preferences = preferences;
 
-  static const String _legacyPersonalWordsKey = 'spellchecker.personal_words.v1';
-  static const String _personalWordsKeyPrefix = 'spellchecker.personal_words.v2.';
+  static const String _legacyPersonalWordsKey =
+      'spellchecker.personal_words.v1';
+  static const String _personalWordsKeyPrefix =
+      'spellchecker.personal_words.v2.';
   static const String _languageIdKey = 'spellchecker.language_id.v1';
   static const String _suggestionLimitKey = 'spellchecker.suggestion_limit.v1';
 
@@ -115,17 +118,18 @@ class DictionaryPreferences {
     Iterable<String> words,
     SpellLanguagePack pack,
   ) {
-    final normalized = words
-        .map(
-          (String word) => PersonalDictionaryCodec.normalizeWord(
-            word,
-            languagePack: pack,
-          ),
-        )
-        .where((String word) => word.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final normalized =
+        words
+            .map(
+              (String word) => PersonalDictionaryCodec.normalizeWord(
+                word,
+                languagePack: pack,
+              ),
+            )
+            .where((String word) => word.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
     return normalized;
   }
 

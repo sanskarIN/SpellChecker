@@ -14,8 +14,5 @@ abstract class WritingRule {
         supportedLanguageIds.contains(languagePack.languageCode);
   }
 
-  Iterable<WritingIssue> analyze(
-    String text,
-    SpellLanguagePack languagePack,
-  );
+  Iterable<WritingIssue> analyze(String text, SpellLanguagePack languagePack);
 }

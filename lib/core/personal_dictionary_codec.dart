@@ -25,10 +25,9 @@ class PersonalDictionaryCodec {
       words,
       languagePack: SpellLanguageRegistry.defaultPack,
     );
-    return const JsonEncoder.withIndent('  ').convert(<String, Object>{
-      'version': legacyVersion,
-      'words': normalized,
-    });
+    return const JsonEncoder.withIndent(
+      '  ',
+    ).convert(<String, Object>{'version': legacyVersion, 'words': normalized});
   }
 
   static String encodeForLanguage(
@@ -43,10 +42,7 @@ class PersonalDictionaryCodec {
     });
   }
 
-  static Set<String> decode(
-    String source, {
-    SpellLanguagePack? languagePack,
-  }) {
+  static Set<String> decode(String source, {SpellLanguagePack? languagePack}) {
     return decodeDocument(source, languagePack: languagePack).words;
   }
 
@@ -127,7 +123,9 @@ class PersonalDictionaryCodec {
 
     final rawWords = map['words'];
     if (rawWords is! List<dynamic>) {
-      throw const FormatException('Dictionary JSON must contain a "words" array.');
+      throw const FormatException(
+        'Dictionary JSON must contain a "words" array.',
+      );
     }
 
     if (version == legacyVersion) {
@@ -189,17 +187,15 @@ class PersonalDictionaryCodec {
     Iterable<String> words, {
     required SpellLanguagePack languagePack,
   }) {
-    final normalized = words
-        .map(
-          (String word) => normalizeWord(
-            word,
-            languagePack: languagePack,
-          ),
-        )
-        .where((String word) => word.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final normalized =
+        words
+            .map(
+              (String word) => normalizeWord(word, languagePack: languagePack),
+            )
+            .where((String word) => word.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
     return normalized;
   }
 }

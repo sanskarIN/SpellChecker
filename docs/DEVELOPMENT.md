@@ -209,6 +209,37 @@ await tester.tap(control);
 
 This tests the real scrollable interaction instead of relying on a particular test-surface height.
 
+## Adding or changing writing rules
+
+Use `WritingRule` rather than adding rule logic to widgets. Rules must be deterministic, side-effect free, explicit about supported language IDs/base codes, and return exact source ranges. Provide automatic replacements only when they can be applied safely.
+
+Run:
+
+```bash
+flutter test test/writing_rules_test.dart
+flutter test test/writing_correction_test.dart
+flutter test test/writing_widget_test.dart
+```
+
+Do not add document logging, persistent analysis history, or network grammar calls as an implementation detail. See [WRITING_RULES.md](WRITING_RULES.md).
+
+## Adding or changing language packs
+
+Language packs live behind `SpellLanguagePack`; do not place language-specific tokenization/normalization logic in widgets.
+
+A new pack requires a stable ID/display name, Unicode-aware token/validation rules, normalization, licensed dictionary data, suggestion metadata policy, isolation tests, persistence tests, selector tests, documentation, and privacy/security review for any runtime download/network requirement.
+
+Run the dedicated V1.3 tests:
+
+```bash
+flutter test test/language_pack_test.dart
+flutter test test/language_dictionary_codec_test.dart
+flutter test test/language_preferences_test.dart
+flutter test test/language_widget_test.dart
+```
+
+See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md).
+
 ## Adding bundled dictionary words
 
 Dictionary data is split across:

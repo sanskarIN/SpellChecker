@@ -29,17 +29,19 @@ void main() {
   test('isolates saved personal words by language', () async {
     final preferences = DictionaryPreferences();
 
-    await preferences.savePersonalWords(<String>{'usword'}, languageId: 'en-US');
-    await preferences.savePersonalWords(<String>{'ukword'}, languageId: 'en-GB');
+    await preferences.savePersonalWords(<String>{
+      'usword',
+    }, languageId: 'en-US');
+    await preferences.savePersonalWords(<String>{
+      'ukword',
+    }, languageId: 'en-GB');
 
-    expect(
-      await preferences.loadPersonalWords(languageId: 'en-US'),
-      <String>{'usword'},
-    );
-    expect(
-      await preferences.loadPersonalWords(languageId: 'en-GB'),
-      <String>{'ukword'},
-    );
+    expect(await preferences.loadPersonalWords(languageId: 'en-US'), <String>{
+      'usword',
+    });
+    expect(await preferences.loadPersonalWords(languageId: 'en-GB'), <String>{
+      'ukword',
+    });
   });
 
   test('migrates legacy V1 words into the default US namespace', () async {
@@ -60,15 +62,18 @@ void main() {
 
   test('clearing one language does not clear another language', () async {
     final preferences = DictionaryPreferences();
-    await preferences.savePersonalWords(<String>{'usword'}, languageId: 'en-US');
-    await preferences.savePersonalWords(<String>{'ukword'}, languageId: 'en-GB');
+    await preferences.savePersonalWords(<String>{
+      'usword',
+    }, languageId: 'en-US');
+    await preferences.savePersonalWords(<String>{
+      'ukword',
+    }, languageId: 'en-GB');
 
     await preferences.clearPersonalWords(languageId: 'en-US');
 
     expect(await preferences.loadPersonalWords(languageId: 'en-US'), isEmpty);
-    expect(
-      await preferences.loadPersonalWords(languageId: 'en-GB'),
-      <String>{'ukword'},
-    );
+    expect(await preferences.loadPersonalWords(languageId: 'en-GB'), <String>{
+      'ukword',
+    });
   });
 }

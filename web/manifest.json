@@ -5,6 +5,6 @@
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#4458D8",
-  "description": "A privacy-first open-source spelling utility with local inline issue review, personal vocabulary, and correction workflows.",
+  "description": "A privacy-first open-source spelling utility with explicit English language packs, Unicode-aware local spelling, optional local writing insights, personal vocabulary, and safe correction workflows.",
   "orientation": "any"
 }

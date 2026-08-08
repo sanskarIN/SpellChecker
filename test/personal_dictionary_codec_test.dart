@@ -4,12 +4,17 @@ import 'package:spellchecker/spell_checker.dart';
 void main() {
   group('PersonalDictionaryCodec', () {
     test('exports normalized sorted versioned JSON', () {
-      final export = PersonalDictionaryCodec.encode(
-        <String>{'Flutter', 'open-source', "Writer's"},
-      );
+      final export = PersonalDictionaryCodec.encode(<String>{
+        'Flutter',
+        'open-source',
+        "Writer's",
+      });
 
       expect(export, contains('"version": 1'));
-      expect(export.indexOf('flutter'), lessThan(export.indexOf('open-source')));
+      expect(
+        export.indexOf('flutter'),
+        lessThan(export.indexOf('open-source')),
+      );
       expect(export, contains("writer's"));
     });
 
@@ -46,9 +51,8 @@ void main() {
 
     test('rejects unsupported format versions', () {
       expect(
-        () => PersonalDictionaryCodec.decode(
-          '{"version":2,"words":["flutter"]}',
-        ),
+        () =>
+            PersonalDictionaryCodec.decode('{"version":2,"words":["flutter"]}'),
         throwsFormatException,
       );
     });

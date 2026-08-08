@@ -91,10 +91,7 @@ void main() {
 
     expect(find.text('2 occurrences'), findsWidgets);
     expect(find.text('Replace all…'), findsWidgets);
-    expect(
-      find.textContaining('Issue '),
-      findsWidgets,
-    );
+    expect(find.textContaining('Issue '), findsWidgets);
   });
 
   testWidgets('saves a personal word through the editor workflow', (

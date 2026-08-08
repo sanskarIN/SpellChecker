@@ -36,6 +36,10 @@ body:
       label: Affected area
       options:
         - Spell checking or suggestions
+        - Language selection / language packs
+        - Writing insights / local writing rules
+        - Writing rule safe fix / undo
+        - Unicode tokenization / normalization
         - Inline issue highlighting
         - Issue navigation or keyboard shortcuts
         - Single replacement

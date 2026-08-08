@@ -31,7 +31,8 @@ class SentenceCapitalizationRule extends WritingRule {
     RegExpMatch? previous;
     for (final match in matches) {
       final word = match.group(0)!;
-      final atSentenceStart = previous == null ||
+      final atSentenceStart =
+          previous == null ||
           _endsSentence(text.substring(previous.end, match.start));
 
       if (atSentenceStart && _startsWithLowercaseLetter(word)) {

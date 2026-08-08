@@ -21,14 +21,14 @@ class SpellCheckerEngine {
     required this.languagePack,
     Set<String>? dictionary,
     Map<String, int>? wordFrequencies,
-  })  : _baseDictionary = Set<String>.unmodifiable(
-          (dictionary ?? languagePack.dictionary)
-              .map(languagePack.normalizeWord)
-              .where((String word) => word.isNotEmpty),
-        ),
-        _wordFrequencies = Map<String, int>.unmodifiable(
-          wordFrequencies ?? languagePack.wordFrequencies,
-        );
+  }) : _baseDictionary = Set<String>.unmodifiable(
+         (dictionary ?? languagePack.dictionary)
+             .map(languagePack.normalizeWord)
+             .where((String word) => word.isNotEmpty),
+       ),
+       _wordFrequencies = Map<String, int>.unmodifiable(
+         wordFrequencies ?? languagePack.wordFrequencies,
+       );
 
   final SpellLanguagePack languagePack;
   final Set<String> _baseDictionary;
