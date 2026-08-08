@@ -42,6 +42,43 @@ void main() {
       expect(suggestions.first, 'spell');
     });
 
+    test('uses frequency rank when candidates are otherwise equivalent', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{'cat', 'cut'},
+        wordFrequencies: <String, int>{'cut': 1, 'cat': 100},
+      );
+
+      final suggestions = engine.suggestionsFor('cot');
+
+      expect(suggestions, <String>['cut', 'cat']);
+    });
+
+    test('limits suggestions during a full text check', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{'hello', 'help', 'hero'},
+      );
+
+      final issue = engine.check('helo', suggestionLimit: 1).single;
+
+      expect(issue.suggestions, hasLength(1));
+    });
+
+    test('accepts regular contractions and possessives from known stems', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{'teacher', 'we', 'could'},
+      );
+
+      expect(engine.isCorrect("teacher's"), isTrue);
+      expect(engine.isCorrect("we're"), isTrue);
+      expect(engine.isCorrect("couldn't"), isTrue);
+    });
+
+    test('preserves recognized suffixes in generated suggestions', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
+
+      expect(engine.suggestionsFor("helo's"), contains("hello's"));
+    });
+
     test('accepts words added to the personal dictionary', () {
       final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
 
@@ -51,6 +88,17 @@ void main() {
       expect(engine.personalDictionary, contains('openai'));
     });
 
+    test('replaces and removes personal dictionary entries', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
+
+      engine.replacePersonalDictionary(<String>{'Flutter', 'Dart'});
+      expect(engine.personalDictionary, <String>{'flutter', 'dart'});
+
+      expect(engine.removeFromPersonalDictionary('DART'), isTrue);
+      expect(engine.personalDictionary, <String>{'flutter'});
+      expect(engine.removeFromPersonalDictionary('missing'), isFalse);
+    });
+
     test('ignores a word for the current session', () {
       final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
 
@@ -58,6 +106,17 @@ void main() {
 
       expect(engine.check('hello wrld'), isEmpty);
       expect(engine.ignoredWords, contains('wrld'));
+    });
+
+    test('clears only ignored words when requested', () {
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
+      engine.addToPersonalDictionary('custom');
+      engine.ignoreWord('temporary');
+
+      engine.clearIgnoredWords();
+
+      expect(engine.personalDictionary, contains('custom'));
+      expect(engine.ignoredWords, isEmpty);
     });
 
     test('resetSession clears personal and ignored words', () {
@@ -77,6 +136,14 @@ void main() {
       final engine = SpellCheckerEngine(dictionary: <String>{"don't", 'stop'});
 
       expect(engine.check("Don't stop."), isEmpty);
+    });
+
+    test('uses the expanded bundled dictionary by default', () {
+      final engine = SpellCheckerEngine();
+
+      expect(engine.isCorrect('architecture'), isTrue);
+      expect(engine.isCorrect('persistent'), isTrue);
+      expect(engine.isCorrect('clipboard'), isTrue);
     });
   });
 }
