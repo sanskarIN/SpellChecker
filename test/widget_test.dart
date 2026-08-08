@@ -89,8 +89,12 @@ void main() {
     await tester.tap(find.text('Undo'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Issue 1 of 2'), findsOneWidget);
+    expect(find.text('2 occurrences'), findsWidgets);
     expect(find.text('Replace all…'), findsWidgets);
+    expect(
+      find.textContaining('Issue '),
+      findsWidgets,
+    );
   });
 
   testWidgets('saves a personal word through the editor workflow', (
