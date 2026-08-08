@@ -1,63 +1,83 @@
-# Core API
+# Public API
 
-SpellChecker exposes reusable core functionality through:
+SpellChecker 2.1 exposes reusable spelling, language, correction, and local writing-rule APIs through three public barrels.
+
+## Imports
+
+Core spelling and correction APIs:
 
 ```dart
 import 'package:spellchecker/spell_checker.dart';
 ```
 
-The public 1.x surface exports edit distance, spell checking, issue models, validated text correction, text statistics, and personal-dictionary import/export helpers. Application UI and storage types remain internal integration details unless explicitly exported.
-
-## Language APIs
-
-Language architecture is exported separately for clarity:
+Language-pack APIs:
 
 ```dart
 import 'package:spellchecker/language.dart';
-import 'package:spellchecker/spell_checker.dart';
 ```
 
-`SpellLanguageRegistry.builtIns` contains the built-in packs and `defaultPack` remains `en-US`. Select a pack explicitly with `SpellCheckerEngine(languagePack: ...)`.
+Writing-rule APIs:
 
-`SpellLanguagePack` carries language/region identity, dictionary data, frequency ranks, Unicode token/validation patterns, normalization, recognized suffixes, and suggestion-source metadata.
+```dart
+import 'package:spellchecker/writing.dart';
+```
 
-`SpellSuggestion` is returned by `suggestionDetailsFor()` and exposes the candidate, distance, frequency rank, language ID/display name, and source. `suggestionsFor()` remains the backward-compatible string-only API.
+Application UI and storage adapters remain internal integration details unless explicitly exported.
 
-`SpellIssue.languageId` identifies the pack that produced an issue and remains optional for source compatibility.
+# Language APIs
 
-See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md) for the complete language contract.
+## `SpellLanguageRegistry`
 
-## `SpellCheckerEngine`
+`SpellLanguageRegistry.builtIns` contains the built-in packs. `defaultPack` remains English (US), `en-US`.
 
-Create an engine with the bundled dictionaries and default frequency data:
+Current built-ins:
+
+```text
+en-US  English (US)
+en-GB  English (UK)
+```
+
+Use `SpellLanguageRegistry.byId(id)` to resolve an explicit pack and `contains(id)` to validate persisted IDs.
+
+## `SpellLanguagePack`
+
+A pack contains:
+
+- Stable language/region ID.
+- Language and region codes.
+- Display name.
+- Dictionary data.
+- Approximate frequency ranks.
+- Unicode token pattern.
+- Valid personal-word pattern.
+- Word normalizer.
+- Recognized suffixes.
+- Suggestion-source metadata.
+- Suggestion edit-distance policy.
+
+The spelling engine delegates tokenization, normalization, dictionary lookup behavior, and suggestion metadata to the selected pack.
+
+See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md).
+
+# `SpellCheckerEngine`
+
+Create an engine using the default US pack:
 
 ```dart
 final engine = SpellCheckerEngine();
 ```
 
-Create an engine with a custom dictionary:
+Select a language explicitly:
 
 ```dart
 final engine = SpellCheckerEngine(
-  dictionary: <String>{'hello', 'world', 'example'},
+  languagePack: SpellLanguageRegistry.englishGb,
 );
 ```
 
-Create an engine with custom suggestion-frequency ranks:
+A custom dictionary/frequency set can still be supplied where supported by the constructor. Existing `SpellCheckerEngine()` callers remain source-compatible and default to `en-US`.
 
-```dart
-final engine = SpellCheckerEngine(
-  dictionary: <String>{'cat', 'cut'},
-  wordFrequencies: <String, int>{
-    'cut': 1,
-    'cat': 100,
-  },
-);
-```
-
-Lower frequency-rank numbers are preferred when candidates are otherwise equivalent. Dictionary entries are normalized to lowercase when the engine is created.
-
-### `check`
+## `check`
 
 ```dart
 List<SpellIssue> check(
@@ -66,18 +86,11 @@ List<SpellIssue> check(
 })
 ```
 
-Checks supported English-style word tokens and returns unknown occurrences in source order.
+Tokenizes text with the selected language pack and returns unknown occurrences in source order.
 
-```dart
-final issues = engine.check(
-  'Helo world',
-  suggestionLimit: 3,
-);
-```
+Each issue is occurrence-specific and belongs to the exact source snapshot that was checked.
 
-Each occurrence is returned separately because source offsets are occurrence-specific. Callers must treat offsets as belonging to the exact text snapshot that was checked.
-
-### `isCorrect`
+## `isCorrect`
 
 ```dart
 bool isCorrect(String word)
@@ -85,12 +98,12 @@ bool isCorrect(String word)
 
 Returns `true` when the normalized word is accepted by:
 
-- The bundled or custom base dictionary.
-- The current personal dictionary.
-- The current ignored-word set.
-- A supported regular apostrophe suffix whose stem is known.
+- The selected base dictionary.
+- The current engine's personal dictionary.
+- The current engine's ignored-word set.
+- A recognized regular suffix whose stem is known.
 
-Supported stem-based suffix recognition includes:
+Current English suffix handling includes:
 
 ```text
 n't
@@ -102,7 +115,7 @@ n't
 's
 ```
 
-### `suggestionsFor`
+## `suggestionsFor`
 
 ```dart
 List<String> suggestionsFor(
@@ -111,17 +124,36 @@ List<String> suggestionsFor(
 })
 ```
 
-Returns close normalized replacement candidates. Candidate ordering is deterministic:
+Returns backward-compatible string candidates.
 
-1. Damerau-Levenshtein edit distance.
+Candidate ordering is deterministic and considers:
+
+1. Damerau-Levenshtein distance.
 2. First-character/prefix agreement.
 3. Approximate word-frequency rank.
 4. Candidate length.
 5. Alphabetical order.
 
-For supported apostrophe suffixes, matching can be performed on the stem and the suffix restored in output.
+## `suggestionDetailsFor`
 
-### Personal and ignored words
+Detailed suggestions expose language/source metadata:
+
+```dart
+final suggestions = engine.suggestionDetailsFor('helo');
+```
+
+`SpellSuggestion` includes:
+
+```text
+word
+distance
+frequencyRank
+languageId
+languageDisplayName
+source
+```
+
+## Personal and ignored words
 
 ```dart
 void addToPersonalDictionary(String word)
@@ -135,13 +167,35 @@ Set<String> get personalDictionary
 Set<String> get ignoredWords
 ```
 
-The engine remains storage-agnostic. The Flutter application persists personal words separately and keeps ignored words session-only.
+The engine itself remains storage-agnostic. The Flutter application persists personal words in language-specific namespaces and keeps ignored words session-only.
 
-## `TextCorrection`
+# `SpellIssue`
 
-SpellChecker 1.2 exports validated text-mutation helpers so correction behavior can be reused without Flutter widgets.
+A spelling issue contains:
 
-### `replaceOne`
+```dart
+const SpellIssue({
+  required String word,
+  required int start,
+  required int end,
+  List<String> suggestions = const <String>[],
+  String? languageId,
+})
+```
+
+A fresh issue satisfies:
+
+```dart
+text.substring(issue.start, issue.end) == issue.word
+```
+
+`languageId` identifies the producing pack when available.
+
+# `TextCorrection`
+
+`TextCorrection` provides validated spelling-text mutation independent from Flutter widgets.
+
+## `replaceOne`
 
 ```dart
 TextCorrectionResult TextCorrection.replaceOne(
@@ -151,31 +205,9 @@ TextCorrectionResult TextCorrection.replaceOne(
 )
 ```
 
-The method replaces exactly one checked occurrence only when all of these remain true:
+A replacement is performed only while the checked source range is still current. Stale/invalid issues return the unchanged text with zero replacements.
 
-- `issue.start` is inside the current text.
-- `issue.end` is inside the current text.
-- The range is non-empty.
-- `text.substring(issue.start, issue.end)` still equals `issue.word`.
-- The suggestion is non-empty.
-
-If the issue is stale or invalid, the returned result has `replacements == 0` and the original text is preserved.
-
-Example:
-
-```dart
-final issue = engine.check('Helo world').first;
-final result = TextCorrection.replaceOne(
-  'Helo world',
-  issue,
-  'hello',
-);
-
-print(result.text); // Hello world
-print(result.replacements); // 1
-```
-
-### `replaceAll`
+## `replaceAll`
 
 ```dart
 TextCorrectionResult TextCorrection.replaceAll(
@@ -186,17 +218,11 @@ TextCorrectionResult TextCorrection.replaceAll(
 )
 ```
 
-Replaces every still-current checked issue whose source word matches `sourceWord` case-insensitively. Matching ranges are applied from the end of the document toward the beginning so earlier offsets remain valid while replacements can change string length.
+Replaces every still-current checked matching occurrence, applying replacements from the end toward the beginning so source offsets remain valid.
 
-Important contract details:
+Only occurrences represented by the supplied issue list are eligible.
 
-- Only occurrences represented by the supplied checked issue list are eligible.
-- Stale or unrelated issue ranges are skipped.
-- Case is matched independently for each original occurrence.
-- `replacements` reports the number of actual mutations.
-- A replace-all operation can be treated as one higher-level undoable edit by the caller.
-
-### `matchCase`
+## `matchCase`
 
 ```dart
 String TextCorrection.matchCase(
@@ -205,15 +231,9 @@ String TextCorrection.matchCase(
 )
 ```
 
-Preserves common capitalization patterns:
+Preserves common casing patterns such as lowercase, title case, and uppercase.
 
-```text
-helo  + hello -> hello
-Helo  + hello -> Hello
-HELO  + hello -> HELLO
-```
-
-### `TextCorrectionResult`
+## `TextCorrectionResult`
 
 ```dart
 const TextCorrectionResult({
@@ -223,111 +243,68 @@ const TextCorrectionResult({
 })
 ```
 
-Fields:
+`changed` is true when one or more replacements were applied.
 
-- `text`: resulting document text.
-- `caretOffset`: safe suggested caret position in the resulting text.
-- `replacements`: number of mutations that were applied.
+# Personal dictionary codec
 
-Convenience getter:
+## Version-2 language-aware documents
 
-```dart
-bool get changed
-```
-
-`changed` is `true` when `replacements > 0`.
-
-### Language-aware dictionary documents
-
-`PersonalDictionaryCodec.encodeForLanguage(words, languagePack: pack)` writes format version 2 with a `language` field. `decodeDocument()` returns a `PersonalDictionaryDocument` containing `version`, `languageId`, and normalized words.
-
-Legacy `encode()` remains version-1-compatible. Version-1 objects, JSON arrays, and plain word lists inherit the caller/selected language because they contain no language metadata.
-
-## `PersonalDictionaryCodec`
-
-SpellChecker exports a versioned import/export helper.
-
-### `encode`
+Use:
 
 ```dart
-String PersonalDictionaryCodec.encode(Iterable<String> words)
+final encoded = PersonalDictionaryCodec.encodeForLanguage(
+  words,
+  languagePack: pack,
+);
 ```
 
-Returns sorted, normalized, indented JSON:
+Current format:
 
 ```json
 {
-  "version": 1,
-  "words": [
-    "flutter",
-    "open-source"
-  ]
+  "version": 2,
+  "language": "en-US",
+  "words": ["example", "flutter"]
 }
 ```
 
-### `decode`
+`decodeDocument()` returns a `PersonalDictionaryDocument` containing:
 
-```dart
-Set<String> PersonalDictionaryCodec.decode(String source)
+```text
+version
+languageId
+words
 ```
 
-Accepted input forms:
+Version-2 documents carry explicit language identity so the application can reject accidental cross-language imports.
 
-- SpellChecker JSON object containing `version` and `words`.
-- JSON array of words.
-- Plain text separated by line breaks and/or commas.
+## Legacy compatibility
 
-Invalid entries or unsupported JSON versions throw `FormatException`.
+`PersonalDictionaryCodec.encode(words)` remains version-1-compatible.
 
-### `normalizeWord`
+Accepted legacy import forms include:
 
-```dart
-String PersonalDictionaryCodec.normalizeWord(Object? value)
-```
+- Version-1 SpellChecker objects.
+- JSON arrays.
+- Plain newline/comma-separated word lists.
 
-Returns a lowercase normalized word or an empty string for invalid input. Curly apostrophes are converted to straight apostrophes. Accepted word syntax supports letters with internal apostrophes or hyphens.
+Legacy forms inherit the caller/selected language because they contain no language metadata.
 
-## `SpellIssue`
+## Normalization
 
-```dart
-const SpellIssue({
-  required String word,
-  required int start,
-  required int end,
-  List<String> suggestions = const <String>[],
-})
-```
+Personal-word normalization is language-pack aware when a pack is supplied. Curly apostrophes and supported Unicode hyphen variants are normalized according to the selected pack.
 
-Fields:
+Malformed entries and unsupported document versions throw `FormatException` rather than being guessed.
 
-- `word`: exact source spelling.
-- `start`: zero-based inclusive source offset.
-- `end`: zero-based exclusive source offset.
-- `suggestions`: ranked replacement candidates.
-
-A fresh issue satisfies:
-
-```dart
-text.substring(issue.start, issue.end) == issue.word
-```
-
-Callers that mutate text must not assume old offsets remain current. `TextCorrection` performs this validation for correction operations.
-
-## `damerauLevenshteinDistance`
+# Edit distance
 
 ```dart
 int damerauLevenshteinDistance(String source, String target)
 ```
 
-Returns the number of insertions, deletions, substitutions, and adjacent transpositions required to transform one string into the other under the implementation's distance model.
+Supports insertion, deletion, substitution, and adjacent transposition under the implementation's distance model.
 
-```dart
-damerauLevenshteinDistance('spell', 'spell'); // 0
-damerauLevenshteinDistance('spel', 'spell');  // 1
-damerauLevenshteinDistance('teh', 'the');     // 1
-```
-
-## `TextStatistics`
+# Text statistics
 
 ```dart
 final stats = TextStatistics.fromText('Hello world.');
@@ -335,63 +312,206 @@ final stats = TextStatistics.fromText('Hello world.');
 
 Fields:
 
-```dart
-stats.characters
-stats.words
-stats.sentences
+```text
+characters
+words
+sentences
 ```
 
-Character count uses Dart string length. Word counting uses the current English-style token pattern.
+# Writing-rule API
 
-## UI integration types
+## `WritingRule`
 
-`SpellCheckEditingController` lives under `lib/features/editor/` and is not currently exported from the public package barrel. It extends `TextEditingController` and renders checked issues with inline styles while validating ranges against its current text.
+A writing rule defines:
 
-Application-level behavior built on top of public core APIs includes:
+```dart
+abstract class WritingRule {
+  String get id;
+  String get displayName;
+  String get description;
+  Set<String> get supportedLanguageIds;
 
-- Active issue selection.
-- F7 / Shift+F7 navigation.
-- Ctrl/Command+Enter checking.
-- Replace-all menus.
-- A bounded correction undo stack.
-- Results auto-scroll.
-- Accessibility live regions and selected-state semantics.
+  Iterable<WritingIssue> analyze(
+    String text,
+    SpellLanguagePack languagePack,
+  );
+}
+```
 
-These are UI integration contracts rather than public core API promises.
+Rule IDs are stable persisted identifiers in V2.1. They must not be renamed casually.
 
-## Persistence boundary
+## `WritingRuleRegistry`
 
-`DictionaryPreferences` remains an application integration class under `lib/storage/`. It is intentionally not exported from `package:spellchecker/spell_checker.dart` because storage implementations may evolve independently from the reusable core.
+`WritingRuleRegistry.builtIns` contains the built-in rules.
 
-The Flutter application persists:
+Current IDs:
 
-- Personal words.
+```text
+repeated-word
+sentence-capitalization
+repeated-space
+repeated-punctuation
+```
+
+`WritingRuleRegistry.defaultEnabledRuleIds` is used when no writing-rule preference exists for the active language.
+
+## `WritingAnalyzer`
+
+```dart
+final result = WritingAnalyzer().analyze(
+  text,
+  languagePack: pack,
+  enabledRuleIds: enabledIds,
+);
+```
+
+The analyzer:
+
+- Runs only rules supporting the selected pack.
+- Applies optional rule-ID filtering.
+- Returns immutable findings sorted deterministically.
+- Reports which rule IDs actually ran.
+- Exposes per-rule issue counts.
+
+`enabledRuleIds == null` means run all supported rules configured in that analyzer. The Flutter application normally passes its resolved persisted/default set explicitly.
+
+## `WritingIssue`
+
+A finding contains:
+
+```text
+ruleId
+ruleName
+message
+start
+end
+originalText
+replacement
+languageId
+severity
+```
+
+`replacement == null` means advisory-only. An empty replacement string is still a valid automatic fix and can represent deletion.
+
+For a current issue:
+
+```dart
+text.substring(issue.start, issue.end) == issue.originalText
+```
+
+## `WritingCorrection.apply`
+
+```dart
+WritingCorrectionResult WritingCorrection.apply(
+  String text,
+  WritingIssue issue,
+)
+```
+
+Applies one automatic fix only when the current source range still equals `originalText`.
+
+Result fields:
+
+```text
+text
+caretOffset
+applied
+```
+
+## `WritingCorrection.applyAll` — V2.1
+
+```dart
+WritingBatchCorrectionResult WritingCorrection.applyAll(
+  String text,
+  Iterable<WritingIssue> issues,
+)
+```
+
+Batch safety contract:
+
+1. Sort candidates by `start`, then `end`, then `ruleId`.
+2. Skip advisory findings without replacements.
+3. Skip invalid/stale findings.
+4. When findings overlap, keep the earliest deterministic candidate and skip later overlaps.
+5. Apply accepted replacements from the document end toward the beginning.
+6. Return the single final document text and counts.
+
+### `WritingBatchCorrectionResult`
+
+```dart
+const WritingBatchCorrectionResult({
+  required String text,
+  required int caretOffset,
+  required int appliedCount,
+  required int skippedCount,
+})
+```
+
+Convenience getter:
+
+```dart
+bool get applied
+```
+
+`applied` is true when `appliedCount > 0`.
+
+The Flutter editor records one successful `applyAll` result as one correction-history entry, making a complete writing batch one-step undoable.
+
+See [WRITING_RULES.md](WRITING_RULES.md) for the full rule and batch-correction specification.
+
+# Application persistence boundary
+
+`DictionaryPreferences` is an application-internal adapter under `lib/storage/`; it is intentionally not exported from the public core/writing barrels.
+
+V2.1 persists:
+
+- Selected language ID.
+- Personal words per language.
 - Suggestion-count preference.
+- Enabled writing-rule IDs per language.
 
-The Flutter application does not persist:
+Writing-rule preference keys use:
+
+```text
+spellchecker.writing_rule_ids.v1.<language-id>
+```
+
+The application distinguishes:
+
+- Missing key → use current registry defaults.
+- Non-empty stored list → use those supported IDs.
+- Empty stored list → explicitly disable all rules for that language.
+
+The application does not persist:
 
 - Editor text.
+- Spelling results.
+- Writing findings.
 - Ignored words.
-- Checked issue lists.
-- Active issue index.
-- V1.2 correction undo snapshots.
+- Active issue position.
+- Correction undo snapshots.
+- Batch correction plans.
 
-## Writing rules API (2.0)
+# UI integration types
 
-Import the writing subsystem with:
+`SpellCheckEditingController`, `SpellCheckerPage`, `DictionaryManagerDialog`, and `WritingInsightsDialog` live under `lib/features/` and are not currently part of the reusable public API guarantee.
 
-```dart
-import 'package:spellchecker/writing.dart';
-```
+Application-level behavior includes:
 
-`WritingRule` defines stable ID/name/description/language eligibility plus a side-effect-free `analyze(text, languagePack)` contract. `WritingAnalyzer` runs supported/enabled rules and returns a sorted immutable `WritingAnalysisResult`.
+- Inline spelling highlighting.
+- Active issue navigation and selection.
+- `F7` / `Shift+F7` spelling navigation.
+- `Ctrl/Command+Enter` spelling check.
+- `Ctrl/Command+Shift+Enter` Writing insights.
+- Spelling replace-all.
+- Writing individual safe fix.
+- Writing **Apply all safe fixes**.
+- Shared bounded correction undo.
+- Per-language saved word and writing-rule preferences.
+- Accessibility live regions and semantic labels.
 
-`WritingIssue` carries rule identity, explanation, exact source range/original text, optional replacement, language ID, and severity.
+# Stability
 
-`WritingCorrection.apply(text, issue)` applies a fix only when the current range still equals `issue.originalText`; otherwise it returns the unchanged text with `applied == false`.
+`lib/spell_checker.dart`, `lib/language.dart`, and `lib/writing.dart` are the intended reusable public API barrels for the 2.x line.
 
-See [WRITING_RULES.md](WRITING_RULES.md) for built-in rule behavior and plugin requirements.
-
-## Stability
-
-The names exported by `lib/spell_checker.dart` are the intended reusable core surface for version 1.x. Internal files under `lib/features/`, `lib/data/`, and `lib/storage/` can evolve more freely as long as documented user behavior remains compatible or the release notes identify changes.
+Internal files under `lib/features/`, `lib/data/`, and `lib/storage/` can evolve more freely, but documented data formats, persisted preference semantics, correction-safety behavior, and public exported APIs require compatibility review and release notes when changed.
