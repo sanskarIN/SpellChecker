@@ -10,8 +10,10 @@ The main screen contains:
 - Check spelling button.
 - Clear button.
 - Word/character/sentence statistics.
+- Current suggestion-count chip.
 - Results panel.
-- Session reset action.
+- Personal-dictionary action with a saved-word badge.
+- Clear-ignored-words action with a session-ignore badge.
 - About action.
 
 ## Check text
@@ -22,48 +24,135 @@ The main screen contains:
 
 Each unknown occurrence shows:
 
-- The original word.
+- Original word.
 - Character position.
 - Ranked suggestions when available.
-- **Add word** action.
-- **Ignore** action.
+- **Save word** action.
+- **Ignore once** action.
 
 ## Replace a word
 
-Select one of the suggestion chips under an issue. SpellChecker replaces only that checked occurrence and then runs the check again.
+Select a suggestion chip under an issue. SpellChecker replaces only that checked occurrence and then runs the check again.
 
-Replacement attempts to preserve common capitalization patterns:
+Replacement preserves common capitalization patterns:
 
 - `helo` → `hello`
 - `Helo` → `Hello`
 - `HELO` → `HELLO`
 
-## Add a word
+For supported apostrophe suffixes, the engine can calculate a suggestion from the stem and restore the suffix, such as `helo's` → `hello's` when appropriate.
 
-Select **Add word** when a legitimate word is missing from the bundled dictionary.
+## Save a personal word
 
-The word is added to the current in-memory personal dictionary and immediately stops being reported.
+Select **Save word** when a legitimate word is missing from the bundled dictionary.
 
-Version 1.0 does not persist personal words after the app process ends.
+SpellChecker V1.1:
 
-## Ignore a word
+1. Normalizes the word.
+2. Adds it to the engine's personal dictionary.
+3. Saves the complete personal dictionary through local application preferences.
+4. Runs the spelling check again.
 
-Select **Ignore** to stop reporting that normalized word during the current session.
+Saved personal words survive normal application restarts on the same device/browser profile.
 
-Use this for temporary names, codes, or vocabulary that you do not want to add to the personal dictionary.
+If persistence fails, the editor restores the previous in-memory personal dictionary and reports the failure instead of pretending that the word was saved.
 
-## Reset session words
+## Ignore once
 
-Use the reset icon in the app bar to clear:
+Select **Ignore once** for temporary names, codes, or vocabulary that should not be saved permanently.
 
-- Personal dictionary additions.
-- Ignored words.
+Ignored words:
 
-The text itself is not cleared by this action.
+- Stop being reported during the active application session.
+- Are not written to persistent preferences.
+- Can be cleared independently from saved personal words.
+
+## Clear ignored session words
+
+Select the visibility/ignored-words action in the app bar.
+
+This clears only temporary ignored words. It does not delete:
+
+- Editor text.
+- Saved personal dictionary entries.
+- Suggestion-count preference.
+
+## Manage the personal dictionary
+
+Select **Manage personal dictionary** in the app bar.
+
+The dialog lets you:
+
+- View saved personal words.
+- Add a word manually.
+- Remove one saved word.
+- Clear all saved words after confirmation.
+- Choose 1–10 suggestions per spelling issue.
+- Import personal vocabulary.
+- Copy a dictionary export to the clipboard.
+
+The saved-word count is displayed as a badge on the dictionary action when the personal dictionary is not empty.
+
+## Suggestion-count preference
+
+Use the dropdown inside **Personal dictionary** to choose between 1 and 10 suggestions per issue.
+
+The preference is saved locally and restored on future launches. If text has already been checked, changing the value refreshes the current results.
+
+## Import personal words
+
+Select **Import** in the personal-dictionary manager and paste one of these forms.
+
+### SpellChecker JSON
+
+```json
+{
+  "version": 1,
+  "words": [
+    "flutter",
+    "open-source"
+  ]
+}
+```
+
+### JSON array
+
+```json
+["flutter", "open-source"]
+```
+
+### Plain text
+
+```text
+flutter
+open-source
+writer's
+```
+
+Commas can also separate plain-text entries.
+
+Imported words are merged with existing saved words. Duplicates are removed. Words are normalized to lowercase and curly apostrophes are converted to straight apostrophes.
+
+Invalid entries produce an error instead of being silently stored.
+
+## Export personal words
+
+Select **Copy export**.
+
+SpellChecker copies a versioned JSON document to the clipboard. The export is:
+
+- Alphabetically sorted.
+- Lowercase-normalized.
+- Deduplicated.
+- Suitable for importing into another SpellChecker installation/profile.
+
+The application does not upload the export anywhere.
 
 ## Clear text
 
-Select **Clear** to empty the editor and reset displayed results/statistics. This does not clear the session dictionary; use the session reset action for that.
+Select **Clear** to empty the editor and reset displayed results/statistics.
+
+This does not remove personal dictionary entries, ignored session words, or preferences.
 
 ## Statistics
 
@@ -73,16 +162,41 @@ SpellChecker displays:
 - Character count.
 - Sentence count.
 
-These are lightweight writing statistics and are not intended as linguistic analysis.
+These are lightweight writing statistics rather than full linguistic analysis.
+
+## Contractions and possessives
+
+V1.1 can recognize many regular apostrophe forms from known stems, including suffixes such as:
+
+```text
+n't
+'re
+'ve
+'ll
+'d
+'m
+'s
+```
+
+This improves common forms such as `teacher's`, `we're`, and `couldn't`. Irregular forms may still depend on direct dictionary coverage.
 
 ## Privacy
 
-Spelling checks run locally. Version 1.0 does not send editor text to a cloud spelling service and does not include analytics or advertising SDKs.
+Spelling analysis runs locally. Editor text is not persisted by SpellChecker.
 
-For details, read [PRIVACY.md](PRIVACY.md).
+V1.1 stores only:
+
+- Saved personal words.
+- Suggestion-count preference.
+
+Ignored words remain memory-only. No analytics, advertising, authentication, telemetry, or cloud spelling API is included.
+
+See [PRIVACY.md](PRIVACY.md) for details.
 
 ## Dictionary limitations
 
-Version 1.0 ships with a starter English dictionary. Correct but uncommon words may be reported as unknown. Add them to the session dictionary or contribute improvements to the project.
+V1.1 expands the bundled English vocabulary but it is still not a complete linguistic database. Correct uncommon words can still be reported as unknown.
 
-SpellChecker does not currently provide grammar checking or automatic language detection.
+You can save legitimate vocabulary locally or contribute curated dictionary improvements to the project.
+
+SpellChecker does not currently provide grammar checking, automatic language detection, or cloud synchronization.
