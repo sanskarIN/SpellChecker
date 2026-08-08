@@ -23,14 +23,20 @@ Status: implemented.
 
 ## 1.1 — Dictionary quality and persistence
 
-Planned:
+Status: implemented.
 
-- Persistent personal dictionary.
-- Import/export personal words.
-- Larger curated English dictionary.
-- Frequency-aware suggestion ranking.
-- Better possessive and contraction handling.
-- User preferences for suggestion count.
+- [x] Persistent device-local personal dictionary.
+- [x] Import/export personal words.
+- [x] Versioned JSON dictionary format.
+- [x] Import from JSON arrays and plain word lists.
+- [x] Larger curated English dictionary.
+- [x] Frequency-aware suggestion ranking.
+- [x] Better regular possessive and contraction handling.
+- [x] Suffix-preserving correction suggestions.
+- [x] User preference for 1–10 suggestions per issue.
+- [x] Personal-dictionary management UI.
+- [x] Separate persistent saved words from session-only ignored words.
+- [x] Persistence, codec, engine, and widget regression tests.
 
 ## 1.2 — Editor experience
 
