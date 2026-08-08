@@ -1,4 +1,5 @@
 name: Integrate V2.1 writing workflow
+# Exact-tree, self-cleaning V2.1 integration gate.
 
 on:
   pull_request:
@@ -94,14 +95,12 @@ jobs:
     SpellLanguagePack languagePack,
   ) {
     final supportedRuleIds = _writingAnalyzer.rules
-        .where((WritingRule rule) => rule.supports(languagePack))
-        .map((WritingRule rule) => rule.id)
+        .where((rule) => rule.supports(languagePack))
+        .map((rule) => rule.id)
         .toSet();
     final requestedRuleIds =
         storedRuleIds ?? WritingRuleRegistry.defaultEnabledRuleIds;
-    return requestedRuleIds
-        .where(supportedRuleIds.contains)
-        .toSet();
+    return requestedRuleIds.where(supportedRuleIds.contains).toSet();
   }
 
   Future<void> _showWritingInsights() async {
