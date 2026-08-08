@@ -30,35 +30,36 @@ void main() {
     );
   }
 
-  testWidgets('portable settings dialog describes privacy boundary and export', (
-    WidgetTester tester,
-  ) async {
-    await _openDialog(
-      tester,
-      SpellCheckerSettingsDocument(
-        languageId: 'en-GB',
-        suggestionLimit: 7,
-        writingRuleOverrides: <String, Iterable<String>>{
-          'en-GB': const <String>[],
-        },
-      ),
-    );
+  testWidgets(
+    'portable settings dialog describes privacy boundary and export',
+    (WidgetTester tester) async {
+      await _openDialog(
+        tester,
+        SpellCheckerSettingsDocument(
+          languageId: 'en-GB',
+          suggestionLimit: 7,
+          writingRuleOverrides: <String, Iterable<String>>{
+            'en-GB': const <String>[],
+          },
+        ),
+      );
 
-    expect(find.text('Portable settings'), findsOneWidget);
-    expect(find.textContaining('Editor text'), findsOneWidget);
-    expect(find.textContaining('personal vocabulary'), findsOneWidget);
-    expect(find.text('Language: English (UK)'), findsOneWidget);
-    expect(find.text('Suggestions per issue: 7'), findsOneWidget);
+      expect(find.text('Portable settings'), findsOneWidget);
+      expect(find.textContaining('Editor text'), findsOneWidget);
+      expect(find.textContaining('personal vocabulary'), findsOneWidget);
+      expect(find.text('Language: English (UK)'), findsOneWidget);
+      expect(find.text('Suggestions per issue: 7'), findsOneWidget);
 
-    final export = tester.widget<SelectableText>(
-      find.byKey(const ValueKey<String>('portable-settings-export')),
-    );
-    final exportedText = export.data!;
-    expect(exportedText, contains('"format": "spellchecker-settings"'));
-    expect(exportedText, contains('"languageId": "en-GB"'));
-    expect(exportedText, isNot(contains('personalWords')));
-    expect(exportedText, isNot(contains('editorText')));
-  });
+      final export = tester.widget<SelectableText>(
+        find.byKey(const ValueKey<String>('portable-settings-export')),
+      );
+      final exportedText = export.data!;
+      expect(exportedText, contains('"format": "spellchecker-settings"'));
+      expect(exportedText, contains('"languageId": "en-GB"'));
+      expect(exportedText, isNot(contains('personalWords')));
+      expect(exportedText, isNot(contains('editorText')));
+    },
+  );
 
   testWidgets('copy action writes the deterministic export to clipboard', (
     WidgetTester tester,
@@ -100,10 +101,7 @@ void main() {
     SpellCheckerSettingsDocument? imported;
     await _openDialog(
       tester,
-      SpellCheckerSettingsDocument(
-        languageId: 'en-US',
-        suggestionLimit: 5,
-      ),
+      SpellCheckerSettingsDocument(languageId: 'en-US', suggestionLimit: 5),
       onImported: (SpellCheckerSettingsDocument? value) => imported = value,
     );
 
@@ -139,10 +137,7 @@ void main() {
     SpellCheckerSettingsDocument? imported;
     await _openDialog(
       tester,
-      SpellCheckerSettingsDocument(
-        languageId: 'en-US',
-        suggestionLimit: 5,
-      ),
+      SpellCheckerSettingsDocument(languageId: 'en-US', suggestionLimit: 5),
       onImported: (SpellCheckerSettingsDocument? value) => imported = value,
     );
 
@@ -179,9 +174,8 @@ Future<void> _openDialog(
               onPressed: () async {
                 final result = await showDialog<SpellCheckerSettingsDocument>(
                   context: context,
-                  builder: (BuildContext context) => SettingsTransferDialog(
-                    initialDocument: document,
-                  ),
+                  builder: (BuildContext context) =>
+                      SettingsTransferDialog(initialDocument: document),
                 );
                 onImported?.call(result);
               },
