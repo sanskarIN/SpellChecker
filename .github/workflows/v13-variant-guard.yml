@@ -1,0 +1,43 @@
+name: Apply V1.3 variant guard
+
+on:
+  push:
+    branches:
+      - v1.3-language-architecture
+    paths:
+      - .github/workflows/v13-variant-guard.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out latest V1.3 branch
+        uses: actions/checkout@v4
+        with:
+          ref: v1.3-language-architecture
+          fetch-depth: 0
+
+      - name: Apply deterministic variant guard
+        run: python3 tools/v13_variant_guard.py
+
+      - name: Remove one-time helper
+        run: |
+          rm -f tools/v13_variant_guard.py
+          rm -f .github/workflows/v13-variant-guard.yml
+
+      - name: Commit variant guard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No variant changes to commit."
+            exit 0
+          fi
+          git commit -m "fix: isolate US and UK variant dictionaries"
+          git pull --rebase origin v1.3-language-architecture
+          git push origin HEAD:v1.3-language-architecture
