@@ -17,7 +17,10 @@ helper_marker = "  testWidgets('writing insights apply a safe fix through editor
 helper = """  Finder writingInsightsScrollable() {
     return find.descendant(
       of: find.byType(AlertDialog),
-      matching: find.byType(Scrollable),
+      matching: find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Scrollable && widget.axisDirection == AxisDirection.down,
+      ),
     );
   }
 
