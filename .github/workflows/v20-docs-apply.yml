@@ -1,0 +1,43 @@
+name: Apply V2.0 documentation
+
+on:
+  push:
+    branches:
+      - v2.0-writing-rules-foundation
+    paths:
+      - .github/workflows/v20-docs-apply.yml
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out latest V2.0 branch
+        uses: actions/checkout@v4
+        with:
+          ref: v2.0-writing-rules-foundation
+          fetch-depth: 0
+
+      - name: Apply guarded V2.0 documentation transform
+        run: python3 tools/v20_docs_apply.py
+
+      - name: Remove one-time helper
+        run: |
+          rm -f tools/v20_docs_apply.py
+          rm -f .github/workflows/v20-docs-apply.yml
+
+      - name: Commit documentation integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No V2.0 documentation changes to commit."
+            exit 0
+          fi
+          git commit -m "docs: complete v2 local writing rules documentation"
+          git pull --rebase origin v2.0-writing-rules-foundation
+          git push origin HEAD:v2.0-writing-rules-foundation
