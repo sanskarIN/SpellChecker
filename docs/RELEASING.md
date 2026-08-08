@@ -7,19 +7,20 @@ This document describes the SpellChecker release procedure.
 Before releasing:
 
 - `main` contains the intended code.
-- GitHub Actions CI is passing on the release commit.
+- GitHub Actions CI is passing on the exact release commit.
 - `pubspec.yaml` contains the intended `MAJOR.MINOR.PATCH+BUILD` version.
 - `CHANGELOG.md` contains a dated release entry.
 - README and user-facing documentation match current behavior.
-- API and architecture documentation match exported/public behavior.
-- Security, privacy, and accessibility documentation are current.
-- Persistent-data behavior and any migrations are documented and tested.
+- API/architecture documentation matches exported behavior.
+- Security, privacy, accessibility, testing, and troubleshooting documentation is current.
+- Persistent-data behavior and migrations are documented/tested.
+- Editor shortcut, correction, and undo behavior is documented/tested.
 
 Do not create a release tag from a branch with failing or missing required validation.
 
 ## Versioning
 
-The Flutter version field uses:
+Flutter version field:
 
 ```text
 MAJOR.MINOR.PATCH+BUILD
@@ -30,26 +31,27 @@ Examples:
 ```text
 1.0.0+1
 1.1.0+2
+1.2.0+3
 ```
 
-Increase the semantic version for user-visible releases and the build number for packaging iterations as needed.
+Increase semantic version for user-visible releases and build number for packaging iterations as needed.
 
-## V1.1 persistent-data compatibility
+## Persistent-data compatibility
 
-SpellChecker 1.1 introduces device-local persistence for:
+SpellChecker persists:
 
 - Personal dictionary words.
 - Suggestion-count preference.
 
-The preference keys and personal-dictionary export format are versioned. Before a future release changes either format:
+Preference keys and personal-dictionary export format are versioned. Before changing either format:
 
-1. Define whether old values remain readable.
-2. Add migration logic when compatibility is required.
-3. Add tests for old-to-new behavior.
-4. Update `docs/PRIVACY.md`, `docs/API.md`, and the changelog.
+1. Define old-value compatibility.
+2. Add migration logic if needed.
+3. Add old-to-new tests.
+4. Update privacy/API/changelog docs.
 5. Never silently reinterpret an existing dictionary export version.
 
-The V1.1 export format is:
+Current export format:
 
 ```json
 {
@@ -57,6 +59,20 @@ The V1.1 export format is:
   "words": ["example"]
 }
 ```
+
+V1.2 does not change this persisted format.
+
+## V1.2 non-persistent editor state
+
+Do not accidentally turn these into persistent data during release preparation:
+
+- Editor text.
+- Checked issue list.
+- Active issue index.
+- Ignored words.
+- Correction undo snapshots.
+
+The correction undo stack can contain editor-text snapshots and must remain memory-only unless a future explicitly reviewed feature changes that design.
 
 ## Local release verification
 
@@ -71,84 +87,116 @@ flutter test --reporter expanded
 flutter build web --release
 ```
 
-Inspect the printed Flutter/Dart versions and confirm they satisfy `pubspec.yaml`.
+Confirm Flutter/Dart versions satisfy `pubspec.yaml`.
 
-## V1.1 release smoke test
+## V1.2 release smoke test
 
-Before tagging V1.1 or a maintenance release based on it, manually verify when practical:
+Before tagging V1.2 or a maintenance release based on it, manually verify when practical:
+
+### Basic checking
 
 1. Launch with no saved preferences.
-2. Check a known misspelling and replace it.
-3. Save a synthetic personal word.
-4. Restart/reload and confirm the saved word is restored.
-5. Change the suggestion count and confirm it is restored after restart/reload.
-6. Ignore a word and confirm the ignore does not persist across a new application session.
-7. Export the personal dictionary and inspect the JSON version/normalized words.
-8. Import the export and confirm duplicates are not created.
-9. Remove one personal word and clear all personal words.
-10. Verify light/dark theme, narrow layout, and keyboard access to new dictionary controls.
+2. Enter a known misspelling.
+3. Check using the button.
+4. Check again using `Ctrl+Enter`/`Command+Enter` on applicable platforms.
+5. Verify inline underlining and Results issue state agree.
 
-Use synthetic words/data for release verification.
+### Navigation
+
+6. Enter at least three synthetic misspellings.
+7. Verify `F7` moves forward and wraps.
+8. Verify `Shift+F7` moves backward and wraps.
+9. Verify app-bar and Results previous/next controls.
+10. Verify active issue selection appears in the editor and Results auto-scrolls when needed.
+
+### Corrections
+
+11. Replace one occurrence and verify case preservation.
+12. Use snackbar **Undo** and verify the previous document returns.
+13. Repeat a misspelling with mixed capitalization.
+14. Use **Replace all…** and verify each checked occurrence is replaced with matching capitalization.
+15. Use **Undo correction** and verify the full bulk edit is restored as one step.
+16. Modify text manually after a correction and verify old correction history/highlights do not incorrectly remain active.
+17. Change text after checking and verify stale replacement refreshes rather than mutating the wrong range.
+
+### States and accessibility
+
+18. Check a blank editor and verify **Nothing to check**.
+19. Check a clean sentence and verify **No issues found**.
+20. Verify keyboard-only access to issue navigation and correction controls.
+21. Verify light/dark themes, larger text, and narrow layout.
+22. Verify active state is understandable through Results text/semantics rather than color alone.
+
+### Persistence regression
+
+23. Save a synthetic personal word.
+24. Restart/reload and confirm it is restored.
+25. Change suggestion count and confirm restoration.
+26. Verify **Ignore once** does not persist across a new session.
+27. Export/import synthetic personal vocabulary.
+
+Use only synthetic text and vocabulary during release verification.
 
 ## Tagging
 
-Create an annotated tag from the verified `main` commit. For V1.1:
+Create an annotated tag from the verified `main` commit. For V1.2:
 
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v1.1.0 -m "SpellChecker v1.1.0"
-git push origin v1.1.0
+git tag -a v1.2.0 -m "SpellChecker v1.2.0"
+git push origin v1.2.0
 ```
 
-Pushing a `v*` tag triggers the repository release-build workflow. That workflow validates the project and uploads the release web build as a GitHub Actions artifact.
+Pushing a `v*` tag triggers the release-build workflow, which validates the project and uploads the release web build as a GitHub Actions artifact.
 
-## Verify the tagged workflow
+## Verify tagged workflow
 
-The tagged release workflow must finish successfully before publishing release notes or presenting the artifact as a verified release.
+The tagged workflow must finish successfully before presenting the artifact as a verified release.
 
-If the workflow fails:
+If it fails:
 
-1. Do not move or overwrite the published tag silently.
+1. Do not silently move/overwrite the published tag.
 2. Diagnose the failure.
-3. Fix the issue on `main` with tests when appropriate.
-4. Publish a new version/tag if the failed tag has already been shared externally.
+3. Fix on `main` with regression tests when appropriate.
+4. Publish a new version/tag if the failed tag was already shared.
 
 ## GitHub release
 
 After the tagged workflow passes:
 
 1. Create a GitHub Release for the tag.
-2. Use the matching `CHANGELOG.md` section as the release-notes foundation.
-3. Mention important persistence/privacy behavior for releases that change it.
-4. Attach approved release artifacts when appropriate.
-5. Verify repository/documentation links and user-visible version text.
-6. Verify the release points to the same commit that passed validation.
+2. Use the matching changelog section as release-note foundation.
+3. Call out important keyboard/editor/correction behavior for V1.2.
+4. Mention persistence/privacy behavior when relevant.
+5. Attach approved artifacts where appropriate.
+6. Verify links and user-visible version text.
+7. Verify the release points to the exact commit that passed validation.
 
 ## Rollback and hotfixes
 
 Do not move a published release tag silently. If a release contains a defect:
 
-1. Fix it on `main`.
+1. Fix on `main`.
 2. Add regression tests.
-3. Update the changelog.
-4. Increment the patch/build version.
+3. Update changelog.
+4. Increment patch/build version.
 5. Publish a new tag.
 
-For persistence defects, also verify that the fix does not destroy or reinterpret existing saved personal words.
+For correction defects, test stale offsets, replace-all ordering, and undo grouping. For persistence defects, verify saved personal data is not destroyed or reinterpreted.
 
 ## Dependency review
 
 Before a release that changes dependencies:
 
-- Review the dependency purpose.
-- Confirm it does not add unexpected network/analytics behavior.
-- Run `flutter pub get` from a clean checkout.
-- Ensure CI resolves the same constraints successfully.
-- Update development/privacy documentation when runtime behavior changes.
+- Review dependency purpose.
+- Confirm no unexpected network/analytics behavior.
+- Run `flutter pub get` cleanly.
+- Ensure CI resolves the same constraints.
+- Update development/privacy docs when runtime behavior changes.
 
-V1.1 uses `shared_preferences` solely for application-local preference storage.
+V1.2 adds no new runtime dependency. `shared_preferences` remains used solely for application-local preference storage.
 
 ## Signing and stores
 
-Mobile/desktop signing credentials, app-store tokens, certificates, and release secrets must never be committed. Store them using the secure facilities of the relevant build/release environment.
+Mobile/desktop signing credentials, store tokens, certificates, and release secrets must never be committed. Use secure release-environment facilities.

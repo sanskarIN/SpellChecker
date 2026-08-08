@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Describe the writing problem first, then the proposed behavior.
+        Describe the writing problem first, then the proposed behavior. Do not include private documents, sensitive personal vocabulary, or real user text.
   - type: textarea
     id: problem
     attributes:
@@ -19,7 +19,7 @@ body:
     id: solution
     attributes:
       label: Proposed behavior
-      description: Describe what SpellChecker should do.
+      description: Describe what SpellChecker should do, including keyboard/accessibility behavior when relevant.
     validations:
       required: true
   - type: textarea
@@ -32,19 +32,27 @@ body:
       label: Area
       options:
         - Spell-checking engine
-        - Dictionary
-        - Suggestions
-        - Editor UI
-        - Accessibility
+        - Dictionary or language packs
+        - Suggestions or ranking
+        - Text correction / replace all
+        - Editor highlighting
+        - Keyboard navigation / shortcuts
+        - Undo / document workflow
+        - Persistence / import-export
+        - Accessibility / semantics
         - Documentation
-        - Build/release
+        - Build / release
         - Other
     validations:
       required: true
   - type: checkboxes
-    id: privacy
+    id: considerations
     attributes:
-      label: Privacy impact
+      label: Design considerations
       options:
-        - label: This proposal does not require transmitting user text to a remote service.
+        - label: This proposal can preserve local-first spelling behavior without transmitting editor text to a remote service.
+          required: false
+        - label: I described any new persisted data, network access, permissions, analytics, synchronization, or account requirement.
+          required: false
+        - label: I considered keyboard-only and screen-reader access for new editor controls.
           required: false

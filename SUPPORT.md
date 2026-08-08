@@ -17,29 +17,47 @@ Use the repository **Bug report** issue template. Include:
 
 - SpellChecker version or commit.
 - Flutter/Dart version when developing locally.
-- Platform/browser and, for persistence problems, whether private/incognito mode is involved.
+- Platform/browser.
 - Reproduction steps.
 - Expected behavior.
 - Actual behavior.
-- Minimal synthetic sample text that contains no private information.
+- Minimal synthetic sample text containing no private information.
 
-For personal-dictionary problems, also state whether the problem involves:
+For V1.2 editor problems, state whether the issue involves:
+
+- Inline underlines/highlights.
+- Active issue selection.
+- `F7` / `Shift+F7` navigation.
+- `Ctrl+Enter` / `Command+Enter` checking.
+- Previous/next issue buttons.
+- Single replacement.
+- **Replace all…**.
+- Snackbar **Undo** or **Undo correction**.
+- Blank/clean result state.
+- Local storage warning.
+- Narrow/scrollable issue layout.
+- Screen-reader/keyboard accessibility.
+
+For personal-dictionary problems, state whether it involves:
 
 - **Save word**.
 - **Ignore once**.
-- Import.
-- Copy export.
+- Import/export.
 - Removing/clearing saved words.
 - Restoring words after restart/reload.
 - Suggestion-count persistence.
 
-Do not attach a real personal dictionary export if its vocabulary is sensitive. Create a small synthetic export that reproduces the problem.
+If a shortcut is affected, include the exact key combination and whether the visible equivalent control works. Browser/OS key handling can differ.
+
+If replace-all/undo is affected, use repeated synthetic words and describe the capitalization pattern and expected replacement count.
+
+Do not attach a real personal dictionary export or private document if it contains sensitive vocabulary/content. Create a small synthetic reproducer.
 
 ## Feature requests
 
-Use the **Feature request** template. Explain the writing problem being solved, the expected behavior, and why it belongs in SpellChecker.
+Use the **Feature request** template. Explain the writing problem, expected behavior, and why it belongs in SpellChecker.
 
-For features involving storage, synchronization, accounts, cloud services, analytics, or editor-text persistence, describe the privacy/security expectations as part of the request.
+For storage, synchronization, accounts, cloud services, analytics, editor-text persistence, persistent undo/document history, language packs, or keyboard telemetry, include privacy/security expectations.
 
 ## Security reports
 
@@ -47,10 +65,23 @@ Do not use normal issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).
 
 ## Privacy-sensitive examples
 
-Never post private documents, account information, secrets, personal messages, or sensitive personal vocabulary as spelling test samples. Replace sensitive content with a minimal synthetic example.
+Never post private documents, account information, secrets, personal messages, sensitive personal vocabulary, or correction-history content as test samples. Replace sensitive content with a minimal synthetic example.
 
 ## Personal dictionary recovery
 
-SpellChecker V1.1 stores saved personal words locally and does not provide cloud synchronization. Before clearing application/browser data, use **Copy export** if you need a portable backup of personal vocabulary.
+Saved personal words are local and are not cloud-synchronized. Before clearing application/browser data, use **Copy export** if you need a portable backup.
 
-If saved words disappear unexpectedly, follow the persistence checks in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) before opening an issue.
+If saved words disappear unexpectedly, follow [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+
+## Correction undo expectations
+
+V1.2 correction undo is intentionally session-only and spelling-specific. Manual text editing clears the correction stack, and application restart does not restore it.
+
+If you report an undo problem, distinguish between:
+
+- Undo immediately after a spelling correction.
+- Undo after replace-all.
+- Undo after subsequent manual typing.
+- Undo after document clear or restart.
+
+The last two cases intentionally do not preserve the earlier spelling-correction history.

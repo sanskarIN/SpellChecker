@@ -4,23 +4,22 @@ Thank you for helping improve SpellChecker. This guide defines the contribution 
 
 ## Code of Conduct
 
-Participation in the project is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Before starting
 
 1. Search existing issues and pull requests for related work.
-2. For large features, architecture changes, persistence-format changes, or public API changes, open an issue before implementation.
+2. For large features, architecture changes, persistence-format changes, public API changes, keyboard-contract changes, or language architecture changes, open an issue before implementation.
 3. Keep each pull request focused on one logical change.
-4. Do not include credentials, private keys, personal data, real user documents, or generated build outputs.
-5. Preserve the privacy-first local behavior unless a separately reviewed change explicitly requires otherwise.
+4. Do not include credentials, private keys, personal data, real user documents, sensitive dictionary exports, or generated build outputs.
+5. Preserve privacy-first local behavior unless a separately reviewed change explicitly requires otherwise.
+6. Preserve keyboard/accessibility behavior when changing the editor.
 
 ## Development requirements
 
 - Flutter stable
 - Dart SDK compatible with `pubspec.yaml` (currently `>=3.8.0 <4.0.0`)
 - Git
-
-Verify your environment:
 
 ```bash
 flutter doctor
@@ -39,18 +38,18 @@ flutter test --reporter expanded
 flutter run -d chrome
 ```
 
-For a complete local setup and directory explanation, read [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the complete setup and architecture-specific guidance.
 
 ## Branch naming
 
-Use short descriptive branch names:
+Use short descriptive names:
 
 ```text
-feature/editor-highlighting
 feature/language-pack-loader
-fix/apostrophe-tokenization
+feature/editor-shortcut-settings
+fix/stale-highlight-range
 docs/update-user-guide
-refactor/suggestion-ranking
+refactor/correction-history
 ```
 
 ## Commit messages
@@ -58,53 +57,99 @@ refactor/suggestion-ranking
 Prefer imperative, descriptive commit messages. Conventional Commit prefixes are encouraged:
 
 ```text
-feat: add persistent personal dictionary
-fix: preserve cursor after replacement
-test: cover transposed spelling suggestions
-docs: document release workflow
+feat: add language pack abstraction
+fix: skip stale inline issue ranges
+test: cover replace-all undo behavior
+docs: document keyboard navigation
 chore: update CI configuration
 ```
 
-## Code style
-
-Format before committing:
+## Code style and required checks
 
 ```bash
 dart format lib test
-```
-
-Then run:
-
-```bash
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --reporter expanded
 ```
 
-### Dart and Flutter guidance
+Fix analyzer/test failures in source or tests. Do not broadly suppress checks for convenience.
 
-- Prefer immutable values and `const` constructors where practical.
-- Keep spelling logic independent of widgets.
-- Keep persistence adapters outside the core spelling engine.
-- Keep UI state local unless cross-feature state requires a dedicated abstraction.
-- Avoid adding a package when a small standard-library implementation is sufficient.
-- Document public APIs and behavior changes.
-- Treat editor text and personal vocabulary as private user data.
-- Do not add telemetry or network transmission without an explicit design discussion and privacy-documentation update.
-- Fix analyzer findings in source/tests rather than broadly suppressing lints for convenience.
+## Architecture rules
+
+### Spelling logic
+
+Keep tokenization, dictionary checks, suggestion ranking, and normalization independent from Flutter widgets.
+
+### Text correction
+
+Single/replace-all mutation belongs in `TextCorrection` or another reusable core abstraction, not duplicated inside widgets.
+
+Correction code must:
+
+- Validate checked source ranges against current text.
+- Refuse stale ranges safely.
+- Apply replace-all ranges from the document end toward the beginning.
+- Preserve case per occurrence.
+- Return deterministic mutation metadata.
+
+### Inline highlighting
+
+`SpellCheckEditingController` owns inline styling. Do not move dictionary/ranking logic into the controller.
+
+Checked highlight ranges must be validated against current text and cleared when manual edits invalidate the check.
+
+### Undo behavior
+
+The current V1.2 correction stack is application-level, bounded, and memory-only.
+
+- Single correction = one undo entry.
+- Replace-all = one undo entry.
+- Manual editing clears spelling-specific correction history.
+- Do not persist editor/correction snapshots without explicit privacy review.
+
+### Active issue state
+
+Changes to active issue behavior must keep editor selection, inline style, Results selected state, navigation controls, and Results auto-scroll coherent.
+
+### Persistence
+
+Keep persistence adapters outside the core spelling/correction engine. Current persisted state is limited to personal words and suggestion-count preference.
+
+## Keyboard and accessibility contracts
+
+V1.2 defines:
+
+- `F7`: next issue.
+- `Shift+F7`: previous issue.
+- `Ctrl+Enter`: spelling check.
+- `Command+Enter`: spelling check.
+
+When changing editor controls:
+
+- Preserve keyboard-only access.
+- Avoid focus traps.
+- Keep visible alternatives for shortcuts.
+- Keep issue meaning available through text/semantics, not color/underline alone.
+- Give icon-only actions meaningful tooltips/labels.
+- Update [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) and tests for behavior changes.
 
 ## Tests
 
-Behavior changes should include tests. At minimum:
+Behavior changes should include tests at the correct layer:
 
-- Core spelling changes: unit tests.
-- Edit-distance/ranking changes: focused algorithm tests.
-- Personal-dictionary codec changes: import/export compatibility tests.
-- Persistence changes: mocked preference tests.
-- User workflow changes: widget tests when practical.
-- Bug fixes: regression test reproducing the previous failure.
+- Core spelling changes → `spell_checker_test.dart`.
+- Edit distance/ranking → focused algorithm tests.
+- Corrections/replace-all/case → `text_correction_test.dart`.
+- Inline highlight controller → `spell_check_editing_controller_test.dart`.
+- Personal dictionary codec → import/export compatibility tests.
+- Persistence → mocked preference tests.
+- User/keyboard/undo/empty-state workflow → widget tests.
+- Bug fixes → regression test reproducing the previous failure.
 
-Persistence/widget tests must use isolated test preferences such as `SharedPreferences.setMockInitialValues` rather than real machine data.
+Persistence/widget tests must use isolated mock preferences rather than real machine data.
+
+For scrollable V1.2 issue actions, use `tester.ensureVisible` before tapping when the control is outside Flutter test's default viewport. Do not distort production layout to satisfy a viewport assumption.
 
 See [docs/TESTING.md](docs/TESTING.md).
 
@@ -113,79 +158,77 @@ See [docs/TESTING.md](docs/TESTING.md).
 A pull request should:
 
 - Explain the problem and solution.
-- Describe user-visible changes.
+- Describe user-visible behavior.
 - Link relevant issues.
-- Include tests for behavior changes.
-- Pass formatting, analysis, and test checks.
-- Update docs and changelog when appropriate.
+- Include appropriate tests.
+- Pass formatting, analysis, and tests.
+- Update documentation/changelog when needed.
 - Avoid unrelated refactoring.
-- Call out storage/privacy/migration implications when relevant.
+- Call out persistence/privacy/migration implications.
+- Call out keyboard/accessibility changes.
+- State whether public API behavior changed.
 
-Use the repository pull request template and complete every relevant section.
+Use the repository PR template.
 
-## Documentation changes
+## Documentation matrix
 
 Update documentation when changing:
 
 - Public APIs → `docs/API.md`
 - Internal architecture → `docs/ARCHITECTURE.md`
-- Setup/dependencies/storage → `docs/DEVELOPMENT.md`
-- User workflow → `docs/USER_GUIDE.md`
-- Privacy behavior → `docs/PRIVACY.md`
-- Accessibility behavior → `docs/ACCESSIBILITY.md`
+- Setup/dependencies/storage/editor internals → `docs/DEVELOPMENT.md`
+- User workflow/shortcuts → `docs/USER_GUIDE.md`
+- Privacy/state retention → `docs/PRIVACY.md`
+- Accessibility/keyboard behavior → `docs/ACCESSIBILITY.md`
 - Test strategy → `docs/TESTING.md`
-- Troubleshooting behavior → `docs/TROUBLESHOOTING.md`
-- Release behavior → `docs/RELEASING.md`
+- Failure/recovery behavior → `docs/TROUBLESHOOTING.md`
+- Release/smoke checks → `docs/RELEASING.md`
 - Planned/completed scope → `docs/ROADMAP.md`
 - Released behavior → `CHANGELOG.md`
+- Repository overview/current version → `README.md`
 
 ## Dictionary contributions
-
-Dictionary changes must be reviewed carefully because false positives and false negatives directly affect user experience.
-
-When adding bundled words:
 
 - Use lowercase normalized entries.
 - Avoid obvious misspellings.
 - Prefer broadly useful words over highly personal vocabulary.
-- Add tests when an entry fixes a known issue.
-- Keep apostrophes normalized to the straight apostrophe form in dictionary data.
-- Check both base and extension data to avoid accidental duplicate maintenance.
+- Add regression tests for reported bugs.
+- Use straight apostrophes in directly stored data.
+- Check both base and extension dictionary data for duplicates.
 
-When changing approximate frequency ranks:
+For frequency ranks:
 
 - Lower rank means stronger preference.
-- Add a deterministic ranking test when ordering is important.
-- Do not claim the compact rank table is a comprehensive linguistic frequency corpus.
+- Add deterministic ranking tests when ordering matters.
+- Do not present the compact rank table as a comprehensive linguistic corpus.
 
 ## Personal dictionary format contributions
 
-`PersonalDictionaryCodec` defines a user-transfer format, so changes require extra care.
+`PersonalDictionaryCodec` defines a user-transfer format:
 
 - Keep exports versioned.
-- Preserve readability of existing version-1 data unless a documented migration strategy says otherwise.
-- Never silently reinterpret an unsupported version.
-- Keep output deterministic (normalized, deduplicated, sorted).
+- Preserve existing version-1 readability unless a documented migration changes it.
+- Reject unsupported versions explicitly.
+- Keep output normalized, deduplicated, and sorted.
 - Reject malformed entries rather than silently storing ambiguous data.
-- Update `docs/API.md`, `docs/USER_GUIDE.md`, `docs/PRIVACY.md`, and `CHANGELOG.md` for format changes.
+- Update API/user/privacy/changelog docs for format changes.
 
 ## Persistence contributions
 
-`DictionaryPreferences` currently stores personal words and the suggestion-count preference via `shared_preferences`.
-
-When modifying persistence:
+When modifying `DictionaryPreferences`:
 
 - Add mocked persistence tests.
-- Keep editor text unpersisted unless a separately reviewed feature explicitly changes that design.
-- Use versioned keys or documented migrations when data meaning changes.
-- Avoid writing success UI before the storage operation succeeds.
-- Preserve rollback/no-false-success behavior for user-visible saves.
+- Keep editor text/check results/active issue/correction history unpersisted unless an explicitly reviewed feature changes that design.
+- Use versioned keys/documented migrations when data meaning changes.
+- Do not display persistence success before writes complete.
+- Preserve rollback/no-false-success behavior.
+- Preserve session spelling when storage is unavailable.
 
 ## Security and privacy
 
-For security-sensitive issues, follow [SECURITY.md](SECURITY.md) instead of opening a normal public issue with exploit details.
+Use [SECURITY.md](SECURITY.md) for security-sensitive reports instead of public exploit details.
 
-Any proposed synchronization, account system, cloud spelling/grammar API, analytics, remote logging, crash reporting, or editor-text persistence requires explicit privacy and security review before implementation.
+Synchronization, accounts, cloud spelling/grammar, analytics, remote logging, crash reporting, editor-text persistence, persistent correction history, or keyboard telemetry require explicit privacy/security review before implementation.
 
 ## License
 

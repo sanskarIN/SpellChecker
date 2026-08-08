@@ -7,12 +7,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug. Do not include private documents, credentials, sensitive personal dictionary exports, or security exploit details here. Use synthetic sample text and vocabulary.
+        Thanks for reporting a bug. Do not include private documents, credentials, sensitive dictionary exports, correction-history content, or security exploit details here. Use synthetic sample text and vocabulary.
   - type: input
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v1.1.0 or commit SHA
+      placeholder: v1.2.0 or commit SHA
     validations:
       required: true
   - type: input
@@ -36,13 +36,18 @@ body:
       label: Affected area
       options:
         - Spell checking or suggestions
-        - Replacement/editor workflow
+        - Inline issue highlighting
+        - Issue navigation or keyboard shortcuts
+        - Single replacement
+        - Replace all
+        - Correction undo
         - Personal dictionary persistence
         - Import/export
         - Ignore-once/session behavior
         - Suggestion-count preference
         - Statistics
-        - Layout/accessibility
+        - Layout/accessibility/semantics
+        - Local storage warning
         - Build/CI/development tooling
         - Other
     validations:
@@ -61,7 +66,7 @@ body:
       placeholder: |
         1. Open SpellChecker
         2. Enter synthetic text ...
-        3. Choose Check spelling / Save word / Import ...
+        3. Check spelling / press F7 / choose Replace all / Undo ...
         4. Observe ...
     validations:
       required: true
@@ -72,10 +77,15 @@ body:
     validations:
       required: true
   - type: textarea
+    id: editor_context
+    attributes:
+      label: Editor and keyboard context
+      description: If relevant, include the exact shortcut/control, issue count/position, whether the visible equivalent control works, whether text changed after checking, and whether the problem occurred before or after Undo. Use synthetic text only.
+  - type: textarea
     id: persistence
     attributes:
       label: Persistence/import context
-      description: If relevant, say whether this involves Save word, Ignore once, restart/reload, private/incognito mode, import format, export, or suggestion-count restoration. Do not paste sensitive vocabulary.
+      description: If relevant, say whether this involves Save word, Ignore once, restart/reload, private/incognito mode, import format, export, suggestion-count restoration, or the local storage warning. Do not paste sensitive vocabulary.
   - type: textarea
     id: additional
     attributes:
@@ -90,5 +100,5 @@ body:
           required: true
         - label: I used synthetic data and removed private or sensitive information from the report.
           required: true
-        - label: I did not include a sensitive personal dictionary export.
+        - label: I did not include a sensitive personal dictionary export or private correction/document content.
           required: true
