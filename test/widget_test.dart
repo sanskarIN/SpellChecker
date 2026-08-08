@@ -72,7 +72,10 @@ void main() {
     expect(find.text('2 occurrences'), findsWidgets);
     expect(find.text('Replace all…'), findsWidgets);
 
-    await tester.tap(find.text('Replace all…').first);
+    final replaceAll = find.text('Replace all…').first;
+    await tester.ensureVisible(replaceAll);
+    await tester.pumpAndSettle();
+    await tester.tap(replaceAll);
     await tester.pumpAndSettle();
 
     final replacementItems = find.byType(PopupMenuItem<String>);
@@ -101,8 +104,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Zorbax'), findsNWidgets(2));
-    expect(find.text('Save word'), findsOneWidget);
-    await tester.tap(find.text('Save word'));
+    final saveWord = find.text('Save word');
+    expect(saveWord, findsOneWidget);
+    await tester.ensureVisible(saveWord);
+    await tester.pumpAndSettle();
+    await tester.tap(saveWord);
     await tester.pumpAndSettle();
 
     expect(find.text('No issues found'), findsOneWidget);
