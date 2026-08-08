@@ -310,7 +310,7 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
                         shrinkWrap: true,
                         primary: false,
                         itemCount: sortedWords.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (BuildContext context, int index) {
                           final word = sortedWords[index];
                           return ListTile(
