@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/spell_language_pack.dart';
 import '../../writing/writing_analyzer.dart';
 import '../../writing/writing_issue.dart';
+import '../../writing/writing_review_preset.dart';
 import '../../writing/writing_review_query.dart';
 import '../../writing/writing_rule.dart';
 import '../../writing/writing_rule_category.dart';
@@ -85,6 +86,21 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
     });
   }
 
+  bool _matchesPreset(WritingReviewPreset preset) {
+    return _automaticFixesOnly == preset.automaticFixesOnly &&
+        _categories.length == preset.categories.length &&
+        _categories.containsAll(preset.categories);
+  }
+
+  void _applyPreset(WritingReviewPreset preset) {
+    setState(() {
+      _categories
+        ..clear()
+        ..addAll(preset.categories);
+      _automaticFixesOnly = preset.automaticFixesOnly;
+    });
+  }
+
   void _toggleCategory(WritingRuleCategory category, bool selected) {
     setState(() {
       if (selected) {
@@ -156,7 +172,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Writing rules run on the current editor text in memory. Rule choices are stored locally for the selected language; review filters are temporary.',
+                'Writing rules run on the current editor text in memory. Rule choices are stored locally for the selected language; review presets, search, and filters are temporary.',
               ),
               const SizedBox(height: 16),
               TextField(
@@ -177,6 +193,25 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                           icon: const Icon(Icons.clear),
                         ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Review preset',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  for (final preset in WritingReviewPreset.values)
+                    ChoiceChip(
+                      key: ValueKey<String>('writing-preset-${preset.id}'),
+                      label: Text(preset.displayName),
+                      selected: _matchesPreset(preset),
+                      onSelected: (_) => _applyPreset(preset),
+                    ),
+                ],
               ),
               const SizedBox(height: 10),
               Wrap(
