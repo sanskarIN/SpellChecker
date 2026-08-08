@@ -1,5 +1,3 @@
-library spellchecker;
-
 export 'core/edit_distance.dart';
 export 'core/personal_dictionary_codec.dart';
 export 'core/spell_checker_engine.dart';
