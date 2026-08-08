@@ -1,0 +1,66 @@
+name: V2.3 Docs Gate
+
+on:
+  pull_request:
+    branches: [v2.3-docs-gate-base]
+
+permissions:
+  contents: write
+
+jobs:
+  materialize-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out recovery branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.3-release-recovery
+          fetch-depth: 0
+
+      - name: Repair strict Writing Rules test-list marker
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/v23_docs_apply.py')
+          text = path.read_text()
+          old = "'test/writing_review_query_test.dart\\ntest/writing_rules_test.dart'"
+          new = "'test/writing_rules_test.dart'"
+          replacement = "'test/writing_review_preset_test.dart\\ntest/writing_review_query_test.dart\\ntest/writing_rules_test.dart'"
+          if text.count(old) != 1 or text.count(replacement) != 1:
+              raise SystemExit('Unexpected V2.3 docs helper marker shape')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Apply V2.3 documentation transform
+        run: python tools/v23_docs_apply.py
+
+      - name: Remove one-time docs helper
+        run: rm -f tools/v23_docs_apply.py
+
+      - name: Assert release documentation markers
+        shell: bash
+        run: |
+          grep -q '`2.3.0+8`' README.md
+          grep -q '## \[2.3.0\] - 2026-08-08' CHANGELOG.md
+          grep -q '## 2.3 — Review presets and preference portability' docs/ROADMAP.md
+          grep -q '# V2.3 review preset and portable-settings APIs' docs/API.md
+          grep -q '# V2.3 review presets and preference portability' docs/ARCHITECTURE.md
+          grep -q '## Review presets and Portable settings — V2.3' docs/PRIVACY.md
+          grep -q '# Portable settings — V2.3' docs/USER_GUIDE.md
+          grep -q '## V2.3 focused coverage' docs/TESTING.md
+          test ! -e tools/v23_docs_apply.py
+
+      - name: Commit materialized documentation
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No documentation changes to commit.'
+          else
+            git commit -m 'Document V2.3 review presets and portability'
+            git push origin HEAD:v2.3-release-recovery
+          fi
