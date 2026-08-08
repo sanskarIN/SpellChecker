@@ -2,178 +2,290 @@
 
 ## Summary
 
-SpellChecker version 1.2 performs spelling analysis locally and stores only a small set of user-controlled preferences on the local device/profile.
+SpellChecker 2.1 performs spelling and optional deterministic writing-rule analysis locally. It stores a deliberately small set of user-controlled settings on the local device/profile and does not persist editor documents or writing-analysis findings.
 
-V1.2 adds inline highlighting, active issue navigation, replace-all, keyboard shortcuts, and spelling-correction undo. None of those features add cloud processing, analytics, authentication, advertising, telemetry, or new persistent document storage.
+V2.1 newly persists only **writing-rule identifiers**, namespaced by selected language. It does not persist the text that produced a finding, the finding message, source excerpts, or batch correction plans.
 
-## Language selection and per-language vocabulary
+## Runtime text processing
 
-V1.3 stores the selected built-in language ID locally and namespaces personal vocabulary by language. It does not send language selection, editor text, or personal vocabulary to a server.
+Editor text remains in application memory while the app is running.
 
-Switching language creates new in-memory pack/session state so temporary ignored words and suggestion caches do not leak to another pack.
-
-The only migration reads SpellChecker's existing local V1 personal-word key and treats it as `en-US`; no external data is fetched.
-
-V1.3 adds no automatic language detection or keyboard/text telemetry.
-
-## Local writing-rule analysis
-
-V2.0 Writing insights receives the current document text only in application memory when the user explicitly opens the dialog. Built-in rules perform deterministic local analysis and do not transmit, log, persist, or synchronize document text/findings.
-
-Writing-rule enablement is session-only. Writing fixes reuse the existing memory-only correction history, which can temporarily contain editor snapshots and is discarded according to the existing correction-history policy.
-
-No cloud grammar/AI service, analytics, remote logging, telemetry, or account system was introduced.
-
-## User text
-
-SpellChecker does not include code that sends editor text to:
+SpellChecker does not include application code that sends editor text to:
 
 - A remote spelling API.
+- A remote grammar API.
+- An AI rewriting service.
 - An analytics service.
 - An advertising service.
 - An account system.
-- A telemetry or remote-logging pipeline.
-- A cloud correction or rewriting service.
+- A telemetry service.
+- A remote logging pipeline.
 
-Editor text remains in the running application memory. SpellChecker does not persist editor documents.
+Hosting platforms, browsers, operating systems, Flutter tooling, and user-installed software can have behavior outside this repository; that behavior is not part of SpellChecker's application code.
 
-Hosting platforms, browsers, operating systems, development tools, or user-installed software can have behavior outside this repository; that behavior is not part of SpellChecker's application code.
+## Spelling analysis data
 
-## Checked issue data
+A spelling check creates in-memory `SpellIssue` values containing source word, offsets, language identity where available, and ranked suggestions.
 
-A spelling check creates an in-memory `List<SpellIssue>` containing:
+The active spelling issue index and inline highlight state are also memory-only.
 
-- The source word.
-- Start/end character offsets.
-- Ranked suggestions.
+Manual editing invalidates old source offsets and clears stale spelling/highlight state.
 
-V1.2 also keeps an in-memory active issue index so the editor and Results panel can stay synchronized.
+SpellChecker does not write spelling issue lists, highlight spans, active issue positions, or suggestion caches to local preferences.
 
-Checked issue data is not written to preferences, files, or a remote service by SpellChecker. Manual editing clears the previous checked issue/highlight state because offsets belong to a specific text snapshot.
+## Writing insights data
 
-## Correction undo snapshots
+Writing insights receives the current editor text in memory when the user explicitly opens the workflow or uses its keyboard shortcut.
 
-V1.2 keeps a bounded in-memory spelling-correction undo stack. Each entry is a `TextEditingValue` representing the editor state immediately before a spelling correction.
+The local `WritingAnalyzer` can create in-memory findings containing:
 
-Because an undo snapshot can contain editor text, the following privacy requirements apply:
+- Rule ID/name.
+- Human-readable message.
+- Source range.
+- Exact original source text for that finding.
+- Optional deterministic replacement.
+- Language ID.
+- Severity.
 
-- Correction snapshots remain memory-only.
-- They are not written to `shared_preferences`.
-- They are not included in dictionary exports.
-- They are not sent over a network.
-- They are discarded when the application process/session ends.
-- Manual text input clears the spelling-specific correction stack, beginning a new correction history.
-- The editor's **Clear** action clears the current document/correction history.
+These findings are not persisted by SpellChecker.
 
-A future feature that persists document/correction history would require an explicit privacy redesign and documentation update before release.
+The application does not store:
+
+- Writing finding lists.
+- Finding source excerpts.
+- Rule messages tied to a document.
+- Batch correction candidate plans.
+- Per-document writing-analysis history.
+
+## Writing-rule preferences — V2.1
+
+V2.1 stores enabled writing-rule **IDs** per language through `shared_preferences`.
+
+Current key shape:
+
+```text
+spellchecker.writing_rule_ids.v1.<language-id>
+```
+
+Examples:
+
+```text
+spellchecker.writing_rule_ids.v1.en-US
+spellchecker.writing_rule_ids.v1.en-GB
+```
+
+Stored values are rule identifiers such as:
+
+```text
+repeated-space
+sentence-capitalization
+```
+
+They do not contain editor text or finding excerpts.
+
+### Unset versus explicit empty
+
+The application distinguishes:
+
+```text
+missing key       -> user has never configured this language -> registry defaults
+stored ID list    -> explicit enabled rules
+stored empty list -> explicit disable-all
+```
+
+This preference meaning is local application state only.
+
+### Persistence failure
+
+If a rule switch cannot be saved, the current in-memory choice remains active for that session and the application reports that local persistence is unavailable.
+
+SpellChecker does not send the preference or editor text to a remote fallback.
+
+## Language selection and vocabulary
+
+The selected built-in language ID is stored locally.
+
+Personal vocabulary is namespaced by language. Switching language creates new in-memory language-specific engine/session state so temporary ignored words and suggestion caches do not leak between packs.
+
+Legacy V1 personal words are read only from SpellChecker's existing local key and interpreted/migrated into the default `en-US` namespace. No external data is fetched for migration.
+
+SpellChecker does not perform automatic language detection or language/keyboard telemetry.
 
 ## Personal dictionary
 
-Words saved through **Save word** or the personal-dictionary manager are persisted through Flutter `shared_preferences`.
+Words saved through **Save word** or the personal dictionary manager are stored locally through Flutter `shared_preferences`.
 
-Stored values are normalized personal vocabulary only. The application does not store the surrounding sentence/document that caused a word to be saved.
+Stored personal values contain normalized vocabulary only, not the surrounding sentence/document that caused a save.
 
-The exact backing mechanism is selected by the `shared_preferences` plugin for each platform/profile. For example, a browser build uses browser-local application storage rather than a SpellChecker cloud service.
+The platform-specific `shared_preferences` implementation chooses the backing local mechanism. A browser build uses browser/profile-local application storage rather than a SpellChecker cloud service.
 
-## Suggestion-count preference
+## Suggestion count
 
-The selected 1–10 suggestion count is stored through `shared_preferences` so the setting survives normal application restarts.
+The selected 1–10 suggestion count is stored locally so it survives normal application restarts.
 
 ## Ignored words
 
-Ignored words are intentionally session-only. They remain in the active `SpellCheckerEngine` instance and are not written to persistent preferences.
+Ignored words are intentionally session-only in the active spelling engine and are not written to preferences.
+
+Changing language constructs a fresh engine/session, so ignored words do not silently cross language packs.
+
+## Correction undo snapshots
+
+SpellChecker keeps a bounded in-memory correction history. A `TextEditingValue` snapshot can contain the full editor document immediately before an automatic correction.
+
+V2.1 uses the same history for:
+
+- Single spelling replacement.
+- Spelling replace-all.
+- Individual writing safe fix.
+- Writing batch safe fix.
+
+Privacy requirements:
+
+- Snapshots remain memory-only.
+- They are not stored in `shared_preferences`.
+- They are not included in personal dictionary exports.
+- They are not sent over a network by SpellChecker.
+- They disappear when the application session ends.
+- Manual user editing clears the programmatic correction stack.
+- Clearing the editor clears the current correction stack.
+
+A future persistent document/correction history feature requires a separate privacy design and documentation update before release.
+
+## Batch writing correction
+
+`WritingCorrection.applyAll` receives current in-memory text plus current in-memory findings.
+
+It validates/skips stale/advisory/overlapping findings and returns a final text value. SpellChecker does not persist the batch candidate set or skipped-finding details as a document history.
+
+The pre-batch editor snapshot enters the same memory-only correction stack so the whole batch can be undone once.
 
 ## Inline highlights
 
-Inline issue underlines are generated from the current checked issue list by the in-memory editing controller. SpellChecker does not save screenshots, styled text, highlight ranges, or rendered spans.
-
-The active issue receives additional visual styling and editor selection, but those values are transient UI state.
+Inline spelling underlines and active styling are generated from current in-memory issue state. SpellChecker does not save screenshots, rendered spans, or highlight ranges.
 
 ## Keyboard shortcuts
 
-V1.2 listens for local keyboard events such as:
+Current local shortcuts include:
 
-- `Ctrl+Enter` / `Command+Enter` for checking.
-- `F7` / `Shift+F7` for issue navigation.
+```text
+Ctrl/Command+Enter        spelling check
+Ctrl/Command+Shift+Enter  Writing insights
+F7                        next spelling issue
+Shift+F7                  previous spelling issue
+```
 
-SpellChecker does not record keyboard telemetry or maintain a keystroke log. The editor necessarily receives user text through Flutter's normal text-input system while the application is running.
+SpellChecker does not maintain a keystroke log or keyboard telemetry.
 
-## Import and export
+The editor necessarily receives ordinary text-input events through Flutter while the application is running.
 
-Dictionary import/export is user initiated.
+## Import/export
 
-- Import reads text pasted by the user into the application.
-- Export writes the personal-dictionary JSON document to the local clipboard.
+Personal dictionary transfer is explicitly user-triggered.
+
+- Import reads text pasted/provided by the user into the application.
+- Export writes a language-aware personal dictionary document to the local clipboard.
 - SpellChecker does not upload imported/exported dictionary data.
 
-Clipboard contents can be read/managed by the host platform according to platform permissions and policies. SpellChecker writes the export only when the user selects **Copy export**.
+Clipboard contents are subject to host platform/browser policies. SpellChecker writes the export only when the user chooses **Copy export**.
 
-## Stored preference keys
+Current version-2 exports include language identity plus normalized personal vocabulary, not editor content.
 
-The application uses versioned local keys for:
+## Persisted settings inventory
 
-- Personal words.
+V2.1 application preferences are limited to:
+
+- Selected language ID.
+- Personal words per language.
 - Suggestion-count preference.
+- Enabled writing-rule IDs per language.
 
-Versioned keys allow future migrations to be explicit rather than silently changing existing-data meaning.
+Example versioned keys:
 
-V1.2 does not add a new preference key for editor text, issues, active issue state, shortcuts, or correction history.
+```text
+spellchecker.language_id.v1
+spellchecker.personal_words.v2.en-US
+spellchecker.personal_words.v2.en-GB
+spellchecker.suggestion_limit.v1
+spellchecker.writing_rule_ids.v1.en-US
+spellchecker.writing_rule_ids.v1.en-GB
+```
 
-## Analytics and telemetry
+The legacy personal-word key remains only for backward-compatible US migration/mirroring behavior.
 
-Version 1.2 contains no analytics SDK, advertising SDK, telemetry SDK, crash-reporting SDK, or remote logging dependency.
+## Explicitly non-persisted state
 
-## Network access
+SpellChecker does not persist:
 
-The runtime spelling/correction engine does not require network access.
+- Editor documents.
+- Spelling issue lists.
+- Writing finding lists.
+- Finding messages/source excerpts.
+- Active issue index.
+- Ignored words.
+- Inline rendered highlight spans.
+- Suggestion caches.
+- Correction undo snapshots.
+- Batch correction plans.
 
-Development/build tooling can access package repositories while resolving dependencies. GitHub Actions downloads Flutter/package dependencies while validating the repository. Those build/development activities are separate from runtime spelling analysis.
+## Analytics/telemetry/network
+
+SpellChecker 2.1 contains no analytics SDK, advertising SDK, telemetry SDK, account/authentication dependency, cloud spelling/grammar dependency, AI rewriting service, or remote document logging pipeline.
+
+Runtime spelling and writing analysis does not require network access.
+
+Development/build tooling can access package repositories, GitHub, and Flutter distribution infrastructure when dependencies/toolchains are resolved. Those build activities are separate from runtime document analysis.
 
 ## Dependency note
 
-`shared_preferences` remains the only non-SDK runtime dependency and is used solely for local preference persistence. V1.2 adds no new runtime dependency.
+`shared_preferences` remains the only non-SDK runtime package dependency and is used for application-local settings.
+
+V2.1 adds no new runtime dependency.
 
 ## Data deletion
 
-Users can remove saved personal vocabulary through the personal-dictionary manager:
+Users can remove personal vocabulary through the personal dictionary manager.
 
-- Remove individual words.
-- Select **Clear all** to delete the saved personal-word list.
+Writing-rule preferences can be changed by toggling rule switches. Turning all switches off stores an explicit empty set for that language; re-enabling switches updates the stored set.
 
 Ignored words disappear when cleared or when the application session ends.
 
-The editor's **Clear** action removes:
+The editor's **Clear** action removes current editor text, current analysis/highlight state, and correction history. It does not delete persistent settings such as language, vocabulary, suggestion count, or writing-rule IDs.
 
-- Current visible editor text.
-- Current checked issue/highlight state.
-- Current spelling-correction undo stack.
+Removing browser/app/profile data according to the host platform's controls can remove all locally stored SpellChecker preferences.
 
-It does not modify saved personal dictionary preferences or the suggestion-count preference.
+## Storage failure
 
-## Storage failures
+When local preference storage is unavailable:
 
-If local preference storage cannot load or write, SpellChecker surfaces a warning and continues session spelling where possible.
+- SpellChecker reports a visible/semantic warning.
+- Session spelling remains available.
+- Writing analysis remains available.
+- Current in-memory writing-rule switch choices can remain active.
+- Durable preference changes may fail.
+- No remote fallback service is contacted.
 
-A storage failure does not cause editor text to be sent to a remote fallback service; there is no remote fallback spelling/persistence service in V1.2.
+## Security-sensitive future features
 
-## Future privacy-sensitive features
+These require explicit privacy/security design review and documentation updates before release:
 
-These require explicit design/privacy review and an update to this document before release:
-
-- Cloud spelling or grammar APIs.
-- Cloud AI rewriting.
+- Cloud spelling/grammar APIs.
+- AI rewriting/model inference.
 - Cross-device synchronization.
 - Accounts.
-- Analytics.
-- Crash reporting.
-- Remote configuration.
-- Any persistence of editor documents.
-- Persistent general document history or correction undo history.
-- Automatic upload of personal dictionaries.
+- Analytics/telemetry.
+- Crash reporting that may capture editor state.
+- Remote configuration affecting analysis behavior.
+- Editor document persistence.
+- Persistent general document/correction history.
+- Automatic dictionary/rule download.
 - Keyboard/usage telemetry.
+- Dynamic external rule/plugin loading.
 
-Any optional network feature must be clearly user-controlled and must not silently change the privacy-first default.
+Any optional network feature must be clearly user-controlled and must not silently replace the local-first default.
 
 ## Contributions and issue reports
 
-Do not include private documents, secrets, personal messages, or sensitive personal dictionary exports in public bug reports/tests. Use minimal synthetic text that reproduces the problem.
+Do not include private documents, secrets, credentials, personal messages, or sensitive personal dictionary exports in public tests/issues.
+
+Use minimal synthetic text that reproduces the problem.
