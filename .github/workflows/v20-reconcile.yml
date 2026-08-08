@@ -1,0 +1,100 @@
+name: Reconcile V2.0 release
+
+on:
+  push:
+    branches:
+      - v2.0-release-reconciliation
+    paths:
+      - .github/workflows/v20-reconcile.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out reconciliation branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.0-release-reconciliation
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Prepare V1.3 transform for reconciled storage
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tools/v13_apply.py')
+          text = path.read_text()
+          start_marker = '# Keep the legacy US preference key mirrored during the V1 -> V2 namespace'
+          end_marker = '# Dictionary manager: selected language drives normalization and V2 import/export.'
+          start = text.index(start_marker)
+          end = text.index(end_marker, start)
+          path.write_text(text[:start] + text[end:])
+          PY
+
+      - name: Apply missing V1.3 application integration
+        run: python3 tools/v13_apply.py
+
+      - name: Apply V1.3 documentation integration
+        run: python3 tools/v13_docs_apply.py
+
+      - name: Apply V2.0 writing integration
+        run: python3 tools/v20_apply.py
+
+      - name: Apply V2.0 documentation integration
+        run: python3 tools/v20_docs_apply.py
+
+      - name: Remove temporary integration machinery
+        run: |
+          rm -f \
+            .github/workflows/v13-apply.yml \
+            .github/workflows/v13-docs-apply.yml \
+            .github/workflows/v13-ensure-integration.yml \
+            .github/workflows/v13-final-validate.yml \
+            .github/workflows/v13-finalize-merge.yml \
+            .github/workflows/v20-apply.yml \
+            .github/workflows/v20-docs-apply.yml \
+            .github/workflows/v20-finalize-merge.yml \
+            .github/workflows/v20-reconcile.yml \
+            tools/v13_apply.py \
+            tools/v13_docs_apply.py \
+            tools/v13_ensure_integration.py \
+            tools/v20_apply.py \
+            tools/v20_docs_apply.py
+          rmdir tools 2>/dev/null || true
+
+      - name: Format source and tests
+        run: dart format lib test
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
+
+      - name: Commit validated reconciliation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No reconciliation changes to commit."
+            exit 0
+          fi
+          git commit -m "fix: reconcile and validate complete v2 release"
+          git push origin HEAD:v2.0-release-reconciliation
