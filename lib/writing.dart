@@ -8,4 +8,6 @@ export 'writing/rules/sentence_capitalization_rule.dart';
 export 'writing/writing_analyzer.dart';
 export 'writing/writing_correction.dart';
 export 'writing/writing_issue.dart';
+export 'writing/writing_review_query.dart';
 export 'writing/writing_rule.dart';
+export 'writing/writing_rule_category.dart';
