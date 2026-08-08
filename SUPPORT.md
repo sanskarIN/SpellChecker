@@ -18,82 +18,183 @@ Use the repository **Bug report** issue template. Include:
 - SpellChecker version or commit.
 - Flutter/Dart version when developing locally.
 - Platform/browser.
-- Reproduction steps.
+- Selected language.
+- Minimal synthetic reproduction steps.
 - Expected behavior.
 - Actual behavior.
-- Minimal synthetic sample text containing no private information.
+- Whether the equivalent visible control works when a keyboard shortcut is involved.
 
-For V1.2 editor problems, state whether the issue involves:
+Never attach private documents or sensitive vocabulary when a short synthetic sample can reproduce the problem.
+
+# Spelling/editor reports
+
+For spelling/editor bugs, say whether the issue involves:
 
 - Inline underlines/highlights.
 - Active issue selection.
 - `F7` / `Shift+F7` navigation.
-- `Ctrl+Enter` / `Command+Enter` checking.
-- Previous/next issue buttons.
-- Single replacement.
+- `Ctrl+Enter` / `Command+Enter` spelling check.
+- Previous/next issue controls.
+- Single spelling replacement.
 - **Replace all…**.
-- Snackbar **Undo** or **Undo correction**.
-- Blank/clean result state.
-- Local storage warning.
-- Narrow/scrollable issue layout.
+- **Undo** / **Undo correction**.
+- Blank/clean states.
+- Storage warning.
+- Narrow/scrollable layout.
 - Screen-reader/keyboard accessibility.
 
-For personal-dictionary problems, state whether it involves:
+For replace-all/undo bugs, use repeated synthetic words and include the expected replacement count/casing.
+
+# Writing insights reports
+
+For Writing insights bugs include:
+
+- Selected language ID/display name.
+- Rule display name and stable ID when known.
+- Synthetic input text.
+- Which rule switches are enabled.
+- Expected finding/fix.
+- Actual finding/fix.
+- Whether text changed after the analysis was produced.
+- Whether **Undo correction** restores the previous document.
+
+## V2.1 persisted rule preference bugs
+
+State whether the issue is:
+
+- A switch not persisting after close/reopen.
+- A switch not restoring after application restart.
+- US/UK rule preference leakage.
+- Explicit disable-all unexpectedly becoming defaults.
+- A newly added rule unexpectedly changing an explicit stored set.
+- Storage-warning/failure behavior.
+
+If safe to do so, report only the stored **rule IDs**, never editor content. Example:
+
+```text
+en-US enabled IDs: repeated-word, sentence-capitalization
+```
+
+Do not post local preference dumps that contain sensitive personal vocabulary.
+
+## V2.1 batch fix bugs
+
+For **Apply all safe fixes** issues, include:
+
+- Synthetic input.
+- Finding rule IDs/ranges if known.
+- Expected final synthetic text.
+- Actual final synthetic text.
+- Applied/skipped counts shown by the UI.
+- Whether any findings overlapped.
+- Whether text changed after analysis.
+- Whether one Undo restores the exact pre-batch text.
+
+The expected V2.1 overlap policy is deterministic: earliest safe source range wins; later overlapping fixes are skipped.
+
+# Language-pack reports
+
+Include the selected pack ID/display name and synthetic sample.
+
+Distinguish among:
+
+- Tokenization.
+- Normalization.
+- Dictionary coverage.
+- US/UK variant behavior.
+- Suggestion ranking.
+- Personal-word isolation.
+- Writing-rule preference isolation.
+- Persisted language selection.
+- Import/export language metadata.
+
+Do not attach copyrighted dictionary datasets or private vocabulary dumps.
+
+# Personal dictionary reports
+
+State whether the issue involves:
 
 - **Save word**.
 - **Ignore once**.
 - Import/export.
 - Removing/clearing saved words.
-- Restoring words after restart/reload.
+- Language-specific vocabulary restoration.
 - Suggestion-count persistence.
+- Version-1 migration.
+- Version-2 cross-language import validation.
 
-If a shortcut is affected, include the exact key combination and whether the visible equivalent control works. Browser/OS key handling can differ.
+Create a small synthetic dictionary export instead of attaching a real sensitive export.
 
-If replace-all/undo is affected, use repeated synthetic words and describe the capitalization pattern and expected replacement count.
+# Keyboard reports
 
-Do not attach a real personal dictionary export or private document if it contains sensitive vocabulary/content. Create a small synthetic reproducer.
+Current shortcuts:
 
-## Writing-rules reports
+```text
+Ctrl+Enter             spelling check
+Command+Enter          spelling check
+Ctrl+Shift+Enter       Writing insights
+Command+Shift+Enter    Writing insights
+F7                     next spelling issue
+Shift+F7               previous spelling issue
+```
 
-For Writing insights bugs, include the rule name/ID, selected language, synthetic input, expected finding/fix, and whether text changed after analysis. State whether disabling the rule works and whether Undo correction restores the previous document.
+Include:
 
-Do not post private documents or sensitive writing samples.
+- Exact key combination.
+- Platform/browser.
+- Whether the visible equivalent action works.
+- Whether focus was in the editor/dialog/another control.
 
-## Language-pack reports
+Browser/OS key interception can differ by platform.
 
-For language issues, include the selected pack ID/display name and synthetic sample word. Distinguish among tokenization, normalization, dictionary coverage, variant spelling, suggestion ranking, personal-word isolation, persisted selection, and import/export language metadata.
+# Correction undo expectations
 
-Do not attach copyrighted dictionary datasets or private vocabulary dumps.
+Correction undo is shared by automatic spelling and writing operations, bounded, and session-only.
 
-## Feature requests
+One history entry represents:
 
-Use the **Feature request** template. Explain the writing problem, expected behavior, and why it belongs in SpellChecker.
+- One spelling replacement.
+- One spelling replace-all.
+- One writing safe fix.
+- One writing batch safe-fix operation.
 
-For storage, synchronization, accounts, cloud services, analytics, editor-text persistence, persistent undo/document history, language packs, or keyboard telemetry, include privacy/security expectations.
+Manual typing clears the correction stack. Application restart does not restore it.
 
-## Security reports
+If reporting an undo bug, distinguish between immediate undo, undo after a bulk operation, undo after manual typing, and behavior after document clear/restart.
 
-Do not use normal issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).
+# Feature requests
 
-## Privacy-sensitive examples
+Use the **Feature request** template. Explain:
 
-Never post private documents, account information, secrets, personal messages, sensitive personal vocabulary, or correction-history content as test samples. Replace sensitive content with a minimal synthetic example.
+- The writing/spelling problem being solved.
+- Expected behavior.
+- Which language(s) it affects.
+- Whether it changes public APIs, persisted data, keyboard workflows, correction safety, or privacy/security boundaries.
 
-## Personal dictionary recovery
+For storage, synchronization, accounts, cloud services, AI rewriting, analytics, editor persistence, persistent history, remote language/rule downloads, or dynamic plugins, include privacy/security expectations.
 
-Saved personal words are local and are not cloud-synchronized. Before clearing application/browser data, use **Copy export** if you need a portable backup.
+# Security reports
 
-If saved words disappear unexpectedly, follow [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+Do not use normal public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).
 
-## Correction undo expectations
+# Privacy-sensitive examples
 
-V1.2 correction undo is intentionally session-only and spelling-specific. Manual text editing clears the correction stack, and application restart does not restore it.
+Never post:
 
-If you report an undo problem, distinguish between:
+- Private documents.
+- Account information.
+- Secrets/credentials.
+- Personal messages.
+- Sensitive personal vocabulary.
+- Real correction-history snapshots.
+- Private writing findings/source excerpts.
 
-- Undo immediately after a spelling correction.
-- Undo after replace-all.
-- Undo after subsequent manual typing.
-- Undo after document clear or restart.
+Replace sensitive data with a minimal synthetic reproducer.
 
-The last two cases intentionally do not preserve the earlier spelling-correction history.
+# Local data recovery
+
+Personal vocabulary is local and not cloud-synchronized. Before clearing browser/application data, use **Copy export** if you need a portable backup.
+
+Writing-rule preferences, selected language, and suggestion count are local settings and currently have no separate export UI. Clearing host application/profile storage can remove them.
+
+If saved data disappears unexpectedly, follow [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) before filing an issue.
