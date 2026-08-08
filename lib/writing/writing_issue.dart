@@ -1,8 +1,4 @@
-enum WritingIssueSeverity {
-  info,
-  suggestion,
-  warning,
-}
+enum WritingIssueSeverity { info, suggestion, warning }
 
 class WritingIssue {
   const WritingIssue({
@@ -46,14 +42,14 @@ class WritingIssue {
 
   @override
   int get hashCode => Object.hash(
-        ruleId,
-        ruleName,
-        message,
-        start,
-        end,
-        originalText,
-        replacement,
-        languageId,
-        severity,
-      );
+    ruleId,
+    ruleName,
+    message,
+    start,
+    end,
+    originalText,
+    replacement,
+    languageId,
+    severity,
+  );
 }

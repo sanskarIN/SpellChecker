@@ -5,9 +5,14 @@ import 'package:flutter/services.dart';
 
 import '../../core/spell_checker_engine.dart';
 import '../../core/spell_issue.dart';
+import '../../core/spell_language_pack.dart';
 import '../../core/text_correction.dart';
 import '../../core/text_statistics.dart';
 import '../../storage/dictionary_preferences.dart';
+import '../../writing/writing_analyzer.dart';
+import '../../writing/writing_correction.dart';
+import '../../writing/writing_issue.dart';
+import 'writing_insights_dialog.dart';
 import 'dictionary_manager_dialog.dart';
 import 'spell_check_editing_controller.dart';
 
@@ -24,14 +29,20 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   static const int _maxCorrectionUndoDepth = 20;
 
   final SpellCheckEditingController _controller = SpellCheckEditingController();
-  final FocusNode _editorFocusNode = FocusNode(debugLabel: 'SpellChecker editor');
-  final SpellCheckerEngine _engine = SpellCheckerEngine();
+  final FocusNode _editorFocusNode = FocusNode(
+    debugLabel: 'SpellChecker editor',
+  );
+  late SpellCheckerEngine _engine;
+  final WritingAnalyzer _writingAnalyzer = WritingAnalyzer();
+  Set<String> _enabledWritingRuleIds =
+      WritingRuleRegistry.defaultEnabledRuleIds;
   final List<TextEditingValue> _correctionUndoStack = <TextEditingValue>[];
 
   late final DictionaryPreferences _preferences;
   List<SpellIssue> _issues = const <SpellIssue>[];
   TextStatistics _statistics = TextStatistics.fromText('');
   int _suggestionLimit = DictionaryPreferences.defaultSuggestionLimit;
+  SpellLanguagePack _languagePack = SpellLanguageRegistry.defaultPack;
   int _activeIssueIndex = -1;
   bool _hasChecked = false;
   bool _preferencesLoaded = false;
@@ -41,6 +52,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   void initState() {
     super.initState();
     _preferences = widget.preferences ?? DictionaryPreferences();
+    _engine = SpellCheckerEngine(languagePack: _languagePack);
     unawaited(_restorePreferences());
   }
 
@@ -53,13 +65,18 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
 
   Future<void> _restorePreferences() async {
     try {
-      final words = await _preferences.loadPersonalWords();
+      final languageId = await _preferences.loadLanguageId();
+      final pack = SpellLanguageRegistry.byId(languageId);
+      final words = await _preferences.loadPersonalWords(languageId: pack.id);
       final limit = await _preferences.loadSuggestionLimit();
       if (!mounted) {
         return;
       }
-      _engine.replacePersonalDictionary(words);
+      final engine = SpellCheckerEngine(languagePack: pack)
+        ..replacePersonalDictionary(words);
       setState(() {
+        _languagePack = pack;
+        _engine = engine;
         _suggestionLimit = limit;
         _preferencesLoaded = true;
         _storageAvailable = true;
@@ -82,6 +99,98 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     }
   }
 
+  Future<void> _showWritingInsights() async {
+    final result = await showDialog<WritingInsightsDialogResult>(
+      context: context,
+      builder: (BuildContext context) => WritingInsightsDialog(
+        text: _controller.text,
+        languagePack: _languagePack,
+        analyzer: _writingAnalyzer,
+        initialEnabledRuleIds: _enabledWritingRuleIds,
+      ),
+    );
+
+    if (!mounted || result == null) {
+      return;
+    }
+
+    setState(() {
+      _enabledWritingRuleIds = Set<String>.from(result.enabledRuleIds);
+    });
+
+    final issue = result.issueToFix;
+    if (issue != null) {
+      _applyWritingFix(issue);
+    }
+  }
+
+  void _applyWritingFix(WritingIssue issue) {
+    final correction = WritingCorrection.apply(_controller.text, issue);
+    if (!correction.applied) {
+      _showMessage(
+        'Text changed after analysis. Open Writing insights again to refresh findings.',
+      );
+      return;
+    }
+
+    if (_correctionUndoStack.length >= 20) {
+      _correctionUndoStack.removeAt(0);
+    }
+    _correctionUndoStack.add(_controller.value);
+
+    _controller.value = TextEditingValue(
+      text: correction.text,
+      selection: TextSelection.collapsed(offset: correction.caretOffset),
+    );
+    _controller.clearIssues();
+    setState(() {
+      _statistics = TextStatistics.fromText(correction.text);
+      _issues = const <SpellIssue>[];
+      _activeIssueIndex = -1;
+      _hasChecked = false;
+    });
+    _checkText(preferredOffset: correction.caretOffset);
+    _showMessage('Applied ${issue.ruleName}. Undo is available.');
+  }
+
+  Future<void> _changeLanguage(String? languageId) async {
+    if (languageId == null || languageId == _languagePack.id) {
+      return;
+    }
+
+    final nextPack = SpellLanguageRegistry.byId(languageId);
+    var nextWords = <String>{};
+    var storageAvailable = true;
+    try {
+      nextWords = await _preferences.loadPersonalWords(languageId: nextPack.id);
+      await _preferences.saveLanguageId(nextPack.id);
+    } catch (_) {
+      storageAvailable = false;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final nextEngine = SpellCheckerEngine(languagePack: nextPack)
+      ..replacePersonalDictionary(nextWords);
+    _correctionUndoStack.clear();
+    _controller.clearIssues();
+    setState(() {
+      _languagePack = nextPack;
+      _engine = nextEngine;
+      _issues = const <SpellIssue>[];
+      _activeIssueIndex = -1;
+      _hasChecked = false;
+      _storageAvailable = storageAvailable;
+    });
+
+    if (_controller.text.trim().isNotEmpty) {
+      _checkText();
+    }
+    _showMessage('Language changed to ${nextPack.displayName}.');
+  }
+
   void _onTextChanged(String value) {
     _correctionUndoStack.clear();
     _controller.clearIssues();
@@ -95,10 +204,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
 
   void _checkText({int? preferredOffset}) {
     final text = _controller.text;
-    final issues = _engine.check(
-      text,
-      suggestionLimit: _suggestionLimit,
-    );
+    final issues = _engine.check(text, suggestionLimit: _suggestionLimit);
     final activeIndex = _chooseActiveIssueIndex(issues, preferredOffset);
 
     setState(() {
@@ -145,15 +251,13 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
 
   void _replaceIssue(SpellIssue issue, String suggestion) {
     final before = _controller.value;
-    final result = TextCorrection.replaceOne(
-      before.text,
-      issue,
-      suggestion,
-    );
+    final result = TextCorrection.replaceOne(before.text, issue, suggestion);
 
     if (!result.changed) {
       _checkText(preferredOffset: issue.start);
-      _showMessage('The text changed after checking, so spelling results were refreshed.');
+      _showMessage(
+        'The text changed after checking, so spelling results were refreshed.',
+      );
       return;
     }
 
@@ -179,7 +283,9 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
 
     if (!result.changed) {
       _checkText(preferredOffset: issue.start);
-      _showMessage('No current matching occurrences were available to replace.');
+      _showMessage(
+        'No current matching occurrences were available to replace.',
+      );
       return;
     }
 
@@ -218,10 +324,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   void _showCorrectionMessage(String message) {
     _showMessage(
       message,
-      action: SnackBarAction(
-        label: 'Undo',
-        onPressed: _undoLastCorrection,
-      ),
+      action: SnackBarAction(label: 'Undo', onPressed: _undoLastCorrection),
     );
   }
 
@@ -281,7 +384,10 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     final before = _engine.personalDictionary;
     _engine.addToPersonalDictionary(issue.word);
     try {
-      await _preferences.savePersonalWords(_engine.personalDictionary);
+      await _preferences.savePersonalWords(
+        _engine.personalDictionary,
+        languageId: _languagePack.id,
+      );
       if (!mounted) {
         return;
       }
@@ -295,7 +401,9 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       }
       setState(() => _storageAvailable = false);
       _checkText(preferredOffset: issue.start);
-      _showMessage('Could not save “${issue.word}”. Local preference storage is unavailable.');
+      _showMessage(
+        'Could not save “${issue.word}”. Local preference storage is unavailable.',
+      );
     }
   }
 
@@ -331,6 +439,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       builder: (BuildContext context) => DictionaryManagerDialog(
         initialWords: _engine.personalDictionary,
         initialSuggestionLimit: _suggestionLimit,
+        languagePack: _languagePack,
         onWordsChanged: _applyPersonalWords,
         onSuggestionLimitChanged: _applySuggestionLimit,
       ),
@@ -339,7 +448,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
 
   Future<void> _applyPersonalWords(Set<String> words) async {
     try {
-      await _preferences.savePersonalWords(words);
+      await _preferences.savePersonalWords(words, languageId: _languagePack.id);
     } catch (_) {
       if (mounted) {
         setState(() => _storageAvailable = false);
@@ -391,12 +500,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '1.2.0',
+      applicationVersion: '2.0.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source spelling utility with local checking, persistent personal vocabulary, inline issue highlighting, keyboard issue navigation, replace-all, and undo-friendly corrections.',
+          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, optional local writing-rule plugins, persistent per-language vocabulary, inline issue review, safe fixes, and undo-friendly corrections.',
         ),
       ],
     );
@@ -427,8 +536,15 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
               title: const Text('SpellChecker'),
               actions: <Widget>[
                 IconButton(
+                  tooltip: 'Writing insights',
+                  onPressed: _showWritingInsights,
+                  icon: const Icon(Icons.auto_fix_high_outlined),
+                ),
+                IconButton(
                   tooltip: 'Previous spelling issue (Shift+F7)',
-                  onPressed: _issues.isEmpty ? null : () => _moveActiveIssue(-1),
+                  onPressed: _issues.isEmpty
+                      ? null
+                      : () => _moveActiveIssue(-1),
                   icon: const Icon(Icons.keyboard_arrow_up),
                 ),
                 IconButton(
@@ -469,10 +585,13 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
                     focusNode: _editorFocusNode,
                     statistics: _statistics,
                     suggestionLimit: _suggestionLimit,
+                    languagePack: _languagePack,
+                    languagePacks: SpellLanguageRegistry.builtIns,
                     preferencesLoaded: _preferencesLoaded,
                     storageAvailable: _storageAvailable,
                     canUndoCorrection: _correctionUndoStack.isNotEmpty,
                     onChanged: _onTextChanged,
+                    onLanguageChanged: _changeLanguage,
                     onCheck: () => _checkText(),
                     onClear: _clearText,
                     onUndoCorrection: _undoLastCorrection,
@@ -533,10 +652,13 @@ class _EditorPanel extends StatelessWidget {
     required this.focusNode,
     required this.statistics,
     required this.suggestionLimit,
+    required this.languagePack,
+    required this.languagePacks,
     required this.preferencesLoaded,
     required this.storageAvailable,
     required this.canUndoCorrection,
     required this.onChanged,
+    required this.onLanguageChanged,
     required this.onCheck,
     required this.onClear,
     required this.onUndoCorrection,
@@ -546,10 +668,13 @@ class _EditorPanel extends StatelessWidget {
   final FocusNode focusNode;
   final TextStatistics statistics;
   final int suggestionLimit;
+  final SpellLanguagePack languagePack;
+  final List<SpellLanguagePack> languagePacks;
   final bool preferencesLoaded;
   final bool storageAvailable;
   final bool canUndoCorrection;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String?> onLanguageChanged;
   final VoidCallback onCheck;
   final VoidCallback onClear;
   final VoidCallback onUndoCorrection;
@@ -571,11 +696,35 @@ class _EditorPanel extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                if (!preferencesLoaded)
+                SizedBox(
+                  width: 170,
+                  child: Semantics(
+                    label: 'Spelling language',
+                    child: DropdownButton<String>(
+                      key: const ValueKey<String>('language-selector'),
+                      value: languagePack.id,
+                      isDense: true,
+                      isExpanded: true,
+                      items: languagePacks
+                          .map(
+                            (SpellLanguagePack pack) =>
+                                DropdownMenuItem<String>(
+                                  value: pack.id,
+                                  child: Text(pack.displayName),
+                                ),
+                          )
+                          .toList(growable: false),
+                      onChanged: preferencesLoaded ? onLanguageChanged : null,
+                    ),
+                  ),
+                ),
+                if (!preferencesLoaded) ...<Widget>[
+                  const SizedBox(width: 8),
                   const SizedBox.square(
                     dimension: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
+                ],
               ],
             ),
             const SizedBox(height: 4),
@@ -591,7 +740,8 @@ class _EditorPanel extends StatelessWidget {
             Expanded(
               child: Semantics(
                 textField: true,
-                label: 'SpellChecker editor. Checked spelling issues are underlined after a spelling check.',
+                label:
+                    'SpellChecker editor. Checked spelling issues are underlined after a spelling check.',
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
@@ -651,7 +801,8 @@ class _StorageWarning extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Semantics(
       liveRegion: true,
-      label: 'Warning: local dictionary storage is unavailable. Spelling still works in session mode.',
+      label:
+          'Warning: local dictionary storage is unavailable. Spelling still works in session mode.',
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -661,7 +812,10 @@ class _StorageWarning extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.warning_amber_rounded, color: colorScheme.onErrorContainer),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: colorScheme.onErrorContainer,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -726,7 +880,9 @@ class _ResultsPanelState extends State<_ResultsPanel> {
     super.didUpdateWidget(oldWidget);
     if (widget.activeIssueIndex != oldWidget.activeIssueIndex ||
         widget.issues != oldWidget.issues) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _ensureActiveVisible());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _ensureActiveVisible(),
+      );
     }
   }
 
@@ -772,7 +928,8 @@ class _ResultsPanelState extends State<_ResultsPanel> {
                 if (widget.hasChecked)
                   Semantics(
                     liveRegion: true,
-                    label: '${widget.issues.length} spelling ${widget.issues.length == 1 ? 'issue' : 'issues'} found',
+                    label:
+                        '${widget.issues.length} spelling ${widget.issues.length == 1 ? 'issue' : 'issues'} found',
                     child: Badge(
                       label: Text('${widget.issues.length}'),
                       child: const Icon(Icons.rule),
@@ -818,7 +975,8 @@ class _ResultsPanelState extends State<_ResultsPanel> {
       return const _EmptyState(
         icon: Icons.edit_note,
         title: 'Ready to check',
-        message: 'Enter text and choose “Check spelling” or press Ctrl/⌘+Enter.',
+        message:
+            'Enter text and choose “Check spelling” or press Ctrl/⌘+Enter.',
       );
     }
 
@@ -826,7 +984,8 @@ class _ResultsPanelState extends State<_ResultsPanel> {
       return const _EmptyState(
         icon: Icons.notes_outlined,
         title: 'Nothing to check',
-        message: 'The editor is empty. Add text before running a spelling check.',
+        message:
+            'The editor is empty. Add text before running a spelling check.',
       );
     }
 
@@ -853,7 +1012,8 @@ class _ResultsPanelState extends State<_ResultsPanel> {
             occurrenceCount: widget.occurrenceCount(issue),
             isActive: isActive,
             onActivate: () => widget.onActivate(index),
-            onReplace: (String suggestion) => widget.onReplace(issue, suggestion),
+            onReplace: (String suggestion) =>
+                widget.onReplace(issue, suggestion),
             onReplaceAll: (String suggestion) =>
                 widget.onReplaceAll(issue, suggestion),
             onAddToDictionary: () => widget.onAddToDictionary(issue),
@@ -896,7 +1056,8 @@ class _IssueTile extends StatelessWidget {
     return Semantics(
       container: true,
       selected: isActive,
-      label: 'Spelling issue ${index + 1} of $totalIssues: ${issue.word}, characters ${issue.start + 1} through ${issue.end}.',
+      label:
+          'Spelling issue ${index + 1} of $totalIssues: ${issue.word}, characters ${issue.start + 1} through ${issue.end}.',
       child: Material(
         color: isActive ? colorScheme.errorContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
@@ -913,7 +1074,8 @@ class _IssueTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         issue.word,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               color: isActive
                                   ? colorScheme.onErrorContainer
                                   : colorScheme.error,
@@ -931,7 +1093,10 @@ class _IssueTile extends StatelessWidget {
                 if (issue.suggestions.isEmpty)
                   const Text('No close suggestions found.')
                 else ...<Widget>[
-                  Text('Suggestions', style: Theme.of(context).textTheme.labelLarge),
+                  Text(
+                    'Suggestions',
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,

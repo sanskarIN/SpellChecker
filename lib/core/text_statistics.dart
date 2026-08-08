@@ -10,7 +10,9 @@ class TextStatistics {
   final int sentences;
 
   factory TextStatistics.fromText(String text) {
-    final wordMatches = RegExp(r"[A-Za-z]+(?:['’-][A-Za-z]+)*").allMatches(text);
+    final wordMatches = RegExp(
+      r"[A-Za-z]+(?:['’-][A-Za-z]+)*",
+    ).allMatches(text);
     final sentenceMatches = RegExp(r'[.!?]+(?:\s|$)').allMatches(text.trim());
 
     return TextStatistics(

@@ -18,6 +18,40 @@ The main screen contains:
 - Clear-ignored-words action with a session-ignore badge.
 - About action.
 
+## Choose a language
+
+Use the language dropdown above the editor. Version 1.3 includes **English (US)** and **English (UK)**.
+
+The selected language is saved locally. Switching language re-checks non-blank text with the new dictionary and starts a separate temporary ignored-word state.
+
+Examples:
+
+```text
+English (US): color
+English (UK): colour
+```
+
+Saved personal words are per-language. A US personal word is not automatically accepted in UK mode. Version-2 dictionary exports include their language; switch to the matching language before importing a tagged export.
+
+SpellChecker does not auto-detect language in V1.3.
+
+## Writing insights
+
+Select **Writing insights** in the app bar when you want optional local writing-rule feedback. The dialog shows supported rules for the selected language and lets you switch each rule on/off for the current session.
+
+V2.0 built-ins:
+
+- Repeated word.
+- Sentence capitalization.
+- Repeated spaces.
+- Repeated punctuation.
+
+Findings show rule name, message, source range, original text, and a suggested replacement when available. Select **Apply safe fix** to close the dialog and apply that one validated fix.
+
+A writing fix enters the same **Undo correction** history used by spelling corrections. If the document changed after analysis, the safe fix is refused and the dialog should be reopened to refresh findings.
+
+Rule switches are intentionally not persisted in V2.0.
+
 ## Check text
 
 1. Type or paste text into the Editor panel.

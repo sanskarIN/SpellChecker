@@ -59,24 +59,40 @@ Status: implemented.
 
 ## 1.3 — Language architecture
 
-Planned:
+Status: implemented.
 
-- Language-pack abstraction.
-- Unicode-aware tokenization.
-- Optional additional dictionaries.
-- Explicit language selection.
-- Language-specific normalization rules.
-- Language-specific suggestion metadata.
-- Tests ensuring language packs do not leak state across selections.
+- [x] Language-pack abstraction.
+- [x] Unicode-aware tokenization.
+- [x] Built-in English (US) and English (UK) dictionaries.
+- [x] Explicit persisted language selection.
+- [x] Language-specific normalization and suffix rules.
+- [x] Language-specific suggestion metadata.
+- [x] Language-tagged spelling issues.
+- [x] Per-language personal dictionary persistence.
+- [x] Legacy V1 personal-word migration into the default pack.
+- [x] Version-2 language-aware dictionary transfer format.
+- [x] Cross-language import protection.
+- [x] Unicode/variant/isolation/persistence/widget tests.
+- [x] Complete language-pack documentation.
 
 ## 2.0 — Advanced writing foundation
 
-Possible future work:
+Status: implemented foundation.
 
-- Plugin-style language packs.
-- Optional grammar modules that can remain local.
-- Extensible suggestion ranking.
-- Cross-platform packaging and signed release automation.
-- More advanced document/session workflows without weakening local-first privacy.
+- [x] Public local `WritingRule` plugin contract.
+- [x] Language-aware `WritingAnalyzer` and rule registry.
+- [x] Per-session rule enable/disable filtering.
+- [x] Repeated-word rule.
+- [x] Sentence-capitalization rule.
+- [x] Repeated-space rule.
+- [x] Repeated-punctuation rule.
+- [x] Deterministic writing issue model and severity metadata.
+- [x] Stale-range-safe writing correction API.
+- [x] Optional Writing insights editor UI.
+- [x] Writing fixes integrated with bounded correction undo.
+- [x] Rule/analyzer/correction/widget regression tests.
+- [x] Complete writing-rules documentation.
+
+Future 2.x work can add richer rule catalogs, persisted rule preferences, additional language-specific rules, extensible spelling rankers, packaging/signing automation, and trusted plugin-loading designs without weakening the local-first privacy baseline.
 
 Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented and user-controlled.

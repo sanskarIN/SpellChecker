@@ -137,6 +137,40 @@ Before tagging V1.2 or a maintenance release based on it, manually verify when p
 
 Use only synthetic text and vocabulary during release verification.
 
+## V1.3 language smoke test
+
+Before tagging V1.3:
+
+1. Start with `en-US`; verify `color` is accepted and `colour` is variant-specific.
+2. Switch to `en-GB`; verify current text is re-checked and `colour` is accepted.
+3. Verify Unicode tokens such as `café`/`naïve` remain whole words.
+4. Save synthetic vocabulary in US mode, switch to UK, and verify it does not leak.
+5. Save different UK vocabulary and verify each set restores when switching back/forth.
+6. Restart/reload and verify selected language restores.
+7. Export a language-tagged personal dictionary and verify `version: 2` plus language ID.
+8. Attempt to import the tagged export under the other language and verify the UI blocks the cross-language merge.
+9. Verify legacy V1 personal words migrate into the US namespace.
+10. Re-run V1.2 inline highlighting/navigation/replace-all/undo regression smoke checks under both built-in packs.
+
+Use only synthetic vocabulary.
+
+## V2.0 writing-rules smoke test
+
+Before tagging V2.0:
+
+1. Open Writing insights under both built-in English packs.
+2. Verify all four built-in rules appear.
+3. Use synthetic text containing each rule pattern.
+4. Disable/re-enable one rule and verify findings update.
+5. Apply a safe finding and verify document text/caret update.
+6. Use Undo correction and verify the pre-fix document returns.
+7. Change document text after analysis and verify a stale fix is refused.
+8. Verify blank/clean Writing insights states.
+9. Verify dialog keyboard access and larger-text/narrow viewport behavior.
+10. Re-run V1.3 language switching/import/isolation and V1.2 spelling/replace-all/undo smoke tests.
+
+Use synthetic text only.
+
 ## Tagging
 
 Create an annotated tag from the verified `main` commit. For V1.2:
@@ -144,8 +178,8 @@ Create an annotated tag from the verified `main` commit. For V1.2:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v1.2.0 -m "SpellChecker v1.2.0"
-git push origin v1.2.0
+git tag -a v2.0.0 -m "SpellChecker v2.0.0"
+git push origin v2.0.0
 ```
 
 Pushing a `v*` tag triggers the release-build workflow, which validates the project and uploads the release web build as a GitHub Actions artifact.

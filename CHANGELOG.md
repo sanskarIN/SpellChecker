@@ -4,6 +4,74 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.0.0] - 2026-08-08
+
+### Added
+
+- Public `WritingRule` plugin contract and `WritingRuleRegistry`.
+- `WritingAnalyzer` with language eligibility and session-level rule enable/disable filtering.
+- Immutable `WritingIssue` model with deterministic source range, severity, message, optional replacement, and language metadata.
+- `WritingCorrection` stale-range validation and safe fix result model.
+- Built-in repeated-word writing rule.
+- Built-in sentence-capitalization writing rule.
+- Built-in repeated-space writing rule.
+- Built-in repeated-punctuation writing rule.
+- Public `package:spellchecker/writing.dart` API barrel.
+- Optional **Writing insights** editor dialog.
+- Session-only rule switches inside Writing insights.
+- Language-aware local writing findings.
+- Safe writing fixes integrated with the existing correction undo stack.
+- Rule/analyzer/correction/widget regression tests.
+- Complete writing-rules architecture, API, privacy, accessibility, testing, support, and contributor documentation.
+
+### Changed
+
+- Product version advances to `2.0.0+5`.
+- About/web metadata now describes the optional local writing-rules layer.
+- SpellChecker's correction history can now contain both spelling and writing-rule fixes while remaining bounded and memory-only.
+
+### Security and privacy
+
+- Writing analysis is explicitly user-triggered and runs locally in memory.
+- No cloud grammar API, AI rewriting service, analytics, telemetry, account system, remote logging, or persisted writing-analysis history was added.
+- Writing corrections validate current source text before mutation.
+- Rule enablement is session-only in V2.0 and does not expand the persistent preference surface.
+
+## [1.3.0] - 2026-08-08
+
+### Added
+
+- `SpellLanguagePack` abstraction and built-in language registry.
+- Explicit English (US) `en-US` and English (UK) `en-GB` packs.
+- Unicode-letter tokenization with curly-apostrophe and Unicode-hyphen normalization.
+- British English variant dictionary and pack-specific frequency metadata.
+- `SpellSuggestion` detailed metadata with language ID, display name, edit distance, frequency rank, and source.
+- Optional language ID on `SpellIssue`.
+- Persisted language selection.
+- Per-language personal dictionary namespaces.
+- Automatic migration of legacy V1 personal words into the default US namespace.
+- Version-2 personal dictionary transfer format containing language metadata.
+- Public `package:spellchecker/language.dart` language API barrel.
+- Explicit editor language selector with automatic re-check on pack changes.
+- Cross-language import protection for version-2 dictionary exports.
+- Unicode/variant/language-isolation/migration/widget regression tests.
+- Complete language-pack contributor and architecture documentation.
+
+### Changed
+
+- `SpellCheckerEngine` now delegates tokenization, normalization, suffix rules, dictionary data, frequency metadata, and suggestion distance policy to the selected pack.
+- Existing `SpellCheckerEngine()` callers still default to English (US).
+- Existing string `suggestionsFor()` remains available; `suggestionDetailsFor()` exposes metadata.
+- Personal vocabulary is isolated by selected language instead of sharing one global set.
+- About/version metadata advances to `1.3.0+4`.
+
+### Security and privacy
+
+- Language selection and per-language personal words remain device-local.
+- No automatic language detection, network pack download, analytics, telemetry, account system, or cloud spelling service was added.
+- Switching packs creates new language-specific session state so ignored/personal vocabulary does not silently leak across packs.
+- Legacy migration reads only SpellChecker's prior local personal-word key and moves it into the default US namespace.
+
 ## [1.2.0] - 2026-08-08
 
 ### Added

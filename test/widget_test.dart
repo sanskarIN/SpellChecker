@@ -91,10 +91,7 @@ void main() {
 
     expect(find.text('2 occurrences'), findsWidgets);
     expect(find.text('Replace all…'), findsWidgets);
-    expect(
-      find.textContaining('Issue '),
-      findsWidgets,
-    );
+    expect(find.textContaining('Issue '), findsWidgets);
   });
 
   testWidgets('saves a personal word through the editor workflow', (
@@ -139,7 +136,7 @@ void main() {
     await tester.tap(find.byTooltip('Manage personal dictionary'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Personal dictionary'), findsOneWidget);
+    expect(find.text('Personal dictionary — English (US)'), findsOneWidget);
     expect(find.text('flutter'), findsOneWidget);
   });
 }

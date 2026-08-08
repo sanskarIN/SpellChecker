@@ -24,6 +24,22 @@ For editor changes, mention affected highlighting, active issue state, shortcuts
 - [ ] Icon-only controls have meaningful tooltips/labels.
 - [ ] I updated accessibility semantics/tests/docs when relevant.
 
+## Writing rules
+
+- [ ] Rule logic is side-effect free and outside Flutter widgets.
+- [ ] Supported languages are explicit.
+- [ ] Automatic fixes validate exact current source text.
+- [ ] Rule changes include focused unit/widget tests.
+- [ ] No document logging, hidden persistence, telemetry, or network grammar processing is introduced.
+
+## Language architecture
+
+- [ ] Language-specific rules remain behind `SpellLanguagePack` instead of widgets.
+- [ ] Personal/ignored state does not leak across packs.
+- [ ] Unicode/tokenization/normalization changes have focused tests.
+- [ ] Dictionary data licensing/provenance is suitable for this repository.
+- [ ] Import/export/persistence migration behavior is documented when changed.
+
 ## Correction safety
 
 Complete this section for correction/editor mutations.

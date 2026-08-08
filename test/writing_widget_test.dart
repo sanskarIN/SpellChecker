@@ -10,6 +10,13 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
+  Finder writingInsightsList() {
+    return find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(ListView),
+    );
+  }
+
   testWidgets('writing insights apply a safe fix through editor undo history', (
     WidgetTester tester,
   ) async {
@@ -28,8 +35,13 @@ void main() {
     expect(find.text('Repeated spaces'), findsWidgets);
     expect(find.text('Repeated word'), findsWidgets);
     expect(find.text('Repeated punctuation'), findsWidgets);
-    expect(find.text('Apply safe fix'), findsWidgets);
 
+    final insightsList = writingInsightsList();
+    expect(insightsList, findsOneWidget);
+    await tester.drag(insightsList, const Offset(0, -520));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Apply safe fix'), findsWidgets);
     await tester.tap(find.text('Apply safe fix').first);
     await tester.pumpAndSettle();
 
@@ -54,14 +66,27 @@ void main() {
     await tester.tap(find.byTooltip('Writing insights'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Repeated spaces'), findsOneWidget);
+    final insightsList = writingInsightsList();
+    expect(insightsList, findsOneWidget);
+
+    await tester.drag(insightsList, const Offset(0, -420));
+    await tester.pumpAndSettle();
     expect(find.text('Use a single space here.'), findsOneWidget);
 
-    final repeatedSpaceSwitch = find.widgetWithText(SwitchListTile, 'Repeated spaces');
+    await tester.drag(insightsList, const Offset(0, 420));
+    await tester.pumpAndSettle();
+
+    final repeatedSpaceSwitch = find.widgetWithText(
+      SwitchListTile,
+      'Repeated spaces',
+    );
     expect(repeatedSpaceSwitch, findsOneWidget);
     await tester.tap(repeatedSpaceSwitch);
     await tester.pumpAndSettle();
 
+    await tester.drag(insightsList, const Offset(0, -420));
+    await tester.pumpAndSettle();
     expect(find.text('Use a single space here.'), findsNothing);
+    expect(find.text('No enabled-rule findings'), findsOneWidget);
   });
 }

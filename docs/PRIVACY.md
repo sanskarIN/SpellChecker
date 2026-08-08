@@ -6,6 +6,24 @@ SpellChecker version 1.2 performs spelling analysis locally and stores only a sm
 
 V1.2 adds inline highlighting, active issue navigation, replace-all, keyboard shortcuts, and spelling-correction undo. None of those features add cloud processing, analytics, authentication, advertising, telemetry, or new persistent document storage.
 
+## Language selection and per-language vocabulary
+
+V1.3 stores the selected built-in language ID locally and namespaces personal vocabulary by language. It does not send language selection, editor text, or personal vocabulary to a server.
+
+Switching language creates new in-memory pack/session state so temporary ignored words and suggestion caches do not leak to another pack.
+
+The only migration reads SpellChecker's existing local V1 personal-word key and treats it as `en-US`; no external data is fetched.
+
+V1.3 adds no automatic language detection or keyboard/text telemetry.
+
+## Local writing-rule analysis
+
+V2.0 Writing insights receives the current document text only in application memory when the user explicitly opens the dialog. Built-in rules perform deterministic local analysis and do not transmit, log, persist, or synchronize document text/findings.
+
+Writing-rule enablement is session-only. Writing fixes reuse the existing memory-only correction history, which can temporarily contain editor snapshots and is discarded according to the existing correction-history policy.
+
+No cloud grammar/AI service, analytics, remote logging, telemetry, or account system was introduced.
+
 ## User text
 
 SpellChecker does not include code that sends editor text to:

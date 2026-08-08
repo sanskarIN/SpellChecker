@@ -54,13 +54,15 @@ class TextCorrection {
     }
 
     final target = sourceWord.toLowerCase();
-    final matching = issues
-        .where(
-          (SpellIssue issue) =>
-              issue.word.toLowerCase() == target && _isCurrentIssue(text, issue),
-        )
-        .toList(growable: false)
-      ..sort((SpellIssue a, SpellIssue b) => b.start.compareTo(a.start));
+    final matching =
+        issues
+            .where(
+              (SpellIssue issue) =>
+                  issue.word.toLowerCase() == target &&
+                  _isCurrentIssue(text, issue),
+            )
+            .toList(growable: false)
+          ..sort((SpellIssue a, SpellIssue b) => b.start.compareTo(a.start));
 
     if (matching.isEmpty) {
       return TextCorrectionResult(

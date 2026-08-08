@@ -5,10 +5,10 @@ import 'package:spellchecker/core/spell_language_pack.dart';
 void main() {
   group('language-aware personal dictionary documents', () {
     test('exports version 2 with language metadata', () {
-      final export = PersonalDictionaryCodec.encodeForLanguage(
-        <String>{'Colour', 'Writer’s'},
-        languagePack: SpellLanguageRegistry.englishGb,
-      );
+      final export = PersonalDictionaryCodec.encodeForLanguage(<String>{
+        'Colour',
+        'Writer’s',
+      }, languagePack: SpellLanguageRegistry.englishGb);
 
       expect(export, contains('"version": 2'));
       expect(export, contains('"language": "en-GB"'));

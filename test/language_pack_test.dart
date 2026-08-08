@@ -20,10 +20,13 @@ void main() {
           .map((match) => match.group(0))
           .toList();
 
-      expect(
-        words,
-        <String>['Café', 'naïve', 'résumé', 'writer’s', 'open‑source'],
-      );
+      expect(words, <String>[
+        'Café',
+        'naïve',
+        'résumé',
+        'writer’s',
+        'open‑source',
+      ]);
       expect(pack.normalizeWord('Writer’s'), "writer's");
       expect(pack.normalizeWord('open‑source'), 'open-source');
     });
@@ -31,8 +34,12 @@ void main() {
 
   group('language-aware SpellCheckerEngine', () {
     test('US and UK packs distinguish common spelling variants', () {
-      final us = SpellCheckerEngine(languagePack: SpellLanguageRegistry.englishUs);
-      final uk = SpellCheckerEngine(languagePack: SpellLanguageRegistry.englishGb);
+      final us = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishUs,
+      );
+      final uk = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishGb,
+      );
 
       expect(us.isCorrect('color'), isTrue);
       expect(us.isCorrect('colour'), isFalse);
@@ -41,13 +48,17 @@ void main() {
     });
 
     test('Unicode loanwords are checked as whole tokens', () {
-      final engine = SpellCheckerEngine(languagePack: SpellLanguageRegistry.englishUs);
+      final engine = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishUs,
+      );
 
       expect(engine.check('café naïve résumé'), isEmpty);
     });
 
     test('issues carry the producing language id', () {
-      final engine = SpellCheckerEngine(languagePack: SpellLanguageRegistry.englishGb);
+      final engine = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishGb,
+      );
 
       final issue = engine.check('color').single;
 
@@ -55,7 +66,9 @@ void main() {
     });
 
     test('detailed suggestions carry language and source metadata', () {
-      final engine = SpellCheckerEngine(languagePack: SpellLanguageRegistry.englishGb);
+      final engine = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishGb,
+      );
 
       final details = engine.suggestionDetailsFor('colur');
 
@@ -67,8 +80,12 @@ void main() {
     });
 
     test('personal words do not leak between language engines', () {
-      final us = SpellCheckerEngine(languagePack: SpellLanguageRegistry.englishUs);
-      final uk = SpellCheckerEngine(languagePack: SpellLanguageRegistry.englishGb);
+      final us = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishUs,
+      );
+      final uk = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishGb,
+      );
 
       us.addToPersonalDictionary('zorbax');
       us.ignoreWord('temporaryword');

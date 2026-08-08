@@ -56,6 +56,32 @@ Options:
 - Add the word in **Manage personal dictionary**.
 - Contribute a broadly useful dictionary entry.
 
+## Writing insights reports something intentional
+
+Writing rules are optional deterministic heuristics. Disable that rule in the Writing insights dialog for the current session. Repeated spaces/punctuation, for example, can be intentional in specialized/informal text.
+
+## Apply safe fix refuses to change text
+
+The document changed after the finding was calculated, so the stored source range is stale. SpellChecker refuses to mutate the wrong text. Close/reopen Writing insights to refresh findings.
+
+## Writing rule switches reset after restart
+
+Expected in V2.0. Rule enablement is session-only and is not part of the persisted preferences yet.
+
+## US/UK spelling changes after switching language
+
+This is expected. `en-US` and `en-GB` deliberately differ for common variants such as `color`/`colour`, `center`/`centre`, and `theater`/`theatre`. Switching language invalidates old issues and re-checks the current text.
+
+## A saved word exists in one language but not another
+
+Expected. Personal dictionaries are isolated by language. Save/import the word separately for the intended pack.
+
+## A version-2 dictionary import asks me to switch language
+
+Version-2 exports include a language ID. SpellChecker prevents silently merging a tagged export into a different selected pack. Switch to the language named by the export, then import again.
+
+Version-1/JSON-array/plain-list imports have no language metadata and are interpreted using the currently selected language.
+
 ## Inline underlines disappear when I type
 
 This is expected. Inline issue ranges belong to the exact text snapshot that was checked. Manual text changes invalidate those ranges, so SpellChecker clears old highlights/results immediately.

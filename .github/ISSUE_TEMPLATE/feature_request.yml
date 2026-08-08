@@ -33,6 +33,8 @@ body:
       options:
         - Spell-checking engine
         - Dictionary or language packs
+        - Language selection / Unicode rules
+        - Writing rules / writing insights
         - Suggestions or ranking
         - Text correction / replace all
         - Editor highlighting

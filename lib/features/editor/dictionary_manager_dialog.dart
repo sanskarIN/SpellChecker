@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/personal_dictionary_codec.dart';
+import '../../core/spell_language_pack.dart';
 import '../../storage/dictionary_preferences.dart';
 
 class DictionaryManagerDialog extends StatefulWidget {
   const DictionaryManagerDialog({
     required this.initialWords,
     required this.initialSuggestionLimit,
+    required this.languagePack,
     required this.onWordsChanged,
     required this.onSuggestionLimitChanged,
     super.key,
@@ -15,6 +17,7 @@ class DictionaryManagerDialog extends StatefulWidget {
 
   final Set<String> initialWords;
   final int initialSuggestionLimit;
+  final SpellLanguagePack languagePack;
   final Future<void> Function(Set<String> words) onWordsChanged;
   final Future<void> Function(int limit) onSuggestionLimitChanged;
 
@@ -46,9 +49,14 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
   }
 
   Future<void> _addWord() async {
-    final word = PersonalDictionaryCodec.normalizeWord(_wordController.text);
+    final word = PersonalDictionaryCodec.normalizeWord(
+      _wordController.text,
+      languagePack: widget.languagePack,
+    );
     if (word.isEmpty) {
-      _showMessage('Enter one valid word. Apostrophes and hyphens are supported.');
+      _showMessage(
+        'Enter one valid word. Apostrophes and hyphens are supported.',
+      );
       return;
     }
     if (_words.contains(word)) {
@@ -144,7 +152,10 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
   }
 
   Future<void> _copyExport() async {
-    final export = PersonalDictionaryCodec.encode(_words);
+    final export = PersonalDictionaryCodec.encodeForLanguage(
+      _words,
+      languagePack: widget.languagePack,
+    );
     await Clipboard.setData(ClipboardData(text: export));
     if (mounted) {
       _showMessage('Dictionary export copied to the clipboard.');
@@ -165,7 +176,8 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
             minLines: 8,
             maxLines: 14,
             decoration: const InputDecoration(
-              hintText: 'Paste a SpellChecker JSON export, JSON array, or one word per line.',
+              hintText:
+                  'Paste a SpellChecker JSON export, JSON array, or one word per line.',
             ),
           ),
         ),
@@ -188,8 +200,19 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
     }
 
     try {
-      final imported = PersonalDictionaryCodec.decode(source);
-      final next = Set<String>.from(_words)..addAll(imported);
+      final document = PersonalDictionaryCodec.decodeDocument(
+        source,
+        languagePack: widget.languagePack,
+      );
+      if (document.version == PersonalDictionaryCodec.currentVersion &&
+          document.languageId != widget.languagePack.id) {
+        final sourceLanguage = SpellLanguageRegistry.byId(document.languageId);
+        _showMessage(
+          'This dictionary is for ${sourceLanguage.displayName}. Switch to that language before importing it.',
+        );
+        return;
+      }
+      final next = Set<String>.from(_words)..addAll(document.words);
       final addedCount = next.length - _words.length;
       if (await _persistWords(next)) {
         _showMessage(
@@ -215,11 +238,15 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
     final sortedWords = _words.toList()..sort();
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: <Widget>[
-          Icon(Icons.menu_book_outlined),
-          SizedBox(width: 10),
-          Expanded(child: Text('Personal dictionary')),
+          const Icon(Icons.menu_book_outlined),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Personal dictionary — ${widget.languagePack.displayName}',
+            ),
+          ),
         ],
       ),
       content: SizedBox(
@@ -230,7 +257,7 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               const Text(
-                'Personal words are stored on this device and used in future sessions.',
+                'Personal words are stored on this device for the selected language pack and used in future sessions.',
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(

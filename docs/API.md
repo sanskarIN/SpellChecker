@@ -8,6 +8,25 @@ import 'package:spellchecker/spell_checker.dart';
 
 The public 1.x surface exports edit distance, spell checking, issue models, validated text correction, text statistics, and personal-dictionary import/export helpers. Application UI and storage types remain internal integration details unless explicitly exported.
 
+## Language APIs
+
+Language architecture is exported separately for clarity:
+
+```dart
+import 'package:spellchecker/language.dart';
+import 'package:spellchecker/spell_checker.dart';
+```
+
+`SpellLanguageRegistry.builtIns` contains the built-in packs and `defaultPack` remains `en-US`. Select a pack explicitly with `SpellCheckerEngine(languagePack: ...)`.
+
+`SpellLanguagePack` carries language/region identity, dictionary data, frequency ranks, Unicode token/validation patterns, normalization, recognized suffixes, and suggestion-source metadata.
+
+`SpellSuggestion` is returned by `suggestionDetailsFor()` and exposes the candidate, distance, frequency rank, language ID/display name, and source. `suggestionsFor()` remains the backward-compatible string-only API.
+
+`SpellIssue.languageId` identifies the pack that produced an issue and remains optional for source compatibility.
+
+See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md) for the complete language contract.
+
 ## `SpellCheckerEngine`
 
 Create an engine with the bundled dictionaries and default frequency data:
@@ -218,6 +237,12 @@ bool get changed
 
 `changed` is `true` when `replacements > 0`.
 
+### Language-aware dictionary documents
+
+`PersonalDictionaryCodec.encodeForLanguage(words, languagePack: pack)` writes format version 2 with a `language` field. `decodeDocument()` returns a `PersonalDictionaryDocument` containing `version`, `languageId`, and normalized words.
+
+Legacy `encode()` remains version-1-compatible. Version-1 objects, JSON arrays, and plain word lists inherit the caller/selected language because they contain no language metadata.
+
 ## `PersonalDictionaryCodec`
 
 SpellChecker exports a versioned import/export helper.
@@ -350,6 +375,22 @@ The Flutter application does not persist:
 - Checked issue lists.
 - Active issue index.
 - V1.2 correction undo snapshots.
+
+## Writing rules API (2.0)
+
+Import the writing subsystem with:
+
+```dart
+import 'package:spellchecker/writing.dart';
+```
+
+`WritingRule` defines stable ID/name/description/language eligibility plus a side-effect-free `analyze(text, languagePack)` contract. `WritingAnalyzer` runs supported/enabled rules and returns a sorted immutable `WritingAnalysisResult`.
+
+`WritingIssue` carries rule identity, explanation, exact source range/original text, optional replacement, language ID, and severity.
+
+`WritingCorrection.apply(text, issue)` applies a fix only when the current range still equals `issue.originalText`; otherwise it returns the unchanged text with `applied == false`.
+
+See [WRITING_RULES.md](WRITING_RULES.md) for built-in rule behavior and plugin requirements.
 
 ## Stability
 

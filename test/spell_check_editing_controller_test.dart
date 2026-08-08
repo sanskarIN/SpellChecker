@@ -8,13 +8,10 @@ void main() {
     WidgetTester tester,
   ) async {
     final controller = SpellCheckEditingController(text: 'Helo wrld');
-    controller.setIssues(
-      const <SpellIssue>[
-        SpellIssue(word: 'Helo', start: 0, end: 4),
-        SpellIssue(word: 'wrld', start: 5, end: 9),
-      ],
-      activeIssueIndex: 1,
-    );
+    controller.setIssues(const <SpellIssue>[
+      SpellIssue(word: 'Helo', start: 0, end: 4),
+      SpellIssue(word: 'wrld', start: 5, end: 9),
+    ], activeIssueIndex: 1);
 
     late TextSpan span;
     await tester.pumpWidget(
@@ -33,7 +30,11 @@ void main() {
     );
 
     final children = span.children!.whereType<TextSpan>().toList();
-    expect(children.map((TextSpan child) => child.text), <String>['Helo', ' ', 'wrld']);
+    expect(children.map((TextSpan child) => child.text), <String>[
+      'Helo',
+      ' ',
+      'wrld',
+    ]);
     expect(children.first.style?.decoration, TextDecoration.underline);
     expect(children.last.style?.decoration, TextDecoration.underline);
     expect(children.last.style?.backgroundColor, isNotNull);
@@ -44,10 +45,9 @@ void main() {
 
   test('clearIssues resets highlighting state', () {
     final controller = SpellCheckEditingController(text: 'Helo');
-    controller.setIssues(
-      const <SpellIssue>[SpellIssue(word: 'Helo', start: 0, end: 4)],
-      activeIssueIndex: 0,
-    );
+    controller.setIssues(const <SpellIssue>[
+      SpellIssue(word: 'Helo', start: 0, end: 4),
+    ], activeIssueIndex: 0);
 
     controller.clearIssues();
 

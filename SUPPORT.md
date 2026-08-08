@@ -53,6 +53,18 @@ If replace-all/undo is affected, use repeated synthetic words and describe the c
 
 Do not attach a real personal dictionary export or private document if it contains sensitive vocabulary/content. Create a small synthetic reproducer.
 
+## Writing-rules reports
+
+For Writing insights bugs, include the rule name/ID, selected language, synthetic input, expected finding/fix, and whether text changed after analysis. State whether disabling the rule works and whether Undo correction restores the previous document.
+
+Do not post private documents or sensitive writing samples.
+
+## Language-pack reports
+
+For language issues, include the selected pack ID/display name and synthetic sample word. Distinguish among tokenization, normalization, dictionary coverage, variant spelling, suggestion ranking, personal-word isolation, persisted selection, and import/export language metadata.
+
+Do not attach copyrighted dictionary datasets or private vocabulary dumps.
+
 ## Feature requests
 
 Use the **Feature request** template. Explain the writing problem, expected behavior, and why it belongs in SpellChecker.

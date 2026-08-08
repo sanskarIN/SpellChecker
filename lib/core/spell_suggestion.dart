@@ -29,13 +29,13 @@ class SpellSuggestion {
 
   @override
   int get hashCode => Object.hash(
-        word,
-        distance,
-        frequencyRank,
-        languageId,
-        languageDisplayName,
-        source,
-      );
+    word,
+    distance,
+    frequencyRank,
+    languageId,
+    languageDisplayName,
+    source,
+  );
 
   @override
   String toString() => '$word [$languageId, distance=$distance]';

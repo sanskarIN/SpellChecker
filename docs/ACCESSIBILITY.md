@@ -60,6 +60,20 @@ Preserve keyboard access for:
 
 Do not create essential pointer-only, hover-only, or color-only actions.
 
+## Language selector accessibility
+
+The V1.3 language selector is a standard Flutter dropdown with visible language names. It must remain keyboard reachable and expose the current selection through standard semantics.
+
+Changing language re-checks current non-blank text; users should not need to infer the new language only from spelling changes. Keep the visible selected language label present.
+
+Do not implement automatic language switching that unexpectedly moves focus or changes rules without explicit user action.
+
+## Writing insights accessibility
+
+Writing insights uses a standard dialog, labeled rule switches, textual finding explanations, source ranges, and labeled fix controls. Findings are semantic containers and empty states use live-region semantics.
+
+Rule meaning/fix availability must never depend only on severity color/icon. Keep rule switches keyboard reachable and do not automatically apply a writing fix when focus/selection changes.
+
 ## Inline issue highlighting
 
 Checked spelling issues receive a wavy underline inside the editable text. The active issue receives stronger background/text styling.
