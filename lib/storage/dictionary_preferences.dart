@@ -56,6 +56,12 @@ class DictionaryPreferences {
     if (value == null) {
       return defaultSuggestionLimit;
     }
-    return value.clamp(minSuggestionLimit, maxSuggestionLimit);
+    if (value < minSuggestionLimit) {
+      return minSuggestionLimit;
+    }
+    if (value > maxSuggestionLimit) {
+      return maxSuggestionLimit;
+    }
+    return value;
   }
 }
