@@ -318,20 +318,22 @@ Add targeted semantics assertions when they are stable under the supported Flutt
 
 ## CI checks
 
-Normal CI runs:
+Normal CI now runs:
 
 ```bash
 flutter pub get
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --reporter expanded
 ```
 
-Before release, also run:
+The tagged release workflow runs the same quality checks and additionally builds the release web app:
 
 ```bash
-dart format --output=none --set-exit-if-changed lib test
 flutter build web --release
 ```
+
+This makes formatting an automated blocking contract rather than only a contributor convention.
 
 ## Analyzer policy
 
