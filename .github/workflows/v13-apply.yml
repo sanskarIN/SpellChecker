@@ -1,0 +1,42 @@
+name: Apply V1.3 integration
+
+on:
+  push:
+    branches:
+      - v1.3-language-architecture
+    paths:
+      - .github/workflows/v13-apply.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out V1.3 branch
+        uses: actions/checkout@v4
+        with:
+          ref: v1.3-language-architecture
+          fetch-depth: 0
+
+      - name: Apply guarded V1.3 integration
+        run: python3 tools/v13_apply.py
+
+      - name: Remove one-time integration helper
+        run: |
+          rm tools/v13_apply.py
+          rm .github/workflows/v13-apply.yml
+
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No integration changes to commit."
+            exit 0
+          fi
+          git commit -m "feat: complete v1.3 language selection integration"
+          git push origin HEAD:v1.3-language-architecture
