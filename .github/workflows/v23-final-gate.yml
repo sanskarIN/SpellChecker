@@ -1,0 +1,211 @@
+name: V2.3 Final Exact-Tree Gate
+
+on:
+  pull_request:
+    branches: [v2.3-final-gate-base]
+
+permissions:
+  contents: write
+
+jobs:
+  final-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out recovery branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.3-release-recovery
+          fetch-depth: 0
+
+      - name: Finalize stale release/support/security wording
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path_name, old, new, label):
+              path = Path(path_name)
+              text = path.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: {label}: expected 1 marker, found {count}')
+              path.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'docs/RELEASING.md',
+              'Current V2.2 release:\n\n```text\n2.2.0+7\n```',
+              'Current V2.3 release:\n\n```text\n2.3.0+8\n```',
+              'current release version',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'V2.1 persists:\n',
+              'V2.3 persists:\n',
+              'persistent-data heading',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'git tag -a v2.2.0 -m "SpellChecker v2.2.0"\ngit push origin v2.2.0',
+              'git tag -a v2.3.0 -m "SpellChecker v2.3.0"\ngit push origin v2.3.0',
+              'tagging example',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              '3. Highlight V2.2 review categories/search/filters, filtered batch fixes, reset-to-defaults semantics, plus the retained V2.1 persistence/batch/undo/shortcut foundation.',
+              '3. Highlight V2.3 review presets and Portable settings semantics, plus V2.2 review categories/search/reset-to-defaults and the retained V2.1 persistence/batch/undo/shortcut foundation.',
+              'release notes guidance',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'V2.1 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.',
+              'V2.3 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.',
+              'release dependency note',
+          )
+          replace_once(
+              'SECURITY.md',
+              '`shared_preferences` remains the only non-SDK runtime dependency and is used for application-local preferences. V2.1 adds no new runtime package.',
+              '`shared_preferences` remains the only non-SDK runtime dependency and is used for application-local preferences. V2.3 adds no new runtime package.',
+              'security dependency note',
+          )
+          replace_once(
+              'SUPPORT.md',
+              'Writing-rule preferences, selected language, and suggestion count are local settings and currently have no separate export UI. Clearing host application/profile storage can remove them.',
+              'Writing-rule preferences, selected language, and suggestion count are local settings that can be copied/imported through **Portable settings** in V2.3. Personal vocabulary remains a separate language-aware dictionary export. Clearing host application/profile storage can remove all of these local values.',
+              'support portability statement',
+          )
+          PY
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Audit tracked release tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -s README.md
+          test -s CHANGELOG.md
+          test -s docs/API.md
+          test -s docs/ARCHITECTURE.md
+          test -s docs/PRIVACY.md
+          test -s docs/USER_GUIDE.md
+          test -s docs/TESTING.md
+          test -s SECURITY.md
+          test -s SUPPORT.md
+          test -s CONTRIBUTING.md
+          grep -q '^version: 2.3.0+8$' pubspec.yaml
+          grep -q "applicationVersion: '2.3.0'" lib/features/editor/spell_checker_page.dart
+          grep -q '`2.3.0+8`' README.md
+          grep -q '## \[2.3.0\] - 2026-08-08' CHANGELOG.md
+          grep -q '## 2.3 — Review presets and preference portability' docs/ROADMAP.md
+          grep -q '# V2.3 review preset and portable-settings APIs' docs/API.md
+          grep -q '# V2.3 review presets and preference portability' docs/ARCHITECTURE.md
+          grep -q '## V2.3 review presets' docs/WRITING_RULES.md
+          grep -q '## V2.3 portable language preferences' docs/LANGUAGE_PACKS.md
+          grep -q '# Portable settings — V2.3' docs/USER_GUIDE.md
+          grep -q '## V2.3 development contracts' docs/DEVELOPMENT.md
+          grep -q '## V2.3 focused coverage' docs/TESTING.md
+          grep -q '## V2.3 review presets and portable settings' docs/ACCESSIBILITY.md
+          grep -q '## Portable settings import problems — V2.3' docs/TROUBLESHOOTING.md
+          grep -q 'Current V2.3 release:' docs/RELEASING.md
+          grep -q 'git tag -a v2.3.0' docs/RELEASING.md
+          grep -q '## Review presets and Portable settings — V2.3' docs/PRIVACY.md
+          grep -q '## V2.3 review preset and portability changes' CONTRIBUTING.md
+          grep -q '## Portable settings security boundary — V2.3' SECURITY.md
+          grep -q '## V2.3 portable settings reports' SUPPORT.md
+          grep -q 'Writing insights review presets' web/index.html
+          grep -q 'portable non-document preferences' web/manifest.json
+          grep -q '## V2.3 review presets and portable settings' .github/pull_request_template.md
+          grep -q '^# V2.3 diagnostic note$' .github/ISSUE_TEMPLATE/bug_report.yml
+          grep -q '^# V2.3 design note$' .github/ISSUE_TEMPLATE/feature_request.yml
+          test -f lib/core/settings_transfer_codec.dart
+          test -f lib/storage/settings_transfer_service.dart
+          test -f lib/features/editor/settings_transfer_dialog.dart
+          test -f lib/writing/writing_review_preset.dart
+          test -f test/settings_transfer_codec_test.dart
+          test -f test/settings_transfer_service_test.dart
+          test -f test/settings_transfer_dialog_test.dart
+          test -f test/writing_review_preset_test.dart
+          test -f test/v23_widget_test.dart
+          if git ls-files 'tools/v23*' | grep -q .; then
+            echo 'Unexpected tracked V2.3 helper:' >&2
+            git ls-files 'tools/v23*' >&2
+            exit 1
+          fi
+          if git ls-files '.github/workflows/v23-*' | grep -q .; then
+            echo 'Unexpected tracked V2.3 temporary workflow:' >&2
+            git ls-files '.github/workflows/v23-*' >&2
+            exit 1
+          fi
+          ! grep -q 'Current V2.2 release:' docs/RELEASING.md
+          ! grep -q '2.2.0+7' README.md docs/RELEASING.md web/index.html web/manifest.json
+          ! grep -q 'currently have no separate export UI' SUPPORT.md
+          ! grep -q 'V2.1 adds no new runtime dependency' docs/RELEASING.md
+          ! grep -q 'V2.1 adds no new runtime package' SECURITY.md
+          python -m json.tool web/manifest.json >/dev/null
+          python - <<'PY'
+          from pathlib import Path
+          lines = Path('pubspec.yaml').read_text().splitlines()
+          start = lines.index('dependencies:') + 1
+          end = lines.index('dev_dependencies:')
+          direct = []
+          for line in lines[start:end]:
+              if line.startswith('  ') and not line.startswith('    ') and ':' in line:
+                  direct.append(line.strip().split(':', 1)[0])
+          if direct != ['flutter', 'shared_preferences']:
+              raise SystemExit(f'Unexpected runtime dependencies: {direct}')
+          PY
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify lockfile stability
+        run: git diff --exit-code -- pubspec.lock
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test V2.3 focused suites
+        run: |
+          flutter test test/writing_review_preset_test.dart --reporter expanded
+          flutter test test/settings_transfer_codec_test.dart --reporter expanded
+          flutter test test/settings_transfer_service_test.dart --reporter expanded
+          flutter test test/settings_transfer_dialog_test.dart --reporter expanded
+          flutter test test/v23_widget_test.dart --reporter expanded
+
+      - name: Test complete suite
+        run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
+
+      - name: Re-audit final working tree
+        shell: bash
+        run: |
+          git diff --check
+          git diff --exit-code -- pubspec.lock
+          if git ls-files 'tools/v23*' | grep -q .; then exit 1; fi
+          if git ls-files '.github/workflows/v23-*' | grep -q .; then exit 1; fi
+          grep -q '^version: 2.3.0+8$' pubspec.yaml
+          grep -q 'Current V2.3 release:' docs/RELEASING.md
+          grep -q 'Portable settings' SUPPORT.md
+
+      - name: Commit exact validated final tree
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No final wording changes to commit.'
+          else
+            git commit -m 'Finalize V2.3 release documentation'
+            git push origin HEAD:v2.3-release-recovery
+          fi
