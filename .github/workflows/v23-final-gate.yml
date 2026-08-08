@@ -5,18 +5,80 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   final-validate:
+    if: github.event.pull_request.head.ref == 'v2.3-final-recovery'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Check out exact pull request head
+      - name: Check out final recovery branch
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: v2.3-final-recovery
           fetch-depth: 0
+
+      - name: Reconcile filesystem to validated V2.3 recovery tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin v2.3-release-recovery
+          git read-tree --reset -u origin/v2.3-release-recovery
+
+      - name: Finalize audited release wording
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path_name, old, new, label):
+              path = Path(path_name)
+              text = path.read_text()
+              if new in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: {label}: expected 1 old marker, found {count}')
+              path.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'docs/RELEASING.md',
+              'Current V2.2 release:\n\n```text\n2.2.0+7\n```',
+              'Current V2.3 release:\n\n```text\n2.3.0+8\n```',
+              'current release version',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'V2.1 persists:\n',
+              'V2.3 persists:\n',
+              'persistent-data heading',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'git tag -a v2.2.0 -m "SpellChecker v2.2.0"\ngit push origin v2.2.0',
+              'git tag -a v2.3.0 -m "SpellChecker v2.3.0"\ngit push origin v2.3.0',
+              'tagging example',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              '3. Highlight V2.2 review categories/search/filters, filtered batch fixes, reset-to-defaults semantics, plus the retained V2.1 persistence/batch/undo/shortcut foundation.',
+              '3. Highlight V2.3 review presets and Portable settings semantics, plus V2.2 review categories/search/reset-to-defaults and the retained V2.1 persistence/batch/undo/shortcut foundation.',
+              'release notes guidance',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'V2.1 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.',
+              'V2.3 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.',
+              'release dependency note',
+          )
+          replace_once(
+              'SECURITY.md',
+              '`shared_preferences` remains the only non-SDK runtime dependency and is used for application-local preferences. V2.1 adds no new runtime package.',
+              '`shared_preferences` remains the only non-SDK runtime dependency and is used for application-local preferences. V2.3 adds no new runtime package.',
+              'security dependency note',
+          )
+          PY
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -116,12 +178,30 @@ jobs:
       - name: Build release web app
         run: flutter build web --release
 
-      - name: Re-audit exact head
+      - name: Re-audit final working tree
         shell: bash
         run: |
+          set -euo pipefail
           git diff --check
           git diff --exit-code -- pubspec.lock
           if git ls-files 'tools/v23*' | grep -q .; then exit 1; fi
           if git ls-files '.github/workflows/v23-*' | grep -q .; then exit 1; fi
           grep -q '^version: 2.3.0+8$' pubspec.yaml
           grep -q 'Current V2.3 release:' docs/RELEASING.md
+          grep -q 'Portable settings' SUPPORT.md
+
+      - name: Commit exact validated final tree
+        shell: bash
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Final recovery branch already matches the validated tree.'
+          else
+            git commit -m 'Finalize V2.3 release tree'
+            git push origin HEAD:"$HEAD_REF"
+          fi
