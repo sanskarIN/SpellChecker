@@ -101,6 +101,26 @@ If a rule switch cannot be saved, the current in-memory choice remains active fo
 
 SpellChecker does not send the preference or editor text to a remote fallback.
 
+## Review filters — V2.2
+
+Writing insights search text, selected rule categories, the automatic-fixes-only switch, visible counts, and the filtered visible finding set are dialog-local memory state.
+
+SpellChecker does not persist or upload:
+
+- Review search queries.
+- Selected review categories.
+- Automatic-fixes-only state.
+- Visible/hidden finding lists.
+- Filtered batch plans.
+
+Closing the dialog discards the review filters.
+
+## Reset-to-defaults privacy behavior
+
+Resetting writing rules clears the selected language's local `spellchecker.writing_rule_ids.v1.<language-id>` override. It does not create a document log or send a reset event to a remote service.
+
+If local storage removal fails, built-in defaults stay active for the current session while the existing persisted override can remain on the device/profile and may reappear after restart.
+
 ## Language selection and vocabulary
 
 The selected built-in language ID is stored locally.

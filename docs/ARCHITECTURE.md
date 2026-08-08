@@ -488,6 +488,62 @@ TextCorrection.replaceAll
        one undo entry
 ```
 
+# V2.2 writing review organization
+
+`WritingReviewQuery` is part of reusable `lib/writing/`, not the Flutter dialog. This keeps search/category/fix-only matching deterministic and unit-testable.
+
+The Writing insights dialog owns only transient review controls:
+
+```text
+search controller
+selected rule categories
+automatic-fixes-only toggle
+```
+
+Those values derive a query and visible rule/finding sets on each rebuild. They are discarded when the dialog closes and are never written to `DictionaryPreferences`.
+
+Finding category labels are resolved from the dialog's actual analyzer-supported rules rather than the global built-in registry, preserving custom analyzer metadata.
+
+## Filtered batch flow
+
+```text
+Writing insights filters
+   │
+   ▼
+WritingReviewQuery.filterIssues
+   │
+   ├── visible findings
+   └── visible automatic findings
+            │
+            ▼
+Apply visible safe fixes
+            │
+            ▼
+WritingCorrection.applyAll
+            │
+            └── same V2.1 stale/overlap/end-to-start/undo contract
+```
+
+Filtering selects the user's batch scope; it does not weaken correction validation.
+
+## Reset-to-defaults flow
+
+```text
+Reset rules to defaults
+   │
+   ▼
+WritingInsightsDialogResult(resetRulePreferences: true)
+   │
+   ▼
+SpellCheckerPage
+   ├── resolve _effectiveWritingRuleIds(null, active pack)
+   ├── activate defaults in memory
+   ├── clear language-specific stored rule-ID key
+   └── report persistence failure without discarding session defaults
+```
+
+A successful reset leaves the preference **unset**, not explicitly equal to the current default set.
+
 # Writing insights flow
 
 ```text

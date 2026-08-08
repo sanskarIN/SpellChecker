@@ -54,6 +54,31 @@ flutter test test/writing_preferences_test.dart
 flutter test test/writing_widget_test.dart
 ```
 
+## V2.2 writing review query coverage
+
+`test/writing_review_query_test.dart` protects:
+
+- Empty-query semantics.
+- Source-compatible Mechanics category default.
+- Repeated-word Clarity categorization.
+- Rule search by ID/name/description/category.
+- Finding search by message/source/replacement metadata.
+- Category filtering consistency between rules and findings.
+- Automatic-fixes-only advisory exclusion.
+- Unknown-rule handling under active category filters.
+
+## V2.2 writing widget coverage
+
+Expanded `test/writing_widget_test.dart` protects:
+
+- Mechanics-only filtered batch applying only visible automatic fixes.
+- Filtered batch remaining one undo entry.
+- Search through category metadata.
+- Reset-to-defaults clearing the stored language override key.
+- Reopened Writing insights resolving registry defaults after reset.
+
+Review-filter tests should use the real lazy dialog/list and scroll/ensure visibility rather than changing production layout. Search/category/automatic-only state must not be asserted in persistent preferences because it is intentionally transient.
+
 ## Writing-rule coverage
 
 `test/writing_rules_test.dart` protects:

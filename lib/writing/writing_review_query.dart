@@ -7,8 +7,8 @@ class WritingReviewQuery {
     String search = '',
     Iterable<WritingRuleCategory> categories = const <WritingRuleCategory>[],
     this.automaticFixesOnly = false,
-  })  : search = search.trim().toLowerCase(),
-        categories = Set<WritingRuleCategory>.unmodifiable(categories);
+  }) : search = search.trim().toLowerCase(),
+       categories = Set<WritingRuleCategory>.unmodifiable(categories);
 
   final String search;
   final Set<WritingRuleCategory> categories;
@@ -29,31 +29,33 @@ class WritingReviewQuery {
       for (final rule in rules) rule.id: rule,
     };
 
-    return issues.where((WritingIssue issue) {
-      if (automaticFixesOnly && !issue.hasAutomaticFix) {
-        return false;
-      }
+    return issues
+        .where((WritingIssue issue) {
+          if (automaticFixesOnly && !issue.hasAutomaticFix) {
+            return false;
+          }
 
-      final rule = ruleById[issue.ruleId];
-      if (categories.isNotEmpty &&
-          (rule == null || !categories.contains(rule.category))) {
-        return false;
-      }
+          final rule = ruleById[issue.ruleId];
+          if (categories.isNotEmpty &&
+              (rule == null || !categories.contains(rule.category))) {
+            return false;
+          }
 
-      if (search.isEmpty) {
-        return true;
-      }
+          if (search.isEmpty) {
+            return true;
+          }
 
-      return _containsSearch(issue.ruleId) ||
-          _containsSearch(issue.ruleName) ||
-          _containsSearch(issue.message) ||
-          _containsSearch(issue.originalText) ||
-          _containsSearch(issue.replacement ?? '') ||
-          (rule != null &&
-              (_containsSearch(rule.displayName) ||
-                  _containsSearch(rule.description) ||
-                  _containsSearch(rule.category.displayName)));
-    }).toList(growable: false);
+          return _containsSearch(issue.ruleId) ||
+              _containsSearch(issue.ruleName) ||
+              _containsSearch(issue.message) ||
+              _containsSearch(issue.originalText) ||
+              _containsSearch(issue.replacement ?? '') ||
+              (rule != null &&
+                  (_containsSearch(rule.displayName) ||
+                      _containsSearch(rule.description) ||
+                      _containsSearch(rule.category.displayName)));
+        })
+        .toList(growable: false);
   }
 
   bool matchesRule(WritingRule rule) {

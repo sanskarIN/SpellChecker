@@ -73,6 +73,22 @@ Requirements:
 - Focus should not jump unexpectedly because a language changes.
 - Language-specific vocabulary/rule choices must not be communicated only indirectly through changed findings.
 
+## V2.2 review-management controls
+
+Writing insights adds standard accessible controls for review organization:
+
+- Labeled search `TextField`.
+- Mechanics/Clarity `FilterChip` controls with selected state.
+- Labeled **Automatic fixes only** switch.
+- Labeled **Clear review filters** action.
+- Visible/total rule and finding counts.
+- Category text in rule/finding content and finding semantics.
+- Labeled **Reset rules to defaults** action.
+
+Filters must remain keyboard reachable and must not make hidden findings indistinguishable from “no findings at all”; the dialog exposes a dedicated **No matching findings** state when enabled rules have findings that the current review filters hide.
+
+When filters are active, **Apply visible safe fixes (N)** includes the visible automatic-fix count in its label. Resetting rules closes the dialog and reports persistence failure textually if the override could not be cleared.
+
 ## Writing insights
 
 Writing insights uses:

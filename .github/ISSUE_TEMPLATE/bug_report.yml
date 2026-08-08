@@ -47,6 +47,11 @@ body:
         - Writing rule preference persistence
         - Writing individual safe fix
         - Writing apply-all batch fix / overlap handling
+        - Writing review search / category filters
+        - Writing automatic-fixes-only filter
+        - Writing apply-visible batch fix
+        - Writing reset rules to defaults
+
         - Writing shortcut (Ctrl/Command+Shift+Enter)
         - Unicode tokenization / normalization
         - Inline issue highlighting

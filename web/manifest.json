@@ -5,6 +5,6 @@
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#4458D8",
-  "description": "A privacy-first open-source writing utility with explicit English language packs, Unicode-aware local spelling, persistent per-language vocabulary and writing-rule choices, batch-safe local writing fixes, keyboard workflows, and undo-friendly corrections.",
+  "description": "A privacy-first open-source writing utility with explicit English language packs, Unicode-aware local spelling, persistent per-language vocabulary and writing-rule choices, categorized searchable writing review, filtered batch-safe local fixes, reset-to-default rule management, keyboard workflows, and undo-friendly corrections.",
   "orientation": "any"
 }

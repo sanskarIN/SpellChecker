@@ -14,6 +14,11 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Per-language persisted writing-rule preferences with backward-compatible defaults.
 - Language-tagged detailed suggestion metadata.
 - Optional local **Writing insights** with configurable deterministic rules.
+
+- Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
+- Temporary Writing insights search, category filters, and **Automatic fixes only** review.
+- **Apply visible safe fixes (N)** when review filters are active.
+- **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
 - Built-in repeated-word, sentence-capitalization, repeated-space, and repeated-punctuation rules.
 - **Apply all safe fixes** for non-overlapping current writing findings.
@@ -44,9 +49,9 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.1.0+6`
+`2.2.0+7`
 
-Version 2.1 is the Writing Workflow Quality release. It keeps the V2.0 local writing-rule foundation and adds durable per-language rule choices, safe batch correction with deterministic overlap handling, one-step batch undo, and the `Ctrl/⌘+Shift+Enter` Writing insights shortcut. Existing V1.3 language-pack behavior and V1.2 spelling/editor workflows remain compatible.
+Version 2.2 is the Writing Review & Rule Management release. It keeps V2.1 persistence, batch-safety, one-step undo, and keyboard workflows while adding reusable rule categories, transient search/category/automatic-fix review filters, filtered batch application, and a true per-language **Reset rules to defaults** action that removes the stored override instead of freezing today's defaults. Existing V2.1, V1.3, and V1.2 behavior remains compatible.
 
 ## Language selection
 
@@ -68,6 +73,26 @@ The built-in rules cover:
 - Repeated identical punctuation.
 
 These rules are deterministic helpers, not a claim of full natural-language grammar coverage.
+
+### Review filters — V2.2
+
+Writing insights can now narrow both rule management and findings without persisting review text/state:
+
+- Search rules and findings by rule ID/name/description/category, finding message/source text, or suggested replacement.
+- Filter by **Mechanics** and/or **Clarity**.
+- Enable **Automatic fixes only** to hide advisory findings.
+- Use **Clear review filters** to return to the complete enabled-rule review.
+- Rule and finding headers show visible/total counts.
+
+Search text, selected categories, and the automatic-fix filter live only inside the open Writing insights dialog. They are not stored in `shared_preferences` and disappear when the dialog closes.
+
+When filters are active, the batch action becomes **Apply visible safe fixes (N)** and passes only currently visible automatic findings to the same V2.1 `WritingCorrection.applyAll` safety/overlap/undo pipeline.
+
+### Reset rules to defaults — V2.2
+
+**Reset rules to defaults** differs from enabling every current switch. It clears the selected language's persisted writing-rule override key, resolves the current registry defaults in memory, and closes the dialog. This returns that language to the **unset/default** preference state so future default-rule changes can be picked up normally.
+
+If clearing the local override fails, built-in defaults remain active for the current session while SpellChecker reports that the saved override could not be removed; the old override may therefore reappear after restart until storage succeeds.
 
 ### Persistent rule choices
 
@@ -281,6 +306,7 @@ SpellChecker/
 │   ├── widget_test.dart
 │   ├── writing_correction_test.dart
 │   ├── writing_preferences_test.dart
+│   ├── writing_review_query_test.dart
 │   ├── writing_rules_test.dart
 │   └── writing_widget_test.dart
 ├── web/

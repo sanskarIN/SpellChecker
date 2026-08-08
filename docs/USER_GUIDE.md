@@ -136,6 +136,28 @@ The dialog displays:
 - **Apply safe fix** on individually fixable findings.
 - **Apply all safe fixes (N)** when at least one automatic fix is available.
 
+## Review search and filters — V2.2
+
+Writing insights can narrow the current review without changing your saved rule choices:
+
+- **Search rules and findings** searches rule metadata plus visible finding text/replacement metadata.
+- **Mechanics** and **Clarity** chips filter rules/findings by category.
+- **Automatic fixes only** hides advisory findings that have no deterministic replacement.
+- **Clear review filters** restores the full enabled-rule review.
+- Rule and finding headers show visible/total counts.
+
+These review filters are temporary. Closing the dialog clears them; they are not saved locally and do not travel between languages.
+
+When any filter is active, the batch button reads **Apply visible safe fixes (N)** and applies only currently visible automatic findings using the same V2.1 stale/overlap safety and one-step undo behavior.
+
+## Reset rules to defaults — V2.2
+
+Use **Reset rules to defaults** when you want the selected language to follow the application's built-in default rule set again.
+
+This is different from manually turning every current rule on. Reset removes the saved per-language override key. After a successful reset, future releases can change built-in defaults and that language can receive the new defaults normally.
+
+If local storage cannot clear the override, current-session defaults still become active and SpellChecker reports the persistence problem; the old saved override may return after restart until storage succeeds.
+
 ## Built-in writing rules
 
 Current rules:

@@ -132,6 +132,22 @@ If the button works but the shortcut does not:
 
 The shortcut is supplementary; the visible control remains authoritative.
 
+## Writing insights says “No matching findings”
+
+The enabled rules have findings, but your current V2.2 search/category/automatic-fix filters hide them.
+
+Use **Clear review filters**, clear the search field, deselect category chips, or turn off **Automatic fixes only**. Review filters disappear automatically when the dialog closes.
+
+## Apply visible safe fixes changed fewer items than the total finding count
+
+Expected. With an active review filter, V2.2 sends only **visible automatic findings** into the existing safe batch pipeline. Hidden findings are outside the requested batch scope; stale/advisory/overlapping visible findings can still be skipped by V2.1 safety rules.
+
+## Reset rules to defaults is different from turning every switch on
+
+Expected. Reset clears the selected language's saved rule-ID override so the language returns to the **unset/default** state. Turning switches on creates/updates an explicit stored list instead.
+
+If reset reports a storage failure, defaults are active for the current session but the previous saved override may return after restart because the key could not be removed.
+
 # Language behavior
 
 ## US/UK spelling changes after switching language

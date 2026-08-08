@@ -399,6 +399,82 @@ Pay particular attention to:
 - Unicode source text.
 - Language-pack normalization.
 
+## V2.2 rule categories
+
+`WritingRuleCategory` is public review metadata:
+
+```dart
+enum WritingRuleCategory {
+  mechanics('Mechanics'),
+  clarity('Clarity');
+}
+```
+
+`WritingRule.category` has a concrete default of `WritingRuleCategory.mechanics`. This is intentionally source-compatible with 2.0/2.1 external rule implementations that implemented the original abstract contract before categories existed.
+
+Rules should override the getter only when another category is a clearer user-facing fit. The built-in `repeated-word` rule is categorized as **Clarity**; the other current built-ins inherit **Mechanics**.
+
+Category names are review organization, not severity. `WritingIssueSeverity` remains a separate finding property.
+
+## V2.2 reusable review query
+
+`WritingReviewQuery` keeps review filtering outside Flutter widgets:
+
+```dart
+final query = WritingReviewQuery(
+  search: 'clarity',
+  categories: <WritingRuleCategory>{WritingRuleCategory.clarity},
+  automaticFixesOnly: true,
+);
+
+final visibleRules = query.filterRules(analyzer.rules);
+final visibleIssues = query.filterIssues(
+  analysis.issues,
+  rules: analyzer.rules,
+);
+```
+
+Search is trimmed/lowercased and can match rule ID/name/description/category plus finding rule metadata, message, exact finding source text, and suggested replacement.
+
+When a category filter is active, a finding whose rule is unavailable in the supplied rule collection is excluded instead of being guessed into a category. Writing insights passes its actual analyzer's supported rule set so custom analyzers retain their own category metadata.
+
+`automaticFixesOnly` filters findings only; it does not hide rule switches. Users can still manage rule enablement while reviewing only automatically fixable findings.
+
+## V2.2 transient review state
+
+Writing insights review filters are intentionally not application preferences:
+
+```text
+search text                memory-only dialog state
+selected categories        memory-only dialog state
+automatic-fixes-only       memory-only dialog state
+visible counts/results     derived memory-only state
+```
+
+Closing Writing insights discards these filters. Only enabled writing-rule IDs remain persisted per language.
+
+## Filtered batch correction
+
+When review filters are inactive, Writing insights displays **Apply all safe fixes (N)**. When any review filter is active it displays **Apply visible safe fixes (N)** and sends only visible automatic findings to `WritingCorrection.applyAll`.
+
+This does not create a second correction algorithm. V2.1 batch invariants remain authoritative: current-source validation, advisory skipping, deterministic overlap handling, end-to-start accepted mutation, applied/skipped counts, and one-step undo.
+
+A hidden finding is simply not part of that user-requested filtered batch. Reopen/clear filters to review or apply other findings.
+
+## Reset rules to defaults — V2.2
+
+Writing insights can return `resetRulePreferences: true`. The page then:
+
+1. Resolves current registry defaults for the selected language.
+2. Activates those defaults for the current session.
+3. Calls `DictionaryPreferences.clearWritingRuleIds(languageId: ...)`.
+4. Leaves the language in the **missing key / registry defaults** state after a successful clear.
+5. Does not apply an individual/batch finding as part of the reset action.
+
+This is deliberately different from storing today's default rule IDs. A future release can evolve `WritingRuleRegistry.defaultEnabledRuleIds`, and a user who chose Reset will receive that new default because no explicit override remains.
+
+If clearing fails, the current-session defaults remain active but the application reports that the saved override could not be removed; the old override may return on restart.
+
 ## Tests
 
 Relevant test files include:
