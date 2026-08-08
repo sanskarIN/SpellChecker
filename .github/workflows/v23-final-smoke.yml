@@ -1,0 +1,16 @@
+name: V2.3 Final Gate Smoke
+
+on:
+  pull_request:
+    branches:
+      - v2.3-final-gate-base
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm trigger
+        run: echo 'V2.3 final-gate pull_request trigger loaded successfully.'
