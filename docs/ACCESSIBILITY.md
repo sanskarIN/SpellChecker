@@ -2,187 +2,231 @@
 
 SpellChecker should remain usable with keyboard navigation, screen readers, text scaling, high-contrast system settings, narrow layouts, and without relying on color alone.
 
-## Current accessibility foundations
+## Current foundations
 
-Version 1.2 uses standard Flutter Material controls plus explicit semantics for editor/result state:
+The application primarily uses standard Flutter Material controls plus explicit semantic wrappers for state that is not obvious from a standard control alone.
+
+Current surfaces include:
 
 - `TextField` for editor and dictionary input.
-- `FilledButton` / `OutlinedButton` for primary actions.
-- `ActionChip` for single replacement suggestions.
-- `PopupMenuButton` for replace-all choices.
-- `TextButton` for save/ignore/dialog actions.
-- `DropdownButtonFormField` for suggestion-count preference.
-- `IconButton` with tooltips for app-bar and navigation actions.
-- `Badge` for saved/ignored/result counts.
-- `AlertDialog` for dictionary/import/confirmation/About content.
-- Material theming following system light/dark mode.
-- Progress indicators for preference restoration and dictionary writes.
-- `Semantics` containers/live regions for editor context, issue state, result counts, empty states, and storage warnings.
-
-Using standard controls lets Flutter provide platform roles/focus behavior while explicit semantic wrappers communicate V1.2 state that a visual underline alone cannot describe.
+- `FilledButton`, `OutlinedButton`, and `TextButton` for labeled actions.
+- `ActionChip` for spelling replacement suggestions.
+- `PopupMenuButton` for spelling replace-all choices.
+- `DropdownButton` / `DropdownButtonFormField` for language and suggestion settings.
+- `SwitchListTile` for Writing insights rule choices.
+- `IconButton` with tooltips for app-bar/navigation controls.
+- `Badge` for supplementary counts.
+- `AlertDialog` for dictionary, import, confirmation, About, and Writing insights.
+- Material light/dark color schemes.
+- Progress indicators during preference restoration/writes.
+- Semantic containers/live regions for important editor/result/finding/warning states.
 
 ## Keyboard shortcuts
-
-V1.2 defines these editor shortcuts:
 
 | Shortcut | Action |
 | --- | --- |
 | `Ctrl+Enter` | Run spelling check |
 | `Command+Enter` | Run spelling check on macOS-style keyboards |
+| `Ctrl+Shift+Enter` | Open Writing insights |
+| `Command+Shift+Enter` | Open Writing insights on macOS-style keyboards |
 | `F7` | Move to next spelling issue |
 | `Shift+F7` | Move to previous spelling issue |
 
-Issue navigation wraps at both ends.
+Visible pointer/touch controls remain available for these workflows. A shortcut must not become the only way to reach an essential action.
 
-Equivalent pointer-accessible previous/next controls remain in the app bar and Results header. Do not remove visible controls solely because a shortcut exists.
-
-## Keyboard behavior checklist
+## Keyboard checklist
 
 Preserve keyboard access for:
 
 - Editor focus and multiline text entry.
+- Language selection.
 - Check spelling.
 - Clear editor text.
 - Undo correction.
-- Previous/next issue navigation.
+- Previous/next spelling issue.
 - Issue-card activation.
 - Suggestion selection.
-- Replace-all menu opening/selection.
-- Save word.
-- Ignore once.
-- Personal-dictionary manager.
-- Personal-word add/remove/clear actions.
+- Spelling replace-all menu.
+- Save word / Ignore once.
+- Personal dictionary manager.
+- Personal-word add/remove/clear.
 - Suggestion-count dropdown.
-- Import dialog text entry/confirmation.
-- Copy export.
+- Dictionary import/export.
 - Clear ignored session words.
+- Writing insights launch.
+- Writing-rule switches.
+- Individual **Apply safe fix**.
+- **Apply all safe fixes (N)**.
 - About dialog.
 
-Do not create essential pointer-only, hover-only, or color-only actions.
+Do not introduce pointer-only, hover-only, or color-only essential actions.
 
-## Language selector accessibility
+## Language selector
 
-The V1.3 language selector is a standard Flutter dropdown with visible language names. It must remain keyboard reachable and expose the current selection through standard semantics.
+The language selector is a standard dropdown in the Editor header and is wrapped with a semantic label identifying it as the spelling language control.
 
-Changing language re-checks current non-blank text; users should not need to infer the new language only from spelling changes. Keep the visible selected language label present.
+Requirements:
 
-Do not implement automatic language switching that unexpectedly moves focus or changes rules without explicit user action.
+- Current language remains visibly named.
+- Control is keyboard reachable.
+- Changing language remains explicit user action.
+- Focus should not jump unexpectedly because a language changes.
+- Language-specific vocabulary/rule choices must not be communicated only indirectly through changed findings.
 
-## Writing insights accessibility
+## Writing insights
 
-Writing insights uses a standard dialog, labeled rule switches, textual finding explanations, source ranges, and labeled fix controls. Findings are semantic containers and empty states use live-region semantics.
+Writing insights uses:
 
-Rule meaning/fix availability must never depend only on severity color/icon. Keep rule switches keyboard reachable and do not automatically apply a writing fix when focus/selection changes.
+- Labeled rule switches.
+- Textual findings.
+- Exact source ranges.
+- Suggested replacement text.
+- Labeled individual fix buttons.
+- A labeled batch action containing the number of available automatic fixes.
+- Semantic finding containers.
+- Semantic empty states.
 
-## Inline issue highlighting
+A rule's meaning, enabled state, severity, or fix availability must not depend only on color/icon styling.
 
-Checked spelling issues receive a wavy underline inside the editable text. The active issue receives stronger background/text styling.
+### Persisted rule choices
 
-Inline styling is supplementary. Users can also identify issues through:
+V2.1 rule switches are persisted per language. The visible switch state remains the user-facing authority.
 
-- Results list text.
+If storage fails, the session choice remains active and the app reports a storage warning. The warning must not imply that editor text was uploaded.
+
+### Batch fixes
+
+**Apply all safe fixes (N)** must remain a normal labeled control.
+
+After a successful batch:
+
+- The complete batch is one undo entry.
+- Feedback reports applied/skipped counts in readable text.
+- **Undo correction** remains available.
+
+Do not rely on a transient color change to communicate that a batch was applied.
+
+## Inline spelling highlights
+
+Checked spelling issues receive wavy underlines; the active issue receives stronger styling.
+
+Inline styling is supplementary. The same issue is also represented through:
+
+- Results text.
 - Issue count.
 - Character range.
-- Active issue position (`Issue X of Y`).
-- Semantic issue labels.
-- Editor selection when an issue is activated.
+- Active issue position.
+- Semantic labels.
+- Editor selection when activated.
 
-This prevents color/underline perception from being the sole mechanism for understanding spelling state.
+Manual edits clear stale highlighting.
 
-Manual edits clear old checked highlighting so stale ranges are not visually presented as current issues.
+## Spelling issue semantics
 
-## Active issue semantics
+Each issue card is a semantic container describing:
 
-Each issue card is a semantic container with:
-
-- Issue index and total issue count.
-- Original issue word.
+- Issue index/total.
+- Source word.
 - Character range.
 - Selected state when active.
 
-Changing active issue also selects its source range in the editor and requests editor focus. Results automatically attempt to scroll the selected card into view.
+Changing active issue also selects the corresponding editor range and requests editor focus. Avoid focus loops between Results and editor.
 
-When changing this behavior, avoid focus loops where Results and editor repeatedly steal focus from one another.
+## Writing finding semantics
+
+Each writing finding is a semantic container identifying:
+
+- Finding position/total.
+- Rule name.
+- Human-readable message.
+
+The visible source range/original text remains available to sighted users; semantic labels should remain concise enough to avoid overwhelming screen-reader output.
 
 ## Live regions
 
-V1.2 uses live-region semantics for important status states:
+Use live regions for important status transitions rather than every visual update.
 
-- Result count after checking.
-- **Ready to check** / **Nothing to check** / **No issues found** states.
-- Local storage unavailable warning.
+Appropriate examples:
 
-Keep live announcements short enough to be useful. Do not mark every suggestion chip or every visual change as a live region; that would create excessive screen-reader noise.
+- Result count.
+- Ready/blank/clean states.
+- Storage-unavailable warning.
+- Writing empty state.
 
-## Storage warning accessibility
+Avoid making each suggestion, switch change, or highlight repaint a live region.
 
-If preference storage cannot load/write, SpellChecker shows visible warning text plus a live-region semantic label. Session spelling remains usable.
+## Storage warnings
 
-The warning must:
+A storage warning should:
 
-- Explain that local dictionary/preferences may not persist.
-- Not imply editor text was uploaded.
+- Explain that local settings may not persist.
 - Remain readable in light/dark themes.
-- Avoid relying only on warning color/icon.
+- Not imply document upload.
+- Avoid color-only communication.
+- Leave session spelling/writing controls usable when possible.
 
-## Correction and undo accessibility
+## Correction and undo
 
-After a spelling correction:
+After a correction:
 
-- A snackbar explains what changed and offers **Undo**.
-- **Undo correction** remains available near the editor while correction history exists.
+- Snackbar feedback can expose **Undo**.
+- **Undo correction** remains available while history exists.
 
-Replace-all is represented by a labeled control/menu rather than requiring a hidden gesture.
+One undo entry represents one user-visible automatic operation:
 
-If future work adds richer announcements for replacement counts, avoid announcing both snackbar and redundant live regions simultaneously unless testing shows it is beneficial.
+- Single spelling replacement.
+- Spelling replace-all.
+- Individual writing safe fix.
+- V2.1 writing batch safe fix.
+
+This grouping makes bulk actions predictable for keyboard/screen-reader users.
 
 ## Screen readers
 
 When adding/changing widgets:
 
-- Prefer controls that already expose semantic roles.
+- Prefer controls with native semantic roles.
 - Give icon-only controls meaningful tooltips/labels.
-- Make visible button text describe outcomes.
-- Avoid duplicate semantics that cause repeated announcements.
-- Keep errors/results descriptive rather than color-only.
-- Preserve the **Save word** vs **Ignore once** distinction.
-- Ensure active/selected issue state is discoverable without inspecting visual background color.
+- Use action-oriented visible labels.
+- Avoid duplicate semantic labels that create repeated announcements.
+- Keep errors/results textual, not color-only.
+- Preserve **Save word** vs **Ignore once** wording.
+- Keep selected issue state discoverable without visual background inspection.
+- Do not announce sensitive editor text more broadly than necessary.
 
-The editor semantic label states that checked spelling issues are underlined after a check.
+## Badges/counts
 
-## Badges and counts
+Badges are supplementary only.
 
-Badges are supplementary:
+Examples:
 
-- Saved-word badge supplements the dictionary manager/list.
+- Saved-word badge supplements the personal dictionary list.
 - Ignored-word badge supplements the clear-ignored action.
-- Result-count badge supplements the Results header/live label.
-
-Do not make badge visibility the only source of state.
+- Result-count badge supplements visible/semantic result text.
 
 ## Loading and disabled states
 
-Personal-dictionary controls remain unavailable until preferences finish loading. The editor displays a small progress indicator during restoration.
+Preference-dependent controls can be disabled while initial restoration runs.
 
-Dictionary-manager writes disable conflicting controls and show a progress indicator.
+Async flows must:
 
-When changing async flows:
-
-- Avoid permanently disabled focus targets.
+- Avoid permanent disabled focus targets.
 - Restore actionable state after success/failure.
 - Surface failures as readable text.
-- Do not indicate success before persistence completes.
-- Preserve session spelling even if preference storage fails.
+- Avoid claiming persistence success before a write succeeds.
+- Preserve session functionality on storage failure where safe.
 
 ## Dialog accessibility
 
-Dictionary/import/confirmation dialogs should retain:
+Dialogs should retain:
 
 - Descriptive titles.
-- Clear cancel/confirm actions.
+- Clear close/cancel/confirm actions.
 - Keyboard-focusable controls.
-- Scrollable/flexible content for text scaling/small viewports.
+- Scrollable/flexible content for narrow viewports and larger text.
 - No essential information encoded solely in icons.
+
+Writing insights intentionally uses a scrollable/lazy findings list; every action must remain reachable through normal scrolling/focus traversal.
 
 ## Color and contrast
 
@@ -191,61 +235,68 @@ Contributors should:
 - Check light and dark themes.
 - Avoid low-contrast custom colors.
 - Preserve visible focus indicators.
-- Ensure active error-container foreground/background uses the Material color scheme.
-- Keep textual result information alongside inline error styling.
+- Keep textual issue/finding descriptions alongside visual emphasis.
+- Never make underline/background color the sole error/finding signal.
 
 ## Text scaling
 
-Layouts should tolerate increased system text scale:
+Layouts should tolerate increased text scale.
 
-- Avoid fixed-height text containers for wrapping content.
+- Avoid fixed-height wrapping text containers.
 - Keep results/dialogs scrollable.
-- Let action labels wrap or reflow via `Wrap` where practical.
-- Check repeated-occurrence chips, Replace all, storage warning, and keyboard hint text at larger scales.
+- Let action labels wrap/reflow where practical.
+- Test language names, storage warnings, batch-fix labels/counts, and rule descriptions at increased scales.
 
 ## Narrow layouts
 
-Below the wide-layout breakpoint the editor/results stack vertically. New controls must remain reachable through scrolling without horizontal clipping.
+Below the wide-layout breakpoint editor/results stack vertically. Controls must remain reachable by scrolling without horizontal clipping.
 
-Issue cards can grow vertically because of suggestion/action content; that is acceptable when their parent list remains scrollable.
+The language selector was intentionally placed in the existing Editor header as a dense control so it does not add unnecessary fixed vertical height to common 800×600 layouts.
 
 ## Automated accessibility testing
 
-V1.2 adds semantic structure but not exhaustive semantic-node assertions yet. Future regression tests should use Flutter semantics testing where stable to protect:
+Add targeted semantics tests where stable for the supported Flutter version.
 
-- Selected issue state.
-- Result count announcement.
-- Blank/clean status labels.
-- Storage-warning label.
+Important contracts include:
+
+- Selected spelling issue state.
+- Result-count/empty-state announcements.
+- Storage-warning live region.
 - Editor semantic label.
-- Tooltips/labels for icon-only navigation controls.
+- Language selector semantic label.
+- Writing finding semantic label.
+- Tooltips for icon-only controls.
+- Reachability of Writing insights batch and individual actions.
 
-Do not replace useful manual screen-reader/keyboard checks with automated tests alone.
+Automated tests complement rather than replace manual screen-reader/keyboard testing.
 
-## Manual accessibility checklist
+## Manual checklist
 
-For significant UI changes, verify when practical:
+For significant UI changes verify when practical:
 
-1. Keyboard-only editor/check/navigation/correction workflow.
-2. F7 and Shift+F7 navigation wraps correctly.
-3. Ctrl/Command+Enter runs a check without breaking multiline entry behavior.
-4. Active issue is understandable without color alone.
-5. Screen-reader labels for icon-only controls.
-6. Result/empty/storage states produce understandable announcements.
-7. Replace-all and Undo are keyboard reachable.
-8. Light and dark themes.
-9. Increased text size.
-10. Narrow viewport layout and scrolling.
-11. Dialog scrolling/focus behavior.
-12. Loading/disabled states during preference writes.
-13. No essential action depends on hover, color, underline, or badges alone.
+1. Keyboard-only editor/spelling workflow.
+2. `F7` / `Shift+F7` wrapping navigation.
+3. `Ctrl/Command+Enter` spelling check.
+4. `Ctrl/Command+Shift+Enter` Writing insights.
+5. Language selector keyboard use/current label.
+6. Writing-rule switch keyboard use.
+7. Individual and batch writing fixes.
+8. One-step undo after a writing batch.
+9. Screen-reader labels for icon-only controls.
+10. Understandable issue/finding status without color alone.
+11. Light/dark themes.
+12. Increased text size.
+13. Narrow viewport/scrolling.
+14. Dialog scrolling/focus behavior.
+15. Loading/disabled states during preference reads/writes.
+16. Storage failure messaging.
 
-## Future accessibility work
+## Future work
 
-V1.2 establishes keyboard/navigation/semantic foundations. Future improvements can include:
+Potential improvements include:
 
-- Dedicated semantics regression tests.
-- High-contrast review on supported platforms.
-- User-configurable shortcut support if needed.
-- More precise announcements after replace-all/undo.
-- Language-selection semantics when V1.3 adds language packs.
+- Dedicated semantics regression coverage.
+- High-contrast platform review.
+- Optional shortcut customization.
+- Refined non-duplicative announcements after bulk fixes/undo.
+- Additional accessible rule categories/filtering if the writing-rule catalogue grows.
