@@ -18,6 +18,21 @@ jobs:
           ref: v2.3-release-recovery
           fetch-depth: 0
 
+      - name: Repair strict Writing Rules test-list marker
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/v23_docs_apply.py')
+          text = path.read_text()
+          old = "'test/writing_review_query_test.dart\\ntest/writing_rules_test.dart'"
+          new = "'test/writing_rules_test.dart'"
+          replacement = "'test/writing_review_preset_test.dart\\ntest/writing_review_query_test.dart\\ntest/writing_rules_test.dart'"
+          if text.count(old) != 1 or text.count(replacement) != 1:
+              raise SystemExit('Unexpected V2.3 docs helper marker shape')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
       - name: Apply V2.3 documentation transform
         run: python tools/v23_docs_apply.py
 
