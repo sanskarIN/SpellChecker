@@ -33,6 +33,10 @@ class SettingsTransferService {
   /// Replaces all portable settings and restores the previous durable document
   /// on a best-effort basis if any write fails.
   Future<void> importDocument(SpellCheckerSettingsDocument document) async {
+    // Encoding performs the same validation as imported JSON and prevents a
+    // programmatically constructed invalid document from reaching storage.
+    SpellCheckerSettingsCodec.encode(document);
+
     final previous = await exportDocument();
     try {
       await _writeDocument(document);
