@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/spell_checker_engine.dart';
 import '../../core/spell_issue.dart';
 import '../../core/text_statistics.dart';
+import '../../storage/dictionary_preferences.dart';
+import 'dictionary_manager_dialog.dart';
 
 class SpellCheckerPage extends StatefulWidget {
-  const SpellCheckerPage({super.key});
+  const SpellCheckerPage({this.preferences, super.key});
+
+  final DictionaryPreferences? preferences;
 
   @override
   State<SpellCheckerPage> createState() => _SpellCheckerPageState();
@@ -15,14 +21,51 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   final TextEditingController _controller = TextEditingController();
   final SpellCheckerEngine _engine = SpellCheckerEngine();
 
+  late final DictionaryPreferences _preferences;
   List<SpellIssue> _issues = const <SpellIssue>[];
   TextStatistics _statistics = TextStatistics.fromText('');
+  int _suggestionLimit = DictionaryPreferences.defaultSuggestionLimit;
   bool _hasChecked = false;
+  bool _preferencesLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _preferences = widget.preferences ?? DictionaryPreferences();
+    unawaited(_restorePreferences());
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _restorePreferences() async {
+    try {
+      final words = await _preferences.loadPersonalWords();
+      final limit = await _preferences.loadSuggestionLimit();
+      if (!mounted) {
+        return;
+      }
+      _engine.replacePersonalDictionary(words);
+      setState(() {
+        _suggestionLimit = limit;
+        _preferencesLoaded = true;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _preferencesLoaded = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showMessage(
+            'Saved dictionary preferences could not be loaded. Session mode is still available.',
+          );
+        }
+      });
+    }
   }
 
   void _onTextChanged(String value) {
@@ -36,7 +79,10 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   void _checkText() {
     setState(() {
       _statistics = TextStatistics.fromText(_controller.text);
-      _issues = _engine.check(_controller.text);
+      _issues = _engine.check(
+        _controller.text,
+        suggestionLimit: _suggestionLimit,
+      );
       _hasChecked = true;
     });
   }
@@ -73,10 +119,29 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     _checkText();
   }
 
-  void _addToDictionary(SpellIssue issue) {
+  Future<void> _addToDictionary(SpellIssue issue) async {
+    if (!_preferencesLoaded) {
+      _showMessage('Dictionary preferences are still loading.');
+      return;
+    }
+
+    final before = _engine.personalDictionary;
     _engine.addToPersonalDictionary(issue.word);
-    _checkText();
-    _showMessage('Added “${issue.word}” to the session dictionary.');
+    try {
+      await _preferences.savePersonalWords(_engine.personalDictionary);
+      if (!mounted) {
+        return;
+      }
+      _checkText();
+      _showMessage('Saved “${issue.word}” to your personal dictionary.');
+    } catch (_) {
+      _engine.replacePersonalDictionary(before);
+      if (!mounted) {
+        return;
+      }
+      _checkText();
+      _showMessage('Could not save “${issue.word}”.');
+    }
   }
 
   void _ignoreWord(SpellIssue issue) {
@@ -85,10 +150,60 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     _showMessage('Ignoring “${issue.word}” for this session.');
   }
 
-  void _resetSessionWords() {
-    _engine.resetSession();
-    _checkText();
-    _showMessage('Session dictionary and ignored words were reset.');
+  void _clearIgnoredWords() {
+    final count = _engine.ignoredWords.length;
+    _engine.clearIgnoredWords();
+    if (_hasChecked) {
+      _checkText();
+    } else {
+      setState(() {});
+    }
+    _showMessage(
+      count == 0
+          ? 'There were no ignored session words.'
+          : 'Cleared $count ignored session ${count == 1 ? 'word' : 'words'}.',
+    );
+  }
+
+  Future<void> _showDictionaryManager() async {
+    if (!_preferencesLoaded) {
+      _showMessage('Dictionary preferences are still loading.');
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) => DictionaryManagerDialog(
+        initialWords: _engine.personalDictionary,
+        initialSuggestionLimit: _suggestionLimit,
+        onWordsChanged: _applyPersonalWords,
+        onSuggestionLimitChanged: _applySuggestionLimit,
+      ),
+    );
+  }
+
+  Future<void> _applyPersonalWords(Set<String> words) async {
+    await _preferences.savePersonalWords(words);
+    _engine.replacePersonalDictionary(words);
+    if (!mounted) {
+      return;
+    }
+    if (_hasChecked) {
+      _checkText();
+    } else {
+      setState(() {});
+    }
+  }
+
+  Future<void> _applySuggestionLimit(int limit) async {
+    await _preferences.saveSuggestionLimit(limit);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _suggestionLimit = limit);
+    if (_hasChecked) {
+      _checkText();
+    }
   }
 
   void _showMessage(String message) {
@@ -111,12 +226,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '1.0.0',
+      applicationVersion: '1.1.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source spelling utility. Spell checking runs locally in the application.',
+          'A privacy-first open-source spelling utility. Spell checking runs locally, and personal dictionary words are stored only on this device.',
         ),
       ],
     );
@@ -124,14 +239,30 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final personalWordCount = _engine.personalDictionary.length;
+    final ignoredWordCount = _engine.ignoredWords.length;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('SpellChecker'),
         actions: <Widget>[
           IconButton(
-            tooltip: 'Reset session words',
-            onPressed: _resetSessionWords,
-            icon: const Icon(Icons.restart_alt),
+            tooltip: 'Manage personal dictionary',
+            onPressed: _preferencesLoaded ? _showDictionaryManager : null,
+            icon: Badge(
+              isLabelVisible: personalWordCount > 0,
+              label: Text('$personalWordCount'),
+              child: const Icon(Icons.menu_book_outlined),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Clear ignored session words',
+            onPressed: _clearIgnoredWords,
+            icon: Badge(
+              isLabelVisible: ignoredWordCount > 0,
+              label: Text('$ignoredWordCount'),
+              child: const Icon(Icons.visibility_outlined),
+            ),
           ),
           IconButton(
             tooltip: 'About SpellChecker',
@@ -146,6 +277,8 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
             final editor = _EditorPanel(
               controller: _controller,
               statistics: _statistics,
+              suggestionLimit: _suggestionLimit,
+              preferencesLoaded: _preferencesLoaded,
               onChanged: _onTextChanged,
               onCheck: _checkText,
               onClear: _clearText,
@@ -194,6 +327,8 @@ class _EditorPanel extends StatelessWidget {
   const _EditorPanel({
     required this.controller,
     required this.statistics,
+    required this.suggestionLimit,
+    required this.preferencesLoaded,
     required this.onChanged,
     required this.onCheck,
     required this.onClear,
@@ -201,6 +336,8 @@ class _EditorPanel extends StatelessWidget {
 
   final TextEditingController controller;
   final TextStatistics statistics;
+  final int suggestionLimit;
+  final bool preferencesLoaded;
   final ValueChanged<String> onChanged;
   final VoidCallback onCheck;
   final VoidCallback onClear;
@@ -214,7 +351,21 @@ class _EditorPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text('Editor', style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    'Editor',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                if (!preferencesLoaded)
+                  const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
             const SizedBox(height: 4),
             Text(
               'Write or paste text below. Your text is checked locally.',
@@ -256,6 +407,7 @@ class _EditorPanel extends StatelessWidget {
                 _StatChip(label: '${statistics.words} words'),
                 _StatChip(label: '${statistics.characters} characters'),
                 _StatChip(label: '${statistics.sentences} sentences'),
+                _StatChip(label: '$suggestionLimit suggestions'),
               ],
             ),
           ],
@@ -286,7 +438,7 @@ class _ResultsPanel extends StatelessWidget {
   final List<SpellIssue> issues;
   final bool hasChecked;
   final void Function(SpellIssue issue, String suggestion) onReplace;
-  final ValueChanged<SpellIssue> onAddToDictionary;
+  final Future<void> Function(SpellIssue issue) onAddToDictionary;
   final ValueChanged<SpellIssue> onIgnore;
 
   @override
@@ -326,7 +478,8 @@ class _ResultsPanel extends StatelessWidget {
       return const _EmptyState(
         icon: Icons.edit_note,
         title: 'Ready to check',
-        message: 'Enter text and choose “Check spelling” to review possible mistakes.',
+        message:
+            'Enter text and choose “Check spelling” to review possible mistakes.',
       );
     }
 
@@ -364,7 +517,7 @@ class _IssueTile extends StatelessWidget {
 
   final SpellIssue issue;
   final ValueChanged<String> onReplace;
-  final VoidCallback onAddToDictionary;
+  final Future<void> Function() onAddToDictionary;
   final VoidCallback onIgnore;
 
   @override
@@ -408,12 +561,12 @@ class _IssueTile extends StatelessWidget {
             TextButton.icon(
               onPressed: onAddToDictionary,
               icon: const Icon(Icons.library_add_outlined),
-              label: const Text('Add word'),
+              label: const Text('Save word'),
             ),
             TextButton.icon(
               onPressed: onIgnore,
               icon: const Icon(Icons.visibility_off_outlined),
-              label: const Text('Ignore'),
+              label: const Text('Ignore once'),
             ),
           ],
         ),
