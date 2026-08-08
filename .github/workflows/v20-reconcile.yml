@@ -58,6 +58,41 @@ jobs:
       - name: Apply V2.0 documentation integration
         run: python3 tools/v20_docs_apply.py
 
+      - name: Fix analyzer findings in reconciled tree
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f'{path}: expected one analyzer-fix match, found {count}')
+              file.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'lib/core/spell_language_pack.dart',
+              "    required Map<String, int> wordFrequencies,\n    required RegExp tokenPattern,\n    required RegExp validWordPattern,\n    required this.normalizer,",
+              "    required Map<String, int> wordFrequencies,\n    required this.tokenPattern,\n    required this.validWordPattern,\n    required this.normalizer,",
+          )
+          replace_once(
+              'lib/core/spell_language_pack.dart',
+              "  })  : dictionary = Set<String>.unmodifiable(dictionary),\n        wordFrequencies = Map<String, int>.unmodifiable(wordFrequencies),\n        tokenPattern = tokenPattern,\n        validWordPattern = validWordPattern;",
+              "  })  : dictionary = Set<String>.unmodifiable(dictionary),\n        wordFrequencies = Map<String, int>.unmodifiable(wordFrequencies);",
+          )
+          replace_once(
+              'lib/features/editor/dictionary_manager_dialog.dart',
+              "      title: const Row(\n        children: <Widget>[\n          Icon(Icons.menu_book_outlined),\n          SizedBox(width: 10),\n          Expanded(child: Text('Personal dictionary — ${widget.languagePack.displayName}')),\n        ],\n      ),",
+              "      title: Row(\n        children: <Widget>[\n          const Icon(Icons.menu_book_outlined),\n          const SizedBox(width: 10),\n          Expanded(child: Text('Personal dictionary — ${widget.languagePack.displayName}')),\n        ],\n      ),",
+          )
+          replace_once(
+              'lib/features/editor/writing_insights_dialog.dart',
+              "      title: Row(\n        children: <Widget>[\n          const Icon(Icons.auto_fix_high_outlined),\n          const SizedBox(width: 10),\n          const Expanded(child: Text('Writing insights')),\n        ],\n      ),",
+              "      title: const Row(\n        children: <Widget>[\n          Icon(Icons.auto_fix_high_outlined),\n          SizedBox(width: 10),\n          Expanded(child: Text('Writing insights')),\n        ],\n      ),",
+          )
+          PY
+
       - name: Remove temporary integration machinery
         run: |
           rm -f \
