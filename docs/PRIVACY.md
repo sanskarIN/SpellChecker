@@ -2,7 +2,7 @@
 
 ## Summary
 
-SpellChecker 2.1 performs spelling and optional deterministic writing-rule analysis locally. It stores a deliberately small set of user-controlled settings on the local device/profile and does not persist editor documents or writing-analysis findings.
+SpellChecker 2.3 performs spelling and optional deterministic writing-rule analysis locally. It stores a deliberately small set of user-controlled settings on the local device/profile and does not persist editor documents or writing-analysis findings.
 
 V2.1 newly persists only **writing-rule identifiers**, namespaced by selected language. It does not persist the text that produced a finding, the finding message, source excerpts, or batch correction plans.
 
@@ -121,6 +121,25 @@ Resetting writing rules clears the selected language's local `spellchecker.writi
 
 If local storage removal fails, built-in defaults stay active for the current session while the existing persisted override can remain on the device/profile and may reappear after restart.
 
+## Review presets and Portable settings — V2.3
+
+Review preset selection is transient dialog state. Preset IDs are public application metadata, but SpellChecker does not persist which preset/search/category/fix-only combination a user was viewing.
+
+Portable settings are explicitly user-triggered. The copied/imported version-1 document contains only:
+
+- Selected built-in language ID.
+- Suggestion-count preference.
+- Explicit per-language writing-rule override lists.
+
+It excludes editor text, personal dictionary words, ignored session words, spelling issue lists, writing findings/source excerpts, and correction/undo snapshots.
+
+**Copy settings JSON** writes the generated JSON to the local clipboard only after user action. Import reads JSON pasted by the user. SpellChecker does not upload or remotely synchronize this document.
+
+Before an import, the application snapshots the previous portable preference state. If any local preference write fails, it attempts to restore that snapshot and reports failure; Flutter `shared_preferences` has no multi-key transaction, so this restoration is best effort rather than an atomic guarantee. The live editor switches to imported settings only after the persistence service succeeds.
+
+The target language's personal vocabulary is loaded independently and reused after a successful import. Portable settings neither transfer nor clear that vocabulary. Editor text also remains unchanged; stale analysis/undo state is cleared and non-blank text is rechecked locally.
+
+
 ## Language selection and vocabulary
 
 The selected built-in language ID is stored locally.
@@ -213,7 +232,7 @@ Current version-2 exports include language identity plus normalized personal voc
 
 ## Persisted settings inventory
 
-V2.1 application preferences are limited to:
+V2.3 application preferences remain limited to:
 
 - Selected language ID.
 - Personal words per language.
@@ -250,7 +269,7 @@ SpellChecker does not persist:
 
 ## Analytics/telemetry/network
 
-SpellChecker 2.1 contains no analytics SDK, advertising SDK, telemetry SDK, account/authentication dependency, cloud spelling/grammar dependency, AI rewriting service, or remote document logging pipeline.
+SpellChecker 2.3 contains no analytics SDK, advertising SDK, telemetry SDK, account/authentication dependency, cloud spelling/grammar dependency, AI rewriting service, or remote document logging pipeline.
 
 Runtime spelling and writing analysis does not require network access.
 
@@ -260,7 +279,7 @@ Development/build tooling can access package repositories, GitHub, and Flutter d
 
 `shared_preferences` remains the only non-SDK runtime package dependency and is used for application-local settings.
 
-V2.1 adds no new runtime dependency.
+V2.3 adds no new runtime dependency.
 
 ## Data deletion
 

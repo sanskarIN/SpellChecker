@@ -3,15 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/settings_transfer_codec.dart';
 import '../../core/spell_checker_engine.dart';
 import '../../core/spell_issue.dart';
 import '../../core/spell_language_pack.dart';
 import '../../core/text_correction.dart';
 import '../../core/text_statistics.dart';
 import '../../storage/dictionary_preferences.dart';
+import '../../storage/settings_transfer_service.dart';
 import '../../writing/writing_analyzer.dart';
 import '../../writing/writing_correction.dart';
 import '../../writing/writing_issue.dart';
+import 'settings_transfer_dialog.dart';
 import 'writing_insights_dialog.dart';
 import 'dictionary_manager_dialog.dart';
 import 'spell_check_editing_controller.dart';
@@ -39,6 +42,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   final List<TextEditingValue> _correctionUndoStack = <TextEditingValue>[];
 
   late final DictionaryPreferences _preferences;
+  late final SettingsTransferService _settingsTransferService;
   List<SpellIssue> _issues = const <SpellIssue>[];
   TextStatistics _statistics = TextStatistics.fromText('');
   int _suggestionLimit = DictionaryPreferences.defaultSuggestionLimit;
@@ -52,6 +56,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   void initState() {
     super.initState();
     _preferences = widget.preferences ?? DictionaryPreferences();
+    _settingsTransferService = SettingsTransferService(_preferences);
     _engine = SpellCheckerEngine(languagePack: _languagePack);
     unawaited(_restorePreferences());
   }
@@ -114,6 +119,95 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     final requestedRuleIds =
         storedRuleIds ?? WritingRuleRegistry.defaultEnabledRuleIds;
     return requestedRuleIds.where(supportedRuleIds.contains).toSet();
+  }
+
+  Future<void> _showPortableSettings() async {
+    if (!_preferencesLoaded) {
+      _showMessage('Dictionary preferences are still loading.');
+      return;
+    }
+
+    SpellCheckerSettingsDocument currentDocument;
+    try {
+      currentDocument = await _settingsTransferService.exportDocument();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _storageAvailable = false);
+      _showMessage(
+        'Portable settings could not be read because local preference storage is unavailable.',
+      );
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final imported = await showDialog<SpellCheckerSettingsDocument>(
+      context: context,
+      builder: (BuildContext context) =>
+          SettingsTransferDialog(initialDocument: currentDocument),
+    );
+
+    if (!mounted || imported == null) {
+      return;
+    }
+
+    await _applyPortableSettings(imported);
+  }
+
+  Future<void> _applyPortableSettings(
+    SpellCheckerSettingsDocument document,
+  ) async {
+    final nextPack = SpellLanguageRegistry.byId(document.languageId);
+    Set<String> nextPersonalWords;
+
+    try {
+      // Read target-language vocabulary before any portable setting is written.
+      // The transfer format never contains or mutates personal words.
+      nextPersonalWords = await _preferences.loadPersonalWords(
+        languageId: nextPack.id,
+      );
+      await _settingsTransferService.importDocument(document);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _storageAvailable = false);
+      _showMessage(
+        'Portable settings were not imported. Previous durable settings were restored when possible.',
+      );
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final nextEngine = SpellCheckerEngine(languagePack: nextPack)
+      ..replacePersonalDictionary(nextPersonalWords);
+    _correctionUndoStack.clear();
+    _controller.clearIssues();
+    setState(() {
+      _languagePack = nextPack;
+      _engine = nextEngine;
+      _enabledWritingRuleIds = _effectiveWritingRuleIds(
+        document.writingRuleIdsFor(nextPack.id),
+        nextPack,
+      );
+      _suggestionLimit = document.suggestionLimit;
+      _issues = const <SpellIssue>[];
+      _activeIssueIndex = -1;
+      _hasChecked = false;
+      _storageAvailable = true;
+    });
+
+    if (_controller.text.trim().isNotEmpty) {
+      _checkText();
+    }
+    _showMessage('Portable settings imported for ${nextPack.displayName}.');
   }
 
   Future<void> _showWritingInsights() async {
@@ -609,12 +703,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '2.2.0',
+      applicationVersion: '2.3.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, categorized local writing rules, temporary review search and filters, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows, and undo-friendly corrections.',
+          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, categorized local writing rules, temporary review presets/search/filters, portable non-document preferences, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows, and undo-friendly corrections.',
         ),
       ],
     );
@@ -672,6 +766,11 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
                   tooltip: 'Next spelling issue (F7)',
                   onPressed: _issues.isEmpty ? null : () => _moveActiveIssue(1),
                   icon: const Icon(Icons.keyboard_arrow_down),
+                ),
+                IconButton(
+                  tooltip: 'Portable settings',
+                  onPressed: _preferencesLoaded ? _showPortableSettings : null,
+                  icon: const Icon(Icons.settings_backup_restore_outlined),
                 ),
                 IconButton(
                   tooltip: 'Manage personal dictionary',

@@ -29,14 +29,12 @@ void main() {
       final mechanics = WritingReviewPreset.mechanics.toQuery();
       final clarity = WritingReviewPreset.clarity.toQuery();
 
-      expect(
-        mechanics.categories,
-        const <WritingRuleCategory>{WritingRuleCategory.mechanics},
-      );
-      expect(
-        clarity.categories,
-        const <WritingRuleCategory>{WritingRuleCategory.clarity},
-      );
+      expect(mechanics.categories, const <WritingRuleCategory>{
+        WritingRuleCategory.mechanics,
+      });
+      expect(clarity.categories, const <WritingRuleCategory>{
+        WritingRuleCategory.clarity,
+      });
     });
 
     test('automatic fixes preset enables only deterministic-fix filter', () {
@@ -46,15 +44,17 @@ void main() {
       expect(query.categories, isEmpty);
     });
 
-    test('free-text search layers over a preset without becoming persistent', () {
-      final query = WritingReviewPreset.clarity.toQuery(search: '  RePeAt  ');
+    test(
+      'free-text search layers over a preset without becoming persistent',
+      () {
+        final query = WritingReviewPreset.clarity.toQuery(search: '  RePeAt  ');
 
-      expect(query.search, 'repeat');
-      expect(
-        query.categories,
-        const <WritingRuleCategory>{WritingRuleCategory.clarity},
-      );
-    });
+        expect(query.search, 'repeat');
+        expect(query.categories, const <WritingRuleCategory>{
+          WritingRuleCategory.clarity,
+        });
+      },
+    );
 
     test('unknown preset IDs safely fall back to all findings', () {
       expect(

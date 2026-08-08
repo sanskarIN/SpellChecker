@@ -475,11 +475,31 @@ This is deliberately different from storing today's default rule IDs. A future r
 
 If clearing fails, the current-session defaults remain active but the application reports that the saved override could not be removed; the old override may return on restart.
 
+## V2.3 review presets
+
+`WritingReviewPreset` is public review-organization metadata layered on `WritingReviewQuery`. Stable built-ins are:
+
+```text
+all-findings      -> no category/fix-only filter
+mechanics         -> Mechanics category
+clarity           -> Clarity category
+automatic-fixes   -> automaticFixesOnly = true
+```
+
+Preset IDs are stable public metadata and require compatibility/release review before renaming or semantic reuse. A preset does not persist search text or rule choices. `toQuery(search: ...)` accepts the current transient search so preset changes can retain the user's local search context.
+
+Writing insights can still create custom combinations by using the category chips and automatic-fix switch directly. That custom transient state does not require or synthesize a new preset ID.
+
+Preset changes select review scope only. Individual/batch correction authority remains `WritingCorrection.apply`/`applyAll`, including stale-range validation, overlap handling, end-to-start application, applied/skipped counts, and one-step undo.
+
+
 ## Tests
 
 Relevant test files include:
 
 ```text
+test/writing_review_preset_test.dart
+test/writing_review_query_test.dart
 test/writing_rules_test.dart
 test/writing_correction_test.dart
 test/writing_preferences_test.dart

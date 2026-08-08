@@ -132,14 +132,33 @@ Status: implemented.
 - [x] Query/filter/reset/filtered-batch regression tests.
 - [x] Complete V2.2 documentation and release metadata.
 
+## 2.3 — Review presets and preference portability
+
+Status: implemented.
+
+- [x] Public stable review-preset metadata and IDs.
+- [x] All findings, Mechanics, Clarity, and Automatic fixes presets.
+- [x] Presets reuse `WritingReviewQuery` and retain transient free-text search.
+- [x] Versioned deterministic non-document settings codec.
+- [x] Portable selected language and 1–10 suggestion-count preference.
+- [x] Portable complete explicit per-language writing-rule override map.
+- [x] Preservation of unset/default versus explicit-empty/disable-all semantics.
+- [x] Forward-compatible preservation of well-formed unknown rule IDs.
+- [x] Dedicated Portable settings copy/import dialog.
+- [x] Persistence-first import with best-effort rollback on write failure.
+- [x] Personal-vocabulary and editor-text exclusion/preservation guarantees.
+- [x] Focused codec/persistence/dialog/widget regression coverage.
+- [x] Complete V2.3 documentation, privacy, release, and repository metadata.
+
+
 ## Future 2.x direction
 
 Possible future work includes:
 
 - Richer deterministic writing-rule catalogues.
 - Additional language-specific writing rules.
-- User-visible rule categories and search/filtering.
-- Import/export of non-sensitive application preferences.
+- Additional review presets/categories driven by demonstrated workflows.
+- Additional portable non-document preferences with explicit compatibility/version review.
 - Extensible spelling suggestion rankers.
 - Trusted plugin-loading designs with explicit security boundaries.
 - Cross-platform packaging and signing automation.

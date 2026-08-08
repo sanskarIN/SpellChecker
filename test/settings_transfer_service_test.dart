@@ -28,81 +28,86 @@ void main() {
 
       expect(document.languageId, 'en-GB');
       expect(document.suggestionLimit, 8);
-      expect(
-        document.writingRuleIdsFor('en-US'),
-        <String>{'sentence-capitalization'},
-      );
+      expect(document.writingRuleIdsFor('en-US'), <String>{
+        'sentence-capitalization',
+      });
       expect(document.hasWritingRuleOverride('en-GB'), isTrue);
       expect(document.writingRuleIdsFor('en-GB'), isEmpty);
     });
 
-    test('imports selected language, limit, and complete override map', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{
-        'spellchecker.language_id.v1': 'en-US',
-        'spellchecker.suggestion_limit.v1': 5,
-        'spellchecker.writing_rule_ids.v1.en-GB': <String>['repeated-word'],
-        'spellchecker.personal_words.v2.en-GB': <String>['customword'],
-      });
-      final preferences = DictionaryPreferences();
-      final service = SettingsTransferService(preferences);
-      final document = SpellCheckerSettingsDocument(
-        languageId: 'en-GB',
-        suggestionLimit: 7,
-        writingRuleOverrides: <String, Iterable<String>>{
-          'en-US': const <String>[],
-        },
-      );
+    test(
+      'imports selected language, limit, and complete override map',
+      () async {
+        SharedPreferences.setMockInitialValues(<String, Object>{
+          'spellchecker.language_id.v1': 'en-US',
+          'spellchecker.suggestion_limit.v1': 5,
+          'spellchecker.writing_rule_ids.v1.en-GB': <String>['repeated-word'],
+          'spellchecker.personal_words.v2.en-GB': <String>['customword'],
+        });
+        final preferences = DictionaryPreferences();
+        final service = SettingsTransferService(preferences);
+        final document = SpellCheckerSettingsDocument(
+          languageId: 'en-GB',
+          suggestionLimit: 7,
+          writingRuleOverrides: <String, Iterable<String>>{
+            'en-US': const <String>[],
+          },
+        );
 
-      await service.importDocument(document);
+        await service.importDocument(document);
 
-      expect(await preferences.loadLanguageId(), 'en-GB');
-      expect(await preferences.loadSuggestionLimit(), 7);
-      expect(
-        await preferences.loadWritingRuleIds(languageId: 'en-US'),
-        isEmpty,
-      );
-      expect(
-        await preferences.loadWritingRuleIds(languageId: 'en-GB'),
-        isNull,
-      );
-      expect(
-        await preferences.loadPersonalWords(languageId: 'en-GB'),
-        <String>{'customword'},
-      );
-    });
+        expect(await preferences.loadLanguageId(), 'en-GB');
+        expect(await preferences.loadSuggestionLimit(), 7);
+        expect(
+          await preferences.loadWritingRuleIds(languageId: 'en-US'),
+          isEmpty,
+        );
+        expect(
+          await preferences.loadWritingRuleIds(languageId: 'en-GB'),
+          isNull,
+        );
+        expect(
+          await preferences.loadPersonalWords(languageId: 'en-GB'),
+          <String>{'customword'},
+        );
+      },
+    );
 
-    test('best-effort rollback restores previous portable preferences', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{
-        'spellchecker.language_id.v1': 'en-US',
-        'spellchecker.suggestion_limit.v1': 4,
-        'spellchecker.writing_rule_ids.v1.en-US': <String>[
-          'sentence-capitalization',
-        ],
-      });
-      final preferences = _FailOncePreferences();
-      final service = SettingsTransferService(preferences);
-      final imported = SpellCheckerSettingsDocument(
-        languageId: 'en-GB',
-        suggestionLimit: 9,
-        writingRuleOverrides: <String, Iterable<String>>{
-          'en-US': const <String>[],
-          'en-GB': <String>{'repeated-word'},
-        },
-      );
+    test(
+      'best-effort rollback restores previous portable preferences',
+      () async {
+        SharedPreferences.setMockInitialValues(<String, Object>{
+          'spellchecker.language_id.v1': 'en-US',
+          'spellchecker.suggestion_limit.v1': 4,
+          'spellchecker.writing_rule_ids.v1.en-US': <String>[
+            'sentence-capitalization',
+          ],
+        });
+        final preferences = _FailOncePreferences();
+        final service = SettingsTransferService(preferences);
+        final imported = SpellCheckerSettingsDocument(
+          languageId: 'en-GB',
+          suggestionLimit: 9,
+          writingRuleOverrides: <String, Iterable<String>>{
+            'en-US': const <String>[],
+            'en-GB': <String>{'repeated-word'},
+          },
+        );
 
-      await expectLater(service.importDocument(imported), throwsStateError);
+        await expectLater(service.importDocument(imported), throwsStateError);
 
-      expect(await preferences.loadLanguageId(), 'en-US');
-      expect(await preferences.loadSuggestionLimit(), 4);
-      expect(
-        await preferences.loadWritingRuleIds(languageId: 'en-US'),
-        <String>{'sentence-capitalization'},
-      );
-      expect(
-        await preferences.loadWritingRuleIds(languageId: 'en-GB'),
-        isNull,
-      );
-    });
+        expect(await preferences.loadLanguageId(), 'en-US');
+        expect(await preferences.loadSuggestionLimit(), 4);
+        expect(
+          await preferences.loadWritingRuleIds(languageId: 'en-US'),
+          <String>{'sentence-capitalization'},
+        );
+        expect(
+          await preferences.loadWritingRuleIds(languageId: 'en-GB'),
+          isNull,
+        );
+      },
+    );
   });
 }
 

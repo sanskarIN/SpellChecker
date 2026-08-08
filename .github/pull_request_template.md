@@ -124,3 +124,15 @@ Complete for spelling correction/editor mutations.
 ## Related issues
 
 Closes #
+
+## V2.3 review presets and portable settings
+
+Complete when relevant.
+
+- [ ] Review preset IDs/semantics remain stable or migration/release notes are included.
+- [ ] Free-text review search remains transient unless persistence is explicitly reviewed.
+- [ ] Portable settings preserve missing/unset versus present-empty override semantics.
+- [ ] Portable settings exclude editor text, personal vocabulary, ignored words, findings, and correction history.
+- [ ] Import validation and best-effort rollback behavior have focused tests.
+- [ ] `shared_preferences` behavior is not described as transactional.
+- [ ] No temporary `tools/v23_*` or `.github/workflows/v23-*` integration/recovery artifact remains in the release tree.

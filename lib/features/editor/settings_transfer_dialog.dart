@@ -5,10 +5,7 @@ import '../../core/settings_transfer_codec.dart';
 import '../../core/spell_language_pack.dart';
 
 class SettingsTransferDialog extends StatefulWidget {
-  const SettingsTransferDialog({
-    super.key,
-    required this.initialDocument,
-  });
+  const SettingsTransferDialog({super.key, required this.initialDocument});
 
   final SpellCheckerSettingsDocument initialDocument;
 
@@ -161,7 +158,9 @@ class _SettingsTransferDialogState extends State<SettingsTransferDialog> {
                   child: Text(
                     _errorMessage!,
                     key: const ValueKey<String>('portable-settings-error'),
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
               ],
