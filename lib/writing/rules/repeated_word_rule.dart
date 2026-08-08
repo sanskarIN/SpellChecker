@@ -1,6 +1,7 @@
 import '../../core/spell_language_pack.dart';
 import '../writing_issue.dart';
 import '../writing_rule.dart';
+import '../writing_rule_category.dart';
 
 class RepeatedWordRule extends WritingRule {
   const RepeatedWordRule();
@@ -17,6 +18,9 @@ class RepeatedWordRule extends WritingRule {
 
   @override
   Set<String> get supportedLanguageIds => const <String>{'en'};
+
+  @override
+  WritingRuleCategory get category => WritingRuleCategory.clarity;
 
   @override
   Iterable<WritingIssue> analyze(
