@@ -19,7 +19,9 @@ helper = """  Finder writingInsightsScrollable() {
       of: find.byType(AlertDialog),
       matching: find.byWidgetPredicate(
         (Widget widget) =>
-            widget is Scrollable && widget.axisDirection == AxisDirection.down,
+            widget is Scrollable &&
+            widget.axisDirection == AxisDirection.down &&
+            widget.physics is AlwaysScrollableScrollPhysics,
       ),
     );
   }
