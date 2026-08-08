@@ -208,9 +208,9 @@ Replace sensitive data with a minimal synthetic reproducer.
 
 # Local data recovery
 
-Personal vocabulary is local and not cloud-synchronized. Before clearing browser/application data, use **Copy export** if you need a portable backup.
+Personal vocabulary is local and not cloud-synchronized. Before clearing browser/application data, use **Copy export** if you need a portable personal-dictionary backup.
 
-Writing-rule preferences, selected language, and suggestion count are local settings and currently have no separate export UI. Clearing host application/profile storage can remove them.
+Writing-rule preferences, selected language, and suggestion count are local settings that can be copied/imported through **Portable settings** in V2.3. Personal vocabulary remains a separate language-aware dictionary export. Clearing host application/profile storage can remove all of these local values.
 
 If saved data disappears unexpectedly, follow [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) before filing an issue.
 
