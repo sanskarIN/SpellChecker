@@ -59,10 +59,10 @@ class EnglishGbDictionary {
 
   /// US spellings intentionally removed from the British pack so explicit
   /// language selection can produce meaningful variant-specific results.
+  /// Words commonly accepted in both variants are deliberately not excluded.
   static const Set<String> excludedUsVariants = <String>{
     'analyze',
     'behavior',
-    'catalog',
     'center',
     'color',
     'defense',
@@ -74,10 +74,6 @@ class EnglishGbDictionary {
     'neighborhood',
     'organization',
     'organize',
-    'practice',
-    'program',
-    'realize',
-    'recognize',
     'theater',
     'traveler',
     'traveling',
