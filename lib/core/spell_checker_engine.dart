@@ -1,19 +1,27 @@
 import '../data/english_dictionary.dart';
+import '../data/english_word_frequencies.dart';
 import 'edit_distance.dart';
 import 'spell_issue.dart';
 
 class SpellCheckerEngine {
-  SpellCheckerEngine({Set<String>? dictionary})
-      : _baseDictionary = Set<String>.unmodifiable(
+  SpellCheckerEngine({
+    Set<String>? dictionary,
+    Map<String, int>? wordFrequencies,
+  })  : _baseDictionary = Set<String>.unmodifiable(
           (dictionary ?? EnglishDictionary.words).map(_normalize),
+        ),
+        _wordFrequencies = Map<String, int>.unmodifiable(
+          wordFrequencies ?? EnglishWordFrequencies.ranks,
         );
 
   final Set<String> _baseDictionary;
+  final Map<String, int> _wordFrequencies;
   final Set<String> _personalDictionary = <String>{};
   final Set<String> _ignoredWords = <String>{};
   final Map<String, List<String>> _suggestionCache = <String, List<String>>{};
 
-  Set<String> get personalDictionary => Set<String>.unmodifiable(_personalDictionary);
+  Set<String> get personalDictionary =>
+      Set<String>.unmodifiable(_personalDictionary);
   Set<String> get ignoredWords => Set<String>.unmodifiable(_ignoredWords);
 
   List<SpellIssue> check(String text, {int suggestionLimit = 5}) {
@@ -44,9 +52,13 @@ class SpellCheckerEngine {
     if (normalized.isEmpty) {
       return true;
     }
-    return _baseDictionary.contains(normalized) ||
-        _personalDictionary.contains(normalized) ||
-        _ignoredWords.contains(normalized);
+
+    if (_isKnownWord(normalized)) {
+      return true;
+    }
+
+    final parts = _splitRecognizedSuffix(normalized);
+    return parts != null && _isKnownWord(parts.stem);
   }
 
   List<String> suggestionsFor(String word, {int limit = 5}) {
@@ -64,26 +76,36 @@ class SpellCheckerEngine {
       return cached.take(limit).toList(growable: false);
     }
 
-    final maxDistance = normalized.length <= 4 ? 1 : (normalized.length <= 8 ? 2 : 3);
+    final parts = _splitRecognizedSuffix(normalized);
+    final target = parts?.stem ?? normalized;
+    final suffix = parts?.suffix ?? '';
+    final maxDistance = target.length <= 4 ? 1 : (target.length <= 8 ? 2 : 3);
     final candidates = <_Candidate>[];
 
     for (final candidate in _baseDictionary.followedBy(_personalDictionary)) {
-      final lengthDifference = (candidate.length - normalized.length).abs();
+      if (candidate.contains("'") || candidate.contains('-')) {
+        continue;
+      }
+
+      final lengthDifference = (candidate.length - target.length).abs();
       if (lengthDifference > maxDistance) {
         continue;
       }
 
-      final distance = damerauLevenshteinDistance(normalized, candidate);
+      final distance = damerauLevenshteinDistance(target, candidate);
       if (distance > maxDistance) {
         continue;
       }
 
-      final prefixPenalty = candidate.startsWith(normalized[0]) ? 0 : 1;
+      final prefixPenalty = target.isNotEmpty && candidate.startsWith(target[0])
+          ? 0
+          : 1;
       candidates.add(
         _Candidate(
           word: candidate,
           distance: distance,
           prefixPenalty: prefixPenalty,
+          frequencyRank: _wordFrequencies[candidate] ?? 10000,
         ),
       );
     }
@@ -97,6 +119,10 @@ class SpellCheckerEngine {
       if (byPrefix != 0) {
         return byPrefix;
       }
+      final byFrequency = a.frequencyRank.compareTo(b.frequencyRank);
+      if (byFrequency != 0) {
+        return byFrequency;
+      }
       final byLength = a.word.length.compareTo(b.word.length);
       if (byLength != 0) {
         return byLength;
@@ -104,7 +130,9 @@ class SpellCheckerEngine {
       return a.word.compareTo(b.word);
     });
 
-    final result = candidates.map((candidate) => candidate.word).toList(growable: false);
+    final result = candidates
+        .map((candidate) => '${candidate.word}$suffix')
+        .toList(growable: false);
     _suggestionCache[normalized] = result;
     return result.take(limit).toList(growable: false);
   }
@@ -118,6 +146,33 @@ class SpellCheckerEngine {
     _suggestionCache.clear();
   }
 
+  bool removeFromPersonalDictionary(String word) {
+    final removed = _personalDictionary.remove(_normalize(word));
+    if (removed) {
+      _suggestionCache.clear();
+    }
+    return removed;
+  }
+
+  void replacePersonalDictionary(Iterable<String> words) {
+    _personalDictionary
+      ..clear()
+      ..addAll(
+        words
+            .map(_normalize)
+            .where((String word) => word.isNotEmpty),
+      );
+    _suggestionCache.clear();
+  }
+
+  void clearPersonalDictionary() {
+    if (_personalDictionary.isEmpty) {
+      return;
+    }
+    _personalDictionary.clear();
+    _suggestionCache.clear();
+  }
+
   void ignoreWord(String word) {
     final normalized = _normalize(word);
     if (normalized.isEmpty) {
@@ -126,15 +181,48 @@ class SpellCheckerEngine {
     _ignoredWords.add(normalized);
   }
 
+  void clearIgnoredWords() {
+    _ignoredWords.clear();
+  }
+
   void resetSession() {
     _personalDictionary.clear();
     _ignoredWords.clear();
     _suggestionCache.clear();
   }
 
+  bool _isKnownWord(String word) {
+    return _baseDictionary.contains(word) ||
+        _personalDictionary.contains(word) ||
+        _ignoredWords.contains(word);
+  }
+
+  static _WordParts? _splitRecognizedSuffix(String word) {
+    for (final suffix in _recognizedSuffixes) {
+      if (word.length <= suffix.length || !word.endsWith(suffix)) {
+        continue;
+      }
+      final stem = word.substring(0, word.length - suffix.length);
+      if (stem.isNotEmpty) {
+        return _WordParts(stem: stem, suffix: suffix);
+      }
+    }
+    return null;
+  }
+
   static String _normalize(String word) {
     return word.trim().toLowerCase().replaceAll('’', "'");
   }
+
+  static const List<String> _recognizedSuffixes = <String>[
+    "n't",
+    "'re",
+    "'ve",
+    "'ll",
+    "'d",
+    "'m",
+    "'s",
+  ];
 }
 
 class _Candidate {
@@ -142,9 +230,18 @@ class _Candidate {
     required this.word,
     required this.distance,
     required this.prefixPenalty,
+    required this.frequencyRank,
   });
 
   final String word;
   final int distance;
   final int prefixPenalty;
+  final int frequencyRank;
+}
+
+class _WordParts {
+  const _WordParts({required this.stem, required this.suffix});
+
+  final String stem;
+  final String suffix;
 }
