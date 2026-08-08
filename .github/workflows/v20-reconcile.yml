@@ -62,13 +62,16 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import textwrap
 
           def replace_once(path: str, old: str, new: str) -> None:
               file = Path(path)
               text = file.read_text()
               count = text.count(old)
               if count != 1:
-                  raise RuntimeError(f'{path}: expected one reconciliation-fix match, found {count}')
+                  raise RuntimeError(
+                      f'{path}: expected one reconciliation-fix match, found {count}'
+                  )
               file.write_text(text.replace(old, new, 1))
 
           replace_once(
@@ -92,97 +95,91 @@ jobs:
               "      title: const Row(\n        children: <Widget>[\n          Icon(Icons.auto_fix_high_outlined),\n          SizedBox(width: 10),\n          Expanded(child: Text('Writing insights')),\n        ],\n      ),",
           )
 
-          # Keep language selection explicit without increasing the editor card's
-          # vertical fixed footprint. The original V1.3 transform inserted a
-          # dedicated selector row above the expanding text field, which caused
-          # a 49px overflow on standard 800x600 layouts.
-          page = 'lib/features/editor/spell_checker_page.dart'
-          replace_once(
-              page,
-              """            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    'Editor',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                if (!preferencesLoaded)
-                  const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
-            ),""",
-              """            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    'Editor',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                SizedBox(
-                  width: 170,
-                  child: Semantics(
-                    label: 'Spelling language',
-                    child: DropdownButton<String>(
-                      key: const ValueKey<String>('language-selector'),
-                      value: languagePack.id,
-                      isDense: true,
-                      isExpanded: true,
-                      items: languagePacks
-                          .map(
-                            (SpellLanguagePack pack) => DropdownMenuItem<String>(
-                              value: pack.id,
-                              child: Text(pack.displayName),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: preferencesLoaded ? onLanguageChanged : null,
+          # Move the V1.3 language selector into the existing editor header so
+          # it consumes horizontal space instead of adding fixed vertical
+          # height above the expanding text field.
+          page = Path('lib/features/editor/spell_checker_page.dart')
+          text = page.read_text()
+          title_marker = "                    'Editor',"
+          if text.count(title_marker) != 1:
+              raise RuntimeError('editor title marker is missing or ambiguous')
+          title_pos = text.index(title_marker)
+          header_start = text.rfind('            Row(\n', 0, title_pos)
+          header_end_marker = '            const SizedBox(height: 4),\n'
+          header_end = text.index(header_end_marker, title_pos)
+          if header_start < 0:
+              raise RuntimeError('editor header row start not found')
+
+          compact_header = textwrap.indent(
+              textwrap.dedent('''\
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      'Editor',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
-                ),
-                if (!preferencesLoaded) ...<Widget>[
-                  const SizedBox(width: 8),
-                  const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  SizedBox(
+                    width: 170,
+                    child: Semantics(
+                      label: 'Spelling language',
+                      child: DropdownButton<String>(
+                        key: const ValueKey<String>('language-selector'),
+                        value: languagePack.id,
+                        isDense: true,
+                        isExpanded: true,
+                        items: languagePacks
+                            .map(
+                              (SpellLanguagePack pack) => DropdownMenuItem<String>(
+                                value: pack.id,
+                                child: Text(pack.displayName),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: preferencesLoaded ? onLanguageChanged : null,
+                      ),
+                    ),
                   ),
+                  if (!preferencesLoaded) ...<Widget>[
+                    const SizedBox(width: 8),
+                    const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ],
                 ],
-              ],
-            ),""",
+              ),
+              '''),
+              '            ',
           )
-          replace_once(
-              page,
-              """            const SizedBox(height: 10),
-            Row(
-              children: <Widget>[
-                const Icon(Icons.language, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DropdownButton<String>(
-                    key: const ValueKey<String>('language-selector'),
-                    value: languagePack.id,
-                    isExpanded: true,
-                    items: languagePacks
-                        .map(
-                          (SpellLanguagePack pack) => DropdownMenuItem<String>(
-                            value: pack.id,
-                            child: Text(pack.displayName),
-                          ),
-                        )
-                        .toList(growable: false),
-                    onChanged: preferencesLoaded ? onLanguageChanged : null,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(""",
-              """            const SizedBox(height: 12),
-            Expanded(""",
+          text = text[:header_start] + compact_header + text[header_end:]
+
+          selector_key = "key: const ValueKey<String>('language-selector')"
+          if text.count(selector_key) != 2:
+              raise RuntimeError(
+                  'expected the compact and legacy language selectors before removing legacy row'
+              )
+          compact_key_pos = text.index(selector_key)
+          legacy_key_pos = text.index(selector_key, compact_key_pos + 1)
+          legacy_start_marker = '            const SizedBox(height: 10),\n'
+          legacy_start = text.rfind(legacy_start_marker, 0, legacy_key_pos)
+          editor_expanded_marker = (
+              '            Expanded(\n'
+              '              child: Semantics(\n'
+              '                textField: true,'
           )
+          editor_expanded = text.index(editor_expanded_marker, legacy_key_pos)
+          if legacy_start < 0:
+              raise RuntimeError('legacy language selector start not found')
+          text = (
+              text[:legacy_start]
+              + '            const SizedBox(height: 12),\n'
+              + text[editor_expanded:]
+          )
+          if text.count(selector_key) != 1:
+              raise RuntimeError('language selector reconciliation did not leave exactly one selector')
+          page.write_text(text)
           PY
 
       - name: Remove temporary integration machinery
