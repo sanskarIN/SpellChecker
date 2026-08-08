@@ -139,7 +139,7 @@ void main() {
     await tester.tap(find.byTooltip('Manage personal dictionary'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Personal dictionary'), findsOneWidget);
+    expect(find.text('Personal dictionary — English (US)'), findsOneWidget);
     expect(find.text('flutter'), findsOneWidget);
   });
 }
