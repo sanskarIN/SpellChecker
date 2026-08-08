@@ -108,12 +108,7 @@ class SpellLanguageRegistry {
     languageCode: 'en',
     regionCode: 'US',
     displayName: 'English (US)',
-    dictionary: <String>{
-      ...EnglishDictionary.words,
-      ...EnglishDictionaryExtension.words,
-      ..._unicodeLoanwords,
-      ..._usVariantWords,
-    },
+    dictionary: _buildEnglishUsDictionary(),
     wordFrequencies: EnglishWordFrequencies.ranks,
     tokenPattern: _unicodeTokenPattern,
     validWordPattern: _unicodeValidWordPattern,
@@ -163,6 +158,18 @@ class SpellLanguageRegistry {
   }
 
   static bool contains(String id) => builtIns.any((pack) => pack.id == id);
+
+  static Set<String> _buildEnglishUsDictionary() {
+    final words = <String>{
+      ...EnglishDictionary.words,
+      ...EnglishDictionaryExtension.words,
+      ..._unicodeLoanwords,
+      ..._usVariantWords,
+    };
+    words.removeAll(EnglishGbDictionary.words);
+    words.addAll(_usVariantWords);
+    return words;
+  }
 
   static Set<String> _buildEnglishGbDictionary() {
     final words = <String>{
