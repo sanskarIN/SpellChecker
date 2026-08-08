@@ -11,6 +11,24 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
+  Finder settingsTransferList() {
+    return find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(ListView),
+    );
+  }
+
+  Future<void> scrollPortableSettingsToImport(WidgetTester tester) async {
+    final list = settingsTransferList();
+    expect(list, findsOneWidget);
+    await tester.drag(list, const Offset(0, -800));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('portable-settings-import')),
+      findsOneWidget,
+    );
+  }
+
   testWidgets('review presets project onto temporary review filters', (
     WidgetTester tester,
   ) async {
@@ -106,6 +124,7 @@ void main() {
           'en-GB': <String>{'sentence-capitalization'},
         },
       );
+      await scrollPortableSettingsToImport(tester);
       await tester.enterText(
         find.byKey(const ValueKey<String>('portable-settings-import')),
         SpellCheckerSettingsCodec.encode(imported),
@@ -116,7 +135,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Portable settings'), findsNothing);
-      expect(tester.widget<TextField>(editor).controller!.text, 'colour customword');
+      expect(
+        tester.widget<TextField>(editor).controller!.text,
+        'colour customword',
+      );
       expect(find.text('English (UK)'), findsWidgets);
 
       final preferences = await SharedPreferences.getInstance();
