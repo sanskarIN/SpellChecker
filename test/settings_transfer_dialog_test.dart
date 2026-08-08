@@ -12,6 +12,24 @@ void main() {
         .setMockMethodCallHandler(SystemChannels.platform, null);
   });
 
+  Finder settingsTransferList() {
+    return find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(ListView),
+    );
+  }
+
+  Future<void> scrollToImportArea(WidgetTester tester) async {
+    final list = settingsTransferList();
+    expect(list, findsOneWidget);
+    await tester.drag(list, const Offset(0, -800));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('portable-settings-import')),
+      findsOneWidget,
+    );
+  }
+
   testWidgets('portable settings dialog describes privacy boundary and export', (
     WidgetTester tester,
   ) async {
@@ -69,6 +87,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(copiedText, SpellCheckerSettingsCodec.encode(document));
+    await scrollToImportArea(tester);
     expect(
       find.byKey(const ValueKey<String>('portable-settings-status')),
       findsOneWidget,
@@ -97,6 +116,7 @@ void main() {
         },
       ),
     );
+    await scrollToImportArea(tester);
     await tester.enterText(
       find.byKey(const ValueKey<String>('portable-settings-import')),
       source,
@@ -126,6 +146,7 @@ void main() {
       onImported: (SpellCheckerSettingsDocument? value) => imported = value,
     );
 
+    await scrollToImportArea(tester);
     await tester.enterText(
       find.byKey(const ValueKey<String>('portable-settings-import')),
       '{invalid',
