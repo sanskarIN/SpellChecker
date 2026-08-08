@@ -16,7 +16,9 @@ class TextStatistics {
     return TextStatistics(
       characters: text.length,
       words: wordMatches.length,
-      sentences: text.trim().isEmpty ? 0 : (sentenceMatches.length == 0 ? 1 : sentenceMatches.length),
+      sentences: text.trim().isEmpty
+          ? 0
+          : (sentenceMatches.isEmpty ? 1 : sentenceMatches.length),
     );
   }
 }

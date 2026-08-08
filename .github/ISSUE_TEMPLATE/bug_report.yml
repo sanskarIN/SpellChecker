@@ -7,18 +7,19 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug. Do not include private documents, credentials, or security exploit details here.
+        Thanks for reporting a bug. Do not include private documents, credentials, sensitive personal dictionary exports, or security exploit details here. Use synthetic sample text and vocabulary.
   - type: input
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v1.0.0 or commit SHA
+      placeholder: v1.1.0 or commit SHA
     validations:
       required: true
   - type: input
     id: flutter
     attributes:
       label: Flutter version
+      description: Required for local/development builds. If you are only using a hosted web build, write "hosted web build".
       placeholder: Output of flutter --version
     validations:
       required: true
@@ -29,11 +30,28 @@ body:
       placeholder: Chrome on Windows 11
     validations:
       required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Spell checking or suggestions
+        - Replacement/editor workflow
+        - Personal dictionary persistence
+        - Import/export
+        - Ignore-once/session behavior
+        - Suggestion-count preference
+        - Statistics
+        - Layout/accessibility
+        - Build/CI/development tooling
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
       label: What happened?
-      description: Describe the incorrect behavior using non-sensitive sample text.
+      description: Describe the incorrect behavior using non-sensitive synthetic text.
     validations:
       required: true
   - type: textarea
@@ -42,8 +60,8 @@ body:
       label: Steps to reproduce
       placeholder: |
         1. Open SpellChecker
-        2. Enter ...
-        3. Choose Check spelling
+        2. Enter synthetic text ...
+        3. Choose Check spelling / Save word / Import ...
         4. Observe ...
     validations:
       required: true
@@ -53,6 +71,11 @@ body:
       label: Expected behavior
     validations:
       required: true
+  - type: textarea
+    id: persistence
+    attributes:
+      label: Persistence/import context
+      description: If relevant, say whether this involves Save word, Ignore once, restart/reload, private/incognito mode, import format, export, or suggestion-count restoration. Do not paste sensitive vocabulary.
   - type: textarea
     id: additional
     attributes:
@@ -65,5 +88,7 @@ body:
       options:
         - label: I searched existing issues for duplicates.
           required: true
-        - label: I removed private or sensitive information from the report.
+        - label: I used synthetic data and removed private or sensitive information from the report.
+          required: true
+        - label: I did not include a sensitive personal dictionary export.
           required: true
