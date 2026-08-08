@@ -122,6 +122,9 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
   Widget build(BuildContext context) {
     final analysis = _analysis;
     final supportedRules = _supportedRules;
+    final ruleById = <String, WritingRule>{
+      for (final rule in supportedRules) rule.id: rule,
+    };
     final query = _query;
     final visibleRules = query.filterRules(supportedRules);
     final visibleIssues = query.filterIssues(
@@ -303,10 +306,9 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                     issue: visibleIssues[index],
                     index: index,
                     total: visibleIssues.length,
-                    category: WritingRuleRegistry.byId(
-                          visibleIssues[index].ruleId,
-                        )?.category ??
-                        WritingRuleCategory.mechanics,
+                    category:
+                        ruleById[visibleIssues[index].ruleId]?.category ??
+                            WritingRuleCategory.mechanics,
                     onFix: visibleIssues[index].hasAutomaticFix
                         ? () => _close(issueToFix: visibleIssues[index])
                         : null,
