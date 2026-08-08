@@ -4,6 +4,34 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.3.0] - 2026-08-08
+
+### Added
+
+- Public `WritingReviewPreset` with stable **All findings**, **Mechanics**, **Clarity**, and **Automatic fixes** IDs.
+- Writing insights preset chips that project into the existing reusable review-query state while retaining temporary free-text search.
+- Public `SpellCheckerSettingsDocument` and version-1 `SpellCheckerSettingsCodec` for deterministic non-document preference transfer.
+- **Portable settings** dialog with explicit local clipboard export and validated pasted-JSON import.
+- Internal `SettingsTransferService` that exports durable preference state, replaces the complete portable preference set on import, and performs best-effort rollback after a failed write.
+- Focused preset, settings codec, persistence rollback, dialog, and end-to-end editor workflow regression tests.
+
+### Changed
+
+- Package version advances to `2.3.0+8`; About version advances to `2.3.0`.
+- Portable import can change selected language, suggestion count, and explicit per-language writing-rule overrides while preserving editor text and target-language personal vocabulary.
+- Successful portable import clears stale issue/correction state and rechecks non-blank text with the imported language.
+- V2.3 release recovery removes temporary integration helpers/workflows from the permanent tree.
+
+### Compatibility, security, and privacy
+
+- Portable override documents preserve the distinction between a missing language key (unset/use registry defaults) and a present empty list (explicit disable-all).
+- Valid well-formed unknown future rule IDs are preserved; malformed rule IDs, unsupported languages, unsupported formats/versions, malformed structures, and suggestion limits outside 1–10 are rejected.
+- Portable settings exclude editor text, personal vocabulary, ignored session words, spelling/writing findings, and correction history.
+- Import validation and preference writes are local. `shared_preferences` has no multi-key transaction, so rollback after a write failure is best effort and is not described as atomic.
+- Review preset/search/category/automatic-fix state remains transient and unpersisted.
+- No new runtime dependency, cloud grammar/spelling service, analytics, telemetry, account system, or remote document transfer is introduced.
+
+
 ## [2.2.0] - 2026-08-08
 
 ### Added

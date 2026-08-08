@@ -311,3 +311,7 @@ Never commit:
 - Release secrets.
 
 Use secure facilities of the release/build platform.
+
+## V2.3 release checks
+
+For a V2.3-compatible release, verify the package/About version pair, stable review-preset IDs, `spellchecker-settings` format/version compatibility, unset-versus-empty rule override semantics, deterministic settings encoding, privacy exclusions, rollback tests, focused V2.3 suites, complete regression suite, and `flutter build web --release`. Confirm the intended release tree contains no one-time `tools/v23_*` helper or `.github/workflows/v23-*` recovery/integration workflow before tagging.

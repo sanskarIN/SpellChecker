@@ -253,3 +253,7 @@ These require explicit security/privacy review before implementation/release:
 - Dynamic external rule/plugin execution.
 
 Update [docs/PRIVACY.md](docs/PRIVACY.md) and relevant user/security documentation before shipping such behavior.
+
+## Portable settings security boundary — V2.3
+
+Portable settings are untrusted user-supplied JSON. Import validates format/version, supported language IDs, suggestion limits, override structure, and rule-ID syntax before persistence. The format does not execute code or dynamically load rules. Export is copied to the local clipboard only after explicit user action. Imported data is not sent to a remote service. `shared_preferences` writes are not transactional; rollback is best effort and must not be represented as an atomic security boundary.

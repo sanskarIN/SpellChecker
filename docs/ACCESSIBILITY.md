@@ -316,3 +316,7 @@ Potential improvements include:
 - Optional shortcut customization.
 - Refined non-duplicative announcements after bulk fixes/undo.
 - Additional accessible rule categories/filtering if the writing-rule catalogue grows.
+
+## V2.3 review presets and portable settings
+
+Review presets use standard Material `ChoiceChip` controls with visible text labels; category filters and the automatic-fixes switch remain independently available. Portable settings uses labeled copy/import controls, a labeled multiline import field, selectable export text, and semantic live-region status/error messages. The visible Portable settings app-bar action has a tooltip, so the workflow is not shortcut-only. Tests scroll lazy dialogs to real controls instead of depending on a fixed viewport.

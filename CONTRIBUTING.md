@@ -424,3 +424,7 @@ These require explicit privacy/security design review before implementation:
 # License
 
 By contributing, you agree that your contribution may be distributed under the repository's [MIT License](LICENSE).
+
+## V2.3 review preset and portability changes
+
+Changes to `WritingReviewPreset` IDs or semantics require compatibility notes and focused query/widget tests. Changes to portable settings must document format/version compatibility, supported languages, suggestion bounds, explicit override semantics, excluded data, failure/rollback behavior, and privacy impact. Never add editor text, personal dictionary contents, findings, correction snapshots, credentials, or private user samples to portable-settings fixtures; use synthetic values only.
