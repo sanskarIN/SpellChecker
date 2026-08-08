@@ -428,3 +428,7 @@ By contributing, you agree that your contribution may be distributed under the r
 ## V2.3 review preset and portability changes
 
 Changes to `WritingReviewPreset` IDs or semantics require compatibility notes and focused query/widget tests. Changes to portable settings must document format/version compatibility, supported languages, suggestion bounds, explicit override semantics, excluded data, failure/rollback behavior, and privacy impact. Never add editor text, personal dictionary contents, findings, correction snapshots, credentials, or private user samples to portable-settings fixtures; use synthetic values only.
+
+## V2.4 suggestion-ranking changes
+
+Preserve the default ranking order unless a release explicitly documents an intentional behavior change. Custom ranker support must not bypass engine eligibility filters, must retain deterministic lexical tie fallback, and must include focused tests for context/candidate metadata and cache-stability assumptions. Do not add dynamic plugin loading as part of a ranker change without a separate security design review.

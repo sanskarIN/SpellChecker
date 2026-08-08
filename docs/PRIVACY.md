@@ -328,3 +328,7 @@ Any optional network feature must be clearly user-controlled and must not silent
 Do not include private documents, secrets, credentials, personal messages, or sensitive personal dictionary exports in public tests/issues.
 
 Use minimal synthetic text that reproduces the problem.
+
+## Suggestion rankers — V2.4
+
+The V2.4 ranker API is local in-process Dart code supplied when constructing `SpellCheckerEngine`. SpellChecker does not persist ranker choice/state, dynamically download rankers, send candidate metadata to a service, or add a network dependency. The built-in application continues using `DefaultSpellSuggestionRanker`. Portable settings and personal-dictionary transfer formats are unchanged.

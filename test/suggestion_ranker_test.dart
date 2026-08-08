@@ -3,15 +3,18 @@ import 'package:spellchecker/spell_checker.dart';
 
 void main() {
   group('SpellSuggestionRanker', () {
-    test('default ranker preserves frequency ordering for equal-distance words', () {
-      final engine = SpellCheckerEngine(
-        dictionary: <String>{'cat', 'cut'},
-        wordFrequencies: <String, int>{'cut': 1, 'cat': 100},
-      );
+    test(
+      'default ranker preserves frequency ordering for equal-distance words',
+      () {
+        final engine = SpellCheckerEngine(
+          dictionary: <String>{'cat', 'cut'},
+          wordFrequencies: <String, int>{'cut': 1, 'cat': 100},
+        );
 
-      expect(engine.suggestionsFor('cot'), <String>['cut', 'cat']);
-      expect(engine.suggestionRanker, isA<DefaultSpellSuggestionRanker>());
-    });
+        expect(engine.suggestionsFor('cot'), <String>['cut', 'cat']);
+        expect(engine.suggestionRanker, isA<DefaultSpellSuggestionRanker>());
+      },
+    );
 
     test('custom ranker can replace the default ordering policy', () {
       final engine = SpellCheckerEngine(
@@ -23,14 +26,17 @@ void main() {
       expect(engine.suggestionsFor('cot'), <String>['cut', 'cat']);
     });
 
-    test('engine provides a stable lexical tie-break for custom ranker ties', () {
-      final engine = SpellCheckerEngine(
-        dictionary: <String>{'cut', 'cat'},
-        suggestionRanker: const _AllEqualRanker(),
-      );
+    test(
+      'engine provides a stable lexical tie-break for custom ranker ties',
+      () {
+        final engine = SpellCheckerEngine(
+          dictionary: <String>{'cut', 'cat'},
+          suggestionRanker: const _AllEqualRanker(),
+        );
 
-      expect(engine.suggestionsFor('cot'), <String>['cat', 'cut']);
-    });
+        expect(engine.suggestionsFor('cot'), <String>['cat', 'cut']);
+      },
+    );
 
     test('ranker receives normalized stem and active language context', () {
       final ranker = _RecordingRanker();
@@ -46,25 +52,28 @@ void main() {
       expect(ranker.lastLanguageId, 'en-US');
     });
 
-    test('candidate metadata includes distance, prefix, frequency and source', () {
-      final ranker = _CandidateRecordingRanker();
-      final engine = SpellCheckerEngine(
-        dictionary: <String>{'cat', 'cut'},
-        wordFrequencies: <String, int>{'cat': 3, 'cut': 7},
-        suggestionRanker: ranker,
-      );
+    test(
+      'candidate metadata includes distance, prefix, frequency and source',
+      () {
+        final ranker = _CandidateRecordingRanker();
+        final engine = SpellCheckerEngine(
+          dictionary: <String>{'cat', 'cut'},
+          wordFrequencies: <String, int>{'cat': 3, 'cut': 7},
+          suggestionRanker: ranker,
+        );
 
-      engine.suggestionsFor('cot');
+        engine.suggestionsFor('cot');
 
-      expect(ranker.seen, isNotEmpty);
-      final cat = ranker.seen.firstWhere(
-        (SpellSuggestionCandidate candidate) => candidate.word == 'cat',
-      );
-      expect(cat.distance, 1);
-      expect(cat.prefixPenalty, 0);
-      expect(cat.frequencyRank, 3);
-      expect(cat.source, isNotEmpty);
-    });
+        expect(ranker.seen, isNotEmpty);
+        final cat = ranker.seen.firstWhere(
+          (SpellSuggestionCandidate candidate) => candidate.word == 'cat',
+        );
+        expect(cat.distance, 1);
+        expect(cat.prefixPenalty, 0);
+        expect(cat.frequencyRank, 3);
+        expect(cat.source, isNotEmpty);
+      },
+    );
 
     test('custom ranking never bypasses suggestion eligibility filtering', () {
       final engine = SpellCheckerEngine(

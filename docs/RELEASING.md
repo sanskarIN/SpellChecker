@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.3 release:
+Current V2.4 release:
 
 ```text
-2.3.0+8
+2.4.0+9
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -228,8 +228,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.3.0 -m "SpellChecker v2.3.0"
-git push origin v2.3.0
+git tag -a v2.4.0 -m "SpellChecker v2.4.0"
+git push origin v2.4.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -251,7 +251,7 @@ After the tagged workflow passes:
 
 1. Create a GitHub Release for that tag.
 2. Use the matching changelog section as the release-note foundation.
-3. Highlight V2.3 review presets and Portable settings semantics, plus V2.2 review categories/search/reset-to-defaults and the retained V2.1 persistence/batch/undo/shortcut foundation.
+3. Highlight V2.4 suggestion-ranker extensibility/default compatibility, plus the retained V2.3 review-preset/Portable settings and earlier correction-safety foundation.
 4. Mention persistent-data/privacy behavior.
 5. Attach approved artifacts where appropriate.
 6. Verify links/version text.
@@ -298,7 +298,7 @@ Before a release changing dependencies:
 - Confirm CI resolves the same constraints.
 - Update development/privacy/security docs.
 
-V2.3 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
+V2.4 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
 
 # Signing and stores
 

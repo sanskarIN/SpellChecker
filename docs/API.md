@@ -1,6 +1,6 @@
 # Public API
 
-SpellChecker 2.3 exposes reusable spelling, language, correction, local writing-review, and portable-settings APIs through three public barrels.
+SpellChecker 2.4 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, and portable-settings APIs through three public barrels.
 
 ## Imports
 
@@ -513,6 +513,53 @@ Review queries have no persistence/network behavior. The Flutter dialog stores s
 `WritingInsightsDialog` is internal UI, but its V2.2 user-visible contract is documented: **Reset rules to defaults** clears the selected language's stored rule-ID override through `DictionaryPreferences.clearWritingRuleIds` and resolves current registry defaults instead of storing a concrete default list.
 
 This preserves the application persistence distinction between missing/unset and explicit stored values.
+
+# V2.4 suggestion ranking APIs
+
+## `SpellSuggestionCandidate`
+
+Public immutable metadata for a candidate that already passed engine eligibility and maximum-edit-distance filtering:
+
+```text
+word
+edit distance
+prefixPenalty
+frequencyRank
+source
+```
+
+Rankers cannot use this API to reintroduce a candidate that the engine rejected before ranking.
+
+## `SpellSuggestionRankingContext`
+
+Provides the normalized target stem and active `SpellLanguagePack`. Recognized suffixes are removed before candidate ranking and reattached afterward, matching pre-V2.4 behavior.
+
+## `SpellSuggestionRanker`
+
+Implement `compare(context, a, b)` to order eligible candidates. Implementations should be deterministic and side-effect free. `SpellCheckerEngine` caches ranked results per normalized input word and assumes its ranker remains semantically stable for the engine lifetime.
+
+If a ranker returns zero, the engine compares candidate words lexically. That final tie-break is engine-owned and guarantees deterministic ordering for equal custom scores.
+
+## `DefaultSpellSuggestionRanker`
+
+The default preserves the historical policy:
+
+1. Lower Damerau-Levenshtein edit distance.
+2. Lower first-character/prefix penalty.
+3. Better (lower) frequency rank.
+4. Shorter candidate word.
+5. Engine lexical fallback.
+
+## Engine injection
+
+```dart
+final engine = SpellCheckerEngine(
+  suggestionRanker: const MySuggestionRanker(),
+);
+```
+
+The new parameter is optional; callers that do not provide a ranker retain pre-V2.4 ordering.
+
 
 # V2.3 review preset and portable-settings APIs
 

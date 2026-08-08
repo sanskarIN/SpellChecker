@@ -280,6 +280,34 @@ This intentionally conservative policy avoids ambiguous chained transformations.
 
 See [WRITING_RULES.md](WRITING_RULES.md).
 
+# V2.4 suggestion ranking boundary
+
+Suggestion generation now has an explicit eligibility/ranking boundary:
+
+```text
+normalized unknown word
+   │
+   ├── recognized-suffix split
+   │
+   ▼
+base + personal candidates
+   │
+   ├── token exclusions
+   ├── length-difference guard
+   └── language-pack maximum edit distance
+          │ eligible candidates only
+          ▼
+SpellSuggestionRanker.compare
+          │
+          └── engine lexical fallback for score ties
+                    │
+                    ▼
+SpellSuggestion metadata + suffix reattachment + cache
+```
+
+`SpellSuggestionRanker` is intentionally not a dynamic plugin loader. A host application supplies a Dart object when constructing `SpellCheckerEngine`; candidate filtering remains engine/language-pack authority. The cache is per engine instance, so rankers should not change semantics after construction.
+
+
 # V2.3 review presets and preference portability
 
 ## Review preset flow
