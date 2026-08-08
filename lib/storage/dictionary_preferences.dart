@@ -11,6 +11,8 @@ class DictionaryPreferences {
       'spellchecker.personal_words.v1';
   static const String _personalWordsKeyPrefix =
       'spellchecker.personal_words.v2.';
+  static const String _writingRuleIdsKeyPrefix =
+      'spellchecker.writing_rule_ids.v1.';
   static const String _languageIdKey = 'spellchecker.language_id.v1';
   static const String _suggestionLimitKey = 'spellchecker.suggestion_limit.v1';
 
@@ -70,6 +72,39 @@ class DictionaryPreferences {
     if (pack.id == SpellLanguageRegistry.defaultPack.id) {
       await preferences.setStringList(_legacyPersonalWordsKey, normalized);
     }
+  }
+
+  /// Returns the stored rule ids for one language, or `null` when the user has
+  /// never configured writing rules for that language.
+  ///
+  /// An empty set is meaningful and represents an explicit "disable all"
+  /// choice, so callers must not collapse it into the default rule set.
+  Future<Set<String>?> loadWritingRuleIds({String? languageId}) async {
+    final preferences = await _instance;
+    final pack = _packFor(languageId);
+    final stored = preferences.getStringList(_writingRuleIdsKey(pack.id));
+    if (stored == null) {
+      return null;
+    }
+    return _normalizeRuleIds(stored).toSet();
+  }
+
+  Future<void> saveWritingRuleIds(
+    Iterable<String> ruleIds, {
+    String? languageId,
+  }) async {
+    final preferences = await _instance;
+    final pack = _packFor(languageId);
+    await preferences.setStringList(
+      _writingRuleIdsKey(pack.id),
+      _normalizeRuleIds(ruleIds),
+    );
+  }
+
+  Future<void> clearWritingRuleIds({String? languageId}) async {
+    final preferences = await _instance;
+    final pack = _packFor(languageId);
+    await preferences.remove(_writingRuleIdsKey(pack.id));
   }
 
   Future<int> loadSuggestionLimit() async {
@@ -133,7 +168,21 @@ class DictionaryPreferences {
     return normalized;
   }
 
+  static List<String> _normalizeRuleIds(Iterable<String> ruleIds) {
+    final normalized = ruleIds
+        .map((String ruleId) => ruleId.trim())
+        .where((String ruleId) => ruleId.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    return normalized;
+  }
+
   static String _personalWordsKey(String languageId) {
     return '$_personalWordsKeyPrefix$languageId';
+  }
+
+  static String _writingRuleIdsKey(String languageId) {
+    return '$_writingRuleIdsKeyPrefix$languageId';
   }
 }
