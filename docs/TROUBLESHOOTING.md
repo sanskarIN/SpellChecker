@@ -431,3 +431,7 @@ It does **not** delete:
 - Writing-rule preferences.
 
 Use the relevant settings controls for persistent data.
+
+## Portable settings import problems — V2.3
+
+If a portable settings document is rejected, verify `format` is `spellchecker-settings`, `version` is `1`, `languageId` and every override key are supported built-in language IDs, `suggestionLimit` is 1–10, override values are arrays, and rule IDs use the documented lowercase stable-ID form. If storage fails during import, SpellChecker keeps the live editor on its previous state and attempts to restore the previous durable portable preferences; because local preference storage is not transactional, recovery is best effort. Personal vocabulary is not part of the portable document, so missing personal words should be investigated through the language-specific personal dictionary instead of the settings JSON.

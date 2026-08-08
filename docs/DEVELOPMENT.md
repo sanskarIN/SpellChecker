@@ -429,3 +429,7 @@ For a user-visible release update:
 - GitHub issue/PR templates when new diagnostic context matters.
 
 Follow [RELEASING.md](RELEASING.md).
+
+## V2.3 development contracts
+
+When changing review presets, keep IDs stable, keep preset behavior as a projection into `WritingReviewQuery`, and add focused preset/query/widget tests. When changing `SpellCheckerSettingsCodec`, treat `format`, `version`, language IDs, suggestion bounds, rule-ID validation, deterministic ordering, and unset-versus-explicit-empty semantics as compatibility-sensitive. Portable settings must remain non-document unless a future release explicitly redesigns the privacy boundary. Storage changes must test failure and best-effort rollback behavior; do not claim `shared_preferences` writes are transactional.

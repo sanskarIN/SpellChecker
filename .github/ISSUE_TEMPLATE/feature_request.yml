@@ -72,3 +72,7 @@ body:
           required: false
         - label: I considered keyboard-only and screen-reader access for new editor controls.
           required: false
+
+# V2.3 design note
+
+# Requests that expand portable settings should identify the exact preference, persistence semantics, compatibility/version impact, privacy boundary, and why it belongs in a non-document transfer format.

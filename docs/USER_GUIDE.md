@@ -16,6 +16,7 @@ The main screen contains:
 - Results panel.
 - Previous/next spelling-issue controls.
 - **Writing insights** app-bar action.
+- **Portable settings** app-bar action.
 - Personal-dictionary action with a saved-word badge.
 - Clear-ignored-words action with a session-ignore badge.
 - About action.
@@ -157,6 +158,35 @@ Use **Reset rules to defaults** when you want the selected language to follow th
 This is different from manually turning every current rule on. Reset removes the saved per-language override key. After a successful reset, future releases can change built-in defaults and that language can receive the new defaults normally.
 
 If local storage cannot clear the override, current-session defaults still become active and SpellChecker reports the persistence problem; the old saved override may return after restart until storage succeeds.
+
+## Review presets — V2.3
+
+Above the V2.2 category controls, Writing insights provides **All findings**, **Mechanics**, **Clarity**, and **Automatic fixes** presets. A preset changes category/automatic-fix review scope but keeps the current free-text search. You can then adjust category chips/toggle manually for a custom temporary combination.
+
+Preset/search/category/automatic-fix state is never saved. Closing the dialog resets that review state; per-language rule switches remain the durable preference.
+
+# Portable settings — V2.3
+
+Select **Portable settings** in the app bar.
+
+### Copy
+
+The dialog shows the current durable selected language, suggestion count, explicit override-language count, and a deterministic JSON document. Choose **Copy settings JSON** to place that JSON on the local clipboard.
+
+### Import
+
+Paste a `spellchecker-settings` version-1 JSON document and choose **Import settings**. A successful import replaces:
+
+- Selected language.
+- Suggestion count.
+- Complete set of explicit per-language writing-rule overrides.
+
+A missing language in `writingRuleOverrides` means that language returns to built-in defaults. A present empty list means all writing rules are explicitly disabled for that language.
+
+Portable settings do **not** contain personal words or editor text. Existing target-language personal vocabulary remains available after import, and current editor text remains unchanged. The editor clears stale checked/finding/undo state and rechecks non-blank text under the imported language.
+
+If local storage fails mid-import, SpellChecker reports that the import failed and attempts to restore the previous durable portable settings. Because local preference storage is not transactional, restoration is best effort.
+
 
 ## Built-in writing rules
 

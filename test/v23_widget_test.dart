@@ -51,15 +51,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      tester.widget<FilterChip>(
-        find.byKey(const ValueKey<String>('writing-category-clarity')),
-      ).selected,
+      tester
+          .widget<FilterChip>(
+            find.byKey(const ValueKey<String>('writing-category-clarity')),
+          )
+          .selected,
       isTrue,
     );
     expect(
-      tester.widget<FilterChip>(
-        find.byKey(const ValueKey<String>('writing-category-mechanics')),
-      ).selected,
+      tester
+          .widget<FilterChip>(
+            find.byKey(const ValueKey<String>('writing-category-mechanics')),
+          )
+          .selected,
       isFalse,
     );
     expect(tester.widget<TextField>(search).controller!.text, 'repeat');
@@ -71,15 +75,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      tester.widget<SwitchListTile>(
-        find.byKey(const ValueKey<String>('automatic-fixes-only')),
-      ).value,
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const ValueKey<String>('automatic-fixes-only')),
+          )
+          .value,
       isTrue,
     );
     expect(
-      tester.widget<FilterChip>(
-        find.byKey(const ValueKey<String>('writing-category-clarity')),
-      ).selected,
+      tester
+          .widget<FilterChip>(
+            find.byKey(const ValueKey<String>('writing-category-clarity')),
+          )
+          .selected,
       isFalse,
     );
     expect(tester.widget<TextField>(search).controller!.text, 'repeat');
@@ -89,9 +97,11 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(
-      tester.widget<SwitchListTile>(
-        find.byKey(const ValueKey<String>('automatic-fixes-only')),
-      ).value,
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const ValueKey<String>('automatic-fixes-only')),
+          )
+          .value,
       isFalse,
     );
   });

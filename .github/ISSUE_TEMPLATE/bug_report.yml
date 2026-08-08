@@ -126,3 +126,7 @@ body:
           required: true
         - label: I did not include a sensitive personal dictionary export, private writing finding, or private correction/document content.
           required: true
+
+# V2.3 diagnostic note
+
+# For portable-settings/review-preset bugs, include only minimized synthetic JSON/text. Never include private editor documents, personal dictionaries, credentials, or sensitive clipboard data.

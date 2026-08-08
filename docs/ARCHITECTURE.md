@@ -280,6 +280,64 @@ This intentionally conservative policy avoids ambiguous chained transformations.
 
 See [WRITING_RULES.md](WRITING_RULES.md).
 
+# V2.3 review presets and preference portability
+
+## Review preset flow
+
+`WritingReviewPreset` lives in `lib/writing/` beside `WritingReviewQuery`. Presets are immutable named projections onto category/automatic-fix filtering; the dialog remains responsible only for transient selection state. Free-text search is not stored in a preset and is intentionally retained when the user switches presets.
+
+```text
+WritingReviewPreset
+   │
+   └── toQuery(search)
+          │
+          ▼
+   WritingReviewQuery
+      ├── filterRules
+      └── filterIssues
+```
+
+No preset bypasses `WritingCorrection`; filtered batch fixes still use the V2.1 correction primitive.
+
+## Portable settings layers
+
+```text
+SpellCheckerSettingsCodec       public pure JSON/validation layer
+SettingsTransferService         internal durable-preference projection/rollback
+SettingsTransferDialog          import/export presentation only
+SpellCheckerPage                live-session mutation after persistence succeeds
+```
+
+The portable document contains selected language, suggestion limit, and the complete explicit per-language writing-rule override map. Personal vocabulary is deliberately outside this format.
+
+## Import flow
+
+```text
+Paste JSON
+   │
+   ▼
+SpellCheckerSettingsCodec.decode
+   │ validate only
+   ▼
+SettingsTransferService.importDocument
+   ├── validate programmatic document
+   ├── snapshot previous portable preferences
+   ├── write language + suggestion limit + complete override map
+   └── write failure -> best-effort restore snapshot, rethrow
+            │ success
+            ▼
+SpellCheckerPage
+   ├── preserve already-loaded editor text
+   ├── load/reuse target-language personal vocabulary
+   ├── create fresh language engine
+   ├── resolve imported/default effective writing rules
+   ├── clear stale issue/correction state
+   └── re-check non-blank editor text
+```
+
+Because `shared_preferences` has no multi-key transaction, rollback is a best-effort safety mechanism rather than an atomic persistence guarantee. The page changes live state only after the service succeeds.
+
+
 # Data layer
 
 Location:
@@ -298,6 +356,7 @@ Location:
 
 ```text
 lib/storage/dictionary_preferences.dart
+lib/storage/settings_transfer_service.dart
 ```
 
 `DictionaryPreferences` wraps Flutter `shared_preferences` for application-owned local settings.

@@ -20,10 +20,10 @@ void main() {
 
       expect(decoded.languageId, 'en-GB');
       expect(decoded.suggestionLimit, 7);
-      expect(
-        decoded.writingRuleIdsFor('en-US'),
-        <String>{'future-rule', 'repeated-space'},
-      );
+      expect(decoded.writingRuleIdsFor('en-US'), <String>{
+        'future-rule',
+        'repeated-space',
+      });
       expect(decoded.hasWritingRuleOverride('en-GB'), isTrue);
       expect(decoded.writingRuleIdsFor('en-GB'), isEmpty);
     });
@@ -72,10 +72,7 @@ void main() {
 
     test('encoded format contains no document or vocabulary fields', () {
       final encoded = SpellCheckerSettingsCodec.encode(
-        SpellCheckerSettingsDocument(
-          languageId: 'en-US',
-          suggestionLimit: 5,
-        ),
+        SpellCheckerSettingsDocument(languageId: 'en-US', suggestionLimit: 5),
       );
       final json = jsonDecode(encoded) as Map<String, dynamic>;
 

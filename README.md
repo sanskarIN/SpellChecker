@@ -16,7 +16,9 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Optional local **Writing insights** with configurable deterministic rules.
 
 - Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
+- Stable Writing insights review presets: **All findings**, **Mechanics**, **Clarity**, and **Automatic fixes**.
 - Temporary Writing insights search, category filters, and **Automatic fixes only** review.
+- Versioned **Portable settings** copy/import for selected language, suggestion count, and explicit per-language writing-rule overrides.
 - **Apply visible safe fixes (N)** when review filters are active.
 - **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
@@ -49,9 +51,9 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.2.0+7`
+`2.3.0+8`
 
-Version 2.2 is the Writing Review & Rule Management release. It keeps V2.1 persistence, batch-safety, one-step undo, and keyboard workflows while adding reusable rule categories, transient search/category/automatic-fix review filters, filtered batch application, and a true per-language **Reset rules to defaults** action that removes the stored override instead of freezing today's defaults. Existing V2.1, V1.3, and V1.2 behavior remains compatible.
+Version 2.3 is the **Review Presets & Preference Portability** release. It keeps V2.2 categories, transient review filtering, reset-to-defaults, V2.1 correction safety, one-step undo, and keyboard workflows while adding stable reusable review presets plus a versioned non-document Portable settings format. Portable settings transfer selected language, suggestion count, and explicit per-language writing-rule overrides only; editor text, personal vocabulary, ignored words, findings, and correction history are excluded. Existing 2.x spelling/writing APIs remain compatible.
 
 ## Language selection
 
@@ -88,6 +90,18 @@ Search text, selected categories, and the automatic-fix filter live only inside 
 
 When filters are active, the batch action becomes **Apply visible safe fixes (N)** and passes only currently visible automatic findings to the same V2.1 `WritingCorrection.applyAll` safety/overlap/undo pipeline.
 
+### Review presets — V2.3
+
+Writing insights adds four stable local review presets:
+
+- **All findings** (`all-findings`) — clears category/fix-only filtering.
+- **Mechanics** (`mechanics`) — selects the Mechanics category.
+- **Clarity** (`clarity`) — selects the Clarity category.
+- **Automatic fixes** (`automatic-fixes`) — shows deterministic automatic findings only.
+
+Presets project into the existing `WritingReviewQuery` state; they do not create a second filtering engine. Free-text search is intentionally retained when changing presets, so a user can combine a preset with a temporary search. Preset selection, search text, category filters, and automatic-fixes-only state are memory-only dialog state and disappear when Writing insights closes.
+
+
 ### Reset rules to defaults — V2.2
 
 **Reset rules to defaults** differs from enabling every current switch. It clears the selected language's persisted writing-rule override key, resolves the current registry defaults in memory, and closes the dialog. This returns that language to the **unset/default** preference state so future default-rule changes can be picked up normally.
@@ -123,6 +137,38 @@ Batch correction follows a deterministic safety contract:
 7. The entire batch is recorded as one correction-history entry, so one **Undo correction** restores the document from before the batch.
 
 See [Writing rules](docs/WRITING_RULES.md).
+
+## Portable settings — V2.3
+
+Open **Portable settings** from the app bar to copy or import a versioned preferences document.
+
+The current format is:
+
+```json
+{
+  "format": "spellchecker-settings",
+  "version": 1,
+  "languageId": "en-US",
+  "suggestionLimit": 5,
+  "writingRuleOverrides": {
+    "en-US": ["sentence-capitalization"],
+    "en-GB": []
+  }
+}
+```
+
+Only durable non-document preferences are transferred:
+
+- Selected built-in language ID.
+- Suggestion count (1–10).
+- Complete set of **explicit** per-language writing-rule overrides.
+
+Override semantics are preserved exactly: a missing language key means **unset/use current registry defaults**, while a present empty array means **explicitly disable all rules** for that language. Valid well-formed unknown future rule IDs are preserved for forward compatibility; malformed IDs, unsupported languages/formats/versions, malformed structures, and invalid suggestion limits are rejected.
+
+Portable settings deliberately exclude editor text, personal dictionary words, ignored session words, spelling findings, writing findings, and correction/undo history. Export copies JSON only when the user presses **Copy settings JSON**. Import reads user-pasted JSON locally; it does not contact a server.
+
+Import is persistence-first. SpellChecker snapshots the previous portable preference document, writes the imported language/limit/complete override map, and performs a best-effort rollback if any local write fails. `shared_preferences` does not provide multi-key transactions, so rollback is documented as best effort rather than atomic. The live editor state changes only after persistence succeeds. Target-language personal vocabulary is loaded separately and preserved; editor text remains unchanged, stale issue/correction state is cleared, and non-blank text is rechecked with the imported language.
+
 
 ## Main workflow
 
@@ -187,6 +233,8 @@ SpellChecker currently stores these settings locally through `shared_preferences
 - Personal dictionary words, namespaced by language.
 - Suggestion-count preference.
 - Enabled writing-rule IDs, namespaced by language.
+
+V2.3 can copy/import a user-triggered portable representation of the selected language, suggestion count, and explicit writing-rule override map. The transfer document itself is not automatically persisted as a document or sent anywhere; import writes those values back through the same local preference adapter.
 
 SpellChecker does **not** persist editor documents, spelling result lists, writing-analysis findings, ignored words, active issue positions, or correction undo snapshots.
 
@@ -269,6 +317,7 @@ SpellChecker/
 │   ├── core/
 │   │   ├── edit_distance.dart
 │   │   ├── personal_dictionary_codec.dart
+│   │   ├── settings_transfer_codec.dart
 │   │   ├── spell_checker_engine.dart
 │   │   ├── spell_issue.dart
 │   │   ├── spell_language_pack.dart
@@ -282,16 +331,20 @@ SpellChecker/
 │   │   └── english_word_frequencies.dart
 │   ├── features/editor/
 │   │   ├── dictionary_manager_dialog.dart
+│   │   ├── settings_transfer_dialog.dart
 │   │   ├── spell_check_editing_controller.dart
 │   │   ├── spell_checker_page.dart
 │   │   └── writing_insights_dialog.dart
 │   ├── storage/
-│   │   └── dictionary_preferences.dart
+│   │   ├── dictionary_preferences.dart
+│   │   └── settings_transfer_service.dart
 │   └── writing/
 │       ├── rules/
 │       ├── writing_analyzer.dart
 │       ├── writing_correction.dart
 │       ├── writing_issue.dart
+│       ├── writing_review_preset.dart
+│       ├── writing_review_query.dart
 │       └── writing_rule.dart
 ├── test/
 │   ├── dictionary_preferences_test.dart
@@ -306,7 +359,12 @@ SpellChecker/
 │   ├── widget_test.dart
 │   ├── writing_correction_test.dart
 │   ├── writing_preferences_test.dart
+│   ├── writing_review_preset_test.dart
 │   ├── writing_review_query_test.dart
+│   ├── settings_transfer_codec_test.dart
+│   ├── settings_transfer_dialog_test.dart
+│   ├── settings_transfer_service_test.dart
+│   ├── v23_widget_test.dart
 │   ├── writing_rules_test.dart
 │   └── writing_widget_test.dart
 ├── web/

@@ -1,6 +1,6 @@
 # Public API
 
-SpellChecker 2.1 exposes reusable spelling, language, correction, and local writing-rule APIs through three public barrels.
+SpellChecker 2.3 exposes reusable spelling, language, correction, local writing-review, and portable-settings APIs through three public barrels.
 
 ## Imports
 
@@ -513,6 +513,62 @@ Review queries have no persistence/network behavior. The Flutter dialog stores s
 `WritingInsightsDialog` is internal UI, but its V2.2 user-visible contract is documented: **Reset rules to defaults** clears the selected language's stored rule-ID override through `DictionaryPreferences.clearWritingRuleIds` and resolves current registry defaults instead of storing a concrete default list.
 
 This preserves the application persistence distinction between missing/unset and explicit stored values.
+
+# V2.3 review preset and portable-settings APIs
+
+## `WritingReviewPreset`
+
+`package:spellchecker/writing.dart` exports immutable reusable review presets. Current stable IDs are:
+
+```text
+all-findings
+automatic-fixes
+clarity
+mechanics
+```
+
+`WritingReviewPreset.values` exposes the built-ins; `WritingReviewPreset.byId(id)` falls back to `allFindings` for an unknown/null ID. `preset.toQuery(search: ...)` returns the corresponding `WritingReviewQuery`. Search is caller-supplied/transient and is not stored in the preset.
+
+Preset IDs are compatibility-sensitive metadata. Do not silently reuse an existing ID for different semantics.
+
+## `SpellCheckerSettingsDocument`
+
+`package:spellchecker/spell_checker.dart` exports the versioned portable preference document:
+
+```dart
+final document = SpellCheckerSettingsDocument(
+  languageId: 'en-US',
+  suggestionLimit: 5,
+  writingRuleOverrides: <String, Iterable<String>>{
+    'en-US': <String>{'sentence-capitalization'},
+    'en-GB': const <String>[],
+  },
+);
+```
+
+`writingRuleOverrides` contains **explicit overrides only**. `hasWritingRuleOverride(languageId) == false` means unset/use current registry defaults. A present empty set means explicit disable-all.
+
+## `SpellCheckerSettingsCodec`
+
+Current constants:
+
+```text
+format = spellchecker-settings
+version = 1
+minSuggestionLimit = 1
+maxSuggestionLimit = 10
+```
+
+`encode(document)` validates language IDs, suggestion limits, and rule IDs and emits deterministic indented JSON with sorted language keys/rule IDs.
+
+`decode(source)` rejects malformed JSON, unsupported format/version, unsupported language IDs, invalid override structures, malformed rule IDs, and suggestion limits outside 1–10. Well-formed unknown future rule IDs are preserved instead of being discarded by the codec.
+
+The codec is intentionally storage/network agnostic and never carries editor text, personal vocabulary, ignored words, findings, or correction history.
+
+## Internal `SettingsTransferService`
+
+The Flutter application uses an internal storage service to project `SpellCheckerSettingsDocument` onto `DictionaryPreferences`. It is not part of the public barrel guarantee. The service snapshots prior portable preferences and performs best-effort rollback if a multi-key import write fails; `shared_preferences` does not provide transactional writes.
+
 
 # Application persistence boundary
 

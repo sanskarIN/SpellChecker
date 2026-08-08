@@ -79,6 +79,25 @@ Expanded `test/writing_widget_test.dart` protects:
 
 Review-filter tests should use the real lazy dialog/list and scroll/ensure visibility rather than changing production layout. Search/category/automatic-only state must not be asserted in persistent preferences because it is intentionally transient.
 
+## V2.3 focused coverage
+
+The V2.3 release adds five focused suites:
+
+```bash
+flutter test test/writing_review_preset_test.dart --reporter expanded
+flutter test test/settings_transfer_codec_test.dart --reporter expanded
+flutter test test/settings_transfer_service_test.dart --reporter expanded
+flutter test test/settings_transfer_dialog_test.dart --reporter expanded
+flutter test test/v23_widget_test.dart --reporter expanded
+```
+
+They protect stable preset IDs/query projection/search retention, deterministic settings JSON, unset-versus-empty override semantics, malformed/unsupported input rejection, forward-compatible well-formed rule IDs, complete override replacement, best-effort rollback, personal-vocabulary exclusion/preservation, clipboard/import dialog behavior, editor-text preservation, and the successful live language/rule/limit refresh path.
+
+Portable settings dialogs use lazy `ListView` content. Widget tests must scroll the real dialog list before interacting with off-screen import/status controls rather than changing production layout to make tests easier.
+
+The V2.3 recovery gate run `31260605417` passed these focused suites, the complete **125-test** regression suite, `flutter analyze`, formatting checks, and `flutter build web --release` on the exact clean code checkpoint before documentation changes.
+
+
 ## Writing-rule coverage
 
 `test/writing_rules_test.dart` protects:
