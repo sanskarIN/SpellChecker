@@ -49,33 +49,33 @@ class SpellCheckEditingController extends TextEditingController {
       );
     }
 
+    final baseStyle = style ?? const TextStyle();
     final colorScheme = Theme.of(context).colorScheme;
-    final issueStyle = style?.copyWith(
+    final issueStyle = baseStyle.copyWith(
       decoration: TextDecoration.underline,
       decorationColor: colorScheme.error,
       decorationStyle: TextDecorationStyle.wavy,
       decorationThickness: 1.5,
     );
-    final activeStyle = issueStyle?.copyWith(
+    final activeStyle = issueStyle.copyWith(
       color: colorScheme.onErrorContainer,
       backgroundColor: colorScheme.errorContainer,
       fontWeight: FontWeight.w600,
     );
 
-    final sorted = _issues.indexed.toList(growable: false)
-      ..sort(
-        (
-          (int, SpellIssue) a,
-          (int, SpellIssue) b,
-        ) => a.$2.start.compareTo(b.$2.start),
+    final sorted = <_IndexedSpellIssue>[
+      for (var index = 0; index < _issues.length; index++)
+        _IndexedSpellIssue(index: index, issue: _issues[index]),
+    ]..sort(
+        (_IndexedSpellIssue a, _IndexedSpellIssue b) =>
+            a.issue.start.compareTo(b.issue.start),
       );
 
     final children = <InlineSpan>[];
     var cursor = 0;
 
     for (final entry in sorted) {
-      final originalIndex = entry.$1;
-      final issue = entry.$2;
+      final issue = entry.issue;
       if (!_isValidIssue(issue, cursor)) {
         continue;
       }
@@ -87,7 +87,7 @@ class SpellCheckEditingController extends TextEditingController {
       children.add(
         TextSpan(
           text: text.substring(issue.start, issue.end),
-          style: originalIndex == _activeIssueIndex ? activeStyle : issueStyle,
+          style: entry.index == _activeIssueIndex ? activeStyle : issueStyle,
         ),
       );
       cursor = issue.end;
@@ -97,7 +97,7 @@ class SpellCheckEditingController extends TextEditingController {
       children.add(TextSpan(text: text.substring(cursor)));
     }
 
-    return TextSpan(style: style, children: children);
+    return TextSpan(style: baseStyle, children: children);
   }
 
   bool _isValidIssue(SpellIssue issue, int cursor) {
@@ -114,4 +114,11 @@ class SpellCheckEditingController extends TextEditingController {
     }
     return index;
   }
+}
+
+class _IndexedSpellIssue {
+  const _IndexedSpellIssue({required this.index, required this.issue});
+
+  final int index;
+  final SpellIssue issue;
 }
