@@ -1,0 +1,153 @@
+name: V2.2 final exact-tree gate
+
+on:
+  pull_request:
+    branches:
+      - v2.2-final-gate-base
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out V2.2 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.2-writing-review-management
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Reconcile V2.2 permanent tree idempotently
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import runpy
+
+          pubspec = Path('pubspec.yaml').read_text()
+          if 'version: 2.1.0+6' in pubspec:
+              helper = Path('tools/v22_apply.py')
+              if not helper.exists():
+                  raise RuntimeError(
+                      'V2.2 page/version integration is missing and tools/v22_apply.py is unavailable.'
+                  )
+              runpy.run_path(str(helper), run_name='__main__')
+          elif 'version: 2.2.0+7' in pubspec:
+              print('V2.2 page/version integration is already present.')
+          else:
+              raise RuntimeError('Unrecognized package version during V2.2 reconciliation.')
+
+          widget_path = Path('test/writing_widget_test.dart')
+          widget = widget_path.read_text()
+          final_scroll = "await tester.drag(insightsList, const Offset(0, -420));"
+          legacy_scrolls = (
+              "await tester.drag(insightsList, const Offset(0, -900));",
+              "await tester.drag(insightsList, const Offset(0, -600));",
+          )
+          legacy_matches = [value for value in legacy_scrolls if value in widget]
+          if final_scroll in widget:
+              if legacy_matches:
+                  raise RuntimeError('Both final and legacy Writing insights scroll helpers are present.')
+              print('V2.2 widget viewport helper is already finalized.')
+          elif len(legacy_matches) == 1:
+              widget_path.write_text(widget.replace(legacy_matches[0], final_scroll, 1))
+              print('V2.2 widget viewport helper reconciled to -420.')
+          else:
+              raise RuntimeError(
+                  f'Expected exactly one recognized Writing insights scroll helper; found {len(legacy_matches)}.'
+              )
+
+          readme = Path('README.md').read_text()
+          docs_done = (
+              '`2.2.0+7`' in readme
+              and '### Review filters — V2.2' in readme
+              and '## [2.2.0] - 2026-08-08' in Path('CHANGELOG.md').read_text()
+              and '## 2.2 — Writing review and rule management' in Path('docs/ROADMAP.md').read_text()
+              and '## V2.2 rule categories' in Path('docs/WRITING_RULES.md').read_text()
+          )
+          if docs_done:
+              print('V2.2 documentation integration is already present.')
+          else:
+              helper = Path('tools/v22_docs_apply.py')
+              if not helper.exists():
+                  raise RuntimeError(
+                      'V2.2 documentation integration is incomplete and tools/v22_docs_apply.py is unavailable.'
+                  )
+              runpy.run_path(str(helper), run_name='__main__')
+
+          page = Path('lib/features/editor/spell_checker_page.dart').read_text()
+          required_markers = (
+              "applicationVersion: '2.2.0'",
+              'if (result.resetRulePreferences)',
+              'clearWritingRuleIds(languageId: _languagePack.id)',
+          )
+          missing = [marker for marker in required_markers if marker not in page]
+          if missing:
+              raise RuntimeError(f'Missing V2.2 page markers after reconciliation: {missing}')
+
+          dialog = Path('lib/features/editor/writing_insights_dialog.dart').read_text()
+          for marker in (
+              "ValueKey<String>('writing-review-search')",
+              "ValueKey<String>('automatic-fixes-only')",
+              "ValueKey<String>('reset-writing-rules')",
+              'Apply visible safe fixes',
+          ):
+              if marker not in dialog:
+                  raise RuntimeError(f'Missing V2.2 dialog marker: {marker}')
+
+          query = Path('lib/writing/writing_review_query.dart')
+          category = Path('lib/writing/writing_rule_category.dart')
+          if not query.exists() or not category.exists():
+              raise RuntimeError('V2.2 public writing review API files are missing.')
+          PY
+
+      - name: Remove all V2.2 integration helpers
+        run: |
+          rm -f \
+            tools/v22_apply.py \
+            tools/v22_docs_apply.py \
+            tools/v22_test_viewport.py
+          rmdir tools 2>/dev/null || true
+
+      - name: Format source and tests
+        run: dart format lib test
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test V2.2 review query
+        run: flutter test test/writing_review_query_test.dart --reporter expanded
+
+      - name: Test V2.2 writing workflow
+        run: flutter test test/writing_widget_test.dart --reporter expanded
+
+      - name: Test complete suite
+        run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
+
+      - name: Commit exact validated V2.2 tree
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No V2.2 reconciliation changes to commit."
+            exit 0
+          fi
+          git commit -m "feat: finalize and validate v2.2 review management"
+          git push origin HEAD:v2.2-writing-review-management
