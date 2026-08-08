@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spellchecker/app.dart';
@@ -17,7 +18,7 @@ void main() {
 
     expect(find.text('Ready to check'), findsOneWidget);
 
-    await tester.enterText(find.byType(EditableText), 'Helo world');
+    await tester.enterText(find.byType(TextField), 'Helo world');
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
@@ -31,7 +32,7 @@ void main() {
     await tester.pumpWidget(const SpellCheckerApp());
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(EditableText), 'Zorbax');
+    await tester.enterText(find.byType(TextField), 'Zorbax');
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
