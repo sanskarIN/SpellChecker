@@ -336,7 +336,7 @@ These are UI integration contracts rather than public core API promises.
 
 ## Persistence boundary
 
-`DictionaryPreferences` remains an application integration class under `lib/storage/`. It is not exported from `package:spellchecker/spellchecker.dart` or `package:spellchecker/spell_checker.dart` because storage implementations may evolve independently from the reusable core.
+`DictionaryPreferences` remains an application integration class under `lib/storage/`. It is intentionally not exported from `package:spellchecker/spell_checker.dart` because storage implementations may evolve independently from the reusable core.
 
 The Flutter application persists:
 
