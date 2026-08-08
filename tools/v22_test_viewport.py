@@ -14,15 +14,24 @@ elif 'await tester.drag(insightsList, const Offset(0, -600));' not in text:
     raise RuntimeError('writing insights scroll helper has an unexpected shape')
 
 helper_marker = "  testWidgets('writing insights apply a safe fix through editor undo history', ("
-helper = """  Future<void> scrollToRule(WidgetTester tester, String label) async {
+helper = """  Finder writingInsightsScrollable() {
+    return find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(Scrollable),
+    );
+  }
+
+  Future<void> scrollToRule(WidgetTester tester, String label) async {
     final insightsList = writingInsightsList();
+    final insightsScrollable = writingInsightsScrollable();
     expect(insightsList, findsOneWidget);
+    expect(insightsScrollable, findsOneWidget);
     await tester.drag(insightsList, const Offset(0, 1200));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text(label),
       160,
-      scrollable: insightsList,
+      scrollable: insightsScrollable,
     );
     await tester.pumpAndSettle();
   }
