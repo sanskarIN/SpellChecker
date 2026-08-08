@@ -77,11 +77,11 @@ Status: implemented.
 
 ## 2.0 — Advanced writing foundation
 
-Status: implemented foundation.
+Status: implemented.
 
 - [x] Public local `WritingRule` plugin contract.
 - [x] Language-aware `WritingAnalyzer` and rule registry.
-- [x] Per-session rule enable/disable filtering.
+- [x] Rule enable/disable filtering.
 - [x] Repeated-word rule.
 - [x] Sentence-capitalization rule.
 - [x] Repeated-space rule.
@@ -89,10 +89,40 @@ Status: implemented foundation.
 - [x] Deterministic writing issue model and severity metadata.
 - [x] Stale-range-safe writing correction API.
 - [x] Optional Writing insights editor UI.
-- [x] Writing fixes integrated with bounded correction undo.
+- [x] Individual writing fixes integrated with bounded correction undo.
 - [x] Rule/analyzer/correction/widget regression tests.
-- [x] Complete writing-rules documentation.
+- [x] Complete writing-rules documentation foundation.
 
-Future 2.x work can add richer rule catalogs, persisted rule preferences, additional language-specific rules, extensible spelling rankers, packaging/signing automation, and trusted plugin-loading designs without weakening the local-first privacy baseline.
+## 2.1 — Writing workflow quality
 
-Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented and user-controlled.
+Status: implemented.
+
+- [x] Per-language persisted writing-rule preferences.
+- [x] Backward-compatible unset/default rule semantics.
+- [x] Explicit persisted empty rule set for “disable all”.
+- [x] Language switching restores language-specific rule choices.
+- [x] `WritingBatchCorrectionResult` public result model.
+- [x] Safe `WritingCorrection.applyAll` batch API.
+- [x] Stale and advisory finding skipping during batch correction.
+- [x] Deterministic overlap resolution for automatic writing fixes.
+- [x] End-to-start batch replacement for source-offset safety.
+- [x] **Apply all safe fixes (N)** Writing insights action.
+- [x] One-step undo for a complete writing-fix batch.
+- [x] `Ctrl/Command+Shift+Enter` Writing insights shortcut.
+- [x] Persistent rule-choice, batch-correction, startup, undo, and keyboard regression tests.
+- [x] Full V2.1 documentation and release metadata.
+
+## Future 2.x direction
+
+Possible future work includes:
+
+- Richer deterministic writing-rule catalogues.
+- Additional language-specific writing rules.
+- User-visible rule categories and search/filtering.
+- Import/export of non-sensitive application preferences.
+- Extensible spelling suggestion rankers.
+- Trusted plugin-loading designs with explicit security boundaries.
+- Cross-platform packaging and signing automation.
+- Performance profiling for very large documents.
+
+Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented, reviewed, and user-controlled.

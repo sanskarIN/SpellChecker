@@ -7,12 +7,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug. Do not include private documents, credentials, sensitive dictionary exports, correction-history content, or security exploit details here. Use synthetic sample text and vocabulary.
+        Thanks for reporting a bug. Do not include private documents, credentials, sensitive dictionary exports, writing-finding excerpts, correction-history content, or security exploit details here. Use synthetic sample text and vocabulary.
   - type: input
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v1.2.0 or commit SHA
+      placeholder: v2.1.0 or commit SHA
     validations:
       required: true
   - type: input
@@ -30,6 +30,12 @@ body:
       placeholder: Chrome on Windows 11
     validations:
       required: true
+  - type: input
+    id: language
+    attributes:
+      label: Selected language
+      description: Include the pack ID/display name when relevant.
+      placeholder: en-US / English (US)
   - type: dropdown
     id: area
     attributes:
@@ -38,13 +44,16 @@ body:
         - Spell checking or suggestions
         - Language selection / language packs
         - Writing insights / local writing rules
-        - Writing rule safe fix / undo
+        - Writing rule preference persistence
+        - Writing individual safe fix
+        - Writing apply-all batch fix / overlap handling
+        - Writing shortcut (Ctrl/Command+Shift+Enter)
         - Unicode tokenization / normalization
         - Inline issue highlighting
-        - Issue navigation or keyboard shortcuts
-        - Single replacement
-        - Replace all
-        - Correction undo
+        - Spelling issue navigation / F7 shortcuts
+        - Single spelling replacement
+        - Spelling replace all
+        - Correction undo / batch undo grouping
         - Personal dictionary persistence
         - Import/export
         - Ignore-once/session behavior
@@ -69,9 +78,10 @@ body:
       label: Steps to reproduce
       placeholder: |
         1. Open SpellChecker
-        2. Enter synthetic text ...
-        3. Check spelling / press F7 / choose Replace all / Undo ...
-        4. Observe ...
+        2. Select en-US / en-GB ...
+        3. Enter synthetic text ...
+        4. Check spelling / open Writing insights / apply one or all fixes / Undo ...
+        5. Observe ...
     validations:
       required: true
   - type: textarea
@@ -81,15 +91,20 @@ body:
     validations:
       required: true
   - type: textarea
+    id: writing_context
+    attributes:
+      label: Writing-rule / batch context
+      description: If relevant, include rule name/ID, enabled rule IDs (not private text), whether the problem is individual or Apply all safe fixes, applied/skipped counts, overlaps, and whether one Undo restored the pre-batch synthetic text.
+  - type: textarea
     id: editor_context
     attributes:
       label: Editor and keyboard context
-      description: If relevant, include the exact shortcut/control, issue count/position, whether the visible equivalent control works, whether text changed after checking, and whether the problem occurred before or after Undo. Use synthetic text only.
+      description: If relevant, include the exact shortcut/control, issue count/position, whether the visible equivalent works, whether text changed after checking/analysis, and whether the problem occurred before or after Undo. Use synthetic text only.
   - type: textarea
     id: persistence
     attributes:
       label: Persistence/import context
-      description: If relevant, say whether this involves Save word, Ignore once, restart/reload, private/incognito mode, import format, export, suggestion-count restoration, or the local storage warning. Do not paste sensitive vocabulary.
+      description: If relevant, say whether this involves Save word, writing-rule switches, explicit disable-all, language switching, restart/reload, private/incognito mode, import format, export, suggestion-count restoration, or the local storage warning. Do not paste sensitive vocabulary or full local preference dumps.
   - type: textarea
     id: additional
     attributes:
@@ -104,5 +119,5 @@ body:
           required: true
         - label: I used synthetic data and removed private or sensitive information from the report.
           required: true
-        - label: I did not include a sensitive personal dictionary export or private correction/document content.
+        - label: I did not include a sensitive personal dictionary export, private writing finding, or private correction/document content.
           required: true

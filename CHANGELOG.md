@@ -4,6 +4,49 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.1.0] - 2026-08-08
+
+### Added
+
+- Per-language persisted writing-rule preferences using versioned local preference keys.
+- Backward-compatible rule-preference semantics: unset uses current built-in defaults, while an explicitly empty set disables all rules for that language.
+- `WritingBatchCorrectionResult` with final text, safe caret offset, applied count, skipped count, and convenience `applied` state.
+- `WritingCorrection.applyAll` for deterministic current-range batch correction.
+- Deterministic overlap resolution for batch writing fixes.
+- **Apply all safe fixes (N)** in Writing insights.
+- One-step correction undo for a complete writing-fix batch.
+- `Ctrl+Shift+Enter` / `Command+Shift+Enter` Writing insights keyboard shortcut.
+- Persistence regression tests for normalized rule IDs, explicit empty sets, language isolation, and clearing one language independently.
+- Batch-correction regression tests for multiple fixes, stale/advisory skipping, overlap handling, and all-unsafe input.
+- Widget regression tests for batch apply/undo, persisted dialog switches, startup restoration, and the Writing insights keyboard shortcut.
+- Complete V2.1 user, API, architecture, privacy, accessibility, testing, troubleshooting, release, support, security, and contributor documentation.
+
+### Changed
+
+- Package version advances to `2.1.0+6`.
+- Writing-rule switches now survive normal application restarts for their selected language instead of being session-only.
+- Changing language restores that language's writing-rule choices along with its personal vocabulary.
+- Individual writing fixes now use the same shared bounded correction-undo helper as spelling corrections and batch writing fixes.
+- Writing insights explains that rule choices are stored locally for the selected language.
+- About metadata describes persistent rule choices, batch-safe writing fixes, and keyboard workflows.
+
+### Safety and correctness
+
+- Batch automatic fixes validate the original analysed source text before mutation.
+- Findings without automatic replacements are skipped during batch correction.
+- Stale findings are skipped rather than applied to changed text.
+- Overlapping automatic fixes are resolved deterministically by source start, end, and rule ID; the earliest accepted finding wins.
+- Accepted batch replacements are applied from the end of the document toward the beginning so checked offsets remain valid.
+- The complete batch is one undo entry.
+- Local persistence failure does not discard the user's current in-memory rule choices; the editor reports that the choices could not be saved.
+
+### Security and privacy
+
+- Only writing-rule identifiers are newly persisted; editor text and writing-analysis findings remain unpersisted.
+- Rule preferences are namespaced by language and stored through the existing local `shared_preferences` adapter.
+- No cloud grammar service, AI rewriting service, analytics, advertising, telemetry, account system, remote logging, or background document upload was added.
+- Writing analysis remains explicitly user-triggered and local.
+
 ## [2.0.0] - 2026-08-08
 
 ### Added

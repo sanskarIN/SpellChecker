@@ -7,203 +7,289 @@ Run the Flutter application and open the SpellChecker editor.
 The main screen contains:
 
 - Editor panel.
-- Check spelling button.
-- Clear button.
-- Undo correction button.
+- Explicit language selector.
+- **Check spelling** button.
+- **Clear** button.
+- **Undo correction** button when correction history exists.
 - Word/character/sentence statistics.
 - Current suggestion-count chip.
 - Results panel.
-- Previous/next issue controls.
+- Previous/next spelling-issue controls.
+- **Writing insights** app-bar action.
 - Personal-dictionary action with a saved-word badge.
 - Clear-ignored-words action with a session-ignore badge.
 - About action.
 
 ## Choose a language
 
-Use the language dropdown above the editor. Version 1.3 includes **English (US)** and **English (UK)**.
+Use the compact language dropdown in the Editor header. Current built-ins are:
 
-The selected language is saved locally. Switching language re-checks non-blank text with the new dictionary and starts a separate temporary ignored-word state.
+```text
+English (US) — en-US
+English (UK) — en-GB
+```
 
-Examples:
+The selected language is saved locally and restored on later launches.
+
+Changing language:
+
+1. Loads that language's saved personal words.
+2. Loads that language's saved writing-rule choices.
+3. Builds a fresh language-specific spelling engine/session state.
+4. Clears stale issue/correction/session state.
+5. Re-checks non-blank editor text with the selected pack.
+
+Common variant example:
 
 ```text
 English (US): color
 English (UK): colour
 ```
 
-Saved personal words are per-language. A US personal word is not automatically accepted in UK mode. Version-2 dictionary exports include their language; switch to the matching language before importing a tagged export.
+Personal vocabulary and writing-rule choices are isolated by language. A US personal word or disabled rule does not automatically affect UK mode.
 
-SpellChecker does not auto-detect language in V1.3.
+SpellChecker does not auto-detect language.
 
-## Writing insights
+## Check spelling
 
-Select **Writing insights** in the app bar when you want optional local writing-rule feedback. The dialog shows supported rules for the selected language and lets you switch each rule on/off for the current session.
-
-V2.0 built-ins:
-
-- Repeated word.
-- Sentence capitalization.
-- Repeated spaces.
-- Repeated punctuation.
-
-Findings show rule name, message, source range, original text, and a suggested replacement when available. Select **Apply safe fix** to close the dialog and apply that one validated fix.
-
-A writing fix enters the same **Undo correction** history used by spelling corrections. If the document changed after analysis, the safe fix is refused and the dialog should be reopened to refresh findings.
-
-Rule switches are intentionally not persisted in V2.0.
-
-## Check text
-
-1. Type or paste text into the Editor panel.
+1. Type or paste text into the editor.
 2. Select **Check spelling**, press `Ctrl+Enter`, or press `⌘+Enter`.
 3. Review inline underlines and the Results panel.
 
-Each unknown checked occurrence is underlined inside the editable text and also appears in Results with:
+Each unknown checked occurrence can show:
 
 - Original word.
 - Character position.
-- Ranked suggestions when available.
-- Occurrence count when the same unknown word appears repeatedly.
-- **Replace all…** when repeated occurrences and suggestions are available.
-- **Save word** action.
-- **Ignore once** action.
+- Ranked suggestions.
+- Occurrence count when the same unknown word repeats.
+- **Replace all…** for repeated checked occurrences with suggestions.
+- **Save word**.
+- **Ignore once**.
 
-If the editor is empty, checking shows **Nothing to check** instead of treating a blank document as a successful spelling result.
+Blank input shows **Nothing to check**.
 
 ## Inline highlighting
 
 After a spelling check:
 
-- Unknown checked words receive a wavy underline in the editor.
-- One issue is active and receives stronger visual styling.
-- Selecting an issue card or navigating issues selects the corresponding source range in the editor.
+- Unknown checked words receive a wavy underline.
+- One spelling issue is active and receives stronger styling.
+- Selecting/navigating an issue selects its source range in the editor.
 
-Manual typing invalidates the previous check. SpellChecker clears old inline issue styling/results immediately rather than leaving stale highlights attached to changed text.
+Manual typing invalidates the previous spelling snapshot, so old highlights/results are cleared instead of being painted against changed text.
 
 ## Navigate spelling issues
 
-Use any of these methods:
+Available controls:
 
-- `F7` — next issue.
-- `Shift+F7` — previous issue.
-- App-bar previous/next issue buttons.
+- `F7` — next spelling issue.
+- `Shift+F7` — previous spelling issue.
+- App-bar previous/next buttons.
 - Results-header previous/next buttons.
 - Select an issue card.
 
-Navigation wraps at the beginning/end of the issue list.
+Navigation wraps at both ends. The Results header shows **Issue X of Y**, and the active card scrolls into view when possible.
 
-The Results header displays **Issue X of Y**. When possible, the active result card automatically scrolls into view.
+## Replace one spelling issue
 
-## Replace one word
+Select a suggestion chip under an issue.
 
-Select a suggestion chip under an issue. SpellChecker replaces only that checked occurrence and then runs the check again.
+SpellChecker replaces only that checked occurrence and preserves common casing patterns:
 
-Replacement preserves common capitalization patterns:
+```text
+helo  -> hello
+Helo  -> Hello
+HELO  -> HELLO
+```
 
-- `helo` → `hello`
-- `Helo` → `Hello`
-- `HELO` → `HELLO`
+Before mutation, SpellChecker verifies that the checked source range still contains the same issue word. If the source is stale, results are refreshed instead of applying the edit.
 
-For supported apostrophe suffixes, the engine can calculate a suggestion from the stem and restore the suffix, such as `helo's` → `hello's` when appropriate.
+## Replace all spelling occurrences
 
-Before any replacement, SpellChecker verifies that the checked source range still contains the same issue word. If the text changed after checking, results are refreshed instead of applying a stale edit.
-
-## Replace all repeated occurrences
-
-When the same unknown word appears in more than one checked occurrence, the issue card shows an occurrence-count chip and **Replace all…**.
+When the same unknown word appears in multiple checked occurrences:
 
 1. Select **Replace all…**.
-2. Choose one of the ranked suggestions.
-3. SpellChecker replaces every current checked occurrence of that same unknown word.
-4. Each occurrence preserves its own capitalization pattern.
-5. The entire replace-all operation becomes one spelling-correction undo step.
+2. Choose a ranked suggestion.
+3. SpellChecker applies the suggestion only to matching occurrences represented by the current checked issue list.
+4. Each occurrence preserves its own casing pattern.
+5. Replacements are applied from the document end toward the beginning for source-offset safety.
+6. The entire operation becomes one correction-history entry.
 
-Only occurrences represented by the current checked issue list are replaced. SpellChecker does not perform an unrestricted string search across unvalidated text.
+This is not an unrestricted string-replace operation.
 
-## Undo a spelling correction
+# Writing insights
 
-After a successful single or replace-all correction:
+Open Writing insights by either:
 
-- A snackbar displays an **Undo** action.
+- Selecting the app-bar **Writing insights** action.
+- Pressing `Ctrl+Shift+Enter`.
+- Pressing `⌘+Shift+Enter` on macOS keyboards.
+
+The dialog displays:
+
+- Selected language.
+- A local-only writing-analysis notice.
+- Supported rule switches.
+- Finding count.
+- Finding cards with rule name, message, source range, and original text.
+- Suggested replacement for deterministic fixes.
+- **Apply safe fix** on individually fixable findings.
+- **Apply all safe fixes (N)** when at least one automatic fix is available.
+
+## Built-in writing rules
+
+Current rules:
+
+- **Repeated word** — adjacent duplicate words.
+- **Sentence capitalization** — lowercase supported sentence starts.
+- **Repeated spaces** — repeated horizontal spaces.
+- **Repeated punctuation** — repeated identical supported punctuation.
+
+These are deterministic local helpers, not a full grammar parser.
+
+## Writing-rule preferences — V2.1
+
+Rule switches are stored locally per language.
+
+This means:
+
+- Turning off **Repeated spaces** in English (US) is restored the next time `en-US` is used.
+- English (UK) retains its own independent rule choices.
+- Disabling every rule is a real persisted choice.
+- A user upgrading from V2.0 who has never configured rules receives the current built-in default rule set.
+
+A switch changes the current session immediately. If local storage is unavailable, the current choice stays active for the session but may not survive restart; SpellChecker reports the persistence failure.
+
+## Apply one writing safe fix
+
+Select **Apply safe fix** for a finding with a deterministic replacement.
+
+Before mutation, SpellChecker verifies that the current source range still exactly matches the text that produced the finding. A stale finding is refused and the user should reopen Writing insights for fresh analysis.
+
+A successful writing fix enters the same bounded **Undo correction** history as spelling corrections.
+
+## Apply all safe writing fixes — V2.1
+
+When automatic fixes exist, select **Apply all safe fixes (N)**.
+
+SpellChecker then:
+
+1. Orders candidate findings deterministically by source start, end, then rule ID.
+2. Skips findings without an automatic replacement.
+3. Skips stale/invalid findings.
+4. If two automatic fixes overlap, keeps the earliest deterministic candidate and skips later overlaps.
+5. Applies accepted replacements from the end of the document toward the beginning.
+6. Reports how many fixes were applied and how many findings were skipped.
+7. Stores the complete batch as **one** undo entry.
+
+One **Undo correction** therefore restores the document exactly to its state before the batch.
+
+## Why some findings are skipped in a batch
+
+A skipped finding does not mean the application silently failed. It means the finding was not safe for the batch under the V2.1 contract.
+
+Common reasons:
+
+- Advisory-only finding.
+- Text changed since analysis.
+- Invalid source range.
+- Overlap with an earlier accepted fix.
+
+Reopen Writing insights after the batch if you want to analyse the resulting text again.
+
+# Correction undo
+
+After a successful spelling or writing correction:
+
+- A snackbar can expose **Undo**.
 - **Undo correction** becomes available below the editor.
 
-Selecting either control restores the document snapshot from immediately before the most recent spelling correction and runs the spelling check again.
+The correction history is bounded (currently 20 entries) and memory-only.
 
-SpellChecker keeps a bounded in-memory history of spelling corrections (currently up to 20 entries). Manual user text editing clears this spelling-specific correction stack so old programmatic edits are not mixed into a new manual editing sequence.
+One history entry is created for:
 
-This correction history is not saved across application restarts.
+- One spelling replacement.
+- One spelling replace-all.
+- One individual writing safe fix.
+- One Writing insights batch safe-fix operation.
+
+Manual typing clears the programmatic correction stack because the document has entered a new manual editing sequence.
+
+Correction history is not saved across application restarts.
+
+# Personal vocabulary
 
 ## Save a personal word
 
-Select **Save word** when a legitimate word is missing from the bundled dictionary.
+Select **Save word** when a legitimate word is missing from the selected bundled dictionary.
 
 SpellChecker:
 
-1. Normalizes the word.
-2. Adds it to the engine's personal dictionary.
-3. Saves the complete personal dictionary through local application preferences.
-4. Runs the spelling check again.
+1. Normalizes the word using the selected language pack.
+2. Adds it to the current engine personal dictionary.
+3. Saves the language-specific complete personal-word set locally.
+4. Re-runs the spelling check.
 
-Saved personal words survive normal application restarts on the same device/browser profile.
-
-If persistence fails, the editor restores the previous in-memory personal dictionary and reports the failure instead of pretending that the word was saved.
-
-## Local storage warning
-
-If saved preferences cannot be loaded or written, SpellChecker displays a warning explaining that local dictionary storage is unavailable.
-
-Session spelling continues to work. However, personal-word/preference changes may not persist until platform storage becomes available again.
-
-The warning does not mean editor text was uploaded or moved elsewhere.
+If persistence fails, SpellChecker restores the previous in-memory personal dictionary rather than claiming the save succeeded.
 
 ## Ignore once
 
-Select **Ignore once** for temporary names, codes, or vocabulary that should not be saved permanently.
+Use **Ignore once** for a temporary name/code/word that should not be saved.
 
 Ignored words:
 
-- Stop being reported during the active application session.
-- Are not written to persistent preferences.
-- Can be cleared independently from saved personal words.
+- Are session-only.
+- Are not persisted.
+- Belong to the current language engine/session.
+- Can be cleared independently from personal vocabulary.
 
 ## Clear ignored session words
 
-Select the visibility/ignored-words action in the app bar.
+Use the dedicated app-bar action.
 
-This clears only temporary ignored words. It does not delete:
+This does not delete:
 
 - Editor text.
-- Saved personal dictionary entries.
+- Personal dictionary entries.
 - Suggestion-count preference.
-- Correction undo history.
+- Writing-rule preferences.
 
-## Manage the personal dictionary
+# Personal dictionary manager
 
-Select **Manage personal dictionary** in the app bar.
+Select **Manage personal dictionary**.
 
-The dialog lets you:
+The dialog is language-qualified and allows you to:
 
-- View saved personal words.
+- View saved words for the selected language.
 - Add a word manually.
 - Remove one saved word.
-- Clear all saved words after confirmation.
-- Choose 1–10 suggestions per spelling issue.
-- Import personal vocabulary.
-- Copy a dictionary export to the clipboard.
-
-The saved-word count is displayed as a badge on the dictionary action when the personal dictionary is not empty.
+- Clear all saved words for that language after confirmation.
+- Select 1–10 suggestions per spelling issue.
+- Import vocabulary.
+- Copy a dictionary export.
 
 ## Suggestion-count preference
 
-Use the dropdown inside **Personal dictionary** to choose between 1 and 10 suggestions per issue.
-
-The preference is saved locally and restored on future launches. If text has already been checked, changing the value refreshes current results and inline issue data.
+The selected 1–10 suggestion count is stored locally and restored later. Changing it refreshes current spelling results when text has already been checked.
 
 ## Import personal words
 
-Select **Import** in the personal-dictionary manager and paste one of these forms.
+### Version-2 language-aware SpellChecker JSON
 
-### SpellChecker JSON
+```json
+{
+  "version": 2,
+  "language": "en-US",
+  "words": [
+    "flutter",
+    "open-source"
+  ]
+}
+```
+
+A tagged export must match a supported language context; the application does not silently reinterpret another language's tagged dictionary.
+
+### Legacy version-1 SpellChecker JSON
 
 ```json
 {
@@ -214,6 +300,8 @@ Select **Import** in the personal-dictionary manager and paste one of these form
   ]
 }
 ```
+
+Version-1 objects contain no language metadata, so imported words use the currently selected language.
 
 ### JSON array
 
@@ -231,42 +319,42 @@ writer's
 
 Commas can also separate plain-text entries.
 
-Imported words are merged with existing saved words. Duplicates are removed. Words are normalized to lowercase and curly apostrophes are converted to straight apostrophes.
-
-Invalid entries produce an error instead of being silently stored.
+Imported words are normalized through the relevant language pack, merged with existing saved words, and deduplicated. Invalid entries are rejected instead of stored silently.
 
 ## Export personal words
 
 Select **Copy export**.
 
-SpellChecker copies a versioned JSON document to the clipboard. The export is:
+SpellChecker copies versioned JSON to the local clipboard. Current application exports include language identity, normalized sorted words, and no surrounding editor text.
 
-- Alphabetically sorted.
-- Lowercase-normalized.
-- Deduplicated.
-- Suitable for importing into another SpellChecker installation/profile.
+Nothing is uploaded by SpellChecker during export.
 
-The application does not upload the export anywhere.
+# Clear text
 
-## Clear text
+Select **Clear** to empty editor text and reset displayed spelling/results/statistics/highlights.
 
-Select **Clear** to empty the editor and reset displayed results/statistics/highlights.
+This does not remove:
 
-This does not remove personal dictionary entries, ignored session words, or saved preferences. Clearing the document also clears the spelling-specific correction undo stack because the current document history has been discarded.
+- Saved language selection.
+- Personal dictionary entries.
+- Suggestion-count preference.
+- Writing-rule preferences.
 
-## Statistics
+It does clear the current correction history because the document itself has been discarded.
 
-SpellChecker displays:
+# Statistics
+
+SpellChecker displays lightweight:
 
 - Word count.
 - Character count.
 - Sentence count.
 
-These are lightweight writing statistics rather than full linguistic analysis.
+These are not a full linguistic parser.
 
-## Contractions and possessives
+# Contractions and possessives
 
-SpellChecker recognizes many regular apostrophe forms from known stems, including:
+Current English packs recognize several regular apostrophe suffixes from known stems:
 
 ```text
 n't
@@ -278,44 +366,75 @@ n't
 's
 ```
 
-This improves forms such as `teacher's`, `we're`, and `couldn't`. Irregular forms may still depend on direct dictionary coverage.
+Irregular forms may still depend on direct dictionary coverage.
 
-## Accessibility and keyboard use
+# Local storage warning
 
-V1.2 uses standard Flutter controls plus explicit semantics for important editor/result states.
+If local preferences cannot be loaded/written, SpellChecker displays a warning.
 
-- Issue cards expose issue number, total count, word, character range, and selected state.
-- Result counts and important empty/warning states are semantic live regions.
+Session spelling and writing analysis remain local and usable. The warning means settings may not persist; it does not mean editor text was uploaded or transferred elsewhere.
+
+# Accessibility and keyboard use
+
+SpellChecker uses standard Material controls plus explicit semantics for important editor/result/finding states.
+
 - Icon-only controls have tooltips.
-- Keyboard navigation is available without pointer-only interaction.
-- Inline underline color is supplementary; Results text and semantic labels communicate the issue independently.
+- Issue cards expose issue position/range and selected state.
+- Result counts and important empty/warning states use semantic live regions.
+- Writing findings expose rule/message semantics.
+- **Apply all safe fixes (N)** includes a visible count.
+- Keyboard workflows supplement normal pointer/touch controls.
+- Inline underline/color/badges are not the sole communication mechanism.
 
-See [ACCESSIBILITY.md](ACCESSIBILITY.md) for the full checklist.
+Keyboard shortcuts:
 
-## Privacy
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+Enter` | Check spelling |
+| `⌘+Enter` | Check spelling on macOS |
+| `Ctrl+Shift+Enter` | Open Writing insights |
+| `⌘+Shift+Enter` | Open Writing insights on macOS |
+| `F7` | Next spelling issue |
+| `Shift+F7` | Previous spelling issue |
 
-Spelling analysis runs locally. Editor text is not persisted by SpellChecker.
+See [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
-Persisted data remains limited to:
+# Privacy
 
-- Saved personal words.
-- Suggestion-count preference.
+Runtime spelling and writing analysis remains local.
 
-Memory-only session data includes:
+Persisted application preferences are limited to:
 
+- Selected language ID.
+- Personal words per language.
+- Suggestion count.
+- Enabled writing-rule IDs per language.
+
+SpellChecker does **not** persist:
+
+- Editor documents.
+- Writing findings or messages.
+- Finding source excerpts.
+- Checked spelling issues.
 - Ignored words.
-- Checked issue list.
-- Active issue state.
 - Correction undo snapshots.
 
-No analytics, advertising, authentication, telemetry, or cloud spelling API is included.
+No cloud spelling/grammar API, analytics, advertising, account system, telemetry, or remote document logging is included.
 
-See [PRIVACY.md](PRIVACY.md) for details.
+See [PRIVACY.md](PRIVACY.md).
 
-## Dictionary limitations
+# Limitations
 
-The bundled English vocabulary is intentionally curated rather than a complete linguistic database. Correct uncommon words can still be reported as unknown.
+The bundled dictionaries and writing rules are intentionally curated/deterministic rather than complete linguistic databases.
 
-You can save legitimate vocabulary locally or contribute curated dictionary improvements to the project.
+SpellChecker currently does not provide:
 
-SpellChecker does not currently provide grammar checking, automatic language detection, cloud synchronization, or multi-language selection. Language architecture is planned for V1.3.
+- Full grammar parsing.
+- AI prose rewriting.
+- Automatic language detection.
+- Cloud synchronization.
+- Account-backed preferences.
+- Background document monitoring.
+- Untrusted dynamic rule plugins.
+
+See [ROADMAP.md](ROADMAP.md) for future direction.

@@ -7,76 +7,111 @@ This document describes the SpellChecker release procedure.
 Before releasing:
 
 - `main` contains the intended code.
-- GitHub Actions CI is passing on the exact release commit.
+- CI is passing on the exact release commit.
 - `pubspec.yaml` contains the intended `MAJOR.MINOR.PATCH+BUILD` version.
 - `CHANGELOG.md` contains a dated release entry.
-- README and user-facing documentation match current behavior.
-- API/architecture documentation matches exported behavior.
-- Security, privacy, accessibility, testing, and troubleshooting documentation is current.
-- Persistent-data behavior and migrations are documented/tested.
-- Editor shortcut, correction, and undo behavior is documented/tested.
+- README/current-release text matches behavior.
+- API/architecture/user/development/testing/accessibility/troubleshooting docs are current.
+- Privacy/security/support/contributor documentation matches persisted/runtime data behavior.
+- Persistent key/format changes have migration and regression tests.
+- Keyboard, correction safety, batch grouping, and undo behavior are documented/tested.
+- One-time development/reconciliation workflows/scripts are absent from the release tree.
 
-Do not create a release tag from a branch with failing or missing required validation.
+Do not tag a branch with failing, unverified, or approval-blocked validation unless an equivalent exact-tree release gate has executed every required check and that evidence is recorded.
 
 ## Versioning
 
-Flutter version field:
+Flutter version format:
 
 ```text
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Examples:
+Current V2.1 release:
 
 ```text
-1.0.0+1
-1.1.0+2
-1.2.0+3
+2.1.0+6
 ```
 
-Increase semantic version for user-visible releases and build number for packaging iterations as needed.
+Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
 
-## Persistent-data compatibility
+# Persistent-data compatibility
 
-SpellChecker persists:
+V2.1 persists:
 
-- Personal dictionary words.
+- Selected language ID.
+- Personal dictionary words per language.
 - Suggestion-count preference.
+- Enabled writing-rule IDs per language.
 
-Preference keys and personal-dictionary export format are versioned. Before changing either format:
+Current key families include:
+
+```text
+spellchecker.personal_words.v2.<language-id>
+spellchecker.language_id.v1
+spellchecker.suggestion_limit.v1
+spellchecker.writing_rule_ids.v1.<language-id>
+```
+
+The legacy V1 personal-word key remains a migration/compatibility source for the default US namespace.
+
+Before changing persisted semantics:
 
 1. Define old-value compatibility.
-2. Add migration logic if needed.
+2. Decide whether migration is required.
 3. Add old-to-new tests.
-4. Update privacy/API/changelog docs.
-5. Never silently reinterpret an existing dictionary export version.
+4. Preserve explicit empty-vs-unset semantics where relevant.
+5. Update API/privacy/security/changelog docs.
+6. Never silently reinterpret an existing key/transfer version.
 
-Current export format:
+## Writing-rule preference compatibility
+
+V2.1 distinguishes:
+
+```text
+missing key       -> use current registry defaults
+stored non-empty  -> explicit enabled IDs
+stored empty list -> explicit disable-all
+```
+
+A future release must not collapse explicit empty into missing/unset.
+
+Rule IDs are persistent identifiers. Renaming/removing them requires compatibility review; unknown old IDs should remain safely ignorable.
+
+# Personal dictionary transfer compatibility
+
+Current application exports use language-aware version 2:
 
 ```json
 {
-  "version": 1,
+  "version": 2,
+  "language": "en-US",
   "words": ["example"]
 }
 ```
 
-V1.2 does not change this persisted format.
+Legacy version-1 objects/JSON arrays/plain word lists remain supported where documented.
 
-## V1.2 non-persistent editor state
+Do not silently import a version-2 document into a mismatched language.
 
-Do not accidentally turn these into persistent data during release preparation:
+# Non-persistent sensitive state
 
-- Editor text.
-- Checked issue list.
+Do not accidentally persist during release work:
+
+- Editor documents.
+- Spelling issue lists.
+- Writing findings/messages/source excerpts.
 - Active issue index.
 - Ignored words.
+- Suggestion cache.
 - Correction undo snapshots.
+- Batch correction plans.
 
-The correction undo stack can contain editor-text snapshots and must remain memory-only unless a future explicitly reviewed feature changes that design.
+Correction snapshots can contain complete editor text and must remain memory-only unless a separately reviewed product/privacy change explicitly redesigns this boundary.
 
-## Local release verification
+# Local release verification
 
-From a clean checkout of the intended release commit:
+From a clean checkout of the exact intended release commit:
 
 ```bash
 flutter clean
@@ -87,150 +122,177 @@ flutter test --reporter expanded
 flutter build web --release
 ```
 
-Confirm Flutter/Dart versions satisfy `pubspec.yaml`.
+Verify printed Flutter/Dart versions satisfy `pubspec.yaml`.
 
-## V1.2 release smoke test
+# V2.1 smoke test
 
-Before tagging V1.2 or a maintenance release based on it, manually verify when practical:
+Use synthetic text/vocabulary only.
 
-### Basic checking
+## Startup/persistence
 
-1. Launch with no saved preferences.
-2. Enter a known misspelling.
-3. Check using the button.
-4. Check again using `Ctrl+Enter`/`Command+Enter` on applicable platforms.
-5. Verify inline underlining and Results issue state agree.
+1. Launch with no saved settings.
+2. Verify default language is English (US).
+3. Open Writing insights and confirm default enabled rules.
+4. Disable one rule, close the dialog, reopen it, and confirm it remains disabled.
+5. Restart/reload and confirm the rule choice restores.
+6. Switch to English (UK) and confirm its rule choices are independent.
+7. Disable every UK writing rule, restart/reload, and confirm explicit disable-all restores rather than defaults.
+8. Switch back to US and confirm the US rule set returns.
+9. Save synthetic personal vocabulary in each language and confirm isolation/restoration.
+10. Change suggestion count and confirm restoration.
 
-### Navigation
+## Spelling regression
 
-6. Enter at least three synthetic misspellings.
-7. Verify `F7` moves forward and wraps.
-8. Verify `Shift+F7` moves backward and wraps.
-9. Verify app-bar and Results previous/next controls.
-10. Verify active issue selection appears in the editor and Results auto-scrolls when needed.
+11. Check a known synthetic misspelling with the button.
+12. Check with `Ctrl/Command+Enter`.
+13. Verify inline highlighting and Results agree.
+14. Verify F7 / Shift+F7 wrap navigation.
+15. Replace one spelling issue and test Undo.
+16. Replace all checked repeated spelling occurrences and test one-step Undo.
+17. Modify text after checking and verify stale correction is refused/refreshed.
 
-### Corrections
+## Writing insights regression
 
-11. Replace one occurrence and verify case preservation.
-12. Use snackbar **Undo** and verify the previous document returns.
-13. Repeat a misspelling with mixed capitalization.
-14. Use **Replace all…** and verify each checked occurrence is replaced with matching capitalization.
-15. Use **Undo correction** and verify the full bulk edit is restored as one step.
-16. Modify text manually after a correction and verify old correction history/highlights do not incorrectly remain active.
-17. Change text after checking and verify stale replacement refreshes rather than mutating the wrong range.
+18. Open Writing insights from the app-bar control.
+19. Open it with `Ctrl/Command+Shift+Enter`.
+20. Verify all supported built-in rules are listed.
+21. Use synthetic text containing each built-in finding pattern.
+22. Apply one safe fix and undo it.
+23. Change text after analysis and verify stale individual fix is refused.
 
-### States and accessibility
+## V2.1 batch writing fix
 
-18. Check a blank editor and verify **Nothing to check**.
-19. Check a clean sentence and verify **No issues found**.
-20. Verify keyboard-only access to issue navigation and correction controls.
-21. Verify light/dark themes, larger text, and narrow layout.
-22. Verify active state is understandable through Results text/semantics rather than color alone.
+24. Use text such as `hello  world world!!`.
+25. Open Writing insights and verify **Apply all safe fixes (N)**.
+26. Apply the batch.
+27. Verify deterministic safe fixes are reflected in one final text.
+28. Verify applied/skipped feedback is understandable.
+29. Use **Undo correction** once and verify the exact pre-batch document returns.
+30. Exercise a synthetic overlap case through unit tests; manual UI overlap depends on available built-in ranges.
 
-### Persistence regression
+## Language/transfer regression
 
-23. Save a synthetic personal word.
-24. Restart/reload and confirm it is restored.
-25. Change suggestion count and confirm restoration.
-26. Verify **Ignore once** does not persist across a new session.
-27. Export/import synthetic personal vocabulary.
+31. Verify `color`/`colour` variant behavior under US/UK.
+32. Verify Unicode tokens such as `café` remain whole tokens.
+33. Export personal vocabulary and inspect `version: 2` plus language ID.
+34. Attempt a tagged cross-language import and confirm it is blocked.
+35. Verify legacy V1 personal-word migration into US remains intact on a migration fixture/test profile.
 
-Use only synthetic text and vocabulary during release verification.
+## Accessibility/layout
 
-## V1.3 language smoke test
+36. Verify keyboard-only spelling and Writing insights workflows.
+37. Verify rule switches, individual fix, batch fix, and Undo are keyboard reachable.
+38. Verify light/dark themes.
+39. Verify increased text scale.
+40. Verify narrow/800×600 layout does not overflow and scrollable actions remain reachable.
+41. Verify important state is understandable without color alone.
 
-Before tagging V1.3:
+# Automated release checks
 
-1. Start with `en-US`; verify `color` is accepted and `colour` is variant-specific.
-2. Switch to `en-GB`; verify current text is re-checked and `colour` is accepted.
-3. Verify Unicode tokens such as `café`/`naïve` remain whole words.
-4. Save synthetic vocabulary in US mode, switch to UK, and verify it does not leak.
-5. Save different UK vocabulary and verify each set restores when switching back/forth.
-6. Restart/reload and verify selected language restores.
-7. Export a language-tagged personal dictionary and verify `version: 2` plus language ID.
-8. Attempt to import the tagged export under the other language and verify the UI blocks the cross-language merge.
-9. Verify legacy V1 personal words migrate into the US namespace.
-10. Re-run V1.2 inline highlighting/navigation/replace-all/undo regression smoke checks under both built-in packs.
+Normal CI now requires all of these checks to pass:
 
-Use only synthetic vocabulary.
+```bash
+flutter pub get
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test --reporter expanded
+```
 
-## V2.0 writing-rules smoke test
+The tagged release workflow runs those same quality checks and additionally builds the release web application:
 
-Before tagging V2.0:
+```bash
+flutter build web --release
+```
 
-1. Open Writing insights under both built-in English packs.
-2. Verify all four built-in rules appear.
-3. Use synthetic text containing each rule pattern.
-4. Disable/re-enable one rule and verify findings update.
-5. Apply a safe finding and verify document text/caret update.
-6. Use Undo correction and verify the pre-fix document returns.
-7. Change document text after analysis and verify a stale fix is refused.
-8. Verify blank/clean Writing insights states.
-9. Verify dialog keyboard access and larger-text/narrow viewport behavior.
-10. Re-run V1.3 language switching/import/isolation and V1.2 spelling/replace-all/undo smoke tests.
+For a feature branch that uses an exact-tree integration/reconciliation gate, record the final validated commit SHA and confirm all temporary gate/helper files were deleted before the commit was pushed.
 
-Use synthetic text only.
+# Tagging
 
-## Tagging
-
-Create an annotated tag from the verified `main` commit. For V1.2:
+From verified `main`:
 
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.0.0 -m "SpellChecker v2.0.0"
-git push origin v2.0.0
+git tag -a v2.1.0 -m "SpellChecker v2.1.0"
+git push origin v2.1.0
 ```
 
-Pushing a `v*` tag triggers the release-build workflow, which validates the project and uploads the release web build as a GitHub Actions artifact.
+Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
 
-## Verify tagged workflow
+# Verify tagged workflow
 
-The tagged workflow must finish successfully before presenting the artifact as a verified release.
+The tagged workflow must finish successfully before presenting its artifact as verified.
 
 If it fails:
 
 1. Do not silently move/overwrite the published tag.
 2. Diagnose the failure.
-3. Fix on `main` with regression tests when appropriate.
-4. Publish a new version/tag if the failed tag was already shared.
+3. Fix on `main` with regression tests.
+4. Increment/publish a new version/tag if the failed tag was already shared externally.
 
-## GitHub release
+# GitHub Release
 
 After the tagged workflow passes:
 
-1. Create a GitHub Release for the tag.
-2. Use the matching changelog section as release-note foundation.
-3. Call out important keyboard/editor/correction behavior for V1.2.
-4. Mention persistence/privacy behavior when relevant.
+1. Create a GitHub Release for that tag.
+2. Use the matching changelog section as the release-note foundation.
+3. Highlight V2.1 persisted per-language rule choices, batch safe fixes, one-step batch undo, and Writing insights shortcut.
+4. Mention persistent-data/privacy behavior.
 5. Attach approved artifacts where appropriate.
-6. Verify links and user-visible version text.
-7. Verify the release points to the exact commit that passed validation.
+6. Verify links/version text.
+7. Verify the release points to the same commit that passed release validation.
 
-## Rollback and hotfixes
+# Rollback and hotfixes
 
-Do not move a published release tag silently. If a release contains a defect:
+Do not silently move a published tag.
+
+For a defect:
 
 1. Fix on `main`.
-2. Add regression tests.
+2. Add a regression test.
 3. Update changelog.
 4. Increment patch/build version.
 5. Publish a new tag.
 
-For correction defects, test stale offsets, replace-all ordering, and undo grouping. For persistence defects, verify saved personal data is not destroyed or reinterpreted.
+For writing batch defects test:
 
-## Dependency review
+- Stale range behavior.
+- Advisory skipping.
+- Overlap resolution.
+- End-to-start mutation.
+- Applied/skipped counts.
+- One-step undo grouping.
 
-Before a release that changes dependencies:
+For preference defects test:
 
-- Review dependency purpose.
-- Confirm no unexpected network/analytics behavior.
-- Run `flutter pub get` cleanly.
-- Ensure CI resolves the same constraints.
-- Update development/privacy docs when runtime behavior changes.
+- Unset/default state.
+- Explicit empty state.
+- Language isolation.
+- Existing stored IDs.
+- Storage failure behavior.
 
-V1.2 adds no new runtime dependency. `shared_preferences` remains used solely for application-local preference storage.
+For personal-vocabulary defects test migration/import compatibility before release.
 
-## Signing and stores
+# Dependency review
 
-Mobile/desktop signing credentials, store tokens, certificates, and release secrets must never be committed. Use secure release-environment facilities.
+Before a release changing dependencies:
+
+- Document the purpose.
+- Review runtime network/storage/analytics permissions/behavior.
+- Run a clean dependency resolution.
+- Confirm CI resolves the same constraints.
+- Update development/privacy/security docs.
+
+V2.1 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
+
+# Signing and stores
+
+Never commit:
+
+- Signing certificates.
+- Store tokens.
+- API credentials.
+- Service-account keys.
+- Release secrets.
+
+Use secure facilities of the release/build platform.

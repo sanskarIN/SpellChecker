@@ -12,7 +12,7 @@ Security fixes are applied to the latest code on `main` and, when applicable, th
 
 ## Reporting a vulnerability
 
-Do not publish exploitable security details, secrets, private documents, sensitive personal vocabulary, or correction-history content in a normal public issue.
+Do not publish exploitable security details, secrets, private documents, sensitive personal vocabulary, writing findings, or correction-history content in a normal public issue.
 
 Preferred reporting method:
 
@@ -32,98 +32,169 @@ A useful report includes:
 
 SpellChecker is designed to:
 
-- Perform spelling/correction analysis locally.
+- Perform spelling and deterministic writing analysis locally.
 - Avoid transmitting editor text by default.
-- Persist only user-controlled personal words and the suggestion-count preference.
-- Keep temporary ignored words in memory only.
-- Keep checked issue state and V1.2 correction history in memory only.
-- Validate source offsets before applying text corrections.
+- Persist only user-controlled local settings.
+- Keep ignored words, findings, active analysis state, and correction history in memory only.
+- Validate source offsets before automatic text mutation.
+- Resolve batch correction overlaps conservatively and deterministically.
 - Validate imported dictionary data instead of executing/interpreting arbitrary content.
 - Avoid embedding secrets in source code.
 - Minimize runtime dependencies.
-- Keep persistent-data formats/keys explicitly versioned where compatibility matters.
-- Run automated analysis/tests on proposed changes.
+- Keep persisted key/data formats versioned where compatibility matters.
+- Run automated analysis/tests before release.
 
-## Local persistence
+## Local persistence — V2.1
 
-SpellChecker uses Flutter `shared_preferences` for device/profile-local storage of:
+SpellChecker uses Flutter `shared_preferences` for local device/profile settings:
 
-- Personal dictionary words.
+- Selected language ID.
+- Personal dictionary words per language.
 - Suggestion-count preference.
+- Enabled writing-rule IDs per language.
 
-SpellChecker does not persist:
+Example key families:
 
-- Editor text.
+```text
+spellchecker.language_id.v1
+spellchecker.personal_words.v2.<language-id>
+spellchecker.suggestion_limit.v1
+spellchecker.writing_rule_ids.v1.<language-id>
+```
+
+The stored writing-rule values are identifiers only; they do not contain editor text or finding excerpts.
+
+The application does not persist:
+
+- Editor documents.
 - Checked spelling-result lists.
+- Writing finding lists/messages/source excerpts.
 - Active issue selection.
 - Temporary ignored words.
-- Suggestion-cache contents.
-- V1.2 correction undo snapshots.
+- Suggestion caches.
+- Correction undo snapshots.
+- Batch correction plans.
 
-The platform-specific `shared_preferences` implementation supplies the storage backend. Treat persisted personal vocabulary as user data and avoid logging/exposing it unnecessarily.
+Treat persisted personal vocabulary as user data and avoid logging/exposing it unnecessarily.
 
-## V1.2 text-correction safety
+## Writing-rule preference integrity
 
-`SpellIssue` offsets are valid only for the text snapshot that was checked. V1.2 correction code verifies that the current substring still matches the issue before mutation.
+V2.1 preserves three distinct states:
 
-For replace-all:
+```text
+missing rule key   -> use current built-in defaults
+stored ID list     -> explicit enabled set
+stored empty list  -> explicit disable-all
+```
 
-- Only current checked ranges matching the target issue word are eligible.
-- Ranges are applied from later offsets toward earlier offsets.
-- Stale ranges are skipped instead of blindly mutating unrelated text.
+Security/correctness implications:
 
-Contributors must preserve these checks when modifying correction behavior. A correction path that applies stale/unvalidated offsets could corrupt user text.
+- Do not reinterpret an explicit empty list as defaults.
+- Unknown stale rule IDs should be ignored safely, not executed dynamically.
+- Rule IDs are data identifiers, not code-loading instructions.
+- Renaming shipped IDs requires migration/compatibility review.
+
+## Spelling correction safety
+
+`SpellIssue` offsets are valid only for the checked text snapshot.
+
+Correction code validates that current source text still matches before mutation.
+
+For spelling replace-all:
+
+- Only current checked matching ranges are eligible.
+- Replacements are applied from later offsets toward earlier offsets.
+- Stale ranges are skipped/refreshed rather than blindly mutating unrelated text.
+
+A correction path that applies unchecked stale offsets can corrupt user text and should be treated as a security/correctness defect.
+
+## Writing correction safety
+
+Rules process current document text in memory and return exact source ranges.
+
+Individual automatic fixes must validate:
+
+- Replacement exists.
+- Source offsets are valid/current.
+- Current substring equals `WritingIssue.originalText` exactly.
+
+V2.1 batch correction additionally:
+
+1. Sorts candidates deterministically by start/end/rule ID.
+2. Skips advisory/no-replacement findings.
+3. Skips invalid/stale findings.
+4. Accepts the earliest deterministic non-overlapping fix and skips later overlaps.
+5. Applies accepted edits from document end toward beginning.
+6. Returns one final text plus applied/skipped counts.
+
+Do not bypass `WritingCorrection` by directly applying finding replacements in widgets.
 
 ## Correction undo data
 
-The V1.2 spelling-correction undo stack can contain editor-text snapshots. It is intentionally:
+The bounded shared correction stack can contain complete editor-text snapshots.
+
+It is intentionally:
 
 - Memory-only.
 - Bounded.
-- Cleared when manual text editing begins a new correction history.
+- Cleared by a new manual editing sequence.
 - Discarded with the application session.
-- Excluded from preference storage and dictionary exports.
+- Excluded from preferences and exports.
 
-Any change that persists, logs, synchronizes, or uploads correction snapshots requires explicit security/privacy review.
+One snapshot can represent a spelling or writing automatic operation, including a V2.1 writing batch.
 
-## Inline highlighting
+Persisting, logging, synchronizing, or uploading correction snapshots requires explicit security/privacy redesign.
 
-Inline highlights are generated from checked in-memory issue ranges. The editing controller validates ranges against current text before styling them and skips invalid/stale ranges.
+## Writing-rule code trust
 
-Visual highlights are presentation data; they are not persisted or exported.
+Current built-in rules are source-controlled Dart code compiled with the application.
 
-## Keyboard shortcuts
+`WritingRule` is an extension interface, but V2.1 does **not** dynamically download or execute untrusted third-party rule code.
 
-SpellChecker handles local shortcut events for checking/navigation. It does not record keyboard telemetry or maintain a key-event history.
+Any future dynamic/plugin registry needs a separate threat model covering:
 
-Changes introducing global keyboard hooks, background key capture, or keyboard analytics require explicit security/privacy review.
+- Code origin/trust.
+- Signing/integrity.
+- Update channel.
+- Permission scope.
+- Sandbox/process boundaries where applicable.
+- Document access.
+- Network access.
+- Revocation.
+- Privacy disclosure.
 
-## Writing-rule safety
-
-Rules process the current document in memory, so they must not log, persist, upload, or otherwise expose source text. Automatic fixes validate exact current source text before mutation.
-
-A future third-party rule/plugin loader requires a separate trust/signing/sandbox/update threat model; `WritingRule` being a plugin interface does not mean untrusted runtime code loading is enabled in V2.0.
+Do not treat a stored rule ID as permission to load arbitrary code.
 
 ## Language-pack safety
 
-Built-in packs are compiled local data. V1.3 does not download executable/content packs at runtime.
+Built-in packs are compiled local data. The current application does not download executable/content packs at runtime.
 
-Language-tagged dictionary imports validate the format version and supported language ID before merging. Pack switches construct isolated session state so ignored/personal vocabulary is not silently shared.
+Language-tagged dictionary imports validate document version and supported language identity before merging.
 
-Any future remote pack registry/download mechanism requires separate signature/integrity, licensing, privacy, and update-channel threat modeling.
+Pack switches construct isolated session state so ignored words and personal vocabulary do not silently leak across languages. V2.1 also isolates writing-rule preferences by language.
+
+Any remote pack/download mechanism requires separate signature/integrity, licensing, privacy, and update-channel review.
 
 ## Import/export safety
 
-Personal dictionary import accepts only validated word entries from supported versioned JSON, JSON arrays, or plain word lists.
+Personal dictionary imports accept only validated word data from supported versioned JSON, JSON arrays, or plain word lists.
 
 Codec changes should:
 
-- Reject malformed entries rather than evaluating/executing imported content.
-- Keep the format data-only.
-- Preserve explicit version checks.
-- Avoid automatic network fetch/import without separate review.
+- Reject malformed entries rather than evaluate/execute imported content.
+- Keep transfer formats data-only.
+- Preserve explicit version/language checks.
+- Avoid automatic remote fetch/import without separate review.
 
-Dictionary export writes user-approved vocabulary to the clipboard only after explicit action. It does not upload the export.
+Export writes user-approved vocabulary to the clipboard after explicit user action. It does not upload the export.
+
+## Keyboard handling
+
+SpellChecker handles local key events for editor workflows, including spelling check, Writing insights, and spelling issue navigation.
+
+It does not record keyboard telemetry or maintain a key-event history.
+
+Global keyboard hooks, background key capture, or keyboard analytics require explicit security/privacy review.
 
 ## Dependency review
 
@@ -134,9 +205,10 @@ Review new dependencies for:
 - Storage scope.
 - Platform permissions.
 - Maintenance/security posture.
-- Whether functionality can remain local.
+- Supply-chain/update behavior.
+- Whether the functionality can remain local.
 
-`shared_preferences` is used only for application-local preference persistence. V1.2 adds no new runtime dependency.
+`shared_preferences` remains the only non-SDK runtime dependency and is used for application-local preferences. V2.1 adds no new runtime package.
 
 ## Dependency and secret hygiene
 
@@ -148,24 +220,26 @@ Do not commit:
 - Service-account credentials.
 - Access tokens.
 - Private user documents.
-- Real sensitive personal dictionary exports.
+- Sensitive real personal dictionary exports.
 - Real editor/correction-history samples containing private content.
+- Private writing findings/source excerpts.
 
 The repository `.gitignore` covers common secret/build patterns, but contributors remain responsible for reviewing every commit.
 
 ## Privacy-sensitive changes
 
-These require explicit security/privacy review and updates to `docs/PRIVACY.md` before implementation/release:
+These require explicit security/privacy review before implementation/release:
 
-- Synchronization.
-- Accounts.
+- Synchronization/accounts.
 - Cloud spelling/grammar/AI services.
-- Analytics or remote logging.
-- Crash reporting.
-- Remote configuration.
-- Editor-text persistence.
-- Persistent/general document history.
-- Persistent correction undo history.
-- Automatic dictionary upload.
+- Analytics/remote logging.
+- Crash reporting that may capture editor text.
+- Remote configuration affecting analysis behavior.
+- Editor-document persistence.
+- Persistent general/correction history.
+- Automatic dictionary/rule upload/download.
 - Keyboard/usage telemetry.
 - Global/background key capture.
+- Dynamic external rule/plugin execution.
+
+Update [docs/PRIVACY.md](docs/PRIVACY.md) and relevant user/security documentation before shipping such behavior.

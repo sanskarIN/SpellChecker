@@ -68,6 +68,9 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       final languageId = await _preferences.loadLanguageId();
       final pack = SpellLanguageRegistry.byId(languageId);
       final words = await _preferences.loadPersonalWords(languageId: pack.id);
+      final storedRuleIds = await _preferences.loadWritingRuleIds(
+        languageId: pack.id,
+      );
       final limit = await _preferences.loadSuggestionLimit();
       if (!mounted) {
         return;
@@ -77,6 +80,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       setState(() {
         _languagePack = pack;
         _engine = engine;
+        _enabledWritingRuleIds = _effectiveWritingRuleIds(storedRuleIds, pack);
         _suggestionLimit = limit;
         _preferencesLoaded = true;
         _storageAvailable = true;
@@ -99,6 +103,19 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     }
   }
 
+  Set<String> _effectiveWritingRuleIds(
+    Set<String>? storedRuleIds,
+    SpellLanguagePack languagePack,
+  ) {
+    final supportedRuleIds = _writingAnalyzer.rules
+        .where((rule) => rule.supports(languagePack))
+        .map((rule) => rule.id)
+        .toSet();
+    final requestedRuleIds =
+        storedRuleIds ?? WritingRuleRegistry.defaultEnabledRuleIds;
+    return requestedRuleIds.where(supportedRuleIds.contains).toSet();
+  }
+
   Future<void> _showWritingInsights() async {
     final result = await showDialog<WritingInsightsDialogResult>(
       context: context,
@@ -114,9 +131,39 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       return;
     }
 
+    final nextRuleIds = _effectiveWritingRuleIds(
+      result.enabledRuleIds,
+      _languagePack,
+    );
     setState(() {
-      _enabledWritingRuleIds = Set<String>.from(result.enabledRuleIds);
+      _enabledWritingRuleIds = nextRuleIds;
     });
+
+    try {
+      await _preferences.saveWritingRuleIds(
+        nextRuleIds,
+        languageId: _languagePack.id,
+      );
+      if (mounted) {
+        setState(() => _storageAvailable = true);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _storageAvailable = false);
+        _showMessage(
+          'Writing rule choices are active for this session but could not be saved locally.',
+        );
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (result.issuesToFix.isNotEmpty) {
+      _applyWritingFixes(result.issuesToFix);
+      return;
+    }
 
     final issue = result.issueToFix;
     if (issue != null) {
@@ -125,7 +172,8 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   }
 
   void _applyWritingFix(WritingIssue issue) {
-    final correction = WritingCorrection.apply(_controller.text, issue);
+    final before = _controller.value;
+    final correction = WritingCorrection.apply(before.text, issue);
     if (!correction.applied) {
       _showMessage(
         'Text changed after analysis. Open Writing insights again to refresh findings.',
@@ -133,11 +181,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       return;
     }
 
-    if (_correctionUndoStack.length >= 20) {
-      _correctionUndoStack.removeAt(0);
-    }
-    _correctionUndoStack.add(_controller.value);
-
+    _pushCorrectionUndo(before);
     _controller.value = TextEditingValue(
       text: correction.text,
       selection: TextSelection.collapsed(offset: correction.caretOffset),
@@ -150,7 +194,39 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _hasChecked = false;
     });
     _checkText(preferredOffset: correction.caretOffset);
-    _showMessage('Applied ${issue.ruleName}. Undo is available.');
+    _showCorrectionMessage('Applied ${issue.ruleName}.');
+  }
+
+  void _applyWritingFixes(List<WritingIssue> issues) {
+    final before = _controller.value;
+    final correction = WritingCorrection.applyAll(before.text, issues);
+    if (!correction.applied) {
+      _showMessage(
+        'No current non-overlapping writing fixes were safe to apply. Open Writing insights again to refresh findings.',
+      );
+      return;
+    }
+
+    _pushCorrectionUndo(before);
+    _controller.value = TextEditingValue(
+      text: correction.text,
+      selection: TextSelection.collapsed(offset: correction.caretOffset),
+    );
+    _controller.clearIssues();
+    setState(() {
+      _statistics = TextStatistics.fromText(correction.text);
+      _issues = const <SpellIssue>[];
+      _activeIssueIndex = -1;
+      _hasChecked = false;
+    });
+    _checkText(preferredOffset: correction.caretOffset);
+
+    final skipped = correction.skippedCount == 0
+        ? ''
+        : ' ${correction.skippedCount} overlapping, stale, or advisory ${correction.skippedCount == 1 ? 'finding was' : 'findings were'} skipped.';
+    _showCorrectionMessage(
+      'Applied ${correction.appliedCount} safe writing ${correction.appliedCount == 1 ? 'fix' : 'fixes'}.$skipped',
+    );
   }
 
   Future<void> _changeLanguage(String? languageId) async {
@@ -160,9 +236,13 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
 
     final nextPack = SpellLanguageRegistry.byId(languageId);
     var nextWords = <String>{};
+    Set<String>? storedRuleIds;
     var storageAvailable = true;
     try {
       nextWords = await _preferences.loadPersonalWords(languageId: nextPack.id);
+      storedRuleIds = await _preferences.loadWritingRuleIds(
+        languageId: nextPack.id,
+      );
       await _preferences.saveLanguageId(nextPack.id);
     } catch (_) {
       storageAvailable = false;
@@ -179,6 +259,10 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     setState(() {
       _languagePack = nextPack;
       _engine = nextEngine;
+      _enabledWritingRuleIds = _effectiveWritingRuleIds(
+        storedRuleIds,
+        nextPack,
+      );
       _issues = const <SpellIssue>[];
       _activeIssueIndex = -1;
       _hasChecked = false;
@@ -500,12 +584,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '2.0.0',
+      applicationVersion: '2.1.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, optional local writing-rule plugins, persistent per-language vocabulary, inline issue review, safe fixes, and undo-friendly corrections.',
+          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, optional local writing-rule plugins, persistent per-language vocabulary and rule choices, batch-safe writing fixes, inline issue review, keyboard workflows, and undo-friendly corrections.',
         ),
       ],
     );
@@ -521,6 +605,18 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
           _checkText(),
       const SingleActivator(LogicalKeyboardKey.enter, meta: true): () =>
           _checkText(),
+      const SingleActivator(
+        LogicalKeyboardKey.enter,
+        control: true,
+        shift: true,
+      ): () =>
+          unawaited(_showWritingInsights()),
+      const SingleActivator(
+        LogicalKeyboardKey.enter,
+        meta: true,
+        shift: true,
+      ): () =>
+          unawaited(_showWritingInsights()),
       const SingleActivator(LogicalKeyboardKey.f7): () => _moveActiveIssue(1),
       const SingleActivator(LogicalKeyboardKey.f7, shift: true): () =>
           _moveActiveIssue(-1),
@@ -536,7 +632,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
               title: const Text('SpellChecker'),
               actions: <Widget>[
                 IconButton(
-                  tooltip: 'Writing insights',
+                  tooltip: 'Writing insights (Ctrl/⌘+Shift+Enter)',
                   onPressed: _showWritingInsights,
                   icon: const Icon(Icons.auto_fix_high_outlined),
                 ),

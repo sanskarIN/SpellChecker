@@ -4,3 +4,11 @@
 /.github/ @sanskarIN
 /lib/core/ @sanskarIN
 /lib/data/ @sanskarIN
+/lib/features/ @sanskarIN
+/lib/storage/ @sanskarIN
+/lib/writing/ @sanskarIN
+/lib/spell_checker.dart @sanskarIN
+/lib/language.dart @sanskarIN
+/lib/writing.dart @sanskarIN
+/test/ @sanskarIN
+/pubspec.yaml @sanskarIN

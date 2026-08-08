@@ -4,10 +4,10 @@
 
 Install:
 
-- Git
-- Flutter stable
-- Dart SDK compatible with `pubspec.yaml` (currently `>=3.8.0 <4.0.0`)
-- Platform tooling required by your chosen Flutter target
+- Git.
+- Flutter stable.
+- Dart SDK compatible with `pubspec.yaml` (currently `>=3.8.0 <4.0.0`).
+- Platform tooling required by your chosen Flutter target.
 
 Verify:
 
@@ -17,79 +17,87 @@ flutter --version
 dart --version
 ```
 
-## Clone
+## Clone and resolve dependencies
 
 ```bash
 git clone https://github.com/sanskarIN/SpellChecker.git
 cd SpellChecker
-```
-
-## Dependencies
-
-```bash
 flutter pub get
 ```
 
 Runtime dependencies remain intentionally small:
 
 - Flutter SDK.
-- `shared_preferences` for device-local personal dictionary and suggestion-count persistence.
+- `shared_preferences` for device/profile-local settings.
 
-V1.2 adds no new runtime dependency. Inline highlighting, shortcuts, replace-all, and correction undo are implemented with Flutter/Dart APIs and project code.
+`shared_preferences` currently stores selected language, per-language personal words, suggestion count, and per-language writing-rule IDs. It is not used for networking, analytics, document persistence, or synchronization.
 
-## Run the web app
+## Run
 
 ```bash
 flutter run -d chrome
 ```
 
-## Generate additional Flutter host platforms
+The repository commits the web host and portable Flutter/Dart source. Generate additional local platform runners only when needed and review generated platform/signing files before committing them.
 
-The repository commits the web host and portable Dart/Flutter source. Generate additional local platform runners with your installed Flutter version only when needed.
+# Important directories
 
-Review generated files before committing them because platform templates can vary by Flutter version and may include machine- or signing-specific configuration.
+## `lib/core`
 
-## Important directories
+Reusable spelling/language/correction primitives:
 
-### `lib/core`
+- `spell_language_pack.dart` — language packs/registry.
+- `spell_checker_engine.dart` — language-aware spelling engine.
+- `spell_issue.dart` / `spell_suggestion.dart` — result models.
+- `text_correction.dart` — validated spelling single/replace-all mutation.
+- `personal_dictionary_codec.dart` — versioned language-aware personal vocabulary transfer.
+- `edit_distance.dart` — Damerau-Levenshtein implementation.
+- `text_statistics.dart` — lightweight writing statistics.
 
-Reusable spelling/correction algorithms, value objects, statistics, and dictionary import/export codec.
+Core changes should have focused unit tests.
 
-Important V1.2 file:
+## `lib/writing`
 
-- `text_correction.dart` — validates checked source ranges and performs deterministic single/replace-all mutation without Flutter widget dependencies.
+Reusable local writing-rule subsystem:
 
-Core changes should normally have focused unit tests.
+- `writing_rule.dart` — public rule/plugin contract and registry.
+- `writing_analyzer.dart` — language eligibility/filtering/result ordering.
+- `writing_issue.dart` — immutable finding model.
+- `writing_correction.dart` — stale-safe individual and V2.1 batch mutation.
+- `rules/` — built-in deterministic rules.
 
-### `lib/data`
+Do not put Flutter widget or preference code in this layer.
 
-Bundled base/extension dictionary data and approximate frequency ranks.
+## `lib/data`
 
-### `lib/features/editor`
+Bundled spelling vocabulary/variant/frequency data.
 
-Flutter editor interaction code:
+## `lib/features/editor`
 
-- `spell_checker_page.dart` — page state, check/active-issue navigation, correction undo, results workflow, storage-warning state, keyboard shortcuts.
-- `spell_check_editing_controller.dart` — inline checked-issue text styling.
-- `dictionary_manager_dialog.dart` — persistent personal dictionary/preferences UI.
+Flutter application workflow:
 
-### `lib/storage`
+- `spell_checker_page.dart` — selected language, restored preferences, spelling/writing workflows, keyboard shortcuts, shared correction undo.
+- `spell_check_editing_controller.dart` — inline spelling styling.
+- `dictionary_manager_dialog.dart` — language-specific personal vocabulary/suggestion settings.
+- `writing_insights_dialog.dart` — rule switches/findings/individual and batch fix requests.
 
-Application-local persistence adapters. `DictionaryPreferences` owns `shared_preferences` integration.
+## `lib/storage`
 
-### `test`
+`DictionaryPreferences` is the local `shared_preferences` adapter. It is application-internal and intentionally separate from public spelling/writing APIs.
 
-Unit, persistence, codec, controller, and widget tests.
+## `test`
 
-### `docs`
+Unit, codec, persistence, controller, language, writing, and widget regression tests.
 
-Project documentation.
+## `docs`
 
-### `.github`
+Project/user/API/architecture/privacy/security/release documentation.
+
+## `.github`
 
 CI/release workflows and collaboration templates.
 
-## Development commands
+# Development commands
 
 Format:
 
@@ -109,19 +117,37 @@ Analyze:
 flutter analyze
 ```
 
-Test:
+Run all tests:
 
 ```bash
 flutter test --reporter expanded
 ```
 
-Build web:
+Build the release web app:
 
 ```bash
 flutter build web --release
 ```
 
-Run a focused V1.2 test:
+Focused V2.1 writing workflow tests:
+
+```bash
+flutter test test/writing_rules_test.dart
+flutter test test/writing_correction_test.dart
+flutter test test/writing_preferences_test.dart
+flutter test test/writing_widget_test.dart
+```
+
+Focused language tests:
+
+```bash
+flutter test test/language_pack_test.dart
+flutter test test/language_dictionary_codec_test.dart
+flutter test test/language_preferences_test.dart
+flutter test test/language_widget_test.dart
+```
+
+Focused spelling/editor tests:
 
 ```bash
 flutter test test/text_correction_test.dart
@@ -129,89 +155,57 @@ flutter test test/spell_check_editing_controller_test.dart
 flutter test test/widget_test.dart
 ```
 
-## Changing correction behavior
+# Changing language packs
 
-Correction mutation belongs in `lib/core/text_correction.dart`, not directly in widgets.
+Language-specific tokenization/normalization/dictionary logic belongs behind `SpellLanguagePack`, not in widgets.
+
+A new pack needs:
+
+- Stable ID/language/region identity.
+- User-readable display name.
+- Unicode-aware token/validation behavior.
+- Normalizer.
+- Licensed/appropriate dictionary data.
+- Frequency/suggestion metadata policy.
+- Suffix behavior when applicable.
+- Personal-word isolation tests.
+- Language-selection persistence tests.
+- Writing-rule eligibility review.
+- User/API/privacy documentation.
+
+Do not add runtime dictionary download/network behavior as an implementation detail without separate security/privacy review.
+
+See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md).
+
+# Changing spelling correction behavior
+
+Spelling mutation belongs in `lib/core/text_correction.dart`.
 
 Keep these invariants:
 
-1. Never trust a `SpellIssue` offset after text may have changed.
-2. Verify the current substring still equals `issue.word` before mutation.
-3. Apply replace-all ranges from highest start offset to lowest.
-4. Preserve capitalization independently per occurrence.
-5. Return the number of actual replacements.
-6. Return a caret offset that is inside the resulting string.
-7. Do not partially mutate when a single targeted issue is stale.
+1. Never trust a `SpellIssue` range after text may have changed.
+2. Verify the current source substring before mutation.
+3. Apply spelling replace-all from highest source start to lowest.
+4. Preserve casing independently per occurrence.
+5. Report actual replacement count.
+6. Return a valid caret.
+7. Do not partially mutate a stale targeted single issue.
 
-Add or update `test/text_correction_test.dart` for deterministic changes.
+Add/update `test/text_correction_test.dart`.
 
-## Changing correction undo
+# Changing writing rules
 
-The application-level correction undo stack lives in `SpellCheckerPage`; it is intentionally not part of `TextCorrection`.
+Implement `WritingRule`; do not add rule matching logic to widgets.
 
-Current design:
+Requirements:
 
-- Stores pre-correction `TextEditingValue` snapshots.
-- Maximum depth: 20 entries.
-- Single replacement = one undo entry.
-- Replace-all = one undo entry.
-- Manual user text edits clear the correction stack.
-- Stack is memory-only and never persisted.
-
-If changing this model, add widget tests and update privacy/user/architecture documentation. Do not silently turn spelling-specific undo into document persistence.
-
-## Changing inline highlighting
-
-`SpellCheckEditingController` extends `TextEditingController` and overrides `buildTextSpan`.
-
-Rules:
-
-- A checked range must still match the current text before styling.
-- Invalid/stale/overlapping ranges must be skipped safely.
-- Non-active issues receive wavy underlining.
-- The active issue may receive additional foreground/background emphasis.
-- Visual styling cannot be the only indication that an issue exists; the Results panel/semantics must remain available.
-- Manual text changes should clear checked issue styling until the next spelling check.
-
-Add/update `test/spell_check_editing_controller_test.dart` for controller behavior.
-
-## Changing active issue navigation
-
-Active issue state is shared across:
-
-- Results header.
-- Results issue card selected state.
-- Inline active highlight.
-- Editor selection.
-- Results auto-scroll.
-
-Navigation currently wraps at both ends.
-
-Keyboard contracts:
-
-- `F7`: next issue.
-- `Shift+F7`: previous issue.
-- `Ctrl+Enter`: run spelling check.
-- `Command+Enter`: run spelling check.
-
-Avoid introducing focus traps. When adding shortcuts, consider platform conflicts and preserve standard text-editing shortcuts.
-
-## Widget test viewport behavior
-
-V1.2 issue cards contain more actions and can extend below Flutter test's default viewport. Tests that tap an issue action should make the intended control visible first when necessary:
-
-```dart
-final control = find.text('Save word');
-await tester.ensureVisible(control);
-await tester.pumpAndSettle();
-await tester.tap(control);
-```
-
-This tests the real scrollable interaction instead of relying on a particular test-surface height.
-
-## Adding or changing writing rules
-
-Use `WritingRule` rather than adding rule logic to widgets. Rules must be deterministic, side-effect free, explicit about supported language IDs/base codes, and return exact source ranges. Provide automatic replacements only when they can be applied safely.
+- Stable unique persistent rule ID.
+- Deterministic side-effect-free analysis.
+- Explicit supported language IDs/codes.
+- Exact source ranges/original text.
+- Automatic replacement only when safe for the rule's documented scope.
+- Positive and negative unit tests.
+- Interaction/overlap tests when the rule can collide with another automatic rule.
 
 Run:
 
@@ -221,114 +215,203 @@ flutter test test/writing_correction_test.dart
 flutter test test/writing_widget_test.dart
 ```
 
-Do not add document logging, persistent analysis history, or network grammar calls as an implementation detail. See [WRITING_RULES.md](WRITING_RULES.md).
+Rule IDs are persisted in V2.1. Renaming a shipped rule ID is therefore a data-migration change, not a cosmetic refactor.
 
-## Adding or changing language packs
+See [WRITING_RULES.md](WRITING_RULES.md).
 
-Language packs live behind `SpellLanguagePack`; do not place language-specific tokenization/normalization logic in widgets.
+# Changing individual writing correction
 
-A new pack requires a stable ID/display name, Unicode-aware token/validation rules, normalization, licensed dictionary data, suggestion metadata policy, isolation tests, persistence tests, selector tests, documentation, and privacy/security review for any runtime download/network requirement.
+`WritingCorrection.apply` is the source-range validation boundary for one automatic writing fix.
 
-Run the dedicated V1.3 tests:
+Do not apply a `WritingIssue.replacement` directly in widget code.
 
-```bash
-flutter test test/language_pack_test.dart
-flutter test test/language_dictionary_codec_test.dart
-flutter test test/language_preferences_test.dart
-flutter test test/language_widget_test.dart
+The correction must verify:
+
+- Replacement exists.
+- Offsets are valid/current.
+- Current substring equals `issue.originalText` exactly.
+
+A stale issue returns unchanged text.
+
+# Changing V2.1 batch writing correction
+
+`WritingCorrection.applyAll` is the authoritative batch contract.
+
+Current invariants:
+
+1. Candidate ordering is source start, source end, then rule ID.
+2. Findings without replacements are skipped.
+3. Invalid/stale findings are skipped.
+4. Later overlapping findings are skipped after an earlier candidate is accepted.
+5. Accepted edits are applied from end toward start.
+6. The result reports applied/skipped counts.
+7. Returned caret is clamped inside final text.
+8. The editor treats one successful batch as one undo entry.
+
+Do not move overlap resolution into `WritingInsightsDialog`; the reusable correction primitive must remain authoritative.
+
+Required regression coverage belongs in `test/writing_correction_test.dart` and `test/writing_widget_test.dart`.
+
+# Changing writing-rule preferences
+
+V2.1 stores rule IDs per language through `DictionaryPreferences`.
+
+Current key shape:
+
+```text
+spellchecker.writing_rule_ids.v1.<language-id>
 ```
 
-See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md).
+Preserve the three-state meaning:
 
-## Adding bundled dictionary words
+```text
+missing key       -> null -> registry defaults
+stored non-empty  -> explicit enabled IDs
+stored empty list -> explicit disable-all
+```
 
-Dictionary data is split across:
+Do not use `?? defaults` in a way that also replaces an empty set.
 
-- `lib/data/english_dictionary.dart`
-- `lib/data/english_dictionary_extension.dart`
+When restoring effective rule IDs, intersect stored/default IDs with rules that both exist and support the active language. Unknown stale IDs must not crash analysis.
 
-Requirements:
+Persistence tests use mocked `SharedPreferences`; do not read/write a developer machine's real preferences.
 
-- Lowercase normalized spelling.
-- No duplicate within the edited const set.
-- Straight apostrophe for directly stored contractions.
-- Add a regression test when an entry resolves a reported bug.
-- Prefer broadly useful vocabulary over project-specific one-off terms.
+# Changing correction undo
 
-For common words used to break ranking ties, update `lib/data/english_word_frequencies.dart` with a lower rank meaning higher preference.
+The application-level correction stack lives in `SpellCheckerPage`, not in `TextCorrection` or `WritingCorrection`.
 
-## Changing suggestion ranking
+Current design:
 
-Ranking changes belong in `lib/core/spell_checker_engine.dart` and/or `lib/core/edit_distance.dart`.
+- Stores pre-correction `TextEditingValue` snapshots.
+- Maximum 20 entries.
+- Single spelling replacement = one entry.
+- Spelling replace-all = one entry.
+- Individual writing fix = one entry.
+- Writing batch fix = one entry.
+- Manual user typing clears the stack.
+- Stack is memory-only.
 
-Current ordering:
+When adding a new automatic correction workflow, decide and test its grouping explicitly. Do not silently create multiple history entries for one user-visible bulk action.
 
-1. Edit distance.
-2. First-character agreement.
-3. Approximate frequency rank.
-4. Candidate length.
-5. Alphabetical order.
+# Changing inline spelling highlighting
 
-Add tests covering candidate inclusion, deterministic ordering where relevant, frequency ties, transposition, thresholds, and suffix-preserving suggestions.
-
-## Changing contraction or possessive behavior
-
-Regular apostrophe suffix handling lives in `SpellCheckerEngine`. Preserve direct dictionary lookup before stem-based recognition so curated irregular forms remain authoritative.
-
-Add tests for accepted forms and correction output.
-
-## Changing personal-dictionary import/export
-
-The public format is implemented by `PersonalDictionaryCodec`.
+`SpellCheckEditingController` validates issue ranges against current text before styling.
 
 Rules:
 
-- Keep exports versioned.
-- Do not silently accept unsupported versions.
-- Preserve deterministic sorted output.
-- Reject malformed word entries rather than storing ambiguous values.
-- Add migration logic before changing the meaning of an existing version.
+- Skip invalid/stale/overlapping spans safely.
+- Keep visual underline/background supplemental to text/semantics.
+- Clear checked issue styling after manual text changes.
+- Add controller tests for deterministic behavior.
 
-## Changing persistence
+# Changing keyboard workflows
 
-`DictionaryPreferences` currently stores:
+Current shortcuts:
 
-- Normalized personal words.
+```text
+Ctrl+Enter             spelling check
+Command+Enter          spelling check
+Ctrl+Shift+Enter       Writing insights
+Command+Shift+Enter    Writing insights
+F7                     next spelling issue
+Shift+F7               previous spelling issue
+```
+
+When changing shortcuts:
+
+- Consider platform conflicts.
+- Preserve ordinary text-editing shortcuts.
+- Keep the equivalent visible control available.
+- Add widget regression coverage.
+- Update accessibility/user docs and tooltips.
+
+# Widget test viewport behavior
+
+The editor/results/dialogs are scrollable. Tests must exercise the same visibility behavior as users instead of relying on the default 800×600 test surface.
+
+For a control below the current viewport:
+
+```dart
+final control = find.text('Save word');
+await tester.ensureVisible(control);
+await tester.pumpAndSettle();
+await tester.tap(control);
+```
+
+Writing insights intentionally uses a lazy `ListView`; findings below rule switches may need a `drag` before they exist in the widget tree.
+
+# Changing personal dictionary transfer
+
+`PersonalDictionaryCodec` owns the public transfer format.
+
+Rules:
+
+- Keep formats versioned.
+- Never silently reinterpret unsupported versions/languages.
+- Preserve deterministic normalized/sorted output.
+- Reject malformed entries.
+- Add compatibility/migration tests before changing an existing format's meaning.
+
+# Changing persistence generally
+
+Current persistent settings:
+
+- Selected language ID.
+- Personal words per language.
 - Suggestion-count preference.
+- Writing-rule IDs per language.
 
-Persistence changes must include tests using `SharedPreferences.setMockInitialValues` so CI remains deterministic.
+Persistence changes require:
 
-Do not persist editor text, checked issues, active issue selection, or correction undo snapshots unless the privacy model/user experience is explicitly redesigned and documented first.
+- Mocked preference tests.
+- Key/version migration review.
+- Privacy documentation updates.
+- User-visible failure behavior review.
 
-## Changing UI behavior
+Do not persist editor text, spelling/writing finding lists, active issue positions, ignored words, or correction snapshots unless the privacy/product model is explicitly redesigned and reviewed first.
 
-Keep core spelling and text-correction logic out of widgets. UI code should call core APIs and persistence adapters.
+# Changing UI behavior
 
-For user-visible editor changes:
+Keep reusable spelling/writing mutation and analysis out of widgets.
 
-- Add widget tests when deterministic.
-- Check narrow and wide layouts.
-- Check keyboard-only use.
-- Check active issue/results synchronization.
-- Check stale range behavior.
-- Check semantics and text scaling.
-- Preserve session spelling when persistence is unavailable.
+For editor changes, test:
 
-Widget tests that touch preferences must initialize mock shared preferences before pumping the app.
+- Narrow/wide layouts.
+- Standard 800×600 test surface.
+- Keyboard-only use.
+- Text scaling/scrolling.
+- Stale source-range behavior.
+- Semantics/live-region behavior.
+- Storage unavailable paths.
+- Language switching.
+- Undo grouping.
 
-## Privacy review
+# Privacy/security review
 
-Any proposed network dependency, analytics feature, crash reporting, telemetry, synchronization, accounts, editor-text persistence, or persistent correction history requires explicit privacy review and an update to `docs/PRIVACY.md` before merge.
+Explicit review is required before adding:
 
-## Updating version numbers
+- Network spelling/grammar calls.
+- AI rewriting.
+- Analytics/telemetry.
+- Crash-reporting services that may capture text.
+- Account/synchronization systems.
+- Remote configuration affecting writing analysis.
+- Editor-document persistence.
+- Persistent correction history.
+- Dynamic external rule/plugin loading.
 
-Update:
+Update `docs/PRIVACY.md` and `SECURITY.md` before merging such changes.
 
-- `version` in `pubspec.yaml`.
+# Version/release changes
+
+For a user-visible release update:
+
+- `pubspec.yaml` version/build.
+- About version text.
 - `CHANGELOG.md`.
 - README current release.
-- About-dialog version text.
-- Roadmap status when a milestone completes.
-- Relevant API/user/development/testing/accessibility/privacy documentation.
+- Roadmap milestone state.
+- API/architecture/user/development/testing/accessibility/troubleshooting/privacy/security/release/support/contribution docs as applicable.
+- GitHub issue/PR templates when new diagnostic context matters.
 
-Follow [RELEASING.md](RELEASING.md) for tagged releases.
+Follow [RELEASING.md](RELEASING.md).

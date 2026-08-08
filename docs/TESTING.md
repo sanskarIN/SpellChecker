@@ -2,14 +2,16 @@
 
 ## Test strategy
 
-SpellChecker uses deterministic unit tests for spelling/correction algorithms, codec and persistence tests for dictionary durability, controller tests for inline rendering state, and Flutter widget tests for the complete editor workflow.
+SpellChecker uses layered deterministic tests so core algorithms, local persistence, rendering state, and full editor workflows can be validated independently.
 
-The suite is intentionally layered:
+The suite is organized around these boundaries:
 
-- Core spelling/correction behavior can run without a widget tree.
-- Persistence tests never touch real machine/user preferences.
-- Inline-controller tests verify rendering state independently from the full editor page.
-- Widget tests verify keyboard and user interaction contracts.
+- Core spelling/language/correction behavior runs without Flutter widgets.
+- Writing-rule analysis and correction runs without Flutter widgets.
+- Persistence tests use isolated mock `SharedPreferences` values.
+- Inline spelling-controller tests isolate rendering state from the page.
+- Widget tests verify keyboard, persistence, language selection, dialog scrolling, correction grouping, and user-visible workflows.
+- Release validation additionally builds the Flutter web target.
 
 ## Run all tests
 
@@ -23,7 +25,9 @@ Short reporter:
 flutter test
 ```
 
-## Focused tests
+## Focused groups
+
+Spelling/editor:
 
 ```bash
 flutter test test/spell_checker_test.dart
@@ -32,204 +36,254 @@ flutter test test/spell_check_editing_controller_test.dart
 flutter test test/widget_test.dart
 ```
 
-## Writing-rules coverage
+Language:
 
-V2.0 tests cover:
+```bash
+flutter test test/language_pack_test.dart
+flutter test test/language_dictionary_codec_test.dart
+flutter test test/language_preferences_test.dart
+flutter test test/language_widget_test.dart
+```
 
-- Each built-in deterministic rule.
-- Adjacent-word boundary behavior.
-- Sentence-start capitalization.
-- Space/punctuation replacement metadata.
-- Language eligibility for both built-in English packs.
-- Analyzer issue ordering/counts.
-- Per-rule enable/disable filtering.
-- Current versus stale writing corrections.
-- Writing insights dialog findings.
-- Safe writing fix integration with editor Undo correction.
-- Session rule toggling in the real widget tree.
+Writing V2.1:
 
-Rule tests should use synthetic text and assert the intended public contract rather than incidental widget positions.
+```bash
+flutter test test/writing_rules_test.dart
+flutter test test/writing_correction_test.dart
+flutter test test/writing_preferences_test.dart
+flutter test test/writing_widget_test.dart
+```
 
-## Language architecture coverage
+## Writing-rule coverage
 
-V1.3 adds tests for:
+`test/writing_rules_test.dart` protects:
 
-- Built-in registry IDs/default behavior.
-- Unicode tokenization and punctuation normalization.
-- US/UK variant acceptance.
-- Language-tagged issues and detailed suggestions.
-- Personal/ignored in-memory isolation between engines.
-- Version-2 language-tagged dictionary documents.
-- Legacy version-1 dictionary compatibility.
-- Selected-language persistence/fallback.
-- Per-language personal-word namespaces and V1 migration.
-- UI language switching/re-check behavior.
-- Saved-word isolation across selector changes.
+- Repeated adjacent-word matching.
+- Non-adjacent duplicate non-matching behavior.
+- Sentence capitalization behavior.
+- Repeated horizontal-space behavior.
+- Repeated punctuation behavior.
+- Replacement metadata.
+- Language eligibility for the built-in English packs.
+- Analyzer enabled-ID filtering.
+- Analyzer deterministic ordering.
+- Per-rule finding counts.
 
-Language tests must prove that adding state to pack A does not change pack B.
+Rule tests should use synthetic source text and assert the public rule contract rather than widget layout details.
 
-## Core engine coverage
+## Writing correction coverage
 
-`test/spell_checker_test.dart` covers:
+`test/writing_correction_test.dart` protects both individual and V2.1 batch mutation.
 
-- Case-insensitive dictionary matching.
-- Unknown-word detection.
-- Source offsets.
-- Close suggestion generation.
-- Lower edit-distance ordering.
-- Frequency-rank tie breaking.
-- Suggestion-count limits.
-- Supported contraction and possessive recognition from known stems.
-- Suffix-preserving suggestions.
-- Personal dictionary add behavior.
-- Personal dictionary replacement/removal.
-- Session-only ignored words.
-- Clearing ignored words independently from personal words.
-- Full in-memory session reset.
-- Apostrophe tokenization.
-- Expanded bundled dictionary coverage.
+### Individual correction
 
-Ranking tests should assert exact order only when ordering itself is the contract.
+- Current automatic fix is applied.
+- Stale source range is refused.
+- Advisory issue without a replacement is not mutated.
 
-## Text correction coverage
+### Batch correction — V2.1
 
-`test/text_correction_test.dart` protects V1.2 correction safety:
+- Multiple current non-overlapping fixes produce one final text.
+- Applied count is accurate.
+- Skipped count is accurate.
+- Stale findings are skipped.
+- Advisory findings are skipped.
+- Overlapping fixes use deterministic earliest-candidate resolution.
+- All-unsafe input leaves text unchanged.
+- Returned caret remains valid.
 
-- Single replacement.
-- Case-preserving title-case replacement.
-- Refusal to apply stale issue offsets.
-- Replace-all across repeated checked occurrences.
-- End-to-start mutation behavior.
-- Unrelated issue preservation.
-- Upper/title/lower case matching.
-- Replacement counts and changed/unchanged result state.
+Batch tests should include replacements that alter string length so end-to-start mutation remains protected.
 
-When correction logic changes, add tests at this layer before changing widget expectations.
+## Writing preference coverage — V2.1
 
-## Inline editing controller coverage
+`test/writing_preferences_test.dart` protects the persisted rule-ID contract:
 
-`test/spell_check_editing_controller_test.dart` covers:
+- Missing key returns `null`.
+- Rule IDs are trimmed, deduplicated, sorted, and empty IDs removed.
+- Explicit empty stored set remains empty rather than becoming defaults.
+- `en-US` and `en-GB` preferences are isolated.
+- Clearing one language returns it to unset/default state without deleting another language's values.
+- Raw key shape remains versioned and language-specific.
 
-- Underline styling for checked issues.
-- Stronger background style for active issue.
-- Active issue index state.
-- Clearing checked issue/highlight state.
-- Building spans from current text safely.
-
-Future edge-case tests should include stale/invalid ranges and overlapping ranges if controller behavior changes there.
-
-## Personal dictionary codec coverage
-
-`test/personal_dictionary_codec_test.dart` covers:
-
-- Versioned JSON export.
-- Normalized deterministic sorting.
-- SpellChecker JSON-object import.
-- JSON-array import.
-- Newline/comma-separated plain-text import.
-- Curly-apostrophe normalization.
-- Invalid-entry rejection.
-- Unsupported-format-version rejection.
-
-## Persistence coverage
-
-`test/dictionary_preferences_test.dart` covers:
-
-- Saving/restoring normalized personal words.
-- Persisting suggestion-count preferences.
-- Clamping suggestion counts to 1–10.
-- Clearing saved personal words.
-
-Tests initialize isolated in-memory preferences:
+Mock preferences before every test:
 
 ```dart
 SharedPreferences.setMockInitialValues(<String, Object>{});
 ```
 
-Never read/write a developer machine's real preferences in tests.
+Never use a developer machine's real settings in tests.
 
-## Edit-distance coverage
+## Writing widget coverage — V2.1
 
-`test/edit_distance_test.dart` covers:
+`test/writing_widget_test.dart` protects full editor behavior.
 
-- Equal strings.
-- Insertions.
-- Deletions.
-- Adjacent transposition.
+### Individual safe fix + undo
 
-## Statistics coverage
+1. Enter synthetic text with writing findings.
+2. Open Writing insights.
+3. Scroll the lazy findings list.
+4. Apply one safe fix.
+5. Verify editor text changed.
+6. Use **Undo correction**.
+7. Verify the original editor text is restored.
 
-`test/text_statistics_test.dart` covers:
+### Apply all safe fixes + one-step undo
 
-- Word count.
-- Character count.
-- Sentence count.
-- Blank input.
+1. Enter text containing several automatic writing findings.
+2. Open Writing insights.
+3. Scroll to **Apply all safe fixes**.
+4. Apply the batch.
+5. Verify all non-overlapping current automatic fixes were reflected in the single final text.
+6. Use **Undo correction** once.
+7. Verify the exact pre-batch text is restored.
 
-## Widget coverage
+This protects correction-history grouping as well as mutation correctness.
 
-`test/widget_test.dart` now verifies the main V1.2 workflows.
+### Persisted rule switches
 
-### Basic spelling workflow
+1. Disable a writing rule in the dialog.
+2. Close the dialog.
+3. Verify the per-language rule-ID preference list no longer contains that ID.
+4. Reopen the dialog.
+5. Verify the rule remains disabled.
 
-1. Launch with mocked preferences.
-2. Enter text.
-3. Check spelling.
-4. Verify an issue, suggestion controls, and active issue indicator.
+### Startup restoration
 
-### Blank-input state
+Seed a language-specific rule-ID key before pumping the app. Verify only those stored/supported rule switches are enabled.
 
-1. Launch with blank editor.
-2. Run a spelling check.
-3. Verify **Nothing to check**.
+### Keyboard shortcut
 
-### Keyboard issue navigation
+Send Ctrl+Shift+Enter and verify Writing insights opens. Platform-specific Command/Meta behavior can be covered separately where Flutter test event behavior is stable.
 
-1. Enter text with two synthetic unknown words.
-2. Check spelling.
-3. Verify **Issue 1 of 2**.
-4. Send `F7`.
-5. Verify **Issue 2 of 2**.
+## Lazy Writing insights list
 
-Future shortcut tests should also cover `Shift+F7` and Ctrl/Command+Enter when platform/key-event behavior is deterministic in Flutter test.
+Writing insights intentionally uses a `ListView` so large finding sets remain scrollable/lazy.
 
-### Replace-all and undo
+A finding below the initial rule-switch area might not exist in the widget tree until scrolling occurs.
 
-1. Enter repeated unknown text.
-2. Check spelling.
-3. Verify repeated occurrence count and **Replace all…**.
-4. Scroll the control into the test viewport when necessary.
-5. Choose a replacement menu item.
-6. Verify issues are removed when the chosen suggestion fixes them.
-7. Use snackbar **Undo**.
-8. Verify repeated issue state is restored.
+Tests should scroll the actual list:
 
-The test intentionally does not force the restored active issue to be issue 1. Undo restores the previous `TextEditingValue`, including caret position; active issue selection can therefore legitimately favor a later issue near the restored caret.
+```dart
+final insightsList = find.descendant(
+  of: find.byType(AlertDialog),
+  matching: find.byType(ListView),
+);
+await tester.drag(insightsList, const Offset(0, -520));
+await tester.pumpAndSettle();
+```
 
-### Persistent Save word workflow
+Do not replace the lazy production list with an eagerly built test-only layout.
 
-1. Launch with empty mocked preferences.
-2. Enter an unknown synthetic word.
-3. Check spelling.
-4. Scroll **Save word** into view when required by the test viewport.
-5. Select **Save word**.
-6. Verify the issue disappears.
-7. Verify mocked `SharedPreferences` contains the normalized word.
+## Language architecture coverage
 
-### Dictionary manager restore workflow
+`test/language_pack_test.dart`, `test/language_dictionary_codec_test.dart`, `test/language_preferences_test.dart`, and `test/language_widget_test.dart` protect:
 
-1. Seed mocked preferences with a saved word and suggestion-count preference.
-2. Launch the app.
-3. Wait for asynchronous restoration.
-4. Verify the stored suggestion count.
-5. Open **Manage personal dictionary**.
-6. Verify the saved word appears.
+- Built-in registry IDs/default pack.
+- Unicode tokenization and punctuation normalization.
+- US/UK variant acceptance differences.
+- Language-tagged issues/suggestions.
+- Engine personal/ignored state isolation.
+- Version-2 language-aware personal dictionary documents.
+- Version-1 compatibility.
+- Selected-language persistence/fallback.
+- Per-language personal-word namespaces.
+- Legacy V1 personal-word migration.
+- Editor language switching/re-check behavior.
+- Saved-word isolation across language switches.
 
-## Widget test viewport rules
+V2.1 extends the language-state contract with per-language writing-rule preferences; those assertions live in `test/writing_preferences_test.dart` and writing widget tests.
 
-Flutter test uses a bounded default surface. V1.2 issue cards contain enough content that actions can be built in the scrollable list but outside the visible hit-test region.
+## Core spelling engine coverage
 
-When a real user would scroll to a control, tests should do the same:
+`test/spell_checker_test.dart` covers:
+
+- Case-insensitive dictionary matching.
+- Unknown-word detection/source offsets.
+- Suggestion generation/ranking.
+- Frequency tie breaking.
+- Suggestion limits.
+- Regular contraction/possessive recognition.
+- Suffix-preserving suggestions.
+- Personal dictionary mutations.
+- Session ignored words.
+- Session reset behavior.
+- Expanded bundled vocabulary.
+
+Ranking tests should assert exact order only when ordering is itself the behavior being protected.
+
+## Spelling correction coverage
+
+`test/text_correction_test.dart` protects:
+
+- Current single replacement.
+- Case preservation.
+- Stale offset refusal.
+- Replace-all across checked repeated occurrences.
+- End-to-start mutation.
+- Unrelated issue preservation.
+- Replacement counts/result change state.
+
+Correct core behavior at this layer before weakening widget expectations.
+
+## Inline spelling-controller coverage
+
+`test/spell_check_editing_controller_test.dart` protects:
+
+- Checked issue styling.
+- Active issue styling/index.
+- Clearing issues/highlights.
+- Safe span construction from current text.
+
+Add stale/invalid/overlap cases when controller behavior changes.
+
+## Personal dictionary codec coverage
+
+Codec tests protect:
+
+- Deterministic normalized exports.
+- Versioned object import/export.
+- Version-2 language metadata.
+- JSON-array/plain-list compatibility.
+- Unicode/apostrophe normalization.
+- Malformed entry rejection.
+- Unsupported format/language rejection.
+
+Existing transfer versions are compatibility contracts, not convenient snapshots that may be rewritten silently.
+
+## General persistence coverage
+
+`test/dictionary_preferences_test.dart` and language-specific tests cover:
+
+- Personal-word save/restore.
+- Suggestion-count persistence/clamping.
+- Personal-word clear behavior.
+- Language selection persistence.
+- Language-specific namespaces/migration.
+
+V2.1 writing preference tests cover the additional rule-ID keys.
+
+## Statistics/edit distance
+
+`test/edit_distance_test.dart` protects equal/insert/delete/transposition behavior.
+
+`test/text_statistics_test.dart` protects word/character/sentence counts and blank input.
+
+## Main widget coverage
+
+`test/widget_test.dart` protects V1.2+ spelling/editor workflows:
+
+- Basic spelling check/result.
+- Blank-input state.
+- F7 navigation.
+- Spelling replace-all and undo.
+- Persistent Save word.
+- Language-qualified dictionary manager restore.
+
+## Widget viewport rules
+
+Flutter test uses a bounded default surface. Real controls can be valid but outside the current hit-test region.
+
+When a user would scroll, tests must scroll too:
 
 ```dart
 final control = find.text('Replace all…').first;
@@ -238,74 +292,79 @@ await tester.pumpAndSettle();
 await tester.tap(control);
 ```
 
-Do not change production layout solely to make an offscreen test tap succeed.
+Do not change production layout only to make an offscreen test tap work.
 
-## Keyboard test guidance
+## Keyboard tests
 
-Use `tester.sendKeyEvent` for simple shortcut contracts such as F7. After key events, call `pumpAndSettle` before checking UI state.
+Use `sendKeyEvent` for simple single-key shortcuts. Modifier combinations can use key-down/key-up events when necessary.
 
-Do not assert focus details more strictly than the user-visible contract unless focus itself is the behavior being protected.
+After keyboard input, call `pumpAndSettle` before asserting visible state.
+
+Protect the user-visible action rather than internal focus state unless focus itself is the contract.
 
 ## Semantics testing
 
-V1.2 adds semantic containers/live regions but the current suite primarily verifies behavior and controller state. New accessibility regressions should add `SemanticsTester` or targeted semantic-node assertions when stable under the supported Flutter version.
+Important semantics contracts include:
 
-Key contracts to protect:
+- Editor label/inline issue explanation.
+- Spelling issue selected state/range/count.
+- Result-count and warning live regions.
+- Writing finding rule/message label.
+- Writing empty state.
+- Batch action text/count.
+- Icon control tooltips.
 
-- Issue card selected state.
-- Result-count/empty-state announcements.
-- Storage-warning live region.
-- Editor semantic label.
-- Icon controls retaining meaningful tooltips/labels.
+Add targeted semantics assertions when they are stable under the supported Flutter version.
 
 ## CI checks
 
-GitHub Actions runs:
+Normal CI now runs:
 
 ```bash
 flutter pub get
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --reporter expanded
 ```
 
-Formatting should also be checked locally:
+The tagged release workflow runs the same quality checks and additionally builds the release web app:
 
 ```bash
-dart format --output=none --set-exit-if-changed lib test
+flutter build web --release
 ```
 
-Apply formatting:
-
-```bash
-dart format lib test
-```
+This makes formatting an automated blocking contract rather than only a contributor convention.
 
 ## Analyzer policy
 
-Analyzer errors must be fixed in source/tests. Do not suppress a lint merely to make CI green unless the rule is genuinely inappropriate for the project and the configuration change is documented.
+Fix analyzer errors/lints in source/tests. Do not suppress a rule merely to make CI green unless the project has deliberately reviewed and documented why that lint is inappropriate.
 
-## Regression-test policy
+## Regression policy
 
 Every deterministic bug fix should include a regression test that fails before the fix and passes after it.
 
-Tests should protect user-visible/public contracts instead of accidental implementation details. Examples:
+Prefer contract assertions over incidental implementation details. Examples:
 
-- Suggestion candidate existence vs. exact ranking order.
-- Undo restoring checked content vs. forcing one active issue index.
-- A control being reachable in a scrollable list vs. assuming it is inside a 600px test viewport.
+- Candidate must exist vs. candidate must occupy a particular rank.
+- Batch must be one undo entry vs. exact internal stack representation.
+- Finding must be reachable by scrolling vs. fixed pixel position.
+- Stored empty rule list must remain explicit-empty vs. a particular `SharedPreferences` platform backend detail.
 
 ## Persistence failure behavior
 
-The editor's **Save word** flow temporarily updates the engine, then writes the complete personal set. If storage fails, it restores the previous set and marks storage unavailable.
+User-visible durable changes must not claim success before storage completes.
 
-Dictionary-manager changes persist before committing local dialog state.
+Examples:
 
-Session spelling must remain usable when local preference storage is unavailable.
+- Personal-word save rolls engine state back if persistence fails.
+- Writing-rule switches remain active in the current session if persistence fails, while the application marks storage unavailable and reports the failure.
+
+Session spelling/writing analysis remains usable without durable local storage.
 
 ## Correction-history privacy
 
-Correction undo snapshots can contain editor text. They must remain in memory only. Tests should not write those snapshots to files/preferences, logs, fixtures, or failure messages beyond minimal synthetic samples.
+Correction snapshots can contain full editor text. They must remain memory-only. Tests must use synthetic documents and must not persist snapshots into fixtures/preferences/log files.
 
 ## Test data privacy
 
-Use synthetic text in tests. Do not add private documents, credentials, account identifiers, personal communications, or sensitive dictionary exports to the repository.
+Use synthetic test data. Never commit private documents, credentials, account identifiers, personal communications, or sensitive personal-dictionary exports.
