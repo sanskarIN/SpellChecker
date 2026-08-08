@@ -189,18 +189,18 @@ Use synthetic text/vocabulary only.
 
 # Automated release checks
 
-Normal CI must pass:
+Normal CI now requires all of these checks to pass:
 
 ```bash
 flutter pub get
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --reporter expanded
 ```
 
-Release validation must additionally include formatting verification and a release web build:
+The tagged release workflow runs those same quality checks and additionally builds the release web application:
 
 ```bash
-dart format --output=none --set-exit-if-changed lib test
 flutter build web --release
 ```
 
