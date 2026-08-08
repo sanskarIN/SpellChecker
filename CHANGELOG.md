@@ -4,6 +4,31 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.4.0] - 2026-08-08
+
+### Added
+
+- Public `SpellSuggestionCandidate` metadata for eligible suggestion candidates.
+- Public `SpellSuggestionRankingContext` carrying the normalized correction target and active language pack.
+- Public `SpellSuggestionRanker` strategy interface.
+- Public `DefaultSpellSuggestionRanker` implementing the exact pre-V2.4 ranking policy.
+- Optional `suggestionRanker` injection in `SpellCheckerEngine`.
+- Focused tests for default compatibility, custom ordering, lexical tie stability, ranking context/candidate metadata, and eligibility-filter boundaries.
+
+### Changed
+
+- Package version advances to `2.4.0+9`; About version advances to `2.4.0`.
+- Suggestion candidate ordering is delegated to the injected ranker after the existing language-pack eligibility/edit-distance filters run.
+- The engine applies a final lexical word tie-break whenever a ranker returns zero, keeping custom-ranker ties deterministic.
+- The suggestion cache assumes the ranker is deterministic and stable for the lifetime of its engine instance.
+
+### Compatibility, security, and privacy
+
+- `DefaultSpellSuggestionRanker` preserves the previous order: edit distance, prefix penalty, frequency rank, word length, lexical fallback.
+- Custom ranking cannot bypass maximum edit distance, compound-token exclusions, or other existing candidate eligibility checks.
+- V2.4 does not dynamically load plugins/rankers, add network behavior, persist ranker state, change Portable settings/personal-dictionary formats, or add a runtime dependency.
+
+
 ## [2.3.0] - 2026-08-08
 
 ### Added

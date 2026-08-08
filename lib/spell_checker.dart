@@ -5,5 +5,6 @@ export 'core/spell_checker_engine.dart';
 export 'core/spell_issue.dart';
 export 'core/spell_language_pack.dart';
 export 'core/spell_suggestion.dart';
+export 'core/spell_suggestion_ranker.dart';
 export 'core/text_correction.dart';
 export 'core/text_statistics.dart';

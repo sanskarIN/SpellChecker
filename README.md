@@ -13,6 +13,8 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Per-language persisted personal dictionaries with legacy V1 migration.
 - Per-language persisted writing-rule preferences with backward-compatible defaults.
 - Language-tagged detailed suggestion metadata.
+- Public injectable `SpellSuggestionRanker` strategy with the pre-V2.4 ranking preserved as the default.
+- Stable lexical tie-breaking for custom ranker ties.
 - Optional local **Writing insights** with configurable deterministic rules.
 
 - Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
@@ -31,7 +33,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Stronger visual treatment for the active spelling issue.
 - `Ctrl/⌘+Enter` spelling check, `F7` next issue, and `Shift+F7` previous issue.
 - Active issue synchronization between editor selection and the Results panel.
-- Damerau-Levenshtein suggestion matching with frequency-aware tie breaking.
+- Damerau-Levenshtein candidate filtering with an extensible deterministic ranking strategy and frequency-aware default ordering.
 - Replace one occurrence with case preservation.
 - Replace all checked occurrences of the same unknown word.
 - Bounded in-memory correction undo history shared by spelling and writing fixes.
@@ -51,9 +53,9 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.3.0+8`
+`2.4.0+9`
 
-Version 2.3 is the **Review Presets & Preference Portability** release. It keeps V2.2 categories, transient review filtering, reset-to-defaults, V2.1 correction safety, one-step undo, and keyboard workflows while adding stable reusable review presets plus a versioned non-document Portable settings format. Portable settings transfer selected language, suggestion count, and explicit per-language writing-rule overrides only; editor text, personal vocabulary, ignored words, findings, and correction history are excluded. Existing 2.x spelling/writing APIs remain compatible.
+Version 2.4 is the **Suggestion Ranking Extensibility & Determinism** release. It preserves the existing spelling candidate eligibility, Damerau-Levenshtein thresholds, default ranking order, metadata, language packs, V2.3 Portable settings/review presets, and all correction-safety behavior while extracting suggestion ordering into a public injectable strategy. Custom rankers receive normalized target/language context plus candidate distance, prefix, frequency, and source metadata; the engine applies a final lexical tie-break so equal custom scores remain deterministic. No user preference, transfer format, or runtime dependency changes in V2.4.
 
 ## Language selection
 
@@ -322,6 +324,7 @@ SpellChecker/
 │   │   ├── spell_issue.dart
 │   │   ├── spell_language_pack.dart
 │   │   ├── spell_suggestion.dart
+│   │   ├── spell_suggestion_ranker.dart
 │   │   ├── text_correction.dart
 │   │   └── text_statistics.dart
 │   ├── data/
@@ -364,6 +367,7 @@ SpellChecker/
 │   ├── settings_transfer_codec_test.dart
 │   ├── settings_transfer_dialog_test.dart
 │   ├── settings_transfer_service_test.dart
+│   ├── suggestion_ranker_test.dart
 │   ├── v23_widget_test.dart
 │   ├── writing_rules_test.dart
 │   └── writing_widget_test.dart
