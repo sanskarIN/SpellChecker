@@ -1,4 +1,5 @@
 import '../data/english_dictionary.dart';
+import '../data/english_dictionary_extension.dart';
 import '../data/english_word_frequencies.dart';
 import 'edit_distance.dart';
 import 'spell_issue.dart';
@@ -8,11 +9,16 @@ class SpellCheckerEngine {
     Set<String>? dictionary,
     Map<String, int>? wordFrequencies,
   })  : _baseDictionary = Set<String>.unmodifiable(
-          (dictionary ?? EnglishDictionary.words).map(_normalize),
+          (dictionary ?? _defaultWords).map(_normalize),
         ),
         _wordFrequencies = Map<String, int>.unmodifiable(
           wordFrequencies ?? EnglishWordFrequencies.ranks,
         );
+
+  static final Set<String> _defaultWords = <String>{
+    ...EnglishDictionary.words,
+    ...EnglishDictionaryExtension.words,
+  };
 
   final Set<String> _baseDictionary;
   final Map<String, int> _wordFrequencies;
@@ -158,9 +164,7 @@ class SpellCheckerEngine {
     _personalDictionary
       ..clear()
       ..addAll(
-        words
-            .map(_normalize)
-            .where((String word) => word.isNotEmpty),
+        words.map(_normalize).where((String word) => word.isNotEmpty),
       );
     _suggestionCache.clear();
   }
