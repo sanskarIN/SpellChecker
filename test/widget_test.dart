@@ -23,7 +23,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Helo'), findsOneWidget);
-    expect(find.text('hello'), findsOneWidget);
+    expect(find.byType(ActionChip), findsWidgets);
+    expect(find.text('Suggestions'), findsOneWidget);
   });
 
   testWidgets('saves a personal word through the editor workflow', (
@@ -36,7 +37,8 @@ void main() {
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Zorbax'), findsOneWidget);
+    expect(find.text('Zorbax'), findsNWidgets(2));
+    expect(find.text('Save word'), findsOneWidget);
     await tester.tap(find.text('Save word'));
     await tester.pumpAndSettle();
 
