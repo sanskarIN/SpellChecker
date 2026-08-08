@@ -10,8 +10,8 @@ class WritingInsightsDialogResult {
     required Iterable<String> enabledRuleIds,
     this.issueToFix,
     Iterable<WritingIssue> issuesToFix = const <WritingIssue>[],
-  })  : enabledRuleIds = Set<String>.unmodifiable(enabledRuleIds),
-        issuesToFix = List<WritingIssue>.unmodifiable(issuesToFix);
+  }) : enabledRuleIds = Set<String>.unmodifiable(enabledRuleIds),
+       issuesToFix = List<WritingIssue>.unmodifiable(issuesToFix);
 
   final Set<String> enabledRuleIds;
   final WritingIssue? issueToFix;
@@ -46,10 +46,10 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
   }
 
   WritingAnalysisResult get _analysis => widget.analyzer.analyze(
-        widget.text,
-        languagePack: widget.languagePack,
-        enabledRuleIds: _enabledRuleIds,
-      );
+    widget.text,
+    languagePack: widget.languagePack,
+    enabledRuleIds: _enabledRuleIds,
+  );
 
   List<WritingRule> get _supportedRules => widget.analyzer.rules
       .where((WritingRule rule) => rule.supports(widget.languagePack))

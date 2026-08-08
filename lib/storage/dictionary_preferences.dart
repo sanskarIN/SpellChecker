@@ -169,12 +169,13 @@ class DictionaryPreferences {
   }
 
   static List<String> _normalizeRuleIds(Iterable<String> ruleIds) {
-    final normalized = ruleIds
-        .map((String ruleId) => ruleId.trim())
-        .where((String ruleId) => ruleId.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final normalized =
+        ruleIds
+            .map((String ruleId) => ruleId.trim())
+            .where((String ruleId) => ruleId.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
     return normalized;
   }
 
