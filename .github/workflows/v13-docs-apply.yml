@@ -1,0 +1,43 @@
+name: Apply V1.3 documentation
+
+on:
+  push:
+    branches:
+      - v1.3-language-architecture
+    paths:
+      - .github/workflows/v13-docs-apply.yml
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out latest V1.3 branch
+        uses: actions/checkout@v4
+        with:
+          ref: v1.3-language-architecture
+          fetch-depth: 0
+
+      - name: Apply guarded documentation transform
+        run: python3 tools/v13_docs_apply.py
+
+      - name: Remove one-time documentation helpers
+        run: |
+          rm -f tools/v13_docs_apply.py
+          rm -f .github/workflows/v13-docs-apply.yml
+
+      - name: Commit documentation integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No documentation changes to commit."
+            exit 0
+          fi
+          git commit -m "docs: complete v1.3 language architecture documentation"
+          git pull --rebase origin v1.3-language-architecture
+          git push origin HEAD:v1.3-language-architecture
