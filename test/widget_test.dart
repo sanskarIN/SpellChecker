@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spellchecker/app.dart';
@@ -25,6 +26,68 @@ void main() {
     expect(find.text('Helo'), findsOneWidget);
     expect(find.byType(ActionChip), findsWidgets);
     expect(find.text('Suggestions'), findsOneWidget);
+    expect(find.text('Issue 1 of 1'), findsOneWidget);
+  });
+
+  testWidgets('shows a dedicated blank-input result state', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Check spelling'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nothing to check'), findsOneWidget);
+  });
+
+  testWidgets('F7 moves to the next spelling issue', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Zorbax Qwertyx');
+    await tester.tap(find.text('Check spelling'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Issue 1 of 2'), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.f7);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Issue 2 of 2'), findsOneWidget);
+  });
+
+  testWidgets('replace all can be undone as one correction', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Helo world Helo world');
+    await tester.tap(find.text('Check spelling'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 occurrences'), findsWidgets);
+    expect(find.text('Replace all…'), findsWidgets);
+
+    await tester.tap(find.text('Replace all…').first);
+    await tester.pumpAndSettle();
+
+    final replacementItems = find.byType(PopupMenuItem<String>);
+    expect(replacementItems, findsWidgets);
+    await tester.tap(replacementItems.first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('No issues found'), findsOneWidget);
+    expect(find.text('Undo'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Issue 1 of 2'), findsOneWidget);
+    expect(find.text('Replace all…'), findsWidgets);
   });
 
   testWidgets('saves a personal word through the editor workflow', (
