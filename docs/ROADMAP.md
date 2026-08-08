@@ -40,14 +40,22 @@ Status: implemented.
 
 ## 1.2 — Editor experience
 
-Planned:
+Status: implemented.
 
-- Inline issue highlighting.
-- Keyboard-first issue navigation.
-- Replace-all for repeated occurrences.
-- Undo-friendly replacement workflow.
-- Improved accessibility semantics.
-- Better empty/error states.
+- [x] Inline issue highlighting in the editable text.
+- [x] Stronger active-issue highlighting.
+- [x] Keyboard-first issue navigation with F7 and Shift+F7.
+- [x] Keyboard spelling check with Ctrl/Command+Enter.
+- [x] Previous/next issue controls.
+- [x] Active issue synchronization between editor selection and Results.
+- [x] Results auto-scroll toward the active issue.
+- [x] Replace-all for repeated checked occurrences.
+- [x] Validated reusable text-correction API.
+- [x] Undo-friendly single and replace-all corrections.
+- [x] Stale source-offset protection.
+- [x] Improved accessibility semantics and live-region states.
+- [x] Dedicated blank-input and storage-warning states.
+- [x] Unit/controller/widget regression coverage for editor behavior.
 
 ## 1.3 — Language architecture
 
@@ -58,6 +66,8 @@ Planned:
 - Optional additional dictionaries.
 - Explicit language selection.
 - Language-specific normalization rules.
+- Language-specific suggestion metadata.
+- Tests ensuring language packs do not leak state across selections.
 
 ## 2.0 — Advanced writing foundation
 
@@ -67,5 +77,6 @@ Possible future work:
 - Optional grammar modules that can remain local.
 - Extensible suggestion ranking.
 - Cross-platform packaging and signed release automation.
+- More advanced document/session workflows without weakening local-first privacy.
 
 Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented and user-controlled.

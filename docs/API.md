@@ -6,7 +6,7 @@ SpellChecker exposes reusable core functionality through:
 import 'package:spellchecker/spell_checker.dart';
 ```
 
-The public 1.x surface currently exports edit distance, spell checking, issue models, text statistics, and personal-dictionary import/export helpers. Application storage under `lib/storage/` is intentionally not part of the public core API.
+The public 1.x surface exports edit distance, spell checking, issue models, validated text correction, text statistics, and personal-dictionary import/export helpers. Application UI and storage types remain internal integration details unless explicitly exported.
 
 ## `SpellCheckerEngine`
 
@@ -49,8 +49,6 @@ List<SpellIssue> check(
 
 Checks supported English-style word tokens and returns unknown occurrences in source order.
 
-Example:
-
 ```dart
 final issues = engine.check(
   'Helo world',
@@ -58,7 +56,7 @@ final issues = engine.check(
 );
 ```
 
-Each occurrence is returned separately because source offsets are occurrence-specific.
+Each occurrence is returned separately because source offsets are occurrence-specific. Callers must treat offsets as belonging to the exact text snapshot that was checked.
 
 ### `isCorrect`
 
@@ -73,7 +71,7 @@ Returns `true` when the normalized word is accepted by:
 - The current ignored-word set.
 - A supported regular apostrophe suffix whose stem is known.
 
-Supported stem-based suffix recognition currently includes:
+Supported stem-based suffix recognition includes:
 
 ```text
 n't
@@ -85,8 +83,6 @@ n't
 's
 ```
 
-This improves handling for forms such as `teacher's`, `we're`, and `couldn't`. Irregular forms can still be included directly in a dictionary.
-
 ### `suggestionsFor`
 
 ```dart
@@ -96,14 +92,7 @@ List<String> suggestionsFor(
 })
 ```
 
-Returns close normalized replacement candidates. The method returns an empty list when:
-
-- `limit <= 0`.
-- The normalized input is empty.
-- The word is already accepted.
-- No candidate falls inside the current edit-distance threshold.
-
-Suggestion candidates are ordered by:
+Returns close normalized replacement candidates. Candidate ordering is deterministic:
 
 1. Damerau-Levenshtein edit distance.
 2. First-character/prefix agreement.
@@ -111,78 +100,127 @@ Suggestion candidates are ordered by:
 4. Candidate length.
 5. Alphabetical order.
 
-For supported apostrophe suffixes, suggestions are calculated from the stem and the suffix is added back to candidate output. For example, an unknown `helo's` can produce `hello's` when `hello` is known.
+For supported apostrophe suffixes, matching can be performed on the stem and the suffix restored in output.
 
-### `addToPersonalDictionary`
+### Personal and ignored words
 
 ```dart
 void addToPersonalDictionary(String word)
-```
-
-Adds a normalized word to the engine's personal dictionary.
-
-The core engine itself is storage-agnostic. The Flutter application persists this set separately through `DictionaryPreferences` in `lib/storage/`.
-
-### `removeFromPersonalDictionary`
-
-```dart
 bool removeFromPersonalDictionary(String word)
-```
-
-Removes a normalized personal word and returns whether an entry was removed. The suggestion cache is invalidated when the set changes.
-
-### `replacePersonalDictionary`
-
-```dart
 void replacePersonalDictionary(Iterable<String> words)
-```
-
-Replaces the full personal dictionary with normalized entries. The application uses this when restoring persisted words or applying an imported dictionary.
-
-### `clearPersonalDictionary`
-
-```dart
 void clearPersonalDictionary()
-```
-
-Clears personal words from the engine instance and invalidates cached suggestions.
-
-### `ignoreWord`
-
-```dart
 void ignoreWord(String word)
-```
-
-Adds a normalized word to the in-memory ignore set.
-
-### `clearIgnoredWords`
-
-```dart
 void clearIgnoredWords()
-```
-
-Clears only ignored words. It does not remove personal dictionary entries.
-
-### `resetSession`
-
-```dart
 void resetSession()
-```
-
-Clears personal words, ignored words, and suggestion cache state from the engine instance. Applications that persist personal words should generally use `clearIgnoredWords()` when they only intend to reset temporary ignores.
-
-### Read-only sets
-
-```dart
 Set<String> get personalDictionary
 Set<String> get ignoredWords
 ```
 
-Returned sets are unmodifiable snapshots/views intended for inspection.
+The engine remains storage-agnostic. The Flutter application persists personal words separately and keeps ignored words session-only.
+
+## `TextCorrection`
+
+SpellChecker 1.2 exports validated text-mutation helpers so correction behavior can be reused without Flutter widgets.
+
+### `replaceOne`
+
+```dart
+TextCorrectionResult TextCorrection.replaceOne(
+  String text,
+  SpellIssue issue,
+  String suggestion,
+)
+```
+
+The method replaces exactly one checked occurrence only when all of these remain true:
+
+- `issue.start` is inside the current text.
+- `issue.end` is inside the current text.
+- The range is non-empty.
+- `text.substring(issue.start, issue.end)` still equals `issue.word`.
+- The suggestion is non-empty.
+
+If the issue is stale or invalid, the returned result has `replacements == 0` and the original text is preserved.
+
+Example:
+
+```dart
+final issue = engine.check('Helo world').first;
+final result = TextCorrection.replaceOne(
+  'Helo world',
+  issue,
+  'hello',
+);
+
+print(result.text); // Hello world
+print(result.replacements); // 1
+```
+
+### `replaceAll`
+
+```dart
+TextCorrectionResult TextCorrection.replaceAll(
+  String text,
+  Iterable<SpellIssue> issues,
+  String sourceWord,
+  String suggestion,
+)
+```
+
+Replaces every still-current checked issue whose source word matches `sourceWord` case-insensitively. Matching ranges are applied from the end of the document toward the beginning so earlier offsets remain valid while replacements can change string length.
+
+Important contract details:
+
+- Only occurrences represented by the supplied checked issue list are eligible.
+- Stale or unrelated issue ranges are skipped.
+- Case is matched independently for each original occurrence.
+- `replacements` reports the number of actual mutations.
+- A replace-all operation can be treated as one higher-level undoable edit by the caller.
+
+### `matchCase`
+
+```dart
+String TextCorrection.matchCase(
+  String original,
+  String suggestion,
+)
+```
+
+Preserves common capitalization patterns:
+
+```text
+helo  + hello -> hello
+Helo  + hello -> Hello
+HELO  + hello -> HELLO
+```
+
+### `TextCorrectionResult`
+
+```dart
+const TextCorrectionResult({
+  required String text,
+  required int caretOffset,
+  required int replacements,
+})
+```
+
+Fields:
+
+- `text`: resulting document text.
+- `caretOffset`: safe suggested caret position in the resulting text.
+- `replacements`: number of mutations that were applied.
+
+Convenience getter:
+
+```dart
+bool get changed
+```
+
+`changed` is `true` when `replacements > 0`.
 
 ## `PersonalDictionaryCodec`
 
-SpellChecker 1.1 exports a versioned import/export helper.
+SpellChecker exports a versioned import/export helper.
 
 ### `encode`
 
@@ -214,7 +252,7 @@ Accepted input forms:
 - JSON array of words.
 - Plain text separated by line breaks and/or commas.
 
-The decoder removes duplicates and normalizes accepted words. Invalid entries or unsupported JSON versions throw `FormatException`.
+Invalid entries or unsupported JSON versions throw `FormatException`.
 
 ### `normalizeWord`
 
@@ -222,7 +260,7 @@ The decoder removes duplicates and normalizes accepted words. Invalid entries or
 String PersonalDictionaryCodec.normalizeWord(Object? value)
 ```
 
-Returns a lowercase normalized word or an empty string for invalid input. Curly apostrophes are converted to straight apostrophes. Current accepted word syntax supports letters with internal apostrophes or hyphens.
+Returns a lowercase normalized word or an empty string for invalid input. Curly apostrophes are converted to straight apostrophes. Accepted word syntax supports letters with internal apostrophes or hyphens.
 
 ## `SpellIssue`
 
@@ -242,13 +280,13 @@ Fields:
 - `end`: zero-based exclusive source offset.
 - `suggestions`: ranked replacement candidates.
 
-The source occurrence is equivalent to:
+A fresh issue satisfies:
 
 ```dart
-text.substring(issue.start, issue.end)
+text.substring(issue.start, issue.end) == issue.word
 ```
 
-when the text has not changed since the check.
+Callers that mutate text must not assume old offsets remain current. `TextCorrection` performs this validation for correction operations.
 
 ## `damerauLevenshteinDistance`
 
@@ -258,8 +296,6 @@ int damerauLevenshteinDistance(String source, String target)
 
 Returns the number of insertions, deletions, substitutions, and adjacent transpositions required to transform one string into the other under the implementation's distance model.
 
-Examples:
-
 ```dart
 damerauLevenshteinDistance('spell', 'spell'); // 0
 damerauLevenshteinDistance('spel', 'spell');  // 1
@@ -267,8 +303,6 @@ damerauLevenshteinDistance('teh', 'the');     // 1
 ```
 
 ## `TextStatistics`
-
-Create statistics from text:
 
 ```dart
 final stats = TextStatistics.fromText('Hello world.');
@@ -284,17 +318,39 @@ stats.sentences
 
 Character count uses Dart string length. Word counting uses the current English-style token pattern.
 
+## UI integration types
+
+`SpellCheckEditingController` lives under `lib/features/editor/` and is not currently exported from the public package barrel. It extends `TextEditingController` and renders checked issues with inline styles while validating ranges against its current text.
+
+Application-level behavior built on top of public core APIs includes:
+
+- Active issue selection.
+- F7 / Shift+F7 navigation.
+- Ctrl/Command+Enter checking.
+- Replace-all menus.
+- A bounded correction undo stack.
+- Results auto-scroll.
+- Accessibility live regions and selected-state semantics.
+
+These are UI integration contracts rather than public core API promises.
+
 ## Persistence boundary
 
-`DictionaryPreferences` is an application integration class under `lib/storage/`. It is not exported from `package:spellchecker/spell_checker.dart` because storage implementations may evolve independently from the reusable spelling engine.
+`DictionaryPreferences` remains an application integration class under `lib/storage/`. It is not exported from `package:spellchecker/spellchecker.dart` or `package:spellchecker/spell_checker.dart` because storage implementations may evolve independently from the reusable core.
 
-The current Flutter application persists:
+The Flutter application persists:
 
 - Personal words.
 - Suggestion-count preference.
 
-Ignored words and editor text are not persisted by SpellChecker.
+The Flutter application does not persist:
+
+- Editor text.
+- Ignored words.
+- Checked issue lists.
+- Active issue index.
+- V1.2 correction undo snapshots.
 
 ## Stability
 
-The exported names in `lib/spell_checker.dart` are the intended public core surface for version 1.x. Internal files under `lib/features/`, `lib/data/`, and `lib/storage/` may evolve more freely.
+The names exported by `lib/spell_checker.dart` are the intended reusable core surface for version 1.x. Internal files under `lib/features/`, `lib/data/`, and `lib/storage/` can evolve more freely as long as documented user behavior remains compatible or the release notes identify changes.
