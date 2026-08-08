@@ -45,7 +45,13 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Test
+      - name: Test V2.2 review query
+        run: flutter test test/writing_review_query_test.dart --reporter expanded
+
+      - name: Test V2.2 writing workflow
+        run: flutter test test/writing_widget_test.dart --reporter expanded
+
+      - name: Test complete suite
         run: flutter test --reporter expanded
 
       - name: Build release web app
