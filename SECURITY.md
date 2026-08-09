@@ -261,3 +261,11 @@ Portable settings are untrusted user-supplied JSON. Import validates format/vers
 ## Suggestion-ranker extension boundary — V2.4
 
 `SpellSuggestionRanker` is an injected in-process interface, not a trusted/dynamic plugin-loading system. SpellChecker does not discover, download, execute, or sandbox third-party ranker packages at runtime. Candidate eligibility and edit-distance limits remain in `SpellCheckerEngine` before custom ranking. Applications that compile in third-party ranker code are responsible for reviewing that code like any other dependency.
+
+## V2.5 bounded-analysis safety boundary
+
+A spelling issue cap is a resource/UX boundary, not permission to weaken correction safety. Captured issues retain exact checked source ranges and all existing stale-source validation.
+
+When a report is truncated, the built-in editor hides Replace all because the checked issue list is incomplete. Do not re-enable bulk mutation by searching raw text from the widget or by treating uncaptured matches as checked ranges.
+
+`maxIssues` must be positive when supplied. The bound does not execute imported data, alter ranker trust, add network processing, or persist document-derived report metadata.

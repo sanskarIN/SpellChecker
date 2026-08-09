@@ -437,3 +437,19 @@ When changing review presets, keep IDs stable, keep preset behavior as a project
 ## V2.4 suggestion-ranker contracts
 
 Custom `SpellSuggestionRanker` implementations must be deterministic and side-effect free for a `SpellCheckerEngine` lifetime. Do not move candidate eligibility, maximum edit distance, token exclusions, suffix handling, or language normalization into a ranker. Return zero for genuinely equal custom scores and let the engine-owned lexical fallback provide stable ordering. Add focused tests whenever candidate metadata, ranking context, default ordering, cache assumptions, or tie semantics change.
+
+## V2.5 bounded-analysis development contract
+
+When changing spelling-analysis performance behavior:
+
+- Keep `check()` source-compatible and unbounded unless a future breaking release explicitly changes the contract.
+- Reject non-positive explicit issue caps.
+- Preserve source-order captured issues.
+- Do not mark a result truncated merely because `issues.length == maxIssues`.
+- Do not generate suggestions for the first proven overflow issue.
+- Keep report issue lists immutable.
+- Preserve V2.4 ranking/candidate eligibility semantics for captured issues.
+- Do not expose Replace all from an incomplete checked issue set.
+- Use synthetic text in performance/regression tests.
+- Prefer deterministic work-count/state assertions over wall-clock thresholds on shared CI hardware.
+- Update `docs/PERFORMANCE.md` when changing the meaning of a bound or the editor cap.

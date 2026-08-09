@@ -673,3 +673,52 @@ Application-level behavior includes:
 `lib/spell_checker.dart`, `lib/language.dart`, and `lib/writing.dart` are the intended reusable public API barrels for the 2.x line.
 
 Internal files under `lib/features/`, `lib/data/`, and `lib/storage/` can evolve more freely, but documented data formats, persisted preference semantics, correction-safety behavior, and public exported APIs require compatibility review and release notes when changed.
+
+# V2.5 bounded spelling-analysis APIs
+
+## `SpellCheckReport`
+
+`SpellCheckReport` is exported through `package:spellchecker/spell_checker.dart` and is an in-memory immutable report value.
+
+```dart
+final report = engine.analyze(text, maxIssues: 200);
+```
+
+Fields/getters:
+
+```text
+issues                 immutable captured SpellIssue list
+scannedTokenCount      tokens inspected before completion/truncation proof
+truncated              true only when another uncaptured issue is proven
+issueLimit             requested positive capture bound, or null
+complete               !truncated
+capturedIssueCount     issues.length
+```
+
+The report does not claim `scannedTokenCount` is the document's total token count when `truncated` is true; analysis returns at the first proven overflow unknown token.
+
+## `SpellCheckerEngine.analyze`
+
+```dart
+SpellCheckReport analyze(
+  String text, {
+  int suggestionLimit = 5,
+  int? maxIssues,
+})
+```
+
+`maxIssues == null` performs unbounded issue capture. A supplied value must be greater than zero or `ArgumentError` is thrown.
+
+The engine captures issues in source order. Once the cap is full it continues token inspection without materializing further issues until it reaches the end or sees one more unknown token. That overflow token proves truncation and causes immediate return without suggestion generation for the overflow issue.
+
+## `check()` compatibility
+
+```dart
+List<SpellIssue> check(String text, {int suggestionLimit = 5})
+```
+
+The historical method remains public and unbounded. It delegates to `analyze()` with no issue cap and returns the report's immutable issue list. Existing call sites do not need to opt into V2.5 bounds.
+
+## Safety boundary
+
+`maxIssues` does not weaken language normalization, known-word checks, source offsets, suggestion ranking, edit-distance thresholds, stale correction protection, or personal/ignored dictionary behavior. It controls issue capture/suggestion work only.

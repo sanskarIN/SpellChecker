@@ -30,6 +30,7 @@ class SpellCheckerPage extends StatefulWidget {
 
 class _SpellCheckerPageState extends State<SpellCheckerPage> {
   static const int _maxCorrectionUndoDepth = 20;
+  static const int _maxVisibleSpellingIssues = 200;
 
   final SpellCheckEditingController _controller = SpellCheckEditingController();
   final FocusNode _editorFocusNode = FocusNode(
@@ -49,6 +50,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   SpellLanguagePack _languagePack = SpellLanguageRegistry.defaultPack;
   int _activeIssueIndex = -1;
   bool _hasChecked = false;
+  bool _spellingResultsTruncated = false;
   bool _preferencesLoaded = false;
   bool _storageAvailable = true;
 
@@ -201,6 +203,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _issues = const <SpellIssue>[];
       _activeIssueIndex = -1;
       _hasChecked = false;
+      _spellingResultsTruncated = false;
       _storageAvailable = true;
     });
 
@@ -311,6 +314,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _issues = const <SpellIssue>[];
       _activeIssueIndex = -1;
       _hasChecked = false;
+      _spellingResultsTruncated = false;
     });
     _checkText(preferredOffset: correction.caretOffset);
     _showCorrectionMessage('Applied ${issue.ruleName}.');
@@ -337,6 +341,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _issues = const <SpellIssue>[];
       _activeIssueIndex = -1;
       _hasChecked = false;
+      _spellingResultsTruncated = false;
     });
     _checkText(preferredOffset: correction.caretOffset);
 
@@ -385,6 +390,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _issues = const <SpellIssue>[];
       _activeIssueIndex = -1;
       _hasChecked = false;
+      _spellingResultsTruncated = false;
       _storageAvailable = storageAvailable;
     });
 
@@ -402,12 +408,18 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _issues = const <SpellIssue>[];
       _activeIssueIndex = -1;
       _hasChecked = false;
+      _spellingResultsTruncated = false;
     });
   }
 
   void _checkText({int? preferredOffset}) {
     final text = _controller.text;
-    final issues = _engine.check(text, suggestionLimit: _suggestionLimit);
+    final report = _engine.analyze(
+      text,
+      suggestionLimit: _suggestionLimit,
+      maxIssues: _maxVisibleSpellingIssues,
+    );
+    final issues = report.issues;
     final activeIndex = _chooseActiveIssueIndex(issues, preferredOffset);
 
     setState(() {
@@ -415,6 +427,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _issues = issues;
       _activeIssueIndex = activeIndex;
       _hasChecked = true;
+      _spellingResultsTruncated = report.truncated;
     });
     _controller.setIssues(issues, activeIssueIndex: activeIndex);
   }
@@ -449,6 +462,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       _issues = const <SpellIssue>[];
       _activeIssueIndex = -1;
       _hasChecked = false;
+      _spellingResultsTruncated = false;
     });
   }
 
@@ -703,12 +717,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '2.4.0',
+      applicationVersion: '2.5.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, deterministic extensible suggestion ranking, categorized local writing rules, temporary review presets/search/filters, portable non-document preferences, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows, and undo-friendly corrections.',
+          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, deterministic extensible suggestion ranking, bounded large-document spelling results, categorized local writing rules, temporary review presets/search/filters, portable non-document preferences, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows, and undo-friendly corrections.',
         ),
       ],
     );
@@ -820,6 +834,8 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
                     issues: _issues,
                     activeIssueIndex: _activeIssueIndex,
                     hasChecked: _hasChecked,
+                    resultsTruncated: _spellingResultsTruncated,
+                    issueLimit: _maxVisibleSpellingIssues,
                     inputIsBlank: _controller.text.trim().isEmpty,
                     occurrenceCount: _occurrenceCount,
                     onActivate: (int index) => _activateIssue(index),
@@ -1064,6 +1080,8 @@ class _ResultsPanel extends StatefulWidget {
     required this.issues,
     required this.activeIssueIndex,
     required this.hasChecked,
+    required this.resultsTruncated,
+    required this.issueLimit,
     required this.inputIsBlank,
     required this.occurrenceCount,
     required this.onActivate,
@@ -1078,6 +1096,8 @@ class _ResultsPanel extends StatefulWidget {
   final List<SpellIssue> issues;
   final int activeIssueIndex;
   final bool hasChecked;
+  final bool resultsTruncated;
+  final int issueLimit;
   final bool inputIsBlank;
   final int Function(SpellIssue issue) occurrenceCount;
   final ValueChanged<int> onActivate;
@@ -1148,10 +1168,15 @@ class _ResultsPanelState extends State<_ResultsPanel> {
                 if (widget.hasChecked)
                   Semantics(
                     liveRegion: true,
-                    label:
-                        '${widget.issues.length} spelling ${widget.issues.length == 1 ? 'issue' : 'issues'} found',
+                    label: widget.resultsTruncated
+                        ? 'At least ${widget.issues.length} spelling issues found. Results are limited.'
+                        : '${widget.issues.length} spelling ${widget.issues.length == 1 ? 'issue' : 'issues'} found',
                     child: Badge(
-                      label: Text('${widget.issues.length}'),
+                      label: Text(
+                        widget.resultsTruncated
+                            ? '${widget.issues.length}+'
+                            : '${widget.issues.length}',
+                      ),
                       child: const Icon(Icons.rule),
                     ),
                   ),
@@ -1217,21 +1242,28 @@ class _ResultsPanelState extends State<_ResultsPanel> {
       );
     }
 
+    final resultOffset = widget.resultsTruncated ? 1 : 0;
     return ListView.separated(
-      itemCount: widget.issues.length,
+      itemCount: widget.issues.length + resultOffset,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (BuildContext context, int index) {
-        final issue = widget.issues[index];
-        final isActive = index == widget.activeIssueIndex;
+        if (widget.resultsTruncated && index == 0) {
+          return _ResultLimitNotice(issueLimit: widget.issueLimit);
+        }
+
+        final issueIndex = index - resultOffset;
+        final issue = widget.issues[issueIndex];
+        final isActive = issueIndex == widget.activeIssueIndex;
         return KeyedSubtree(
           key: _keyFor(issue),
           child: _IssueTile(
             issue: issue,
-            index: index,
+            index: issueIndex,
             totalIssues: widget.issues.length,
             occurrenceCount: widget.occurrenceCount(issue),
+            allowReplaceAll: !widget.resultsTruncated,
             isActive: isActive,
-            onActivate: () => widget.onActivate(index),
+            onActivate: () => widget.onActivate(issueIndex),
             onReplace: (String suggestion) =>
                 widget.onReplace(issue, suggestion),
             onReplaceAll: (String suggestion) =>
@@ -1245,12 +1277,50 @@ class _ResultsPanelState extends State<_ResultsPanel> {
   }
 }
 
+class _ResultLimitNotice extends StatelessWidget {
+  const _ResultLimitNotice({required this.issueLimit});
+
+  final int issueLimit;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final message =
+        'Showing the first $issueLimit spelling issues. More unknown words exist later in the document. Replace all is unavailable for limited results; use single fixes or check a smaller section.';
+    return Semantics(
+      liveRegion: true,
+      label: message,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Icon(Icons.info_outline, color: colorScheme.onSecondaryContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: colorScheme.onSecondaryContainer),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _IssueTile extends StatelessWidget {
   const _IssueTile({
     required this.issue,
     required this.index,
     required this.totalIssues,
     required this.occurrenceCount,
+    required this.allowReplaceAll,
     required this.isActive,
     required this.onActivate,
     required this.onReplace,
@@ -1263,6 +1333,7 @@ class _IssueTile extends StatelessWidget {
   final int index;
   final int totalIssues;
   final int occurrenceCount;
+  final bool allowReplaceAll;
   final bool isActive;
   final VoidCallback onActivate;
   final ValueChanged<String> onReplace;
@@ -1304,7 +1375,13 @@ class _IssueTile extends StatelessWidget {
                       ),
                     ),
                     if (occurrenceCount > 1)
-                      Chip(label: Text('$occurrenceCount occurrences')),
+                      Chip(
+                        label: Text(
+                          allowReplaceAll
+                              ? '$occurrenceCount occurrences'
+                              : '$occurrenceCount captured occurrences',
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -1331,7 +1408,7 @@ class _IssueTile extends StatelessWidget {
                         )
                         .toList(growable: false),
                   ),
-                  if (occurrenceCount > 1) ...<Widget>[
+                  if (occurrenceCount > 1 && allowReplaceAll) ...<Widget>[
                     const SizedBox(height: 8),
                     PopupMenuButton<String>(
                       tooltip: 'Replace all ${issue.word} occurrences',
