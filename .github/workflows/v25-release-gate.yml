@@ -25,10 +25,12 @@ jobs:
           cache: true
 
       - name: Apply permanent V2.5 release integration
-        run: python tools/v25_release_apply.py
+        run: |
+          python tools/v25_release_apply.py
+          python tools/v25_release_fix.py
 
-      - name: Remove one-time helper
-        run: rm -f tools/v25_release_apply.py
+      - name: Remove one-time helpers
+        run: rm -f tools/v25_release_apply.py tools/v25_release_fix.py
 
       - name: Format source and tests
         run: dart format lib test
@@ -68,6 +70,7 @@ jobs:
           grep -q 'SpellCheckReport analyze' lib/core/spell_checker_engine.dart
           grep -q 'maxIssues: _maxVisibleSpellingIssues' lib/features/editor/spell_checker_page.dart
           grep -q '_maxVisibleSpellingIssues = 200' lib/features/editor/spell_checker_page.dart
+          grep -q 'final resultOffset = widget.resultsTruncated ? 1 : 0;' lib/features/editor/spell_checker_page.dart
           grep -q '200+' test/bounded_analysis_widget_test.dart
           grep -q "spell_check_report.dart" lib/spell_checker.dart
           grep -q '`2.5.0+10`' README.md
@@ -89,6 +92,7 @@ jobs:
           grep -q 'bounded large-document spelling results' web/manifest.json
           grep -q '## V2.5 bounded-analysis / performance' .github/pull_request_template.md
           test ! -e tools/v25_release_apply.py
+          test ! -e tools/v25_release_fix.py
           if find .github/workflows -maxdepth 1 -type f -name 'v25-*' | grep -q .; then
             echo 'Unexpected V2.5 temporary workflow in candidate tree.' >&2
             exit 1
