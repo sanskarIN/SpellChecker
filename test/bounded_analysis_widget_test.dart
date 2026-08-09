@@ -13,6 +13,9 @@ void main() {
   testWidgets('limits large spelling result sets and disables replace all', (
     WidgetTester tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(const SpellCheckerApp());
     await tester.pumpAndSettle();
 
@@ -47,6 +50,9 @@ void main() {
   testWidgets('small complete result sets retain replace all', (
     WidgetTester tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(const SpellCheckerApp());
     await tester.pumpAndSettle();
 
