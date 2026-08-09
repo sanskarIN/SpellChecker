@@ -1,4 +1,5 @@
 import 'edit_distance.dart';
+import 'spell_check_report.dart';
 import 'spell_issue.dart';
 import 'spell_language_pack.dart';
 import 'spell_suggestion.dart';
@@ -54,14 +55,47 @@ class SpellCheckerEngine {
       Set<String>.unmodifiable(_personalDictionary);
   Set<String> get ignoredWords => Set<String>.unmodifiable(_ignoredWords);
 
+  /// Runs a complete spelling check and preserves the historical list-returning
+  /// API. Use [analyze] when a caller needs bounded issue capture or report
+  /// metadata.
   List<SpellIssue> check(String text, {int suggestionLimit = 5}) {
-    final issues = <SpellIssue>[];
-    final matches = languagePack.tokenize(text);
+    return analyze(text, suggestionLimit: suggestionLimit).issues;
+  }
 
-    for (final match in matches) {
+  /// Analyses spelling and returns issues plus scan metadata.
+  ///
+  /// When [maxIssues] is supplied, the engine captures at most that many
+  /// issues. After the cap is reached it keeps scanning only until it either
+  /// reaches the end of the token stream or finds one additional unknown word.
+  /// No suggestion generation is performed for that overflow issue. This lets
+  /// callers distinguish a complete capped result from a genuinely truncated
+  /// one while bounding the expensive suggestion work.
+  SpellCheckReport analyze(
+    String text, {
+    int suggestionLimit = 5,
+    int? maxIssues,
+  }) {
+    if (maxIssues != null && maxIssues <= 0) {
+      throw ArgumentError.value(maxIssues, 'maxIssues', 'must be greater than 0');
+    }
+
+    final issues = <SpellIssue>[];
+    var scannedTokenCount = 0;
+
+    for (final match in languagePack.tokenize(text)) {
+      scannedTokenCount += 1;
       final word = match.group(0)!;
       if (isCorrect(word)) {
         continue;
+      }
+
+      if (maxIssues != null && issues.length >= maxIssues) {
+        return SpellCheckReport(
+          issues: issues,
+          scannedTokenCount: scannedTokenCount,
+          truncated: true,
+          issueLimit: maxIssues,
+        );
       }
 
       issues.add(
@@ -75,7 +109,12 @@ class SpellCheckerEngine {
       );
     }
 
-    return issues;
+    return SpellCheckReport(
+      issues: issues,
+      scannedTokenCount: scannedTokenCount,
+      truncated: false,
+      issueLimit: maxIssues,
+    );
   }
 
   bool isCorrect(String word) {
