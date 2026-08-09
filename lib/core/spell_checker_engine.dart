@@ -76,7 +76,11 @@ class SpellCheckerEngine {
     int? maxIssues,
   }) {
     if (maxIssues != null && maxIssues <= 0) {
-      throw ArgumentError.value(maxIssues, 'maxIssues', 'must be greater than 0');
+      throw ArgumentError.value(
+        maxIssues,
+        'maxIssues',
+        'must be greater than 0',
+      );
     }
 
     final issues = <SpellIssue>[];

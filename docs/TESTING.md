@@ -416,3 +416,23 @@ Use synthetic test data. Never commit private documents, credentials, account id
 ## V2.4 focused suggestion-ranking coverage
 
 Run `flutter test test/suggestion_ranker_test.dart --reporter expanded` when changing ranking behavior. The suite protects historical default frequency ordering, optional custom ordering, engine lexical tie stability, normalized target/language context, distance/prefix/frequency/source candidate metadata, and the rule that ranking cannot bypass eligibility/edit-distance filtering. The complete suite must remain green because suggestion order is consumed by full spelling checks and editor widgets.
+
+## V2.5 bounded-analysis coverage
+
+Focused core coverage lives in:
+
+```bash
+flutter test test/spell_check_report_test.dart
+```
+
+It protects unbounded `check()` compatibility, exact-cap completeness, proven-overflow truncation, skipped overflow suggestion generation, positive-cap validation, scanned-token metadata, and immutable report issues.
+
+Focused editor coverage lives in:
+
+```bash
+flutter test test/bounded_analysis_widget_test.dart
+```
+
+It uses 201 repeated synthetic unknown tokens to prove the `200+` limited-results state, accessible warning text, captured-occurrence wording, and absence of Replace all. A small two-occurrence complete result separately proves that Replace all remains available when results are complete.
+
+Do not replace these deterministic invariants with timing thresholds. See `docs/PERFORMANCE.md` for profiling guidance.

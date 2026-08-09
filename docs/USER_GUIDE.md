@@ -490,3 +490,20 @@ SpellChecker currently does not provide:
 - Untrusted dynamic rule plugins.
 
 See [ROADMAP.md](ROADMAP.md) for future direction.
+
+# Large documents and limited spelling results — V2.5
+
+SpellChecker can accept long editor text, but the built-in Results panel intentionally captures at most the first 200 spelling issues per check.
+
+If more unknown words exist, the badge shows **200+** and the Results panel explains that later issues were not captured. Inline underlines and F7/Shift+F7 navigation then cover the captured issues only.
+
+You can still:
+
+- Apply a single suggestion.
+- Save a captured word to the personal dictionary.
+- Ignore a captured word for the current session.
+- Re-run spelling after edits.
+
+**Replace all** is intentionally unavailable while results are limited. A partial checked issue list does not contain every matching source range, so presenting a partial mutation as “all” would be misleading. Work on a smaller section or apply single fixes, then check again.
+
+A result that happens to contain exactly 200 issues is not automatically labeled limited. The `200+` state appears only after SpellChecker proves that another unknown word exists.

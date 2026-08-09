@@ -221,3 +221,16 @@ For review-preset issues, include the preset name/ID, selected language, synthet
 ## V2.4 custom ranker reports
 
 For custom-ranker issues, include the ranker policy in pseudocode, a small synthetic dictionary/input, active language ID, expected/actual ordered candidate words, and whether the behavior reproduces with `DefaultSpellSuggestionRanker`. Do not include private document text or sensitive personal dictionaries.
+
+# V2.5 large-document reports
+
+For a `200+` or bounded-analysis bug, use synthetic text and include:
+
+- Whether the report/UI showed `200+`.
+- The configured/API `maxIssues` when using the library directly.
+- Captured issue count.
+- `truncated`, `complete`, and `scannedTokenCount` for API reports when relevant.
+- Whether Replace all was incorrectly visible/hidden.
+- Selected language and suggestion count.
+
+Do not attach a private large document. A repeated synthetic token sequence is sufficient for limit-state bugs.

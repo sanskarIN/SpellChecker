@@ -4,6 +4,32 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.5.0] - 2026-08-09
+
+### Added
+
+- Public immutable `SpellCheckReport` with captured issues, scanned-token count, truncation state, issue limit, completeness, and captured-count metadata.
+- Public `SpellCheckerEngine.analyze()` API with optional positive `maxIssues` capture bound.
+- Dedicated `docs/PERFORMANCE.md` contract for large-document behavior and profiling.
+- End-to-end widget coverage for the 200-issue editor cap and limited-result bulk-action safety.
+
+### Changed
+
+- Package version advances to `2.5.0+10`; About version advances to `2.5.0`.
+- Historical `SpellCheckerEngine.check()` remains unbounded and delegates to `analyze()` without a cap.
+- After a bounded analysis reaches its capture cap, the engine scans only until it either reaches the token-stream end or proves that one additional unknown token exists.
+- The proven overflow issue is not materialized and receives no suggestion generation.
+- The built-in editor captures at most 200 spelling issues and renders a `200+` badge only when an additional issue is actually proven.
+- Limited results show an accessible explanation and label repeated words as captured occurrences.
+- **Replace all** is hidden when spelling results are truncated because the checked occurrence set is incomplete.
+
+### Compatibility, performance, security, and privacy
+
+- Inputs with exactly the configured issue count remain complete when no later issue exists.
+- Single-occurrence correction, navigation, highlighting, personal-dictionary actions, ignored-word behavior, V2.4 suggestion ranking, V2.3 Portable settings, and writing workflows remain compatible.
+- `maxIssues` bounds captured issues/expensive suggestion materialization; it is not represented as a hard document-length bound.
+- `SpellCheckReport` remains memory-only and adds no persistence, telemetry, network request, logging, background upload, or runtime dependency.
+
 ## [2.4.0] - 2026-08-08
 
 ### Added

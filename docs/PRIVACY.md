@@ -332,3 +332,11 @@ Use minimal synthetic text that reproduces the problem.
 ## Suggestion rankers — V2.4
 
 The V2.4 ranker API is local in-process Dart code supplied when constructing `SpellCheckerEngine`. SpellChecker does not persist ranker choice/state, dynamically download rankers, send candidate metadata to a service, or add a network dependency. The built-in application continues using `DefaultSpellSuggestionRanker`. Portable settings and personal-dictionary transfer formats are unchanged.
+
+## V2.5 bounded-analysis privacy behavior
+
+`SpellCheckReport` is memory-only. It can contain spelling issue words, source offsets, and suggestions and therefore follows the same private document-state rules as prior `SpellIssue` lists.
+
+The 200-issue editor cap does not upload skipped text, log overflow words, persist report metadata, or send performance telemetry. The overflow word used to prove truncation is inspected locally and is not materialized into a persisted/report issue.
+
+V2.5 introduces no document persistence, analytics, remote logging, account system, cloud spelling/grammar service, background upload, or new runtime package.

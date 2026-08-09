@@ -792,3 +792,31 @@ V2.1 does not attempt to provide:
 - Persistent document history.
 - Untrusted dynamic plugin execution.
 - Production-scale linguistic coverage comparable to a specialized language platform.
+
+# V2.5 bounded analysis boundary
+
+V2.5 separates **analysis completeness metadata** from the historical list-returning spell-check API.
+
+```text
+editor/caller
+    |
+    v
+SpellCheckerEngine.analyze(text, maxIssues: N)
+    |
+    +-- tokenization + known-word checks
+    |
+    +-- captured issues (<= N) -> suggestions/ranker/cache
+    |
+    +-- after N, inspect until end or first additional unknown
+    |
+    v
+SpellCheckReport
+```
+
+Only captured issues enter suggestion generation and UI highlighting. The first overflow unknown proves truncation but is not converted into a `SpellIssue`.
+
+The built-in editor selects `N = 200`. This is a presentation/performance policy, not a persisted preference or public engine default. Other callers can choose another positive cap or remain unbounded.
+
+When the editor report is truncated, bulk Replace all is withheld because `TextCorrection.replaceAll` intentionally mutates checked ranges from the current issue list. Single checked-range corrections remain safe.
+
+No new storage layer, isolate/background worker, network boundary, dynamic plugin loader, or document cache is introduced.

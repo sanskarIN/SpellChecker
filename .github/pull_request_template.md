@@ -136,3 +136,15 @@ Complete when relevant.
 - [ ] Import validation and best-effort rollback behavior have focused tests.
 - [ ] `shared_preferences` behavior is not described as transactional.
 - [ ] No temporary `tools/v23_*` or `.github/workflows/v23-*` integration/recovery artifact remains in the release tree.
+
+## V2.5 bounded-analysis / performance
+
+Complete when relevant.
+
+- [ ] Historical unbounded `check()` behavior remains compatible.
+- [ ] Explicit issue limits are positive and truncation is proven rather than inferred from equality with the cap.
+- [ ] Overflow issues do not receive unnecessary suggestion generation.
+- [ ] Limited UI results are visibly/semantically identified.
+- [ ] Bulk correction is not exposed for an incomplete checked occurrence set.
+- [ ] Performance tests use synthetic data and deterministic invariants rather than unstable wall-clock thresholds.
+- [ ] `docs/PERFORMANCE.md` is updated when the performance contract changes.

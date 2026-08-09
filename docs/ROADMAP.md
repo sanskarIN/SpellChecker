@@ -166,6 +166,23 @@ Status: implemented.
 - [x] API/architecture/development/testing/privacy/security/release documentation.
 
 
+## 2.5 — Bounded analysis and large-document safety
+
+Status: implemented.
+
+- [x] Public immutable `SpellCheckReport` analysis metadata.
+- [x] Backward-compatible unbounded `check()` behavior.
+- [x] Optional positive `maxIssues` capture bound on `analyze()`.
+- [x] Truncation reported only after an additional unknown token is proven.
+- [x] No suggestion generation for the proven overflow issue.
+- [x] Built-in editor cap of 200 captured spelling issues.
+- [x] `200+` result badge and accessible limited-result notice.
+- [x] Captured-occurrence wording for limited results.
+- [x] Bulk Replace all suppression for incomplete checked occurrence sets.
+- [x] Focused core and widget regression coverage.
+- [x] Dedicated performance/profiling documentation.
+- [x] No persistence/network/runtime-dependency expansion.
+
 ## Future 2.x direction
 
 Possible future work includes:

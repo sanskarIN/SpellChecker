@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.4 release:
+Current V2.5 release:
 
 ```text
-2.4.0+9
+2.5.0+10
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -228,8 +228,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.4.0 -m "SpellChecker v2.4.0"
-git push origin v2.4.0
+git tag -a v2.5.0 -m "SpellChecker v2.5.0"
+git push origin v2.5.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -315,3 +315,17 @@ Use secure facilities of the release/build platform.
 ## V2.3 release checks
 
 For a V2.3-compatible release, verify the package/About version pair, stable review-preset IDs, `spellchecker-settings` format/version compatibility, unset-versus-empty rule override semantics, deterministic settings encoding, privacy exclusions, rollback tests, focused V2.3 suites, complete regression suite, and `flutter build web --release`. Confirm the intended release tree contains no one-time `tools/v23_*` helper or `.github/workflows/v23-*` recovery/integration workflow before tagging.
+
+## V2.5 bounded-analysis release checks
+
+Before tagging V2.5-compatible code, verify:
+
+1. `SpellCheckerEngine.check()` still matches unbounded `analyze()` results.
+2. Exact-cap inputs without later unknowns remain complete.
+3. Overflow inputs prove truncation without suggestion generation for the overflow issue.
+4. The editor displays `200+` only for proven truncation.
+5. The limited-results notice is visible and exposed to semantics.
+6. Replace all is absent for limited results and still present for complete repeated-issue results.
+7. `docs/PERFORMANCE.md` matches the implementation.
+8. No new runtime dependency/persistence/network behavior was introduced unintentionally.
+9. Formatting, analyzer, focused V2.5 tests, complete tests, and `flutter build web --release` pass on the exact release tree.

@@ -15,6 +15,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Language-tagged detailed suggestion metadata.
 - Public injectable `SpellSuggestionRanker` strategy with the pre-V2.4 ranking preserved as the default.
 - Stable lexical tie-breaking for custom ranker ties.
+- Bounded large-document spelling analysis with an explicit first-200 issue UI policy and safe limited-result messaging.
 - Optional local **Writing insights** with configurable deterministic rules.
 
 - Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
@@ -53,9 +54,27 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.4.0+9`
+`2.5.0+10`
 
-Version 2.4 is the **Suggestion Ranking Extensibility & Determinism** release. It preserves the existing spelling candidate eligibility, Damerau-Levenshtein thresholds, default ranking order, metadata, language packs, V2.3 Portable settings/review presets, and all correction-safety behavior while extracting suggestion ordering into a public injectable strategy. Custom rankers receive normalized target/language context plus candidate distance, prefix, frequency, and source metadata; the engine applies a final lexical tie-break so equal custom scores remain deterministic. No user preference, transfer format, or runtime dependency changes in V2.4.
+Version 2.5 is the **Bounded Analysis & Large-Document Safety** release. It keeps V2.4 suggestion-ranker extensibility and every existing spelling/writing/persistence contract while adding public `SpellCheckReport` metadata and `SpellCheckerEngine.analyze()` for optional bounded issue capture. The built-in editor captures at most 200 spelling issues, labels genuinely truncated results as `200+`, and disables **Replace all** when the checked occurrence set is incomplete. No persistence format, network behavior, or runtime dependency changes in V2.5.
+
+## Large-document spelling checks — V2.5
+
+The public `SpellCheckerEngine.check()` method remains an unbounded compatibility API. Callers that need bounded issue capture can use `analyze()`:
+
+```dart
+final report = engine.analyze(
+  text,
+  suggestionLimit: 5,
+  maxIssues: 200,
+);
+```
+
+A bounded report captures at most `maxIssues` `SpellIssue` objects. Reaching the numerical cap alone does **not** mark the report truncated: the engine keeps inspecting tokens until it reaches the end or proves that one additional unknown word exists. Suggestions are not generated for that first overflow issue.
+
+The built-in editor uses a 200-issue cap. A genuinely limited result shows `200+` and an accessible notice. Navigation/highlighting cover the captured prefix. Single fixes remain available, but **Replace all** is hidden because a partial issue list cannot truthfully represent all checked occurrences in the document.
+
+This is an issue/suggestion-work bound, not a maximum document-size promise. See [Performance and large-document behavior](docs/PERFORMANCE.md) for the precise contract and profiling guidance.
 
 ## Language selection
 
