@@ -65,7 +65,7 @@ void main() {
 
       expect(result.languageId, 'en-US');
       expect(result.isClean, isFalse);
-      expect(result.analyzedRuleIds, hasLength(4));
+      expect(result.analyzedRuleIds, hasLength(6));
       expect(
         result.issues.map((issue) => issue.start),
         orderedEquals(
@@ -76,6 +76,8 @@ void main() {
       expect(result.issueCountByRule['sentence-capitalization'], 1);
       expect(result.issueCountByRule['repeated-space'], 1);
       expect(result.issueCountByRule['repeated-punctuation'], 1);
+      expect(result.issueCountByRule['missing-space-after-punctuation'], isNull);
+      expect(result.issueCountByRule['space-before-punctuation'], isNull);
     });
 
     test('can disable all but one rule', () {
