@@ -30,10 +30,7 @@ void main() {
       findsOneWidget,
     );
 
-    await _dragResultsUntilBuilt(
-      tester,
-      find.text('200 captured occurrences'),
-    );
+    await _dragResultsUntilBuilt(tester, find.text('200 captured occurrences'));
 
     expect(find.text('200 captured occurrences'), findsWidgets);
     expect(find.text('Replace all…'), findsNothing);
@@ -65,10 +62,7 @@ void main() {
   });
 }
 
-Future<void> _dragResultsUntilBuilt(
-  WidgetTester tester,
-  Finder target,
-) async {
+Future<void> _dragResultsUntilBuilt(WidgetTester tester, Finder target) async {
   final resultsList = find.byType(ListView);
   expect(resultsList, findsOneWidget);
 

@@ -4,9 +4,7 @@ import 'package:spellchecker/spell_checker.dart';
 void main() {
   group('SpellCheckerEngine.analyze', () {
     test('unbounded analysis matches the historical check API', () {
-      final engine = SpellCheckerEngine(
-        dictionary: <String>{'hello', 'world'},
-      );
+      final engine = SpellCheckerEngine(dictionary: <String>{'hello', 'world'});
       const text = 'hello wrld again';
 
       final report = engine.analyze(text, suggestionLimit: 2);
@@ -25,7 +23,10 @@ void main() {
 
       final report = engine.analyze('wrld agin hello', maxIssues: 2);
 
-      expect(report.issues.map((issue) => issue.word), <String>['wrld', 'agin']);
+      expect(report.issues.map((issue) => issue.word), <String>[
+        'wrld',
+        'agin',
+      ]);
       expect(report.issueLimit, 2);
       expect(report.truncated, isFalse);
       expect(report.complete, isTrue);
@@ -37,7 +38,10 @@ void main() {
 
       final report = engine.analyze('wrld agin othr hello', maxIssues: 2);
 
-      expect(report.issues.map((issue) => issue.word), <String>['wrld', 'agin']);
+      expect(report.issues.map((issue) => issue.word), <String>[
+        'wrld',
+        'agin',
+      ]);
       expect(report.issueLimit, 2);
       expect(report.truncated, isTrue);
       expect(report.complete, isFalse);
@@ -63,14 +67,8 @@ void main() {
     test('rejects non-positive issue caps', () {
       final engine = SpellCheckerEngine(dictionary: <String>{'hello'});
 
-      expect(
-        () => engine.analyze('wrld', maxIssues: 0),
-        throwsArgumentError,
-      );
-      expect(
-        () => engine.analyze('wrld', maxIssues: -1),
-        throwsArgumentError,
-      );
+      expect(() => engine.analyze('wrld', maxIssues: 0), throwsArgumentError);
+      expect(() => engine.analyze('wrld', maxIssues: -1), throwsArgumentError);
     });
 
     test('exposes an immutable issue list', () {

@@ -320,3 +320,11 @@ Potential improvements include:
 ## V2.3 review presets and portable settings
 
 Review presets use standard Material `ChoiceChip` controls with visible text labels; category filters and the automatic-fixes switch remain independently available. Portable settings uses labeled copy/import controls, a labeled multiline import field, selectable export text, and semantic live-region status/error messages. The visible Portable settings app-bar action has a tooltip, so the workflow is not shortcut-only. Tests scroll lazy dialogs to real controls instead of depending on a fixed viewport.
+
+## V2.5 limited-result accessibility
+
+The limited spelling-result state must not rely on the `+` badge alone.
+
+When results are truncated, the Results panel provides a live-region semantic message and visible explanatory text stating that only the first 200 spelling issues were captured and that Replace all is unavailable. Repeated-word chips use “captured occurrences” wording so screen-reader and visual users receive the same incompleteness signal.
+
+Keyboard issue navigation remains available across captured issues. Do not expose a keyboard-only bulk action that bypasses the limited-result Replace all restriction.

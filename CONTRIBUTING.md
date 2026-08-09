@@ -432,3 +432,9 @@ Changes to `WritingReviewPreset` IDs or semantics require compatibility notes an
 ## V2.4 suggestion-ranking changes
 
 Preserve the default ranking order unless a release explicitly documents an intentional behavior change. Custom ranker support must not bypass engine eligibility filters, must retain deterministic lexical tie fallback, and must include focused tests for context/candidate metadata and cache-stability assumptions. Do not add dynamic plugin loading as part of a ranker change without a separate security design review.
+
+## V2.5 performance and bounded-analysis changes
+
+Changes to issue limits, scan termination, candidate generation, caching, ranking, or large-result rendering should include deterministic regression coverage and an update to `docs/PERFORMANCE.md`.
+
+Do not use private documents as benchmark fixtures. Do not describe `maxIssues` as a hard document-size bound. Do not expose Replace all on a truncated issue report unless a future design supplies a separate complete-range safety contract.

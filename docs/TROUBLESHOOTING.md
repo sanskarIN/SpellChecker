@@ -435,3 +435,13 @@ Use the relevant settings controls for persistent data.
 ## Portable settings import problems — V2.3
 
 If a portable settings document is rejected, verify `format` is `spellchecker-settings`, `version` is `1`, `languageId` and every override key are supported built-in language IDs, `suggestionLimit` is 1–10, override values are arrays, and rule IDs use the documented lowercase stable-ID form. If storage fails during import, SpellChecker keeps the live editor on its previous state and attempts to restore the previous durable portable preferences; because local preference storage is not transactional, recovery is best effort. Personal vocabulary is not part of the portable document, so missing personal words should be investigated through the language-specific personal dictionary instead of the settings JSON.
+
+## Results show 200+ — V2.5
+
+`200+` means SpellChecker captured 200 spelling issues and then found at least one additional unknown word later in the text.
+
+This is not a crash or storage problem. Single fixes and captured-issue navigation still work. Replace all is hidden because the checked occurrence set is incomplete.
+
+If you need to review later portions, fix/ignore/save some early issues and check again, or temporarily check a smaller section of the document. Do not interpret the 200 captured issues as the total number of issues in the document.
+
+If fewer than 200 issues are shown without `+`, the result completed normally.
