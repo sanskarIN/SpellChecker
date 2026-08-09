@@ -30,11 +30,7 @@ void main() {
     final scrollable = insightsScrollable();
     expect(list, findsOneWidget);
     expect(scrollable, findsOneWidget);
-    await tester.scrollUntilVisible(
-      target,
-      180,
-      scrollable: scrollable,
-    );
+    await tester.scrollUntilVisible(target, 180, scrollable: scrollable);
     await tester.pumpAndSettle();
   }
 

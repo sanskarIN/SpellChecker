@@ -820,3 +820,20 @@ The built-in editor selects `N = 200`. This is a presentation/performance policy
 When the editor report is truncated, bulk Replace all is withheld because `TextCorrection.replaceAll` intentionally mutates checked ranges from the current issue list. Single checked-range corrections remain safe.
 
 No new storage layer, isolate/background worker, network boundary, dynamic plugin loader, or document cache is introduced.
+
+# V2.6 writing catalogue ownership
+
+The two new punctuation-spacing rules live in `lib/writing/rules/` and remain pure local analyzers. They do not add widget logic, persistence adapters, network boundaries, or a second correction engine.
+
+Rule ownership is deliberately conservative:
+
+```text
+repeated-punctuation              owns repeated/clustered punctuation runs
+repeated-space                    owns runs of 2+ spaces
+missing-space-after-punctuation   owns comma/semicolon + immediate letter
+space-before-punctuation          owns one stray space + punctuation
+```
+
+When distinct rule ranges still overlap, the existing batch-correction ordering and overlap resolver is the sole mutation authority. The editor never merges or directly applies overlapping replacements itself.
+
+Default registry expansion flows through the existing `_effectiveWritingRuleIds` behavior: missing preference uses current defaults, while explicit stored sets are intersected with supported registry IDs and remain explicit.

@@ -722,3 +722,11 @@ The historical method remains public and unbounded. It delegates to `analyze()` 
 ## Safety boundary
 
 `maxIssues` does not weaken language normalization, known-word checks, source offsets, suggestion ranking, edit-distance thresholds, stale correction protection, or personal/ignored dictionary behavior. It controls issue capture/suggestion work only.
+
+# V2.6 writing catalogue APIs
+
+`package:spellchecker/writing.dart` now exports `MissingSpaceAfterPunctuationRule` and `SpaceBeforePunctuationRule`. Both implement the existing `WritingRule` contract, use stable IDs, report `WritingRuleCategory.mechanics`, support English via the `en` language identifier, produce exact non-empty source ranges, and provide deterministic automatic replacements.
+
+No new analyzer or correction API is introduced. `WritingAnalyzer`, `WritingReviewQuery`, review presets, `WritingCorrection.apply/applyAll`, per-language preference IDs, and Portable settings continue to consume rules through their existing contracts.
+
+Because both new rules are included in `WritingRuleRegistry.builtIns`, `defaultEnabledRuleIds` expands to six IDs. This changes only the existing **unset/default** preference state. Explicit stored sets and explicit empty sets keep their established meaning.

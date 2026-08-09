@@ -234,3 +234,9 @@ For a `200+` or bounded-analysis bug, use synthetic text and include:
 - Selected language and suggestion count.
 
 Do not attach a private large document. A repeated synthetic token sequence is sufficient for limit-state bugs.
+
+# V2.6 punctuation-spacing reports
+
+For a V2.6 writing-rule issue, include synthetic text, selected language, the rule ID (`missing-space-after-punctuation` or `space-before-punctuation`), expected source range/replacement, enabled-rule IDs when relevant, and whether another automatic finding overlapped.
+
+For upgrade/default reports, state whether the language's writing-rule preference key was missing, explicitly non-empty, or explicitly empty. Do not post a full preference dump containing private vocabulary or document data.

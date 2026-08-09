@@ -4,6 +4,33 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.6.0] - 2026-08-09
+
+### Added
+
+- Public `MissingSpaceAfterPunctuationRule` with stable ID `missing-space-after-punctuation`.
+- Public `SpaceBeforePunctuationRule` with stable ID `space-before-punctuation`.
+- Unicode-letter-aware comma/semicolon missing-space detection with deterministic insertion replacements.
+- Conservative single-space-before-punctuation detection that leaves multi-space ownership to `repeated-space`.
+- Focused rule, registry, Unicode, source-range, repeated-punctuation-exclusion, multi-space-ownership, overlap, batch, widget, and undo regressions.
+- Permanent CI release-web build validation for every push/PR quality run.
+
+### Changed
+
+- Package version advances to `2.6.0+11`; About version advances to `2.6.0`.
+- The built-in English writing catalogue expands from four to six rules.
+- `WritingRuleRegistry.defaultEnabledRuleIds` now contains the two new Mechanics rule IDs.
+- Unset/default language profiles therefore use six built-in rules; explicit stored rule sets remain exactly explicit.
+- README/project tree and writing-rule/API/architecture/testing/privacy/security/release documentation describe the expanded catalogue and upgrade semantics.
+
+### Compatibility, correction safety, security, and privacy
+
+- No existing writing-rule ID, category, persistence key, Portable settings format, spelling API, or correction contract changes.
+- Repeated/clustered punctuation is excluded from the missing-space rule so the existing repeated-punctuation rule retains ownership.
+- Multi-space-before-punctuation runs are excluded from the new single-space rule so the existing repeated-space rule retains ownership.
+- New-rule overlaps still use the existing deterministic `WritingCorrection.applyAll` conflict policy; no widget bypasses source-range/stale/overlap checks.
+- No new runtime dependency, persistence payload, analytics, telemetry, network request, cloud grammar service, dynamic rule loading, or document upload is introduced.
+
 ## [2.5.0] - 2026-08-09
 
 ### Added

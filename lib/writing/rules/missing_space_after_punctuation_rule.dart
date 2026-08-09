@@ -10,10 +10,7 @@ import '../writing_rule.dart';
 class MissingSpaceAfterPunctuationRule extends WritingRule {
   const MissingSpaceAfterPunctuationRule();
 
-  static final RegExp _candidatePattern = RegExp(
-    r'[,;]\p{L}',
-    unicode: true,
-  );
+  static final RegExp _candidatePattern = RegExp(r'[,;]\p{L}', unicode: true);
 
   static const Set<String> _reviewPunctuation = <String>{
     ',',
@@ -44,7 +41,9 @@ class MissingSpaceAfterPunctuationRule extends WritingRule {
   ) sync* {
     for (final match in _candidatePattern.allMatches(text)) {
       if (match.start > 0 &&
-          _reviewPunctuation.contains(text.substring(match.start - 1, match.start))) {
+          _reviewPunctuation.contains(
+            text.substring(match.start - 1, match.start),
+          )) {
         // Leave repeated/clustered punctuation to its dedicated rule. This
         // also avoids overlapping an automatic spacing fix with that run.
         continue;

@@ -148,3 +148,15 @@ Complete when relevant.
 - [ ] Bulk correction is not exposed for an incomplete checked occurrence set.
 - [ ] Performance tests use synthetic data and deterministic invariants rather than unstable wall-clock thresholds.
 - [ ] `docs/PERFORMANCE.md` is updated when the performance contract changes.
+
+## V2.6 writing catalogue
+
+Complete when relevant.
+
+- [ ] New/changed rule IDs are stable and documented.
+- [ ] Automatic scope is narrow, deterministic, and language-explicit.
+- [ ] Exact source ranges/original text and replacements are tested.
+- [ ] Interaction/overlap ownership with existing automatic rules is tested.
+- [ ] Unset/default versus explicit stored rule-set behavior is preserved.
+- [ ] Batch correction still uses the shared stale/overlap/undo contract.
+- [ ] No rule-specific widget mutation path, remote processing, telemetry, or dynamic code loading was introduced.

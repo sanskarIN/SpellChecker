@@ -453,3 +453,11 @@ When changing spelling-analysis performance behavior:
 - Use synthetic text in performance/regression tests.
 - Prefer deterministic work-count/state assertions over wall-clock thresholds on shared CI hardware.
 - Update `docs/PERFORMANCE.md` when changing the meaning of a bound or the editor cap.
+
+## V2.6 writing catalogue development contract
+
+When adding or changing built-in rules, preserve stable IDs, exact source ranges, explicit language eligibility, deterministic replacements, and correction-engine ownership. Test adjacent/overlapping interactions with every automatic built-in whose range can intersect.
+
+For punctuation/spacing changes specifically, test Unicode letters, repeated punctuation, multi-space runs, source-boundary positions, refreshed analysis after a skipped overlap, explicit stored preference sets, reset-to-default behavior, and one-step batch undo.
+
+Do not expand a rule's automatic scope merely to reduce the number of analysis passes if doing so introduces ambiguous prose interpretation. Narrow deterministic rules are preferred over broad speculative rewriting.

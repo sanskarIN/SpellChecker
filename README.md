@@ -25,7 +25,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - **Apply visible safe fixes (N)** when review filters are active.
 - **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
-- Built-in repeated-word, sentence-capitalization, repeated-space, and repeated-punctuation rules.
+- Built-in repeated-word, sentence-capitalization, repeated-space, repeated-punctuation, missing-space-after-punctuation, and space-before-punctuation rules.
 - **Apply all safe fixes** for non-overlapping current writing findings.
 - Stale-range-safe individual and batch writing corrections.
 - One-step undo for a complete writing-fix batch.
@@ -54,9 +54,9 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.5.0+10`
+`2.6.0+11`
 
-Version 2.5 is the **Bounded Analysis & Large-Document Safety** release. It keeps V2.4 suggestion-ranker extensibility and every existing spelling/writing/persistence contract while adding public `SpellCheckReport` metadata and `SpellCheckerEngine.analyze()` for optional bounded issue capture. The built-in editor captures at most 200 spelling issues, labels genuinely truncated results as `200+`, and disables **Replace all** when the checked occurrence set is incomplete. No persistence format, network behavior, or runtime dependency changes in V2.5.
+Version 2.6 is the **Deterministic Writing Rule Catalogue Expansion** release. It keeps V2.5 bounded spelling analysis, V2.4 extensible suggestion ranking, V2.3 preference portability, and all existing correction/persistence contracts while adding two conservative English Mechanics rules: **Missing space after punctuation** and **Space before punctuation**. Users in the unset/default rule state receive the expanded six-rule default catalogue; explicit stored rule-ID sets remain explicit and do not silently gain new rules. Permanent CI now also builds the release web app on every quality run. No persistence format, network behavior, or runtime dependency changes in V2.6.
 
 ## Large-document spelling checks — V2.5
 
@@ -94,8 +94,18 @@ The built-in rules cover:
 - Sentence-start capitalization.
 - Repeated horizontal spaces.
 - Repeated identical punctuation.
+- A comma or semicolon followed immediately by a letter.
+- One stray space immediately before common punctuation.
 
 These rules are deterministic helpers, not a claim of full natural-language grammar coverage.
+
+### Expanded punctuation-spacing rules — V2.6
+
+The English Writing insights catalogue now contains six built-in deterministic rules. `missing-space-after-punctuation` proposes a space when a comma or semicolon is followed immediately by a Unicode letter, while skipping repeated/clustered punctuation so the dedicated repeated-punctuation rule retains ownership. `space-before-punctuation` removes one stray ASCII space directly before common prose punctuation and deliberately skips multi-space runs so `repeated-space` retains that source range.
+
+Both new rules are Mechanics rules with deterministic replacements and exact source ranges. A source such as `Hello ,world` can legitimately produce overlapping findings from the two new rules; the existing `WritingCorrection.applyAll` overlap contract remains authoritative, so the earlier safe range is applied and the overlapping finding is skipped until the next analysis.
+
+Default-state compatibility is intentional: languages with no stored writing-rule override use the current six-rule registry defaults. A stored explicit non-empty or empty rule-ID set remains explicit and is not expanded during upgrade. **Reset rules to defaults** removes that override and therefore opts back into the current registry defaults.
 
 ### Review filters — V2.2
 
@@ -286,25 +296,17 @@ The repository includes Flutter web host files. The Dart/Flutter application cod
 
 ## Quality checks
 
-Run the core validation used by CI:
+Run the validation used by CI:
 
 ```bash
 flutter pub get
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --reporter expanded
-```
-
-Check formatting before committing:
-
-```bash
-dart format --output=none --set-exit-if-changed lib test
-```
-
-Build the release web application when preparing a release:
-
-```bash
 flutter build web --release
 ```
+
+The tagged release workflow repeats those quality checks and uploads the generated web artifact.
 
 ## Project structure
 
@@ -322,6 +324,7 @@ SpellChecker/
 │   ├── ARCHITECTURE.md
 │   ├── DEVELOPMENT.md
 │   ├── LANGUAGE_PACKS.md
+│   ├── PERFORMANCE.md
 │   ├── PRIVACY.md
 │   ├── RELEASING.md
 │   ├── ROADMAP.md
@@ -339,6 +342,7 @@ SpellChecker/
 │   │   ├── edit_distance.dart
 │   │   ├── personal_dictionary_codec.dart
 │   │   ├── settings_transfer_codec.dart
+│   │   ├── spell_check_report.dart
 │   │   ├── spell_checker_engine.dart
 │   │   ├── spell_issue.dart
 │   │   ├── spell_language_pack.dart
@@ -369,16 +373,20 @@ SpellChecker/
 │       ├── writing_review_query.dart
 │       └── writing_rule.dart
 ├── test/
+│   ├── bounded_analysis_widget_test.dart
 │   ├── dictionary_preferences_test.dart
 │   ├── language_dictionary_codec_test.dart
 │   ├── language_pack_test.dart
 │   ├── language_preferences_test.dart
 │   ├── personal_dictionary_codec_test.dart
 │   ├── spell_check_editing_controller_test.dart
+│   ├── spell_check_report_test.dart
 │   ├── spell_checker_test.dart
 │   ├── text_correction_test.dart
 │   ├── text_statistics_test.dart
 │   ├── widget_test.dart
+│   ├── writing_catalogue_test.dart
+│   ├── writing_catalogue_widget_test.dart
 │   ├── writing_correction_test.dart
 │   ├── writing_preferences_test.dart
 │   ├── writing_review_preset_test.dart
@@ -467,6 +475,7 @@ See [docs/PRIVACY.md](docs/PRIVACY.md).
 
 - [User guide](docs/USER_GUIDE.md)
 - [Language packs](docs/LANGUAGE_PACKS.md)
+- [Performance and large-document behavior](docs/PERFORMANCE.md)
 - [Writing rules](docs/WRITING_RULES.md)
 - [API reference](docs/API.md)
 - [Architecture](docs/ARCHITECTURE.md)

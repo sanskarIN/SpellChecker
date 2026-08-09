@@ -507,3 +507,15 @@ You can still:
 **Replace all** is intentionally unavailable while results are limited. A partial checked issue list does not contain every matching source range, so presenting a partial mutation as “all” would be misleading. Work on a smaller section or apply single fixes, then check again.
 
 A result that happens to contain exactly 200 issues is not automatically labeled limited. The `200+` state appears only after SpellChecker proves that another unknown word exists.
+
+# Punctuation spacing rules — V2.6
+
+Writing insights includes two additional English Mechanics checks.
+
+**Missing space after punctuation** suggests one space when a comma or semicolon is followed immediately by a letter, such as `hello,world` → `hello, world`. It does not automatically handle every punctuation type or repeated punctuation sequence.
+
+**Space before punctuation** removes one stray space before common punctuation, such as `hello , world` → `hello, world`. Runs of multiple spaces are handled first by the existing Repeated spaces rule.
+
+If two safe findings overlap, **Apply all safe fixes** can apply one and report the overlapping finding as skipped. Reopen Writing insights after the correction to analyze the updated text. This is expected safety behavior, not data loss.
+
+If you previously saved an explicit rule selection, the two new rules remain off unless they are part of that stored set. Use the switches to enable them or choose **Reset rules to defaults** to return the language to the current six-rule default catalogue.

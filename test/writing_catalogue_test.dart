@@ -13,14 +13,14 @@ void main() {
       final issues = rule.analyze('Hello,world;again.', us).toList();
 
       expect(issues, hasLength(2));
-      expect(
-        issues.map((WritingIssue issue) => issue.originalText),
-        <String>[',w', ';a'],
-      );
-      expect(
-        issues.map((WritingIssue issue) => issue.replacement),
-        <String>[', w', '; a'],
-      );
+      expect(issues.map((WritingIssue issue) => issue.originalText), <String>[
+        ',w',
+        ';a',
+      ]);
+      expect(issues.map((WritingIssue issue) => issue.replacement), <String>[
+        ', w',
+        '; a',
+      ]);
       for (final issue in issues) {
         expect(
           'Hello,world;again.'.substring(issue.start, issue.end),
@@ -61,14 +61,16 @@ void main() {
       final issues = rule.analyze(text, us).toList();
 
       expect(issues, hasLength(3));
-      expect(
-        issues.map((WritingIssue issue) => issue.originalText),
-        <String>[' ,', ' !', ' .'],
-      );
-      expect(
-        issues.map((WritingIssue issue) => issue.replacement),
-        <String>[',', '!', '.'],
-      );
+      expect(issues.map((WritingIssue issue) => issue.originalText), <String>[
+        ' ,',
+        ' !',
+        ' .',
+      ]);
+      expect(issues.map((WritingIssue issue) => issue.replacement), <String>[
+        ',',
+        '!',
+        '.',
+      ]);
       for (final issue in issues) {
         expect(text.substring(issue.start, issue.end), issue.originalText);
       }
@@ -115,13 +117,10 @@ void main() {
         },
       );
 
-      expect(
-        result.analyzedRuleIds,
-        <String>{
-          'missing-space-after-punctuation',
-          'space-before-punctuation',
-        },
-      );
+      expect(result.analyzedRuleIds, <String>{
+        'missing-space-after-punctuation',
+        'space-before-punctuation',
+      });
       expect(result.issues, hasLength(2));
     });
 

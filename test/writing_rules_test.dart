@@ -76,7 +76,10 @@ void main() {
       expect(result.issueCountByRule['sentence-capitalization'], 1);
       expect(result.issueCountByRule['repeated-space'], 1);
       expect(result.issueCountByRule['repeated-punctuation'], 1);
-      expect(result.issueCountByRule['missing-space-after-punctuation'], isNull);
+      expect(
+        result.issueCountByRule['missing-space-after-punctuation'],
+        isNull,
+      );
       expect(result.issueCountByRule['space-before-punctuation'], isNull);
     });
 

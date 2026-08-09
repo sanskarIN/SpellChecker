@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.5 release:
+Current V2.6 release:
 
 ```text
-2.5.0+10
+2.6.0+11
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -204,20 +204,17 @@ Use synthetic text/vocabulary only.
 
 # Automated release checks
 
-Normal CI now requires all of these checks to pass:
+Normal CI now requires all of these checks to pass on the exact push/PR tree:
 
 ```bash
 flutter pub get
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --reporter expanded
-```
-
-The tagged release workflow runs those same quality checks and additionally builds the release web application:
-
-```bash
 flutter build web --release
 ```
+
+The tagged release workflow repeats the same quality/build checks and uploads the generated web application as the release artifact.
 
 For a feature branch that uses an exact-tree integration/reconciliation gate, record the final validated commit SHA and confirm all temporary gate/helper files were deleted before the commit was pushed.
 
@@ -228,8 +225,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.5.0 -m "SpellChecker v2.5.0"
-git push origin v2.5.0
+git tag -a v2.6.0 -m "SpellChecker v2.6.0"
+git push origin v2.6.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -329,3 +326,9 @@ Before tagging V2.5-compatible code, verify:
 7. `docs/PERFORMANCE.md` matches the implementation.
 8. No new runtime dependency/persistence/network behavior was introduced unintentionally.
 9. Formatting, analyzer, focused V2.5 tests, complete tests, and `flutter build web --release` pass on the exact release tree.
+
+## V2.6 writing catalogue release checks
+
+Before tagging V2.6-compatible code, verify both new stable rule IDs/exports, exact range/replacement tests, Unicode following-letter behavior, repeated-punctuation/multi-space exclusions, six-rule default registry membership, explicit stored-set compatibility, overlap/batch behavior, widget batch+undo flow, `2.6.0+11` / About `2.6.0`, and complete documentation.
+
+Normal CI now includes the release web build, so the exact release PR head must pass formatting, analyzer, complete tests, and `flutter build web --release`. The tagged workflow repeats quality/build validation and uploads the web artifact.

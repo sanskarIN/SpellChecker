@@ -436,3 +436,18 @@ flutter test test/bounded_analysis_widget_test.dart
 It uses 201 repeated synthetic unknown tokens to prove the `200+` limited-results state, accessible warning text, captured-occurrence wording, and absence of Replace all. A small two-occurrence complete result separately proves that Replace all remains available when results are complete.
 
 Do not replace these deterministic invariants with timing thresholds. See `docs/PERFORMANCE.md` for profiling guidance.
+
+## V2.6 writing catalogue coverage
+
+Focused V2.6 tests:
+
+```bash
+flutter test test/writing_catalogue_test.dart
+flutter test test/writing_catalogue_widget_test.dart
+```
+
+The core suite protects comma/semicolon insertion, Unicode following letters, already-correct spacing, repeated-punctuation exclusion, single-space-before-punctuation removal, multi-space ownership, six-rule registry/default membership, selective analyzer execution, and deterministic overlap handling across two analysis passes.
+
+The widget suite protects new default switches for an unset profile and verifies that two non-overlapping V2.6 findings batch through the existing correction path and restore exactly with one Undo.
+
+Permanent CI now runs formatting, analyzer, the complete test suite, and `flutter build web --release` on every main push and pull request.

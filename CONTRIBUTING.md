@@ -438,3 +438,9 @@ Preserve the default ranking order unless a release explicitly documents an inte
 Changes to issue limits, scan termination, candidate generation, caching, ranking, or large-result rendering should include deterministic regression coverage and an update to `docs/PERFORMANCE.md`.
 
 Do not use private documents as benchmark fixtures. Do not describe `maxIssues` as a hard document-size bound. Do not expose Replace all on a truncated issue report unless a future design supplies a separate complete-range safety contract.
+
+## V2.6 writing catalogue changes
+
+New deterministic writing rules must define a stable ID, narrow user-readable scope, explicit supported language IDs, exact source ranges/original text, and deterministic replacements only when the documented transformation is safe. Review overlap ownership with existing rules before adding a new automatic range.
+
+Changes that expand `WritingRuleRegistry.defaultEnabledRuleIds` must document unset/default versus explicit-set upgrade behavior and include persistence/widget regressions where relevant.

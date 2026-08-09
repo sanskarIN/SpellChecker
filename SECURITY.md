@@ -269,3 +269,11 @@ A spelling issue cap is a resource/UX boundary, not permission to weaken correct
 When a report is truncated, the built-in editor hides Replace all because the checked issue list is incomplete. Do not re-enable bulk mutation by searching raw text from the widget or by treating uncaptured matches as checked ranges.
 
 `maxIssues` must be positive when supplied. The bound does not execute imported data, alter ranker trust, add network processing, or persist document-derived report metadata.
+
+## V2.6 writing catalogue safety boundary
+
+The new rule IDs are compiled source-controlled metadata, not dynamic code-loading instructions. Automatic punctuation-spacing replacements still pass through exact-source validation and the shared deterministic overlap resolver.
+
+Repeated/clustered punctuation and multi-space ownership exclusions reduce competing automatic ranges without weakening the existing rules. An overlap that remains is skipped by `WritingCorrection.applyAll` rather than being merged heuristically.
+
+No dynamic plugin loading, remote rule download, executable imported rule data, network grammar service, or new runtime package is introduced.

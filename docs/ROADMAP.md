@@ -183,6 +183,22 @@ Status: implemented.
 - [x] Dedicated performance/profiling documentation.
 - [x] No persistence/network/runtime-dependency expansion.
 
+## 2.6 — Deterministic writing rule catalogue expansion
+
+Status: implemented.
+
+- [x] Public missing-space-after-punctuation Mechanics rule.
+- [x] Public single-space-before-punctuation Mechanics rule.
+- [x] Unicode-letter support for the missing-space rule.
+- [x] Repeated-punctuation exclusion to avoid duplicate ownership.
+- [x] Multi-space exclusion to preserve repeated-space ownership.
+- [x] Six-rule built-in/default registry integration.
+- [x] Explicit stored rule sets remain unchanged across upgrade.
+- [x] Deterministic overlap handling through the existing batch-correction contract.
+- [x] Focused unit/registry/batch/widget/undo regression coverage.
+- [x] Permanent CI web-release build validation.
+- [x] Complete V2.6 API/writing/privacy/security/release documentation.
+
 ## Future 2.x direction
 
 Possible future work includes:

@@ -70,6 +70,8 @@ repeated-word
 sentence-capitalization
 repeated-space
 repeated-punctuation
+missing-space-after-punctuation
+space-before-punctuation
 ```
 
 ## Language eligibility
@@ -561,3 +563,37 @@ The current subsystem does not claim to provide:
 - Background document monitoring.
 
 The intended foundation is deterministic, local, inspectable rule execution that can be extended without weakening correction safety or privacy.
+
+## V2.6 punctuation-spacing catalogue expansion
+
+V2.6 adds two public English Mechanics rules to `WritingRuleRegistry.builtIns` and therefore to `defaultEnabledRuleIds`.
+
+### `missing-space-after-punctuation`
+
+`MissingSpaceAfterPunctuationRule` matches a comma or semicolon followed immediately by a Unicode letter. Its issue range contains the punctuation plus following letter, and its replacement inserts exactly one ASCII space between them. Colons, periods, question marks, and exclamation marks are intentionally outside this automatic rule because their safe spacing needs more context.
+
+The rule skips a candidate when another review punctuation character immediately precedes the matched comma/semicolon. This leaves repeated/clustered punctuation to `repeated-punctuation` rather than creating competing automatic findings for the same run.
+
+### `space-before-punctuation`
+
+`SpaceBeforePunctuationRule` matches one ASCII space directly before `, . ; : ! ?` and replaces that two-character range with the punctuation mark. It skips the candidate when another space or tab immediately precedes the matched space. Multi-space runs therefore remain owned by `repeated-space`; after a repeated-space correction and refreshed analysis, a remaining single stray punctuation space can be handled by the V2.6 rule.
+
+### Upgrade/default semantics
+
+No storage migration writes new IDs into existing preferences. The existing three-state contract remains authoritative:
+
+```text
+missing key       -> current registry defaults (now six built-in IDs)
+stored non-empty  -> explicit stored IDs only
+stored empty list -> explicit disable-all
+```
+
+A user with an explicit pre-V2.6 set does not silently gain the new rules. **Reset rules to defaults** clears the override and opts that language back into current registry defaults. Portable settings preserve the same missing-versus-explicit semantics.
+
+### Overlap example
+
+`Hello ,world` can produce `space-before-punctuation` on ` ,` and `missing-space-after-punctuation` on `,w`. Those ranges overlap at the comma. `WritingCorrection.applyAll` keeps its established deterministic ordering/overlap policy: the earlier source range is accepted and the overlapping later candidate is skipped. Re-analysis then exposes any remaining safe finding. V2.6 does not create a special-case mutation path.
+
+### Tests
+
+`test/writing_catalogue_test.dart` protects rule scope, Unicode behavior, exact ranges/replacements, registry defaults, ownership exclusions, and overlap/batch behavior. `test/writing_catalogue_widget_test.dart` protects unset-profile switches plus batch correction and one-step undo in the real Writing insights workflow.

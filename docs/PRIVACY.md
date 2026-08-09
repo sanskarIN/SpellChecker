@@ -340,3 +340,9 @@ The V2.4 ranker API is local in-process Dart code supplied when constructing `Sp
 The 200-issue editor cap does not upload skipped text, log overflow words, persist report metadata, or send performance telemetry. The overflow word used to prove truncation is inspected locally and is not materialized into a persisted/report issue.
 
 V2.5 introduces no document persistence, analytics, remote logging, account system, cloud spelling/grammar service, background upload, or new runtime package.
+
+## V2.6 writing catalogue privacy behavior
+
+The new punctuation-spacing rules analyze the explicitly requested editor text in memory exactly like existing built-in rules. Their findings can contain a short exact source range and deterministic replacement, but SpellChecker does not persist or upload those findings.
+
+Registry-default expansion does not write a migration record. Existing explicit rule-ID preferences remain unchanged; missing preferences simply resolve against the current built-in defaults at runtime. V2.6 adds no telemetry, analytics, remote grammar/spelling service, document upload, account system, or runtime dependency.
