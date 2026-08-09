@@ -30,18 +30,10 @@ void main() {
       findsOneWidget,
     );
 
-    final resultsList = find.byType(ListView);
-    expect(resultsList, findsOneWidget);
-    final resultsScrollable = find.descendant(
-      of: resultsList,
-      matching: find.byType(Scrollable),
-    );
-    await tester.scrollUntilVisible(
+    await _dragResultsUntilBuilt(
+      tester,
       find.text('200 captured occurrences'),
-      160,
-      scrollable: resultsScrollable,
     );
-    await tester.pumpAndSettle();
 
     expect(find.text('200 captured occurrences'), findsWidgets);
     expect(find.text('Replace all…'), findsNothing);
@@ -63,18 +55,7 @@ void main() {
     expect(find.text('2'), findsOneWidget);
     expect(find.text('2 occurrences'), findsWidgets);
 
-    final resultsList = find.byType(ListView);
-    expect(resultsList, findsOneWidget);
-    final resultsScrollable = find.descendant(
-      of: resultsList,
-      matching: find.byType(Scrollable),
-    );
-    await tester.scrollUntilVisible(
-      find.text('Replace all…'),
-      120,
-      scrollable: resultsScrollable,
-    );
-    await tester.pumpAndSettle();
+    await _dragResultsUntilBuilt(tester, find.text('Replace all…'));
 
     expect(find.text('Replace all…'), findsWidgets);
     expect(
@@ -82,4 +63,19 @@ void main() {
       findsNothing,
     );
   });
+}
+
+Future<void> _dragResultsUntilBuilt(
+  WidgetTester tester,
+  Finder target,
+) async {
+  final resultsList = find.byType(ListView);
+  expect(resultsList, findsOneWidget);
+
+  for (var attempt = 0; attempt < 12 && target.evaluate().isEmpty; attempt++) {
+    await tester.drag(resultsList, const Offset(0, -180));
+    await tester.pumpAndSettle();
+  }
+
+  expect(target, findsWidgets);
 }
