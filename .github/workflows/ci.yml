@@ -16,9 +16,9 @@ concurrency:
 
 jobs:
   quality:
-    name: Format, analyze, and test
+    name: Format, analyze, test, and build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Check out repository
@@ -46,3 +46,6 @@ jobs:
 
       - name: Test
         run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
