@@ -23,7 +23,10 @@ class RepeatedSpaceRule extends WritingRule {
     String text,
     SpellLanguagePack languagePack,
   ) sync* {
-    for (final match in RegExp(r' {2,}').allMatches(text)) {
+    // Runs before punctuation and line/document endings are owned by the
+    // specialized V2.6 spacing rules so batch correction never has to choose
+    // between "collapse" and "remove" fixes for the same source range.
+    for (final match in RegExp(r' {2,}(?=[^\s,.;:!?])').allMatches(text)) {
       yield WritingIssue(
         ruleId: id,
         ruleName: displayName,
