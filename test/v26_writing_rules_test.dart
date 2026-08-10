@@ -11,12 +11,12 @@ void main() {
   final pack = SpellLanguageRegistry.englishUs;
 
   group('V2.6 writing-rule interactions', () {
-    test('punctuation spacing wins exact-range repeated-space overlap', () {
+    test('specialized punctuation spacing owns terminal space ranges', () {
       final analyzer = WritingAnalyzer();
       const text = 'Hello  !';
 
       final result = analyzer.analyze(text, languagePack: pack);
-      final overlapping = result.issues
+      final spacingIssues = result.issues
           .where(
             (issue) =>
                 issue.start == 5 &&
@@ -28,13 +28,14 @@ void main() {
           )
           .toList(growable: false);
 
-      expect(overlapping, hasLength(2));
+      expect(spacingIssues, hasLength(1));
+      expect(spacingIssues.single.ruleId, 'punctuation-spacing');
       final correction = WritingCorrection.applyAll(text, result.issues);
 
       expect(correction.applied, isTrue);
       expect(correction.text, 'Hello!');
       expect(correction.appliedCount, 1);
-      expect(correction.skippedCount, greaterThanOrEqualTo(1));
+      expect(correction.skippedCount, 0);
     });
 
     test('new mechanics compose with repeated punctuation in one batch', () {
