@@ -1,0 +1,52 @@
+name: V2.6 Core Gate
+
+on:
+  pull_request:
+    branches: [v2.6-core-gate-base]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out V2.6 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.6-writing-rule-expansion
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Format runner workspace
+        run: dart format lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test V2.6 focused writing rules
+        run: flutter test test/v26_writing_rules_test.dart --reporter expanded
+
+      - name: Test writing subsystem
+        run: |
+          flutter test test/writing_rules_test.dart --reporter expanded
+          flutter test test/writing_correction_test.dart --reporter expanded
+          flutter test test/writing_preferences_test.dart --reporter expanded
+          flutter test test/writing_review_query_test.dart --reporter expanded
+          flutter test test/writing_review_preset_test.dart --reporter expanded
+          flutter test test/writing_widget_test.dart --reporter expanded
+
+      - name: Test complete suite
+        run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
