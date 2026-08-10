@@ -1,0 +1,139 @@
+name: V2.6 Release Gate
+
+on:
+  pull_request:
+    branches: [v2.6-release-gate-base]
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out V2.6 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.6-writing-rule-expansion
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Apply V2.6 release integration
+        run: python tools/v26_release_apply.py
+
+      - name: Remove one-time helper
+        run: rm -f tools/v26_release_apply.py
+
+      - name: Format source and tests
+        run: dart format lib test
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify lockfile stability
+        run: git diff --exit-code -- pubspec.lock
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test focused V2.6 writing rules
+        run: flutter test test/v26_writing_rules_test.dart --reporter expanded
+
+      - name: Test writing subsystem
+        run: |
+          flutter test test/writing_rules_test.dart --reporter expanded
+          flutter test test/writing_correction_test.dart --reporter expanded
+          flutter test test/writing_preferences_test.dart --reporter expanded
+          flutter test test/writing_review_query_test.dart --reporter expanded
+          flutter test test/writing_review_preset_test.dart --reporter expanded
+          flutter test test/writing_widget_test.dart --reporter expanded
+
+      - name: Test complete suite
+        run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
+
+      - name: Audit permanent V2.6 tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          grep -q '^version: 2.6.0+11$' pubspec.yaml
+          grep -q "applicationVersion: '2.6.0'" lib/features/editor/spell_checker_page.dart
+          grep -q "String get id => 'punctuation-spacing'" lib/writing/rules/punctuation_spacing_rule.dart
+          grep -q "String get id => 'trailing-whitespace'" lib/writing/rules/trailing_whitespace_rule.dart
+          grep -q "export 'writing/rules/punctuation_spacing_rule.dart';" lib/writing.dart
+          grep -q "export 'writing/rules/trailing_whitespace_rule.dart';" lib/writing.dart
+          grep -q 'PunctuationSpacingRule()' lib/writing/writing_analyzer.dart
+          grep -q 'TrailingWhitespaceRule()' lib/writing/writing_analyzer.dart
+          grep -q '`2.6.0+11`' README.md
+          grep -q '## \[2.6.0\] - 2026-08-10' CHANGELOG.md
+          grep -q '## 2.6 — Deterministic writing rule expansion' docs/ROADMAP.md
+          grep -q '## V2.6 deterministic spacing rules' docs/WRITING_RULES.md
+          grep -q '## V2.6 writing-rule API additions' docs/API.md
+          grep -q '## V2.6 spacing-rule ownership boundary' docs/ARCHITECTURE.md
+          grep -q '## V2.6 writing-rule development checks' docs/DEVELOPMENT.md
+          grep -q '## V2.6 deterministic writing-rule coverage' docs/TESTING.md
+          grep -q '## V2.6 punctuation and trailing-whitespace checks' docs/USER_GUIDE.md
+          grep -q '## V2.6 English writing-rule eligibility' docs/LANGUAGE_PACKS.md
+          grep -q '## V2.6 Writing insights accessibility' docs/ACCESSIBILITY.md
+          grep -q '## V2.6 spacing rules are missing or inactive' docs/TROUBLESHOOTING.md
+          grep -q '## V2.6 writing-rule privacy boundary' docs/PRIVACY.md
+          grep -q '## V2.6 deterministic rule safety' SECURITY.md
+          grep -q '## V2.6 spacing-rule reports' SUPPORT.md
+          grep -q '## V2.6 writing-rule catalogue contributions' CONTRIBUTING.md
+          grep -q '## V2.6 release checks' docs/RELEASING.md
+          grep -q 'Current V2.6 release:' docs/RELEASING.md
+          grep -q 'git tag -a v2.6.0' docs/RELEASING.md
+          grep -q 'expanded punctuation/trailing-whitespace rules' web/index.html
+          grep -q 'expanded punctuation/trailing-whitespace rules' web/manifest.json
+          grep -q '## V2.6 deterministic writing-rule checklist' .github/pull_request_template.md
+          python -m json.tool web/manifest.json >/dev/null
+          test ! -e tools/v26_release_apply.py
+          if git ls-files 'tools/v26*' | grep -q .; then
+            echo 'Unexpected tracked V2.6 helper:' >&2
+            git ls-files 'tools/v26*' >&2
+            exit 1
+          fi
+          if git ls-files '.github/workflows/v26-*' | grep -q .; then
+            echo 'Unexpected tracked V2.6 workflow in candidate tree:' >&2
+            git ls-files '.github/workflows/v26-*' >&2
+            exit 1
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          lines = Path('pubspec.yaml').read_text().splitlines()
+          start = lines.index('dependencies:') + 1
+          end = lines.index('dev_dependencies:')
+          direct = []
+          for line in lines[start:end]:
+              if line.startswith('  ') and not line.startswith('    ') and ':' in line:
+                  direct.append(line.strip().split(':', 1)[0])
+          if direct != ['flutter', 'shared_preferences']:
+              raise SystemExit(f'Unexpected runtime dependencies: {direct}')
+          PY
+
+      - name: Commit exact validated V2.6 tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'V2.6 feature branch already matches the validated release tree.'
+          else
+            git commit -m 'Finalize V2.6 deterministic writing rule release'
+            git push origin HEAD:v2.6-writing-rule-expansion
+          fi
