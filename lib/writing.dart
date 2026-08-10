@@ -1,10 +1,12 @@
 /// Local writing-rule APIs for SpellChecker 2.0 and later.
 library;
 
+export 'writing/rules/punctuation_spacing_rule.dart';
 export 'writing/rules/repeated_punctuation_rule.dart';
 export 'writing/rules/repeated_space_rule.dart';
 export 'writing/rules/repeated_word_rule.dart';
 export 'writing/rules/sentence_capitalization_rule.dart';
+export 'writing/rules/trailing_whitespace_rule.dart';
 export 'writing/writing_analyzer.dart';
 export 'writing/writing_correction.dart';
 export 'writing/writing_issue.dart';
