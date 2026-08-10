@@ -67,7 +67,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git diff --check
+          git add -A
+          git diff --cached --check
           grep -q '^version: 2.6.0+11$' pubspec.yaml
           grep -q "applicationVersion: '2.6.0'" lib/features/editor/spell_checker_page.dart
           grep -q "String get id => 'punctuation-spacing'" lib/writing/rules/punctuation_spacing_rule.dart
@@ -129,7 +130,6 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
           git diff --cached --check
           if git diff --cached --quiet; then
             echo 'V2.6 feature branch already matches the validated release tree.'
