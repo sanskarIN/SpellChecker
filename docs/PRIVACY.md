@@ -340,3 +340,7 @@ The V2.4 ranker API is local in-process Dart code supplied when constructing `Sp
 The 200-issue editor cap does not upload skipped text, log overflow words, persist report metadata, or send performance telemetry. The overflow word used to prove truncation is inspected locally and is not materialized into a persisted/report issue.
 
 V2.5 introduces no document persistence, analytics, remote logging, account system, cloud spelling/grammar service, background upload, or new runtime package.
+
+## V2.6 writing-rule privacy boundary
+
+Punctuation-spacing and trailing-whitespace analysis runs locally against the in-memory editor text through the existing `WritingAnalyzer`. Findings/source snippets remain memory-only. V2.6 persists no new value: only the existing per-language rule-ID preferences can reference the two new stable IDs after a user changes/reset rule choices. No document text, whitespace finding, correction plan, analytics event, telemetry, or network request is added.

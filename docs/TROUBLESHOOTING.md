@@ -445,3 +445,7 @@ This is not a crash or storage problem. Single fixes and captured-issue navigati
 If you need to review later portions, fix/ignore/save some early issues and check again, or temporarily check a smaller section of the document. Do not interpret the 200 captured issues as the total number of issues in the document.
 
 If fewer than 200 issues are shown without `+`, the result completed normally.
+
+## V2.6 spacing rules are missing or inactive
+
+If **Punctuation spacing** or **Trailing whitespace** is not enabled after upgrading, check whether the language has an explicit saved writing-rule override. V2.6 preserves explicit non-empty and explicit empty sets. Use **Reset rules to defaults** to clear that override and opt back into the current registry defaults. The two rules are currently eligible for the built-in English (US) and English (UK) packs only.

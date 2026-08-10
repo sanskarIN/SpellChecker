@@ -453,3 +453,7 @@ When changing spelling-analysis performance behavior:
 - Use synthetic text in performance/regression tests.
 - Prefer deterministic work-count/state assertions over wall-clock thresholds on shared CI hardware.
 - Update `docs/PERFORMANCE.md` when changing the meaning of a bound or the editor cap.
+
+## V2.6 writing-rule development checks
+
+When changing whitespace-oriented rules, test ownership boundaries as well as positive matches. A new automatic rule must not accidentally create a second incompatible replacement for an exact range already owned by another built-in. Use synthetic LF, CRLF, punctuation-adjacent, interior-space, and document-end cases. Keep issue ranges exact and keep widget tests on the real lazy Writing insights `ListView`; scroll controls into view rather than making production lists eager for tests.

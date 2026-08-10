@@ -820,3 +820,9 @@ The built-in editor selects `N = 200`. This is a presentation/performance policy
 When the editor report is truncated, bulk Replace all is withheld because `TextCorrection.replaceAll` intentionally mutates checked ranges from the current issue list. Single checked-range corrections remain safe.
 
 No new storage layer, isolate/background worker, network boundary, dynamic plugin loader, or document cache is introduced.
+
+## V2.6 spacing-rule ownership boundary
+
+The writing analyzer still executes independent deterministic rules and sorts their findings before correction. V2.6 avoids a new conflict-resolution layer by assigning mutually exclusive whitespace responsibilities: `RepeatedSpaceRule` owns repeated interior spaces, `PunctuationSpacingRule` owns horizontal whitespace before common punctuation, and `TrailingWhitespaceRule` owns horizontal whitespace before line/document endings.
+
+All findings continue through the existing `WritingCorrection` safety boundary. Widgets do not directly mutate source ranges, and V2.6 introduces no new persistence, service, network, or background-processing layer.

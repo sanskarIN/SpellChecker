@@ -69,6 +69,8 @@ Current built-in IDs are:
 repeated-word
 sentence-capitalization
 repeated-space
+punctuation-spacing
+trailing-whitespace
 repeated-punctuation
 ```
 
@@ -561,3 +563,43 @@ The current subsystem does not claim to provide:
 - Background document monitoring.
 
 The intended foundation is deterministic, local, inspectable rule execution that can be extended without weakening correction safety or privacy.
+
+## V2.6 deterministic spacing rules
+
+V2.6 expands `WritingRuleRegistry.builtIns` with two English Mechanics rules:
+
+```text
+punctuation-spacing
+trailing-whitespace
+```
+
+### Punctuation spacing
+
+`PunctuationSpacingRule` matches one or more horizontal spaces/tabs immediately before `, . ; : ! ?`. Its `originalText` is exactly the whitespace run and its deterministic automatic replacement is the empty string. It does not rewrite the punctuation itself.
+
+### Trailing whitespace
+
+`TrailingWhitespaceRule` matches horizontal spaces/tabs immediately before LF/CRLF line endings or at the document end. Newline characters are not part of the issue range; the automatic replacement removes only the trailing horizontal whitespace.
+
+### Non-overlapping ownership
+
+`RepeatedSpaceRule` now matches repeated **interior** spaces only. It deliberately excludes repeated runs immediately before common punctuation and before line/document endings. Those source ranges belong to the V2.6 specialized rules. The separation prevents a batch from receiving both “collapse to one space” and “remove all whitespace” candidates for the same range.
+
+This does not change `WritingCorrection.applyAll` overlap semantics. Start/end/rule-ID ordering and conservative overlap skipping remain the global safety contract for genuinely overlapping findings from independent rules.
+
+### Preference compatibility
+
+The two new IDs are members of `WritingRuleRegistry.defaultEnabledRuleIds`. Therefore:
+
+```text
+unset preference      -> current six-rule defaults, including V2.6 rules
+explicit non-empty    -> exactly the stored supported IDs; no silent expansion
+explicit empty list   -> all rules disabled; no silent expansion
+Reset rules           -> clears override -> current six-rule defaults
+```
+
+The existing `spellchecker.writing_rule_ids.v1.<language-id>` key meaning and storage format do not change. Both rules declare `en`, so they support the built-in `en-US` and `en-GB` packs.
+
+### V2.6 regression requirements
+
+Changes to either spacing rule must keep tests for exact source ranges, LF/CRLF/document-end handling, punctuation adjacency, interior-space ownership, English pack support, default registry membership, safe batch composition, Writing insights visibility, and one-step undo.

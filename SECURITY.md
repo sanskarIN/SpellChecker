@@ -269,3 +269,7 @@ A spelling issue cap is a resource/UX boundary, not permission to weaken correct
 When a report is truncated, the built-in editor hides Replace all because the checked issue list is incomplete. Do not re-enable bulk mutation by searching raw text from the widget or by treating uncaptured matches as checked ranges.
 
 `maxIssues` must be positive when supplied. The bound does not execute imported data, alter ranker trust, add network processing, or persist document-derived report metadata.
+
+## V2.6 deterministic rule safety
+
+The two new spacing rules are source-controlled Dart implementations compiled with the application. They do not interpret or execute document content, load external rules, or bypass `WritingCorrection` source validation. Specialized ownership of punctuation-adjacent/trailing whitespace prevents conflicting built-in automatic replacements for the same exact source range. V2.6 adds no dependency, permission, remote service, telemetry, or dynamic-code boundary.

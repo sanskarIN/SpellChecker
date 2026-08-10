@@ -507,3 +507,9 @@ You can still:
 **Replace all** is intentionally unavailable while results are limited. A partial checked issue list does not contain every matching source range, so presenting a partial mutation as “all” would be misleading. Work on a smaller section or apply single fixes, then check again.
 
 A result that happens to contain exactly 200 issues is not automatically labeled limited. The `200+` state appears only after SpellChecker proves that another unknown word exists.
+
+## V2.6 punctuation and trailing-whitespace checks
+
+Writing insights includes **Punctuation spacing** and **Trailing whitespace** for English (US) and English (UK). Punctuation spacing removes spaces/tabs immediately before common punctuation such as commas, periods, colons, semicolons, question marks, and exclamation marks. Trailing whitespace removes spaces/tabs at line endings or at the end of the document without removing newline characters.
+
+Both are normal per-language writing-rule switches. If you have never customized rule choices, they are enabled with the current defaults. If you previously saved an explicit rule list, SpellChecker preserves that list instead of silently adding new rules; use **Reset rules to defaults** if you want the current complete default catalogue.

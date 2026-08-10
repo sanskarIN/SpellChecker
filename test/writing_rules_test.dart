@@ -44,25 +44,34 @@ void main() {
       expect(issues.every((issue) => issue.replacement == ' '), isTrue);
     });
 
-    test('punctuation spacing removes horizontal whitespace before punctuation', () {
-      const rule = PunctuationSpacingRule();
+    test(
+      'punctuation spacing removes horizontal whitespace before punctuation',
+      () {
+        const rule = PunctuationSpacingRule();
 
-      final issues = rule.analyze('Hello , world  ! Fine\t?', pack).toList();
+        final issues = rule.analyze('Hello , world  ! Fine\t?', pack).toList();
 
-      expect(issues, hasLength(3));
-      expect(
-        issues.map((issue) => issue.originalText),
-        orderedEquals(<String>[' ', '  ', '\t']),
-      );
-      expect(issues.every((issue) => issue.replacement == ''), isTrue);
-      expect(issues.every((issue) => issue.ruleId == 'punctuation-spacing'), isTrue);
-    });
+        expect(issues, hasLength(3));
+        expect(
+          issues.map((issue) => issue.originalText),
+          orderedEquals(<String>[' ', '  ', '\t']),
+        );
+        expect(issues.every((issue) => issue.replacement == ''), isTrue);
+        expect(
+          issues.every((issue) => issue.ruleId == 'punctuation-spacing'),
+          isTrue,
+        );
+      },
+    );
 
-    test('punctuation spacing ignores punctuation without preceding whitespace', () {
-      const rule = PunctuationSpacingRule();
+    test(
+      'punctuation spacing ignores punctuation without preceding whitespace',
+      () {
+        const rule = PunctuationSpacingRule();
 
-      expect(rule.analyze('Hello, world! Fine?', pack), isEmpty);
-    });
+        expect(rule.analyze('Hello, world! Fine?', pack), isEmpty);
+      },
+    );
 
     test('trailing whitespace handles LF, CRLF, and document end', () {
       const rule = TrailingWhitespaceRule();
@@ -126,10 +135,7 @@ void main() {
     test('new rules are enabled by default and address mixed mechanics', () {
       final analyzer = WritingAnalyzer();
 
-      final result = analyzer.analyze(
-        'Hello  !\nWorld  ',
-        languagePack: pack,
-      );
+      final result = analyzer.analyze('Hello  !\nWorld  ', languagePack: pack);
 
       expect(
         result.analyzedRuleIds,

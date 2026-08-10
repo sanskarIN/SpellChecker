@@ -4,6 +4,30 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.6.0] - 2026-08-10
+
+### Added
+
+- Built-in English `PunctuationSpacingRule` with stable ID `punctuation-spacing` for horizontal whitespace immediately before common punctuation.
+- Built-in English `TrailingWhitespaceRule` with stable ID `trailing-whitespace` for horizontal whitespace immediately before LF/CRLF line endings or the document end.
+- Public exports for both new deterministic writing rules.
+- Focused V2.6 rule, registry, exact-range, batch-composition, Writing insights visibility, and one-step undo regression coverage.
+
+### Changed
+
+- Package version advances to `2.6.0+11`; About version advances to `2.6.0`.
+- The default built-in writing registry expands from four to six rules for users in the unset/default preference state.
+- `RepeatedSpaceRule` now owns only repeated interior spaces; punctuation-adjacent and line/document-end whitespace ranges are delegated to the specialized V2.6 rules so automatic fixes do not overlap with incompatible replacement semantics.
+- Lazy Writing insights widget tests scroll through the real expanded rule catalogue before interacting with findings/batch actions.
+
+### Compatibility, security, and privacy
+
+- Explicit per-language saved rule lists remain explicit; V2.6 does not silently add new rule IDs to a stored non-empty or empty override.
+- Resetting rules still clears the override key, after which current registry defaults include the two V2.6 rules.
+- Existing `WritingCorrection.apply`/`applyAll` stale-range, deterministic ordering, overlap, end-to-start mutation, and one-step undo contracts are unchanged.
+- Both new rules are deterministic, English-only, local, source-controlled rules. No editor text, findings, review state, or correction history is newly persisted.
+- V2.6 adds no runtime dependency, network request, telemetry, cloud writing service, dynamic rule loading, or account behavior.
+
 ## [2.5.0] - 2026-08-09
 
 ### Added

@@ -183,6 +183,22 @@ Status: implemented.
 - [x] Dedicated performance/profiling documentation.
 - [x] No persistence/network/runtime-dependency expansion.
 
+## 2.6 — Deterministic writing rule expansion
+
+Status: implemented.
+
+- [x] Built-in English punctuation-spacing rule with stable public ID.
+- [x] Built-in English trailing-whitespace rule with stable public ID.
+- [x] Exact source-range and deterministic empty-string replacement contracts.
+- [x] Six-rule built-in registry/default set for unset preferences.
+- [x] Explicit persisted non-empty/empty rule preferences remain unchanged.
+- [x] Interior repeated-space ownership separated from punctuation/trailing whitespace ownership.
+- [x] Safe batch composition with repeated punctuation and one-step undo.
+- [x] Writing insights exposes both new rule switches.
+- [x] Focused rule/analyzer/interaction/widget regression coverage.
+- [x] Complete V2.6 documentation, privacy/security, release, and web metadata updates.
+- [x] No persistence/network/runtime-dependency expansion.
+
 ## Future 2.x direction
 
 Possible future work includes:

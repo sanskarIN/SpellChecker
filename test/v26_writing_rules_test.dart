@@ -70,7 +70,10 @@ void main() {
 
       expect(text.substring(punctuation.start, punctuation.end), ' ');
       expect(text.substring(trailing.start, trailing.end), '  ');
-      expect(WritingCorrection.apply(text, punctuation).text, 'Hello,\nWorld  ');
+      expect(
+        WritingCorrection.apply(text, punctuation).text,
+        'Hello,\nWorld  ',
+      );
 
       final stale = WritingCorrection.apply('Hello,\nWorld  ', punctuation);
       expect(stale.applied, isFalse);
@@ -108,11 +111,7 @@ void main() {
       expect(scrollable, findsOneWidget);
       await tester.drag(list, const Offset(0, 1200));
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        target,
-        160,
-        scrollable: scrollable,
-      );
+      await tester.scrollUntilVisible(target, 160, scrollable: scrollable);
       await tester.pumpAndSettle();
     }
 
@@ -157,7 +156,10 @@ void main() {
       await tester.tap(applyAll);
       await tester.pumpAndSettle();
 
-      expect(tester.widget<TextField>(editor).controller!.text, 'Hello!\nWorld');
+      expect(
+        tester.widget<TextField>(editor).controller!.text,
+        'Hello!\nWorld',
+      );
       await tester.tap(find.text('Undo correction'));
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(editor).controller!.text, original);
