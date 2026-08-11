@@ -48,10 +48,17 @@ void main() {
     await tester.tap(find.text('Open insights'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Total findings: 3'), findsOneWidget);
-    expect(find.textContaining('Total findings: 2'), findsOneWidget);
-
     final scrollable = _dialogScrollable();
+    for (final expected in <String>[
+      'Total findings: 3',
+      'Total findings: 2',
+    ]) {
+      final finder = find.textContaining(expected);
+      await tester.scrollUntilVisible(finder, 120, scrollable: scrollable);
+      await tester.pumpAndSettle();
+      expect(finder, findsOneWidget);
+    }
+
     final exactNotice = find.textContaining(
       'Showing the first 2 of 5 findings in review order.',
     );
@@ -65,7 +72,15 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byTooltip('2 captured of 5 total findings'), findsOneWidget);
+
+    final capturedTooltip = find.byTooltip('2 captured of 5 total findings');
+    await tester.scrollUntilVisible(
+      capturedTooltip,
+      100,
+      scrollable: scrollable,
+    );
+    await tester.pumpAndSettle();
+    expect(capturedTooltip, findsOneWidget);
   });
 }
 
