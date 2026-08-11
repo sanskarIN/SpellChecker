@@ -11,92 +11,87 @@ void main() {
     expect(WritingInsightsDialog.defaultMaxIssues, 200);
   });
 
-  testWidgets(
-    'limited analysis shows exact totals and returns captured fixes',
-    (WidgetTester tester) async {
-      WritingInsightsDialogResult? returnedResult;
-      final analyzer = WritingAnalyzer(
-        rules: const <WritingRule>[
-          _SyntheticAutomaticRule(<int>[0, 2, 4]),
-        ],
-      );
+  testWidgets('limited analysis shows exact totals and returns captured fixes', (
+    WidgetTester tester,
+  ) async {
+    WritingInsightsDialogResult? returnedResult;
+    final analyzer = WritingAnalyzer(
+      rules: const <WritingRule>[
+        _SyntheticAutomaticRule(<int>[0, 2, 4]),
+      ],
+    );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
-            builder: (BuildContext context) {
-              return Scaffold(
-                body: Center(
-                  child: FilledButton(
-                    onPressed: () async {
-                      returnedResult =
-                          await showDialog<WritingInsightsDialogResult>(
-                            context: context,
-                            builder: (BuildContext context) =>
-                                WritingInsightsDialog(
-                                  text: 'abcdef',
-                                  languagePack: SpellLanguageRegistry.englishUs,
-                                  analyzer: analyzer,
-                                  initialEnabledRuleIds: const <String>{
-                                    'synthetic',
-                                  },
-                                  maxIssues: 2,
-                                ),
-                          );
-                    },
-                    child: const Text('Open insights'),
-                  ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (BuildContext context) {
+            return Scaffold(
+              body: Center(
+                child: FilledButton(
+                  onPressed: () async {
+                    returnedResult =
+                        await showDialog<WritingInsightsDialogResult>(
+                          context: context,
+                          builder: (BuildContext context) =>
+                              WritingInsightsDialog(
+                                text: 'abcdef',
+                                languagePack: SpellLanguageRegistry.englishUs,
+                                analyzer: analyzer,
+                                initialEnabledRuleIds: const <String>{
+                                  'synthetic',
+                                },
+                                maxIssues: 2,
+                              ),
+                        );
+                  },
+                  child: const Text('Open insights'),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
-      );
+      ),
+    );
 
-      await tester.tap(find.text('Open insights'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Open insights'));
+    await tester.pumpAndSettle();
 
-      expect(find.textContaining('Total findings: 3'), findsOneWidget);
+    expect(find.textContaining('Total findings: 3'), findsOneWidget);
 
-      final list = _dialogList();
-      final scrollable = _dialogScrollable();
-      expect(list, findsOneWidget);
-      expect(scrollable, findsOneWidget);
+    final list = _dialogList();
+    final scrollable = _dialogScrollable();
+    expect(list, findsOneWidget);
+    expect(scrollable, findsOneWidget);
 
-      final limitedText = find.textContaining(
-        'Showing the first 2 of 3 findings in review order.',
-      );
-      await tester.scrollUntilVisible(limitedText, 160, scrollable: scrollable);
-      await tester.pumpAndSettle();
+    final limitedText = find.textContaining(
+      'Showing the first 2 of 3 findings in review order.',
+    );
+    await tester.scrollUntilVisible(limitedText, 160, scrollable: scrollable);
+    await tester.pumpAndSettle();
 
-      expect(limitedText, findsOneWidget);
-      expect(
-        find.textContaining(
-          '1 additional finding is not retained by the 2-finding capture limit.',
-        ),
-        findsOneWidget,
-      );
+    expect(limitedText, findsOneWidget);
+    expect(
+      find.textContaining(
+        '1 additional finding is not retained by the 2-finding capture limit.',
+      ),
+      findsOneWidget,
+    );
 
-      final applyCaptured = find.text('Apply captured safe fixes (2)');
-      await tester.scrollUntilVisible(
-        applyCaptured,
-        120,
-        scrollable: scrollable,
-      );
-      await tester.pumpAndSettle();
-      expect(applyCaptured, findsOneWidget);
+    final applyCaptured = find.text('Apply captured safe fixes (2)');
+    await tester.scrollUntilVisible(applyCaptured, 120, scrollable: scrollable);
+    await tester.pumpAndSettle();
+    expect(applyCaptured, findsOneWidget);
 
-      await tester.tap(applyCaptured);
-      await tester.pumpAndSettle();
+    await tester.tap(applyCaptured);
+    await tester.pumpAndSettle();
 
-      expect(returnedResult, isNotNull);
-      expect(returnedResult!.issuesToFix, hasLength(2));
-      expect(
-        returnedResult!.issuesToFix.map((WritingIssue issue) => issue.start),
-        <int>[0, 2],
-      );
-    },
-  );
+    expect(returnedResult, isNotNull);
+    expect(returnedResult!.issuesToFix, hasLength(2));
+    expect(
+      returnedResult!.issuesToFix.map((WritingIssue issue) => issue.start),
+      <int>[0, 2],
+    );
+  });
 
   testWidgets('limited filtered state reports exact uncaptured count', (
     WidgetTester tester,
