@@ -316,6 +316,9 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                         ? '${analysis.capturedIssueCount} captured of ${analysis.totalIssueCount} total findings'
                         : '${visibleIssues.length} visible findings',
                     child: Badge(
+                      key: const ValueKey<String>(
+                        'writing-findings-total-badge',
+                      ),
                       label: Text(
                         analysis.isTruncated && query.isEmpty
                             ? analysis.totalIssueCount == null
