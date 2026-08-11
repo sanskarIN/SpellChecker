@@ -15,8 +15,13 @@ class WritingAnalysisResult {
     required this.languageId,
     this.issueLimit,
     this.isTruncated = false,
+    this.totalIssueCount,
+    Map<String, int>? totalIssueCountByRule,
   }) : issues = List<WritingIssue>.unmodifiable(issues),
-       analyzedRuleIds = Set<String>.unmodifiable(analyzedRuleIds) {
+       analyzedRuleIds = Set<String>.unmodifiable(analyzedRuleIds),
+       totalIssueCountByRule = totalIssueCountByRule == null
+           ? null
+           : Map<String, int>.unmodifiable(totalIssueCountByRule) {
     if (issueLimit != null && issueLimit! <= 0) {
       throw ArgumentError.value(issueLimit, 'issueLimit', 'must be positive');
     }
@@ -24,6 +29,65 @@ class WritingAnalysisResult {
       throw ArgumentError(
         'A truncated writing analysis result must declare its issue limit.',
       );
+    }
+    if (issueLimit != null && this.issues.length > issueLimit!) {
+      throw ArgumentError(
+        'Captured writing issues cannot exceed the declared issue limit.',
+      );
+    }
+    if (totalIssueCount != null && totalIssueCount! < this.issues.length) {
+      throw ArgumentError.value(
+        totalIssueCount,
+        'totalIssueCount',
+        'cannot be smaller than the captured issue count',
+      );
+    }
+    if (isTruncated &&
+        totalIssueCount != null &&
+        totalIssueCount! <= this.issues.length) {
+      throw ArgumentError(
+        'A truncated result with an exact total must report at least one '
+        'uncaptured issue.',
+      );
+    }
+    if (!isTruncated &&
+        totalIssueCount != null &&
+        totalIssueCount != this.issues.length) {
+      throw ArgumentError(
+        'A complete result with an exact total must capture every issue.',
+      );
+    }
+    if (this.totalIssueCountByRule != null) {
+      if (totalIssueCount == null) {
+        throw ArgumentError(
+          'Per-rule total issue counts require totalIssueCount.',
+        );
+      }
+      var summedCount = 0;
+      for (final entry in this.totalIssueCountByRule!.entries) {
+        if (entry.value < 0) {
+          throw ArgumentError.value(
+            entry.value,
+            'totalIssueCountByRule[${entry.key}]',
+            'must not be negative',
+          );
+        }
+        summedCount += entry.value;
+      }
+      if (summedCount != totalIssueCount) {
+        throw ArgumentError(
+          'Per-rule total issue counts must sum to totalIssueCount.',
+        );
+      }
+      final capturedCounts = issueCountByRule;
+      for (final entry in capturedCounts.entries) {
+        if ((this.totalIssueCountByRule![entry.key] ?? 0) < entry.value) {
+          throw ArgumentError(
+            'Per-rule total issue counts cannot be smaller than captured '
+            'counts.',
+          );
+        }
+      }
     }
   }
 
@@ -39,9 +103,30 @@ class WritingAnalysisResult {
   /// Whether at least one additional finding existed beyond [issueLimit].
   final bool isTruncated;
 
+  /// Exact number of findings yielded by every analyzed rule, when known.
+  ///
+  /// Results produced by [WritingAnalyzer] always provide this value. It is
+  /// nullable so callers constructing [WritingAnalysisResult] directly using
+  /// the V2.7 constructor shape remain source-compatible.
+  final int? totalIssueCount;
+
+  /// Exact per-rule finding totals across the analyzed text, when known.
+  ///
+  /// The map is immutable. Like [totalIssueCount], analyzer-produced results
+  /// always provide it while directly constructed compatibility results may
+  /// omit it.
+  final Map<String, int>? totalIssueCountByRule;
+
   bool get isClean => issues.isEmpty;
   bool get isComplete => !isTruncated;
   int get capturedIssueCount => issues.length;
+  bool get hasExactIssueTotals => totalIssueCount != null;
+
+  /// Exact number of findings not retained because of [issueLimit], when the
+  /// total is known.
+  int? get uncapturedIssueCount => totalIssueCount == null
+      ? null
+      : totalIssueCount! - capturedIssueCount;
 
   Map<String, int> get issueCountByRule {
     final counts = <String, int>{};
@@ -77,6 +162,8 @@ class WritingAnalyzer {
         ? null
         : _BoundedWritingIssueCollector(maxIssues);
     final analyzedRuleIds = <String>{};
+    final totalIssueCountByRule = <String, int>{};
+    var totalIssueCount = 0;
 
     for (final rule in _rules) {
       if (!rule.supports(languagePack) ||
@@ -85,6 +172,12 @@ class WritingAnalyzer {
       }
       analyzedRuleIds.add(rule.id);
       for (final issue in rule.analyze(text, languagePack)) {
+        totalIssueCount += 1;
+        totalIssueCountByRule.update(
+          issue.ruleId,
+          (int value) => value + 1,
+          ifAbsent: () => 1,
+        );
         if (boundedIssues == null) {
           issues.add(issue);
         } else {
@@ -103,6 +196,8 @@ class WritingAnalyzer {
       languageId: languagePack.id,
       issueLimit: maxIssues,
       isTruncated: boundedIssues?.isTruncated ?? false,
+      totalIssueCount: totalIssueCount,
+      totalIssueCountByRule: totalIssueCountByRule,
     );
   }
 }
