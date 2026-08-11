@@ -162,3 +162,13 @@ Complete when relevant.
 - [ ] Batch composition and one-step undo remain safe.
 - [ ] No new persistence/network/telemetry/runtime dependency is introduced unintentionally.
 - [ ] No temporary `tools/v26_*` or `.github/workflows/v26-*` release artifact remains in the final tree.
+
+## V2.7 bounded writing-analysis checklist
+
+- [ ] Optional `maxIssues` behavior preserves unbounded compatibility and positive-limit validation.
+- [ ] Bounded findings preserve the globally sorted unbounded prefix and exact-at-limit completeness.
+- [ ] Limited Writing insights wording describes captured findings/filters/batch actions truthfully.
+- [ ] Focused bounded-analysis and limited-dialog tests are included or remain green.
+- [ ] No persistence format, runtime dependency, network, privacy, or security boundary changed unintentionally.
+- [ ] `what_changed.md` and release documentation are synchronized with the implementation.
+- [ ] No V2.7 helper or disposable workflow is included in the permanent release diff.

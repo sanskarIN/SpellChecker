@@ -826,3 +826,13 @@ No new storage layer, isolate/background worker, network boundary, dynamic plugi
 The writing analyzer still executes independent deterministic rules and sorts their findings before correction. V2.6 avoids a new conflict-resolution layer by assigning mutually exclusive whitespace responsibilities: `RepeatedSpaceRule` owns repeated interior spaces, `PunctuationSpacingRule` owns horizontal whitespace before common punctuation, and `TrailingWhitespaceRule` owns horizontal whitespace before line/document endings.
 
 All findings continue through the existing `WritingCorrection` safety boundary. Widgets do not directly mutate source ranges, and V2.6 introduces no new persistence, service, network, or background-processing layer.
+
+## V2.7 bounded writing-result architecture
+
+The writing analyzer now separates rule execution from retained-result storage. Unbounded calls append all findings and sort once. Bounded calls stream findings into a private ordered collector capped at `maxIssues`.
+
+The collector uses the same comparison contract as the public analysis result: source start first, then severity ordering, then rule ID. It performs ordered insertion and drops the current worst retained finding when a better later finding arrives after the cap is full. This matters because rule registration order and rule-yield order are not the global review order.
+
+`isTruncated` means at least one finding existed outside the retained prefix. The architecture deliberately keeps full enabled-rule scanning, so the bound controls retained finding objects and downstream dialog rendering rather than claiming a hard compute budget.
+
+The editor remains a consumer of the public analyzer API. Writing insights supplies its 200-finding policy through `maxIssues`; the core analyzer does not hard-code an editor-specific cap.

@@ -238,3 +238,9 @@ Do not attach a private large document. A repeated synthetic token sequence is s
 ## V2.6 spacing-rule reports
 
 For punctuation-spacing/trailing-whitespace bugs, provide a minimal synthetic sample and say whether it involves interior repeated spaces, whitespace immediately before punctuation, LF/CRLF line endings, or document-end whitespace. Include the selected English pack and whether rule choices were unset/default or explicitly saved. Do not attach a private document when a short synthetic string can reproduce the issue.
+
+## V2.7 limited Writing insights reports
+
+When reporting a V2.7 Writing insights problem, include whether the dialog displayed a limited-result notice, the selected language, active review preset/filter state, and whether the issue reproduced after editing/reopening Writing insights. Do not include private document text unless it is necessary and safe to share; a small synthetic reproduction is preferred.
+
+A `200+`-style state means the built-in dialog captured its first 200 findings in review order and observed at least one more. Filters and batch actions then operate on the captured prefix only.

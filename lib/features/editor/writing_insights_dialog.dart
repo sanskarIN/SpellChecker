@@ -30,12 +30,16 @@ class WritingInsightsDialog extends StatefulWidget {
     required this.languagePack,
     required this.analyzer,
     required this.initialEnabledRuleIds,
-  });
+    this.maxIssues = defaultMaxIssues,
+  }) : assert(maxIssues > 0);
+
+  static const int defaultMaxIssues = 200;
 
   final String text;
   final SpellLanguagePack languagePack;
   final WritingAnalyzer analyzer;
   final Set<String> initialEnabledRuleIds;
+  final int maxIssues;
 
   @override
   State<WritingInsightsDialog> createState() => _WritingInsightsDialogState();
@@ -64,6 +68,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
     widget.text,
     languagePack: widget.languagePack,
     enabledRuleIds: _enabledRuleIds,
+    maxIssues: widget.maxIssues,
   );
 
   List<WritingRule> get _supportedRules => widget.analyzer.rules
@@ -292,14 +297,27 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
-                  Text('${visibleIssues.length}/${analysis.issues.length}'),
+                  Text(
+                    '${visibleIssues.length}/${analysis.capturedIssueCount}${analysis.isTruncated ? '+' : ''}',
+                  ),
                   const SizedBox(width: 8),
                   Badge(
-                    label: Text('${visibleIssues.length}'),
+                    label: Text(
+                      analysis.isTruncated && query.isEmpty
+                          ? '${analysis.capturedIssueCount}+'
+                          : '${visibleIssues.length}',
+                    ),
                     child: const Icon(Icons.fact_check_outlined),
                   ),
                 ],
               ),
+              if (analysis.isTruncated) ...<Widget>[
+                const SizedBox(height: 10),
+                _WritingAnalysisLimitNotice(
+                  capturedCount: analysis.capturedIssueCount,
+                  issueLimit: analysis.issueLimit!,
+                ),
+              ],
               if (visibleAutomaticIssues.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 10),
                 FilledButton.tonalIcon(
@@ -307,7 +325,11 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                   onPressed: () => _close(issuesToFix: visibleAutomaticIssues),
                   icon: const Icon(Icons.auto_fix_high),
                   label: Text(
-                    query.isEmpty
+                    analysis.isTruncated
+                        ? query.isEmpty
+                              ? 'Apply captured safe fixes (${visibleAutomaticIssues.length})'
+                              : 'Apply visible captured safe fixes (${visibleAutomaticIssues.length})'
+                        : query.isEmpty
                         ? 'Apply all safe fixes (${visibleAutomaticIssues.length})'
                         : 'Apply visible safe fixes (${visibleAutomaticIssues.length})',
                   ),
@@ -328,11 +350,14 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                       'No local writing rule reported an issue in this text.',
                 )
               else if (visibleIssues.isEmpty)
-                const _WritingEmptyState(
+                _WritingEmptyState(
                   icon: Icons.filter_alt_off_outlined,
-                  title: 'No matching findings',
-                  message:
-                      'The enabled rules have findings, but none match the current review filters.',
+                  title: analysis.isTruncated
+                      ? 'No matching captured findings'
+                      : 'No matching findings',
+                  message: analysis.isTruncated
+                      ? 'None of the captured findings match the current review filters. Additional uncaptured findings may exist.'
+                      : 'The enabled rules have findings, but none match the current review filters.',
                 )
               else
                 for (var index = 0; index < visibleIssues.length; index++)
@@ -360,6 +385,41 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
         ),
         TextButton(onPressed: () => _close(), child: const Text('Close')),
       ],
+    );
+  }
+}
+
+class _WritingAnalysisLimitNotice extends StatelessWidget {
+  const _WritingAnalysisLimitNotice({
+    required this.capturedCount,
+    required this.issueLimit,
+  });
+
+  final int capturedCount;
+  final int issueLimit;
+
+  @override
+  Widget build(BuildContext context) {
+    final message =
+        'Showing the first $capturedCount findings in review order. More findings exist beyond the $issueLimit-finding capture limit. Review filters and batch actions use captured findings only.';
+
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: 'Writing analysis limited. $message',
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Icon(Icons.info_outline),
+              const SizedBox(width: 10),
+              Expanded(child: Text(message)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -16,6 +16,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Public injectable `SpellSuggestionRanker` strategy with the pre-V2.4 ranking preserved as the default.
 - Stable lexical tie-breaking for custom ranker ties.
 - Bounded large-document spelling analysis with an explicit first-200 issue UI policy and safe limited-result messaging.
+- Bounded Writing insights analysis with an explicit first-200 finding policy and captured-only limited-review wording.
 - Optional local **Writing insights** with configurable deterministic rules.
 
 - Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
@@ -54,9 +55,19 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.6.0+11`
+`2.7.0+12`
 
-Version 2.6 is the **Deterministic Writing Rule Expansion** release. It keeps the V2.5 bounded spelling contract and every existing persistence/correction safety guarantee while expanding the built-in English Writing insights catalogue with **Punctuation spacing** and **Trailing whitespace**. The specialized spacing rules own punctuation-adjacent and line/document-end whitespace ranges so batch correction does not produce conflicting collapse-versus-remove fixes. No persistence format, network behavior, or runtime dependency changes in V2.6.
+Version 2.7 is the **Bounded Writing Analysis & Large-Document Review Safety** release. It keeps the V2.6 six-rule catalogue, V2.5 bounded spelling behavior, and every existing persistence/correction contract while adding optional bounded writing-result capture and a truthful 200-finding Writing insights policy. Limited review filters and batch actions operate on captured findings only. No persistence format, network behavior, or runtime dependency changes in V2.7.
+
+## Large-document Writing insights — V2.7
+
+`WritingAnalyzer.analyze()` now accepts an optional positive `maxIssues` argument. Omitting it keeps the historical unbounded behavior. A bounded `WritingAnalysisResult` reports `issueLimit`, `isTruncated`, `isComplete`, and `capturedIssueCount`.
+
+Bounded results keep the same earliest review-order prefix as unbounded analysis even when a later rule yields an earlier source range. Reaching the numerical cap alone is not truncation: `isTruncated` becomes true only after another finding is observed.
+
+The built-in Writing insights dialog captures at most 200 findings. When overflow is proven it displays a limited notice, uses `200+`-style count semantics, and states that search/presets/category/fix filters operate on captured findings only. Batch labels become **Apply captured safe fixes (N)** or **Apply visible captured safe fixes (N)** so a partial result is never presented as a complete whole-document finding set.
+
+Rules are still executed across the supplied text so the globally earliest captured prefix remains correct. The bound limits retained finding objects/dialog workload; it is not a CPU-time or maximum-document-size promise. See [Performance and large-document behavior](docs/PERFORMANCE.md).
 
 ## Large-document spelling checks — V2.5
 

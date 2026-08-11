@@ -457,3 +457,11 @@ When changing spelling-analysis performance behavior:
 ## V2.6 writing-rule development checks
 
 When changing whitespace-oriented rules, test ownership boundaries as well as positive matches. A new automatic rule must not accidentally create a second incompatible replacement for an exact range already owned by another built-in. Use synthetic LF, CRLF, punctuation-adjacent, interior-space, and document-end cases. Keep issue ranges exact and keep widget tests on the real lazy Writing insights `ListView`; scroll controls into view rather than making production lists eager for tests.
+
+## V2.7 bounded-analysis development checks
+
+When modifying writing analysis, test both unbounded and bounded paths. A custom rule test must not assume findings are yielded in source order; bounded results must still match the prefix of the fully sorted unbounded result.
+
+New result metadata must preserve these invariants: limits are positive, exact-at-limit results can remain complete, truncation requires a proven overflow finding, and captured lists remain immutable.
+
+UI work must not describe a truncated captured set as the complete document finding set. Filters and batch actions must clearly state captured-only behavior while stale-range and one-step undo protections remain active.

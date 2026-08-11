@@ -199,6 +199,22 @@ Status: implemented.
 - [x] Complete V2.6 documentation, privacy/security, release, and web metadata updates.
 - [x] No persistence/network/runtime-dependency expansion.
 
+## 2.7 — Bounded writing analysis and large-document review safety
+
+Status: implemented.
+
+- [x] Optional positive `maxIssues` bound on `WritingAnalyzer.analyze()`.
+- [x] Backward-compatible unbounded analysis when no limit is supplied.
+- [x] Immutable writing result metadata for issue limit, truncation, completeness, and captured count.
+- [x] Globally ordered bounded collector preserving the unbounded review-order prefix.
+- [x] Exactly-at-limit results remain complete unless another finding exists.
+- [x] Full enabled-rule/full-document scanning retained for global ordering correctness.
+- [x] Built-in Writing insights cap of 200 captured findings.
+- [x] Accessible limited-analysis notice and truthful captured-finding counts.
+- [x] Captured-only review filter and batch-fix wording for incomplete result sets.
+- [x] Core and widget regression coverage for bounds, ordering, filtering, fixes, and immutability.
+- [x] No persistence/network/runtime-dependency expansion.
+
 ## Future 2.x direction
 
 Possible future work includes:

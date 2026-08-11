@@ -442,3 +442,11 @@ Do not replace these deterministic invariants with timing thresholds. See `docs/
 `test/v26_writing_rules_test.dart` and the expanded `test/writing_rules_test.dart` protect punctuation-spacing/trailing-whitespace matching, exact source ranges, LF/CRLF/document-end behavior, registry/default enablement, English pack eligibility, non-overlapping repeated-space ownership, batch composition with repeated punctuation, Writing insights switch visibility, and one-step undo.
 
 The legacy `test/writing_widget_test.dart` continues to exercise the real lazy dialog. Because the built-in catalogue now contains six rules, batch-action tests scroll farther through the actual list before locating/tapping actions; no eager test-only production layout is introduced.
+
+## V2.7 bounded writing-analysis coverage
+
+Focused tests cover unbounded compatibility, positive-limit validation, exact-at-limit completeness, proven overflow, immutable captured lists, captured per-rule counts, and globally ordered prefix retention when custom rules yield findings out of order.
+
+Widget tests use a deliberately small capture limit to exercise the limited state without huge fixtures. They verify the accessible overflow explanation, captured-safe-fix wording, returned captured issue ranges, and the filtered empty state that warns additional uncaptured findings may exist.
+
+The complete regression suite must continue protecting V2.6 rule behavior, V2.5 spelling bounds, V2.4 ranking extensibility, Portable settings, persisted rule choices, correction safety, and keyboard/editor workflows.

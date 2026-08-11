@@ -332,3 +332,11 @@ Keyboard issue navigation remains available across captured issues. Do not expos
 ## V2.6 Writing insights accessibility
 
 The two new rules appear as the same labeled `SwitchListTile` controls used by existing writing rules, so they remain keyboard/focus/assistive-technology reachable. Their findings use the existing semantic finding-card and safe-fix controls. Expanded catalogue tests intentionally scroll the real lazy dialog so narrow/small viewports remain part of the supported interaction model.
+
+## V2.7 limited Writing insights accessibility
+
+When Writing insights proves that more findings exist beyond its capture limit, the limited-result explanation is exposed in a semantic container and live region. The message states the captured count, the configured limit, and that review filters and batch actions use captured findings only.
+
+Limited results avoid an unqualified complete count. Batch labels switch to **captured** wording, and a filtered empty state says **No matching captured findings** when uncaptured findings may still exist.
+
+The existing rule switches, preset/filter controls, finding semantics, keyboard shortcut, safe-fix controls, and dialog scrolling remain available. Tests exercise the limited state with a small synthetic cap rather than relying on display color or a particular viewport size.

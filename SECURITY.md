@@ -273,3 +273,11 @@ When a report is truncated, the built-in editor hides Replace all because the ch
 ## V2.6 deterministic rule safety
 
 The two new spacing rules are source-controlled Dart implementations compiled with the application. They do not interpret or execute document content, load external rules, or bypass `WritingCorrection` source validation. Specialized ownership of punctuation-adjacent/trailing whitespace prevents conflicting built-in automatic replacements for the same exact source range. V2.6 adds no dependency, permission, remote service, telemetry, or dynamic-code boundary.
+
+## V2.7 bounded writing-analysis security
+
+V2.7 does not introduce remote rule loading, executable plugins, dynamic code evaluation, worker downloads, or network-backed analysis. `maxIssues` constrains retained `WritingIssue` objects but is not a denial-of-service boundary for arbitrary custom rules because every enabled/supported rule is still executed to preserve global result ordering.
+
+Callers that accept untrusted very large documents or untrusted third-party rule implementations must enforce their own input-size, execution-time, isolation, or plugin-trust policies. The built-in local rules remain source-controlled and deterministic.
+
+Automatic mutations continue to use exact-source stale checks and conservative overlap handling; a bounded result does not bypass those protections.

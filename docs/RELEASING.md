@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.6 release:
+Current V2.7 release:
 
 ```text
-2.6.0+11
+2.7.0+12
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -337,3 +337,27 @@ Verify package/About versions `2.6.0+11` / `2.6.0`, both stable new rule IDs, si
 Smoke-test synthetic input containing interior repeated spaces, spaces before punctuation, LF/CRLF trailing whitespace, document-end whitespace, and repeated punctuation. Confirm **Apply all safe fixes** yields the expected complete text and one **Undo correction** restores the exact original. Confirm an explicit old saved rule list does not silently gain V2.6 IDs, while **Reset rules to defaults** makes the current six-rule defaults active.
 
 Before tagging, confirm the tracked tree has no `tools/v26_*` helper and no `.github/workflows/v26-*` temporary gate/recovery workflow.
+
+## V2.7 bounded Writing insights release checks
+
+Before tagging V2.7:
+
+1. Verify `WritingAnalyzer.analyze()` remains unbounded when `maxIssues` is omitted.
+2. Verify zero/negative `maxIssues` values are rejected.
+3. Verify an exact-limit result is complete when no additional finding exists.
+4. Verify a true overflow result exposes `isTruncated == true`, `isComplete == false`, and the configured `issueLimit`.
+5. Verify bounded results equal the globally sorted prefix of unbounded results even when custom rules yield findings out of order.
+6. Verify Writing insights uses a 200-finding limit and only shows limited-state wording after overflow is proven.
+7. Verify search/presets/category/fix-only filters operate on captured findings in a limited result.
+8. Verify limited batch labels say **captured** and one Undo restores the complete pre-batch editor text.
+9. Verify `pubspec.lock` and direct runtime dependencies are unchanged unless a separately reviewed dependency change is intended.
+10. Verify `what_changed.md`, README, changelog, roadmap, API/performance/writing/user/accessibility/privacy/security/support docs, and web metadata describe V2.7 consistently.
+11. Verify no `tools/v27*` or `.github/workflows/v27-*` helper/gate artifact is present in the release tree.
+12. Run formatting, analyzer, the complete test suite, and `flutter build web --release` on the exact intended release SHA.
+
+Tag the verified release only from the exact merged `main` commit:
+
+```bash
+git tag -a v2.7.0 <verified-main-sha> -m "SpellChecker 2.7.0"
+git push origin v2.7.0
+```

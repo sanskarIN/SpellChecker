@@ -730,3 +730,20 @@ The historical method remains public and unbounded. It delegates to `analyze()` 
 Both rules return exact, non-empty source ranges and deterministic empty-string replacements. `WritingRuleRegistry.builtIns` and `defaultEnabledRuleIds` now contain six built-ins. Existing explicit per-language stored rule-ID sets remain explicit and are intersected with supported registered IDs as before.
 
 `RepeatedSpaceRule` retains its public ID/API but narrows its matching responsibility to repeated interior spaces, delegating punctuation-adjacent and terminal whitespace ranges to the specialized V2.6 rules.
+
+## V2.7 writing-analysis bounds
+
+`WritingAnalyzer.analyze()` adds the optional named parameter `int? maxIssues`. Existing callers remain source-compatible because the parameter is optional and defaults to unbounded behavior.
+
+`WritingAnalysisResult` adds:
+
+```text
+issueLimit          requested positive capture limit, or null
+isTruncated         true only after an additional finding exists
+isComplete          convenience inverse of isTruncated
+capturedIssueCount  number of retained findings
+```
+
+`issues` remains immutable. In bounded mode it contains the globally earliest findings according to the analyzer's existing deterministic comparator. `issueCountByRule` describes retained findings only when a result is truncated.
+
+Passing zero or a negative `maxIssues` throws `ArgumentError`. Constructing inconsistent result metadata, such as a non-positive `issueLimit` or `isTruncated == true` without a limit, also throws `ArgumentError`.

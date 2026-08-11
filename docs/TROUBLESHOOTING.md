@@ -449,3 +449,11 @@ If fewer than 200 issues are shown without `+`, the result completed normally.
 ## V2.6 spacing rules are missing or inactive
 
 If **Punctuation spacing** or **Trailing whitespace** is not enabled after upgrading, check whether the language has an explicit saved writing-rule override. V2.6 preserves explicit non-empty and explicit empty sets. Use **Reset rules to defaults** to clear that override and opt back into the current registry defaults. The two rules are currently eligible for the built-in English (US) and English (UK) packs only.
+
+## Writing insights says results are limited
+
+The built-in V2.7 Writing insights dialog captures at most 200 findings. A limited notice means at least one additional finding exists beyond that captured prefix.
+
+This does not mean analysis failed. Review the captured findings, apply safe captured fixes if desired, edit the text, and open Writing insights again for a fresh analysis. Search and filters only inspect the captured findings while the result is limited.
+
+The limit controls retained finding objects and dialog workload; it is not a hard maximum document length or a promise that rule execution stops after 200 matches.
