@@ -513,3 +513,13 @@ A result that happens to contain exactly 200 issues is not automatically labeled
 Writing insights includes **Punctuation spacing** and **Trailing whitespace** for English (US) and English (UK). Punctuation spacing removes spaces/tabs immediately before common punctuation such as commas, periods, colons, semicolons, question marks, and exclamation marks. Trailing whitespace removes spaces/tabs at line endings or at the end of the document without removing newline characters.
 
 Both are normal per-language writing-rule switches. If you have never customized rule choices, they are enabled with the current defaults. If you previously saved an explicit rule list, SpellChecker preserves that list instead of silently adding new rules; use **Reset rules to defaults** if you want the current complete default catalogue.
+
+## V2.7 large-document Writing insights
+
+Writing insights captures at most 200 findings in the built-in editor. If more findings exist, the dialog shows a limited-result notice and a `200+`-style count rather than presenting the captured count as the complete document total.
+
+When analysis is limited, search, review presets, Mechanics/Clarity filters, and Automatic fixes only operate on the captured findings. The dialog says this explicitly. A filtered empty state means no **captured** finding matched; it does not claim later uncaptured findings were searched.
+
+Batch buttons also use captured wording in the limited state: **Apply captured safe fixes** when no review filter is active and **Apply visible captured safe fixes** when filters are active. The same stale-source and overlap safety rules apply, and one Undo restores the entire accepted batch.
+
+The 200-finding policy is not a maximum document size. Rules still analyse the supplied text so SpellChecker can retain the correct earliest findings in review order.

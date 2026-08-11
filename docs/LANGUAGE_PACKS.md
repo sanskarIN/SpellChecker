@@ -313,3 +313,9 @@ Portable settings carry an explicit selected built-in language ID plus explicit 
 ## V2.6 English writing-rule eligibility
 
 `punctuation-spacing` and `trailing-whitespace` declare the language code `en`, so both built-in English (US) and English (UK) packs are eligible. V2.6 does not change spelling tokenization, normalization, dictionary contents, language IDs, personal vocabulary namespaces, or dictionary transfer formats.
+
+## V2.7 bounded writing analysis and language packs
+
+The writing-analysis capture bound does not change language eligibility. `WritingAnalyzer` still checks each enabled rule with the explicitly selected `SpellLanguagePack` and runs only rules whose `supports()` contract matches that pack.
+
+The built-in 200-finding Writing insights policy is shared by English (US) and English (UK). Language selection, per-language personal vocabulary, and per-language writing-rule preferences remain independently persisted exactly as before V2.7.
