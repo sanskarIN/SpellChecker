@@ -156,6 +156,15 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
         .where((WritingIssue issue) => issue.hasAutomaticFix)
         .toList(growable: false);
 
+    String ruleSubtitle(WritingRule rule) {
+      final base = '${rule.category.displayName} • ${rule.description}';
+      final total = analysis.totalIssueCountByRule?[rule.id];
+      if (!_enabledRuleIds.contains(rule.id) || total == null) {
+        return base;
+      }
+      return '$base • Total findings: $total';
+    }
+
     return AlertDialog(
       title: const Row(
         children: <Widget>[
@@ -282,9 +291,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                     title: Text(rule.displayName),
-                    subtitle: Text(
-                      '${rule.category.displayName} • ${rule.description}',
-                    ),
+                    subtitle: Text(ruleSubtitle(rule)),
                     value: _enabledRuleIds.contains(rule.id),
                     onChanged: (bool value) => _toggleRule(rule.id, value),
                   ),
@@ -298,16 +305,26 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                     ),
                   ),
                   Text(
-                    '${visibleIssues.length}/${analysis.capturedIssueCount}${analysis.isTruncated ? '+' : ''}',
+                    analysis.isTruncated
+                        ? '${visibleIssues.length}/${analysis.capturedIssueCount} captured'
+                        : '${visibleIssues.length}/${analysis.capturedIssueCount}',
                   ),
                   const SizedBox(width: 8),
-                  Badge(
-                    label: Text(
-                      analysis.isTruncated && query.isEmpty
-                          ? '${analysis.capturedIssueCount}+'
-                          : '${visibleIssues.length}',
+                  Tooltip(
+                    message:
+                        analysis.isTruncated && analysis.totalIssueCount != null
+                        ? '${analysis.capturedIssueCount} captured of ${analysis.totalIssueCount} total findings'
+                        : '${visibleIssues.length} visible findings',
+                    child: Badge(
+                      label: Text(
+                        analysis.isTruncated && query.isEmpty
+                            ? analysis.totalIssueCount == null
+                                  ? '${analysis.capturedIssueCount}+'
+                                  : '${analysis.capturedIssueCount}/${analysis.totalIssueCount}'
+                            : '${visibleIssues.length}',
+                      ),
+                      child: const Icon(Icons.fact_check_outlined),
                     ),
-                    child: const Icon(Icons.fact_check_outlined),
                   ),
                 ],
               ),
@@ -316,6 +333,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                 _WritingAnalysisLimitNotice(
                   capturedCount: analysis.capturedIssueCount,
                   issueLimit: analysis.issueLimit!,
+                  totalIssueCount: analysis.totalIssueCount,
                 ),
               ],
               if (visibleAutomaticIssues.isNotEmpty) ...<Widget>[
@@ -356,7 +374,9 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                       ? 'No matching captured findings'
                       : 'No matching findings',
                   message: analysis.isTruncated
-                      ? 'None of the captured findings match the current review filters. Additional uncaptured findings may exist.'
+                      ? analysis.uncapturedIssueCount == null
+                            ? 'None of the captured findings match the current review filters. Additional uncaptured findings may exist.'
+                            : 'None of the captured findings match the current review filters. ${analysis.uncapturedIssueCount} uncaptured findings were not searched.'
                       : 'The enabled rules have findings, but none match the current review filters.',
                 )
               else
@@ -393,15 +413,25 @@ class _WritingAnalysisLimitNotice extends StatelessWidget {
   const _WritingAnalysisLimitNotice({
     required this.capturedCount,
     required this.issueLimit,
+    required this.totalIssueCount,
   });
 
   final int capturedCount;
   final int issueLimit;
+  final int? totalIssueCount;
 
   @override
   Widget build(BuildContext context) {
-    final message =
-        'Showing the first $capturedCount findings in review order. More findings exist beyond the $issueLimit-finding capture limit. Review filters and batch actions use captured findings only.';
+    final total = totalIssueCount;
+    final uncaptured = total == null ? null : total - capturedCount;
+    final omittedLabel = uncaptured == null
+        ? null
+        : uncaptured == 1
+        ? '1 additional finding is'
+        : '$uncaptured additional findings are';
+    final message = total == null
+        ? 'Showing the first $capturedCount findings in review order. More findings exist beyond the $issueLimit-finding capture limit. Review filters and batch actions use captured findings only.'
+        : 'Showing the first $capturedCount of $total findings in review order. $omittedLabel not retained by the $issueLimit-finding capture limit. Review filters and batch actions use captured findings only.';
 
     return Semantics(
       container: true,
