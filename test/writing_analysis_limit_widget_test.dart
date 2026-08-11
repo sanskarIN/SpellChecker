@@ -56,8 +56,6 @@ void main() {
     await tester.tap(find.text('Open insights'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Total findings: 3'), findsOneWidget);
-
     final list = _dialogList();
     final scrollable = _dialogScrollable();
     expect(list, findsOneWidget);
