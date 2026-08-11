@@ -14,10 +14,7 @@ void main() {
         ],
       );
 
-      final result = analyzer.analyze(
-        'abcdefghijk',
-        languagePack: pack,
-      );
+      final result = analyzer.analyze('abcdefghijk', languagePack: pack);
 
       expect(result.isTruncated, isFalse);
       expect(result.capturedIssueCount, 5);
@@ -55,10 +52,7 @@ void main() {
         2,
         3,
       ]);
-      expect(result.issueCountByRule, <String, int>{
-        'beta': 2,
-        'alpha': 1,
-      });
+      expect(result.issueCountByRule, <String, int>{'beta': 2, 'alpha': 1});
       expect(result.totalIssueCountByRule, <String, int>{
         'alpha': 4,
         'beta': 5,
@@ -88,16 +82,10 @@ void main() {
 
     test('zero findings still have exact analyzer diagnostics', () {
       final analyzer = WritingAnalyzer(
-        rules: const <WritingRule>[
-          _DiagnosticOffsetsRule('alpha', <int>[]),
-        ],
+        rules: const <WritingRule>[_DiagnosticOffsetsRule('alpha', <int>[])],
       );
 
-      final result = analyzer.analyze(
-        'abc',
-        languagePack: pack,
-        maxIssues: 2,
-      );
+      final result = analyzer.analyze('abc', languagePack: pack, maxIssues: 2);
 
       expect(result.isClean, isTrue);
       expect(result.isComplete, isTrue);

@@ -124,9 +124,8 @@ class WritingAnalysisResult {
 
   /// Exact number of findings not retained because of [issueLimit], when the
   /// total is known.
-  int? get uncapturedIssueCount => totalIssueCount == null
-      ? null
-      : totalIssueCount! - capturedIssueCount;
+  int? get uncapturedIssueCount =>
+      totalIssueCount == null ? null : totalIssueCount! - capturedIssueCount;
 
   Map<String, int> get issueCountByRule {
     final counts = <String, int>{};
