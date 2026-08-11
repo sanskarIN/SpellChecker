@@ -49,10 +49,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final scrollable = _dialogScrollable();
-    for (final expected in <String>[
-      'Total findings: 3',
-      'Total findings: 2',
-    ]) {
+    for (final expected in <String>['Total findings: 3', 'Total findings: 2']) {
       final finder = find.textContaining(expected);
       await tester.scrollUntilVisible(finder, 120, scrollable: scrollable);
       await tester.pumpAndSettle();
