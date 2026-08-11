@@ -603,3 +603,15 @@ The existing `spellchecker.writing_rule_ids.v1.<language-id>` key meaning and st
 ### V2.6 regression requirements
 
 Changes to either spacing rule must keep tests for exact source ranges, LF/CRLF/document-end handling, punctuation adjacency, interior-space ownership, English pack support, default registry membership, safe batch composition, Writing insights visibility, and one-step undo.
+
+## V2.7 bounded writing analysis
+
+`WritingAnalyzer.analyze()` accepts an optional positive `maxIssues` argument. Omitting it preserves the historical unbounded contract.
+
+A bounded `WritingAnalysisResult` exposes `issueLimit`, `isTruncated`, `isComplete`, and `capturedIssueCount`. Reaching the numerical limit alone does not make a result truncated: truncation is reported only after an additional finding is observed.
+
+The bounded collector keeps at most `maxIssues` finding objects while preserving the same globally sorted prefix produced by unbounded analysis. Rules may yield findings in arbitrary source order, and later rules may yield an earlier source range, so the collector can displace a worse retained finding rather than simply stopping after the first N yielded values.
+
+The analyzer still invokes every enabled and supported rule across the supplied text. This is a finding-retention bound, not a rule-runtime, character-count, or document-length bound.
+
+The built-in Writing insights dialog requests at most 200 captured findings. When overflow is proven, filters operate on captured findings only, and batch actions use **Apply captured safe fixes** or **Apply visible captured safe fixes** wording. Existing stale-source, advisory-skip, overlap-resolution, end-to-start mutation, and one-step undo contracts remain unchanged.

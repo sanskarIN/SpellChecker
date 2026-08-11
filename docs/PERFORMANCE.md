@@ -144,3 +144,26 @@ Potential follow-up profiling work includes:
 - Explicit caller-configurable document-size policies.
 
 Any optimization must preserve source offsets, language normalization, suggestion correctness, deterministic ranking, stale-correction protection, and privacy boundaries.
+
+## V2.7 bounded Writing insights analysis
+
+Writing analysis now supports an optional retained-finding bound:
+
+```dart
+final result = analyzer.analyze(
+  text,
+  languagePack: pack,
+  enabledRuleIds: enabledIds,
+  maxIssues: 200,
+);
+```
+
+`null` preserves unbounded finding capture. A supplied bound must be positive.
+
+The collector stores at most the requested number of `WritingIssue` objects and maintains the analyzer's global review ordering: source start, severity ordering, then rule ID. If a later rule yields an earlier finding, that finding can replace a worse retained item. Bounded results therefore equal the first N items of the corresponding unbounded sorted result.
+
+The analyzer does **not** stop running rules after N findings. It must inspect all enabled/supported rule streams to know whether a later rule contributes an earlier result and to distinguish an exact-N complete result from a genuinely truncated result. `maxIssues` is therefore a retained-finding memory/UI bound, not a CPU-time, rule-invocation, character, line, or document-size bound.
+
+The built-in Writing insights policy is 200 captured findings. A `200+`-style limited state appears only when another finding beyond the cap has actually been observed. Search, presets, category filters, automatic-fix filtering, and batch actions operate only on the captured prefix when analysis is truncated.
+
+For profiling, measure writing-rule execution and bounded-result maintenance separately. Synthetic workloads should cover many findings from one rule, many enabled rules, out-of-order custom-rule yields, exact-at-limit documents, and true overflow. Avoid wall-clock correctness thresholds unless the runner environment is explicitly controlled.
