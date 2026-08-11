@@ -73,7 +73,11 @@ void main() {
     final diagnosticsBadge = find.byKey(
       const ValueKey<String>('writing-findings-total-badge'),
     );
-    for (var attempt = 0; attempt < 6 && diagnosticsBadge.evaluate().isEmpty; attempt++) {
+    for (
+      var attempt = 0;
+      attempt < 6 && diagnosticsBadge.evaluate().isEmpty;
+      attempt++
+    ) {
       await tester.drag(_dialogList(), const Offset(0, 140));
       await tester.pumpAndSettle();
     }
