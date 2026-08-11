@@ -70,14 +70,13 @@ void main() {
       findsOneWidget,
     );
 
-    final capturedTooltip = find.byTooltip('2 captured of 5 total findings');
-    await tester.scrollUntilVisible(
-      capturedTooltip,
-      100,
-      scrollable: scrollable,
+    final diagnosticsBadge = find.byKey(
+      const ValueKey<String>('writing-findings-total-badge'),
     );
-    await tester.pumpAndSettle();
-    expect(capturedTooltip, findsOneWidget);
+    expect(diagnosticsBadge, findsOneWidget);
+    final badge = tester.widget<Badge>(diagnosticsBadge);
+    expect(badge.label, isA<Text>());
+    expect((badge.label! as Text).data, '2/5');
   });
 }
 
