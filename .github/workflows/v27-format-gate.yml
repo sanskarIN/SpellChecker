@@ -1,0 +1,43 @@
+name: V2.7 Format Gate
+
+on:
+  pull_request:
+    branches: [v2.7-format-gate-base]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out V2.7 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.7-bounded-writing-analysis
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Format new V2.7 tests
+        run: dart format test/writing_analysis_limit_test.dart test/writing_analysis_limit_widget_test.dart
+
+      - name: Commit canonical formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add test/writing_analysis_limit_test.dart test/writing_analysis_limit_widget_test.dart
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'V2.7 tests already formatted.'
+          else
+            git commit -m 'style: apply canonical formatting to V2.7 tests'
+            git push origin HEAD:v2.7-bounded-writing-analysis
+          fi
