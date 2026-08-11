@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.5 release:
+Current V2.6 release:
 
 ```text
-2.5.0+10
+2.6.0+11
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -228,8 +228,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.5.0 -m "SpellChecker v2.5.0"
-git push origin v2.5.0
+git tag -a v2.6.0 -m "SpellChecker v2.6.0"
+git push origin v2.6.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -329,3 +329,11 @@ Before tagging V2.5-compatible code, verify:
 7. `docs/PERFORMANCE.md` matches the implementation.
 8. No new runtime dependency/persistence/network behavior was introduced unintentionally.
 9. Formatting, analyzer, focused V2.5 tests, complete tests, and `flutter build web --release` pass on the exact release tree.
+
+## V2.6 release checks
+
+Verify package/About versions `2.6.0+11` / `2.6.0`, both stable new rule IDs, six built-in registry/default IDs, punctuation/trailing exact-range behavior, repeated-space non-overlap ownership, explicit rule-preference compatibility, focused V2.6 tests, complete writing tests, complete regression suite, and `flutter build web --release`.
+
+Smoke-test synthetic input containing interior repeated spaces, spaces before punctuation, LF/CRLF trailing whitespace, document-end whitespace, and repeated punctuation. Confirm **Apply all safe fixes** yields the expected complete text and one **Undo correction** restores the exact original. Confirm an explicit old saved rule list does not silently gain V2.6 IDs, while **Reset rules to defaults** makes the current six-rule defaults active.
+
+Before tagging, confirm the tracked tree has no `tools/v26_*` helper and no `.github/workflows/v26-*` temporary gate/recovery workflow.

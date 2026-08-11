@@ -44,6 +44,58 @@ void main() {
       expect(issues.every((issue) => issue.replacement == ' '), isTrue);
     });
 
+    test(
+      'punctuation spacing removes horizontal whitespace before punctuation',
+      () {
+        const rule = PunctuationSpacingRule();
+
+        final issues = rule.analyze('Hello , world  ! Fine\t?', pack).toList();
+
+        expect(issues, hasLength(3));
+        expect(
+          issues.map((issue) => issue.originalText),
+          orderedEquals(<String>[' ', '  ', '\t']),
+        );
+        expect(issues.every((issue) => issue.replacement == ''), isTrue);
+        expect(
+          issues.every((issue) => issue.ruleId == 'punctuation-spacing'),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'punctuation spacing ignores punctuation without preceding whitespace',
+      () {
+        const rule = PunctuationSpacingRule();
+
+        expect(rule.analyze('Hello, world! Fine?', pack), isEmpty);
+      },
+    );
+
+    test('trailing whitespace handles LF, CRLF, and document end', () {
+      const rule = TrailingWhitespaceRule();
+      const text = 'one  \ntwo\t\r\nthree   ';
+
+      final issues = rule.analyze(text, pack).toList();
+
+      expect(issues, hasLength(3));
+      expect(
+        issues.map((issue) => issue.originalText),
+        orderedEquals(<String>['  ', '\t', '   ']),
+      );
+      expect(issues.every((issue) => issue.replacement == ''), isTrue);
+      for (final issue in issues) {
+        expect(text.substring(issue.start, issue.end), issue.originalText);
+      }
+    });
+
+    test('trailing whitespace ignores indentation and interior spacing', () {
+      const rule = TrailingWhitespaceRule();
+
+      expect(rule.analyze('  indented\nword\tinside', pack), isEmpty);
+    });
+
     test('repeated punctuation rule collapses identical punctuation runs', () {
       const rule = RepeatedPunctuationRule();
 
@@ -65,7 +117,7 @@ void main() {
 
       expect(result.languageId, 'en-US');
       expect(result.isClean, isFalse);
-      expect(result.analyzedRuleIds, hasLength(4));
+      expect(result.analyzedRuleIds, hasLength(6));
       expect(
         result.issues.map((issue) => issue.start),
         orderedEquals(
@@ -76,6 +128,21 @@ void main() {
       expect(result.issueCountByRule['sentence-capitalization'], 1);
       expect(result.issueCountByRule['repeated-space'], 1);
       expect(result.issueCountByRule['repeated-punctuation'], 1);
+      expect(result.issueCountByRule['punctuation-spacing'], isNull);
+      expect(result.issueCountByRule['trailing-whitespace'], isNull);
+    });
+
+    test('new rules are enabled by default and address mixed mechanics', () {
+      final analyzer = WritingAnalyzer();
+
+      final result = analyzer.analyze('Hello  !\nWorld  ', languagePack: pack);
+
+      expect(
+        result.analyzedRuleIds,
+        containsAll(<String>{'punctuation-spacing', 'trailing-whitespace'}),
+      );
+      expect(result.issueCountByRule['punctuation-spacing'], 1);
+      expect(result.issueCountByRule['trailing-whitespace'], 1);
     });
 
     test('can disable all but one rule', () {
@@ -93,10 +160,31 @@ void main() {
     });
 
     test('English rules support both built-in English packs', () {
-      const rule = RepeatedWordRule();
+      const rules = <WritingRule>[
+        RepeatedWordRule(),
+        PunctuationSpacingRule(),
+        TrailingWhitespaceRule(),
+      ];
 
-      expect(rule.supports(SpellLanguageRegistry.englishUs), isTrue);
-      expect(rule.supports(SpellLanguageRegistry.englishGb), isTrue);
+      for (final rule in rules) {
+        expect(rule.supports(SpellLanguageRegistry.englishUs), isTrue);
+        expect(rule.supports(SpellLanguageRegistry.englishGb), isTrue);
+      }
+    });
+
+    test('registry resolves new stable rule IDs', () {
+      expect(
+        WritingRuleRegistry.byId('punctuation-spacing'),
+        isA<PunctuationSpacingRule>(),
+      );
+      expect(
+        WritingRuleRegistry.byId('trailing-whitespace'),
+        isA<TrailingWhitespaceRule>(),
+      );
+      expect(
+        WritingRuleRegistry.defaultEnabledRuleIds,
+        containsAll(<String>{'punctuation-spacing', 'trailing-whitespace'}),
+      );
     });
   });
 }

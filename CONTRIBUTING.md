@@ -438,3 +438,7 @@ Preserve the default ranking order unless a release explicitly documents an inte
 Changes to issue limits, scan termination, candidate generation, caching, ranking, or large-result rendering should include deterministic regression coverage and an update to `docs/PERFORMANCE.md`.
 
 Do not use private documents as benchmark fixtures. Do not describe `maxIssues` as a hard document-size bound. Do not expose Replace all on a truncated issue report unless a future design supplies a separate complete-range safety contract.
+
+## V2.6 writing-rule catalogue contributions
+
+Whitespace-rule changes must document source-range ownership and include interaction tests with existing automatic rules. Do not rely on rule-ID alphabetical ordering to repair avoidable overlap: when two built-ins have distinct semantic responsibilities, prefer non-overlapping matching boundaries. Preserve stable shipped IDs, per-language explicit preference semantics, deterministic fixes, and the existing correction safety/undo pipeline.

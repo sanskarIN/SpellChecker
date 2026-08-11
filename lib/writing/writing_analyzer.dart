@@ -1,8 +1,10 @@
 import '../core/spell_language_pack.dart';
+import 'rules/punctuation_spacing_rule.dart';
 import 'rules/repeated_punctuation_rule.dart';
 import 'rules/repeated_space_rule.dart';
 import 'rules/repeated_word_rule.dart';
 import 'rules/sentence_capitalization_rule.dart';
+import 'rules/trailing_whitespace_rule.dart';
 import 'writing_issue.dart';
 import 'writing_rule.dart';
 
@@ -83,6 +85,8 @@ class WritingRuleRegistry {
     RepeatedWordRule(),
     SentenceCapitalizationRule(),
     RepeatedSpaceRule(),
+    PunctuationSpacingRule(),
+    TrailingWhitespaceRule(),
     RepeatedPunctuationRule(),
   ];
 

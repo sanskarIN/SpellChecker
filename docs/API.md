@@ -722,3 +722,11 @@ The historical method remains public and unbounded. It delegates to `analyze()` 
 ## Safety boundary
 
 `maxIssues` does not weaken language normalization, known-word checks, source offsets, suggestion ranking, edit-distance thresholds, stale correction protection, or personal/ignored dictionary behavior. It controls issue capture/suggestion work only.
+
+## V2.6 writing-rule API additions
+
+`package:spellchecker/writing.dart` now exports `PunctuationSpacingRule` and `TrailingWhitespaceRule`. Their stable IDs are `punctuation-spacing` and `trailing-whitespace` respectively. Both implement the existing `WritingRule` contract; no abstract interface member was added, so external rule implementations remain source-compatible.
+
+Both rules return exact, non-empty source ranges and deterministic empty-string replacements. `WritingRuleRegistry.builtIns` and `defaultEnabledRuleIds` now contain six built-ins. Existing explicit per-language stored rule-ID sets remain explicit and are intersected with supported registered IDs as before.
+
+`RepeatedSpaceRule` retains its public ID/API but narrows its matching responsibility to repeated interior spaces, delegating punctuation-adjacent and terminal whitespace ranges to the specialized V2.6 rules.

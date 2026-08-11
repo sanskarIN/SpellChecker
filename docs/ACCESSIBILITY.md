@@ -328,3 +328,7 @@ The limited spelling-result state must not rely on the `+` badge alone.
 When results are truncated, the Results panel provides a live-region semantic message and visible explanatory text stating that only the first 200 spelling issues were captured and that Replace all is unavailable. Repeated-word chips use “captured occurrences” wording so screen-reader and visual users receive the same incompleteness signal.
 
 Keyboard issue navigation remains available across captured issues. Do not expose a keyboard-only bulk action that bypasses the limited-result Replace all restriction.
+
+## V2.6 Writing insights accessibility
+
+The two new rules appear as the same labeled `SwitchListTile` controls used by existing writing rules, so they remain keyboard/focus/assistive-technology reachable. Their findings use the existing semantic finding-card and safe-fix controls. Expanded catalogue tests intentionally scroll the real lazy dialog so narrow/small viewports remain part of the supported interaction model.

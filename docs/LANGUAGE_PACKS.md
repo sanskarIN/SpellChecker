@@ -309,3 +309,7 @@ The goal is a stable, explicit, testable language boundary that can be extended 
 ## V2.3 portable language preferences
 
 Portable settings carry an explicit selected built-in language ID plus explicit writing-rule overrides keyed by supported language ID. The settings codec rejects unsupported language IDs rather than guessing or auto-detecting a substitute. Personal vocabulary is deliberately excluded from portable settings and remains in its existing per-language local namespace. After a successful import, the editor loads the target language's existing personal words into a fresh engine and rechecks non-blank text. A missing override key means that language follows current registry defaults; an empty override list means explicit disable-all.
+
+## V2.6 English writing-rule eligibility
+
+`punctuation-spacing` and `trailing-whitespace` declare the language code `en`, so both built-in English (US) and English (UK) packs are eligible. V2.6 does not change spelling tokenization, normalization, dictionary contents, language IDs, personal vocabulary namespaces, or dictionary transfer formats.

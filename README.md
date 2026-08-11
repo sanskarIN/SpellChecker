@@ -25,7 +25,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - **Apply visible safe fixes (N)** when review filters are active.
 - **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
-- Built-in repeated-word, sentence-capitalization, repeated-space, and repeated-punctuation rules.
+- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, trailing-whitespace, and repeated-punctuation rules.
 - **Apply all safe fixes** for non-overlapping current writing findings.
 - Stale-range-safe individual and batch writing corrections.
 - One-step undo for a complete writing-fix batch.
@@ -54,9 +54,9 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.5.0+10`
+`2.6.0+11`
 
-Version 2.5 is the **Bounded Analysis & Large-Document Safety** release. It keeps V2.4 suggestion-ranker extensibility and every existing spelling/writing/persistence contract while adding public `SpellCheckReport` metadata and `SpellCheckerEngine.analyze()` for optional bounded issue capture. The built-in editor captures at most 200 spelling issues, labels genuinely truncated results as `200+`, and disables **Replace all** when the checked occurrence set is incomplete. No persistence format, network behavior, or runtime dependency changes in V2.5.
+Version 2.6 is the **Deterministic Writing Rule Expansion** release. It keeps the V2.5 bounded spelling contract and every existing persistence/correction safety guarantee while expanding the built-in English Writing insights catalogue with **Punctuation spacing** and **Trailing whitespace**. The specialized spacing rules own punctuation-adjacent and line/document-end whitespace ranges so batch correction does not produce conflicting collapse-versus-remove fixes. No persistence format, network behavior, or runtime dependency changes in V2.6.
 
 ## Large-document spelling checks — V2.5
 
@@ -92,10 +92,20 @@ The built-in rules cover:
 
 - Repeated adjacent words.
 - Sentence-start capitalization.
-- Repeated horizontal spaces.
+- Repeated interior horizontal spaces.
+- Horizontal whitespace before common punctuation.
+- Trailing horizontal whitespace at line/document ends.
 - Repeated identical punctuation.
 
 These rules are deterministic helpers, not a claim of full natural-language grammar coverage.
+
+### Expanded deterministic mechanics — V2.6
+
+Writing insights now includes **Punctuation spacing** (`punctuation-spacing`) and **Trailing whitespace** (`trailing-whitespace`) for both built-in English packs. Both rules use exact source ranges and empty-string automatic replacements, so individual and batch fixes continue through the existing stale-range-safe `WritingCorrection` APIs.
+
+`Repeated spaces` remains responsible for repeated interior spaces, but deliberately does not emit for a run immediately before common punctuation or at a line/document ending. Those ranges belong to the V2.6 specialized rules. This prevents two automatic rules from proposing incompatible fixes for the same characters while leaving the global V2.1 overlap policy unchanged.
+
+Users whose per-language rule preference is **unset/default** receive the expanded registry defaults. An explicit saved rule list—including an explicit empty list—remains authoritative and is not silently expanded. **Reset rules to defaults** clears the stored override and therefore opts that language back into the current six-rule defaults.
 
 ### Review filters — V2.2
 

@@ -148,3 +148,17 @@ Complete when relevant.
 - [ ] Bulk correction is not exposed for an incomplete checked occurrence set.
 - [ ] Performance tests use synthetic data and deterministic invariants rather than unstable wall-clock thresholds.
 - [ ] `docs/PERFORMANCE.md` is updated when the performance contract changes.
+
+## V2.6 deterministic writing-rule checklist
+
+Complete when relevant.
+
+- [ ] New/changed built-in rule IDs are stable and documented.
+- [ ] Exact source ranges and automatic replacements have focused tests.
+- [ ] English pack eligibility is explicit/tested when applicable.
+- [ ] Rule ownership does not create avoidable conflicting exact-range replacements.
+- [ ] Unset/default versus explicit persisted rule-list semantics remain compatible.
+- [ ] Writing insights lazy-list accessibility/viewport behavior is exercised realistically.
+- [ ] Batch composition and one-step undo remain safe.
+- [ ] No new persistence/network/telemetry/runtime dependency is introduced unintentionally.
+- [ ] No temporary `tools/v26_*` or `.github/workflows/v26-*` release artifact remains in the final tree.

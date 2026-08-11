@@ -436,3 +436,9 @@ flutter test test/bounded_analysis_widget_test.dart
 It uses 201 repeated synthetic unknown tokens to prove the `200+` limited-results state, accessible warning text, captured-occurrence wording, and absence of Replace all. A small two-occurrence complete result separately proves that Replace all remains available when results are complete.
 
 Do not replace these deterministic invariants with timing thresholds. See `docs/PERFORMANCE.md` for profiling guidance.
+
+## V2.6 deterministic writing-rule coverage
+
+`test/v26_writing_rules_test.dart` and the expanded `test/writing_rules_test.dart` protect punctuation-spacing/trailing-whitespace matching, exact source ranges, LF/CRLF/document-end behavior, registry/default enablement, English pack eligibility, non-overlapping repeated-space ownership, batch composition with repeated punctuation, Writing insights switch visibility, and one-step undo.
+
+The legacy `test/writing_widget_test.dart` continues to exercise the real lazy dialog. Because the built-in catalogue now contains six rules, batch-action tests scroll farther through the actual list before locating/tapping actions; no eager test-only production layout is introduced.

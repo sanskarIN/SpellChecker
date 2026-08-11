@@ -21,7 +21,7 @@ void main() {
   Future<void> scrollToFindings(WidgetTester tester) async {
     final insightsList = writingInsightsList();
     expect(insightsList, findsOneWidget);
-    await tester.drag(insightsList, const Offset(0, -600));
+    await tester.drag(insightsList, const Offset(0, -1400));
     await tester.pumpAndSettle();
   }
 
