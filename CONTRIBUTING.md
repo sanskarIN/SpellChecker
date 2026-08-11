@@ -442,3 +442,11 @@ Do not use private documents as benchmark fixtures. Do not describe `maxIssues` 
 ## V2.6 writing-rule catalogue contributions
 
 Whitespace-rule changes must document source-range ownership and include interaction tests with existing automatic rules. Do not rely on rule-ID alphabetical ordering to repair avoidable overlap: when two built-ins have distinct semantic responsibilities, prefer non-overlapping matching boundaries. Preserve stable shipped IDs, per-language explicit preference semantics, deterministic fixes, and the existing correction safety/undo pipeline.
+
+## V2.7 bounded-analysis contributions
+
+Changes to `WritingAnalyzer` bounds must preserve unbounded source compatibility, positive-limit validation, global deterministic ordering, exact-at-limit completeness, proven-overflow truncation semantics, and immutable result data.
+
+Custom-rule tests used for bounded analysis should include out-of-order yields so implementations cannot accidentally depend on registry order. UI contributions must describe incomplete result sets as captured/limited and must retain stale-source and one-step undo safety.
+
+Do not turn the V2.7 finding-retention bound into a claimed CPU/document-size security limit without a separate design and test contract.

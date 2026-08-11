@@ -344,3 +344,11 @@ V2.5 introduces no document persistence, analytics, remote logging, account syst
 ## V2.6 writing-rule privacy boundary
 
 Punctuation-spacing and trailing-whitespace analysis runs locally against the in-memory editor text through the existing `WritingAnalyzer`. Findings/source snippets remain memory-only. V2.6 persists no new value: only the existing per-language rule-ID preferences can reference the two new stable IDs after a user changes/reset rule choices. No document text, whitespace finding, correction plan, analytics event, telemetry, or network request is added.
+
+## V2.7 bounded writing-analysis privacy
+
+The optional writing `maxIssues` bound and the built-in 200-finding Writing insights policy do not add storage or transmission. The analyzer reads the supplied text in memory, retains at most the configured finding count when bounded, and returns in-memory metadata describing whether additional findings existed.
+
+Captured findings, uncaptured finding counts, analysis limits, review search/filter state, and correction history are not newly persisted. The application still has no cloud spelling/grammar service, telemetry, analytics, account requirement, advertising, background document upload, or automatic remote rewriting.
+
+A limited result should be treated as potentially containing sensitive source excerpts just like any other `WritingIssue`; application code must not log or export it by default.
