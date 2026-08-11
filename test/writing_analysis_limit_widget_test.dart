@@ -12,7 +12,7 @@ void main() {
   });
 
   testWidgets(
-    'limited analysis shows captured wording and returns captured fixes',
+    'limited analysis shows exact totals and returns captured fixes',
     (WidgetTester tester) async {
       WritingInsightsDialogResult? returnedResult;
       final analyzer = WritingAnalyzer(
@@ -56,18 +56,26 @@ void main() {
       await tester.tap(find.text('Open insights'));
       await tester.pumpAndSettle();
 
+      expect(find.textContaining('Total findings: 3'), findsOneWidget);
+
       final list = _dialogList();
       final scrollable = _dialogScrollable();
       expect(list, findsOneWidget);
       expect(scrollable, findsOneWidget);
 
       final limitedText = find.textContaining(
-        'More findings exist beyond the 2-finding capture limit',
+        'Showing the first 2 of 3 findings in review order.',
       );
       await tester.scrollUntilVisible(limitedText, 160, scrollable: scrollable);
       await tester.pumpAndSettle();
 
       expect(limitedText, findsOneWidget);
+      expect(
+        find.textContaining(
+          '1 additional finding is not retained by the 2-finding capture limit.',
+        ),
+        findsOneWidget,
+      );
 
       final applyCaptured = find.text('Apply captured safe fixes (2)');
       await tester.scrollUntilVisible(
@@ -90,7 +98,7 @@ void main() {
     },
   );
 
-  testWidgets('limited filtered state names captured findings truthfully', (
+  testWidgets('limited filtered state reports exact uncaptured count', (
     WidgetTester tester,
   ) async {
     final analyzer = WritingAnalyzer(
@@ -145,7 +153,7 @@ void main() {
 
     expect(emptyTitle, findsOneWidget);
     expect(
-      find.textContaining('Additional uncaptured findings may exist.'),
+      find.textContaining('1 uncaptured finding was not searched.'),
       findsOneWidget,
     );
   });
