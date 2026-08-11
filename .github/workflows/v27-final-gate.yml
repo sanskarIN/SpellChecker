@@ -1,0 +1,111 @@
+name: V2.7 Final Release Gate
+
+on:
+  pull_request:
+    branches: [v2.7-final-gate-base]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out V2.7 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.7-bounded-writing-analysis
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify dependency and formatting stability
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- pubspec.lock
+          git fetch origin main
+          git diff --exit-code origin/main -- pubspec.lock
+          dart format --output=none --set-exit-if-changed lib test
+          git diff --check
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test focused V2.7 bounded analysis
+        run: |
+          flutter test test/writing_analysis_limit_test.dart --reporter expanded
+          flutter test test/writing_analysis_limit_widget_test.dart --reporter expanded
+
+      - name: Test complete project suite
+        run: flutter test --reporter expanded
+
+      - name: Build release web app
+        run: flutter build web --release
+
+      - name: Audit permanent V2.7 release tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '^version: 2.7.0+12$' pubspec.yaml
+          grep -q "applicationVersion: '2.7.0'" lib/features/editor/spell_checker_page.dart
+          grep -q 'int? maxIssues' lib/writing/writing_analyzer.dart
+          grep -q 'final int? issueLimit' lib/writing/writing_analyzer.dart
+          grep -q 'final bool isTruncated' lib/writing/writing_analyzer.dart
+          grep -q 'bool get isComplete' lib/writing/writing_analyzer.dart
+          grep -q 'int get capturedIssueCount' lib/writing/writing_analyzer.dart
+          grep -q 'static const int defaultMaxIssues = 200' lib/features/editor/writing_insights_dialog.dart
+          grep -q 'Apply captured safe fixes' lib/features/editor/writing_insights_dialog.dart
+          grep -q 'Apply visible captured safe fixes' lib/features/editor/writing_insights_dialog.dart
+          grep -q 'No matching captured findings' lib/features/editor/writing_insights_dialog.dart
+          test -f test/writing_analysis_limit_test.dart
+          test -f test/writing_analysis_limit_widget_test.dart
+          grep -q '## \[2.7.0\] - 2026-08-11' CHANGELOG.md
+          grep -q '`2.7.0+12`' README.md
+          grep -q '## Large-document Writing insights — V2.7' README.md
+          grep -q '## 2.7 — Bounded writing analysis and large-document review safety' docs/ROADMAP.md
+          grep -q '## V2.7 bounded writing analysis' docs/WRITING_RULES.md
+          grep -q '## V2.7 bounded Writing insights analysis' docs/PERFORMANCE.md
+          grep -q '## V2.7 writing-analysis bounds' docs/API.md
+          grep -q '## V2.7 bounded writing-result architecture' docs/ARCHITECTURE.md
+          grep -q '## V2.7 bounded-analysis development checks' docs/DEVELOPMENT.md
+          grep -q '## V2.7 bounded writing-analysis coverage' docs/TESTING.md
+          grep -q '## V2.7 large-document Writing insights' docs/USER_GUIDE.md
+          grep -q '## V2.7 limited Writing insights accessibility' docs/ACCESSIBILITY.md
+          grep -q '## Writing insights says results are limited' docs/TROUBLESHOOTING.md
+          grep -q '## V2.7 bounded writing analysis and language packs' docs/LANGUAGE_PACKS.md
+          grep -q '## V2.7 bounded writing-analysis privacy' docs/PRIVACY.md
+          grep -q '## V2.7 bounded writing-analysis security' SECURITY.md
+          grep -q '## V2.7 limited Writing insights reports' SUPPORT.md
+          grep -q '## V2.7 bounded-analysis contributions' CONTRIBUTING.md
+          grep -q 'Current V2.7 release:' docs/RELEASING.md
+          grep -q 'git tag -a v2.7.0' docs/RELEASING.md
+          grep -q '## V2.7 bounded writing-analysis checklist' .github/pull_request_template.md
+          grep -q '## V2.7 — Bounded Writing Analysis & Large-Document Review Safety' what_changed.md
+          grep -q 'bounded large-document spelling and Writing insights results' web/index.html
+          grep -q 'bounded large-document spelling and Writing insights results' web/manifest.json
+          python -m json.tool web/manifest.json >/dev/null
+          if git diff --name-only origin/main...HEAD | grep -E '^(tools/v27|\.github/workflows/v27-)'; then
+            echo 'Disposable V2.7 helper/workflow leaked into permanent release diff.' >&2
+            exit 1
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          lines = Path('pubspec.yaml').read_text().splitlines()
+          start = lines.index('dependencies:') + 1
+          end = lines.index('dev_dependencies:')
+          direct = []
+          for line in lines[start:end]:
+              if line.startswith('  ') and not line.startswith('    ') and ':' in line:
+                  direct.append(line.strip().split(':', 1)[0])
+          if direct != ['flutter', 'shared_preferences']:
+              raise SystemExit(f'Unexpected runtime dependencies: {direct}')
+          PY
