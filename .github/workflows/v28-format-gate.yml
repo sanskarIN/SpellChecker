@@ -25,7 +25,13 @@ jobs:
           cache: true
 
       - name: Format V2.8 source and tests
-        run: dart format lib/writing/writing_analyzer.dart test/writing_analysis_diagnostics_test.dart
+        run: |
+          dart format \
+            lib/writing/writing_analyzer.dart \
+            lib/features/editor/writing_insights_dialog.dart \
+            test/writing_analysis_diagnostics_test.dart \
+            test/writing_analysis_limit_widget_test.dart \
+            test/writing_analysis_diagnostics_widget_test.dart
 
       - name: Commit canonical formatting
         shell: bash
@@ -33,11 +39,16 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/writing/writing_analyzer.dart test/writing_analysis_diagnostics_test.dart
+          git add \
+            lib/writing/writing_analyzer.dart \
+            lib/features/editor/writing_insights_dialog.dart \
+            test/writing_analysis_diagnostics_test.dart \
+            test/writing_analysis_limit_widget_test.dart \
+            test/writing_analysis_diagnostics_widget_test.dart
           git diff --cached --check
           if git diff --cached --quiet; then
             echo 'V2.8 source/tests already formatted.'
           else
-            git commit -m 'style: apply canonical formatting to V2.8 diagnostics'
+            git commit -m 'style: format V2.8 diagnostics UI and tests'
             git push origin HEAD:v2.8-writing-analysis-diagnostics
           fi
