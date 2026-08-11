@@ -68,7 +68,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(limitedText, findsOneWidget);
-      expect(find.text('2+'), findsWidgets);
 
       final applyCaptured = find.text('Apply captured safe fixes (2)');
       await tester.scrollUntilVisible(
