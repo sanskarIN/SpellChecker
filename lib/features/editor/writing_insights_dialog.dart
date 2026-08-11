@@ -376,6 +376,8 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                   message: analysis.isTruncated
                       ? analysis.uncapturedIssueCount == null
                             ? 'None of the captured findings match the current review filters. Additional uncaptured findings may exist.'
+                            : analysis.uncapturedIssueCount == 1
+                            ? 'None of the captured findings match the current review filters. 1 uncaptured finding was not searched.'
                             : 'None of the captured findings match the current review filters. ${analysis.uncapturedIssueCount} uncaptured findings were not searched.'
                       : 'The enabled rules have findings, but none match the current review filters.',
                 )
