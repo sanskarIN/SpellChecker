@@ -73,11 +73,22 @@ void main() {
     final diagnosticsBadge = find.byKey(
       const ValueKey<String>('writing-findings-total-badge'),
     );
+    for (var attempt = 0; attempt < 6 && diagnosticsBadge.evaluate().isEmpty; attempt++) {
+      await tester.drag(_dialogList(), const Offset(0, 140));
+      await tester.pumpAndSettle();
+    }
     expect(diagnosticsBadge, findsOneWidget);
     final badge = tester.widget<Badge>(diagnosticsBadge);
     expect(badge.label, isA<Text>());
     expect((badge.label! as Text).data, '2/5');
   });
+}
+
+Finder _dialogList() {
+  return find.descendant(
+    of: find.byType(AlertDialog),
+    matching: find.byType(ListView),
+  );
 }
 
 Finder _dialogScrollable() {
