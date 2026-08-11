@@ -6,7 +6,7 @@ def append_section(path_name: str, title: str, section: str) -> None:
     text = path.read_text()
     if not text.startswith(title):
         raise SystemExit(f'Unexpected title for {path_name}')
-    marker = section.splitlines()[0]
+    marker = next(line for line in section.splitlines() if line.strip())
     if marker in text:
         raise SystemExit(f'V2.7 section already exists in {path_name}')
     path.write_text(text.rstrip() + '\n\n' + section.strip() + '\n')
