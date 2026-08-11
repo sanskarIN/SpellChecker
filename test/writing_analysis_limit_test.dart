@@ -23,19 +23,13 @@ void main() {
       final analyzer = WritingAnalyzer();
 
       expect(
-        () => analyzer.analyze(
-          'Hello world.',
-          languagePack: pack,
-          maxIssues: 0,
-        ),
+        () =>
+            analyzer.analyze('Hello world.', languagePack: pack, maxIssues: 0),
         throwsArgumentError,
       );
       expect(
-        () => analyzer.analyze(
-          'Hello world.',
-          languagePack: pack,
-          maxIssues: -1,
-        ),
+        () =>
+            analyzer.analyze('Hello world.', languagePack: pack, maxIssues: -1),
         throwsArgumentError,
       );
     });
@@ -48,11 +42,7 @@ void main() {
       );
       const text = 'abcdefghij';
 
-      final result = analyzer.analyze(
-        text,
-        languagePack: pack,
-        maxIssues: 3,
-      );
+      final result = analyzer.analyze(text, languagePack: pack, maxIssues: 3);
 
       expect(result.issueLimit, 3);
       expect(result.capturedIssueCount, 3);
@@ -69,11 +59,7 @@ void main() {
       );
       const text = 'abcdefghij';
 
-      final result = analyzer.analyze(
-        text,
-        languagePack: pack,
-        maxIssues: 3,
-      );
+      final result = analyzer.analyze(text, languagePack: pack, maxIssues: 3);
 
       expect(result.issueLimit, 3);
       expect(result.capturedIssueCount, 3);
@@ -92,11 +78,7 @@ void main() {
       final text = List<String>.filled(100, 'x').join();
 
       final unbounded = analyzer.analyze(text, languagePack: pack);
-      final bounded = analyzer.analyze(
-        text,
-        languagePack: pack,
-        maxIssues: 3,
-      );
+      final bounded = analyzer.analyze(text, languagePack: pack, maxIssues: 3);
 
       expect(unbounded.issues.map((issue) => issue.start), <int>[
         5,
@@ -119,11 +101,7 @@ void main() {
       );
       final text = List<String>.filled(100, 'x').join();
 
-      final result = analyzer.analyze(
-        text,
-        languagePack: pack,
-        maxIssues: 2,
-      );
+      final result = analyzer.analyze(text, languagePack: pack, maxIssues: 2);
 
       expect(result.issues.map((issue) => issue.start), <int>[1, 2]);
       expect(result.isTruncated, isTrue);
@@ -139,17 +117,10 @@ void main() {
       );
       const text = 'abcdefghij';
 
-      final result = analyzer.analyze(
-        text,
-        languagePack: pack,
-        maxIssues: 4,
-      );
+      final result = analyzer.analyze(text, languagePack: pack, maxIssues: 4);
 
       expect(result.isTruncated, isTrue);
-      expect(result.issueCountByRule, <String, int>{
-        'rule-a': 2,
-        'rule-b': 2,
-      });
+      expect(result.issueCountByRule, <String, int>{'rule-a': 2, 'rule-b': 2});
       expect(result.capturedIssueCount, 4);
     });
 
