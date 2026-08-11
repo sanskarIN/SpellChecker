@@ -37,7 +37,7 @@ void main() {
     test('exactly reaching the limit remains complete', () {
       final analyzer = WritingAnalyzer(
         rules: <WritingRule>[
-          _OffsetsRule('only-rule', <int>[1, 3, 5]),
+          const _OffsetsRule('only-rule', <int>[1, 3, 5]),
         ],
       );
       const text = 'abcdefghij';
@@ -54,7 +54,7 @@ void main() {
     test('reports truncation only after an additional finding exists', () {
       final analyzer = WritingAnalyzer(
         rules: <WritingRule>[
-          _OffsetsRule('only-rule', <int>[1, 3, 5, 7]),
+          const _OffsetsRule('only-rule', <int>[1, 3, 5, 7]),
         ],
       );
       const text = 'abcdefghij';
@@ -71,8 +71,8 @@ void main() {
     test('bounded capture matches the globally sorted unbounded prefix', () {
       final analyzer = WritingAnalyzer(
         rules: <WritingRule>[
-          _OffsetsRule('rule-z', <int>[90, 10, 50]),
-          _OffsetsRule('rule-a', <int>[80, 5, 20]),
+          const _OffsetsRule('rule-z', <int>[90, 10, 50]),
+          const _OffsetsRule('rule-a', <int>[80, 5, 20]),
         ],
       );
       final text = List<String>.filled(100, 'x').join();
@@ -95,8 +95,8 @@ void main() {
     test('later rules can displace worse retained findings', () {
       final analyzer = WritingAnalyzer(
         rules: <WritingRule>[
-          _OffsetsRule('first-rule', <int>[70, 80, 90]),
-          _OffsetsRule('second-rule', <int>[1, 2, 3]),
+          const _OffsetsRule('first-rule', <int>[70, 80, 90]),
+          const _OffsetsRule('second-rule', <int>[1, 2, 3]),
         ],
       );
       final text = List<String>.filled(100, 'x').join();
@@ -111,8 +111,8 @@ void main() {
     test('captured per-rule counts describe retained findings only', () {
       final analyzer = WritingAnalyzer(
         rules: <WritingRule>[
-          _OffsetsRule('rule-a', <int>[1, 4, 7]),
-          _OffsetsRule('rule-b', <int>[2, 3, 8]),
+          const _OffsetsRule('rule-a', <int>[1, 4, 7]),
+          const _OffsetsRule('rule-b', <int>[2, 3, 8]),
         ],
       );
       const text = 'abcdefghij';
@@ -148,7 +148,7 @@ void main() {
     test('captured issues remain immutable', () {
       final result = WritingAnalyzer(
         rules: <WritingRule>[
-          _OffsetsRule('only-rule', <int>[1, 2]),
+          const _OffsetsRule('only-rule', <int>[1, 2]),
         ],
       ).analyze('abcd', languagePack: pack, maxIssues: 1);
 
