@@ -1,0 +1,43 @@
+name: V2.8 Format Gate
+
+on:
+  pull_request:
+    branches: [v2.8-format-gate-base]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out V2.8 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.8-writing-analysis-diagnostics
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Format V2.8 source and tests
+        run: dart format lib/writing/writing_analyzer.dart test/writing_analysis_diagnostics_test.dart
+
+      - name: Commit canonical formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/writing/writing_analyzer.dart test/writing_analysis_diagnostics_test.dart
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'V2.8 source/tests already formatted.'
+          else
+            git commit -m 'style: apply canonical formatting to V2.8 diagnostics'
+            git push origin HEAD:v2.8-writing-analysis-diagnostics
+          fi
