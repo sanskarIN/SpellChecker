@@ -239,6 +239,27 @@ Those surfaces remain compatibility boundaries and should not be churned solely 
 
 V2.7 is complete only when the exact final PR head passes permanent CI, an exact-tree release gate passes `flutter build web --release` plus full formatting/analyzer/tests/hygiene assertions, `what_changed.md` contains the final validation evidence, the helper PR is closed unmerged, and merged `main` is byte-identical to the exact CI-green release head with no `tools/v27*` or `.github/workflows/v27-*` disposable artifact.
 
+### Final V2.7 release-gate evidence
+
+Read-only V2.7 Final Release Gate run `31489335300` validated candidate `a09c1ba18e25ae3afafec346d172de26cd258a41` and passed every configured stage:
+
+- stable Flutter setup and dependency resolution;
+- `pubspec.lock` stability in the working tree and against V2.6 `main`;
+- canonical formatting and `git diff --check`;
+- `flutter analyze`;
+- focused `writing_analysis_limit_test.dart`;
+- focused `writing_analysis_limit_widget_test.dart`;
+- the complete project test suite;
+- `flutter build web --release`;
+- `2.7.0+12` package and `2.7.0` About identity assertions;
+- bounded analyzer/result/dialog/test API markers;
+- changelog/README/roadmap/technical/user/accessibility/privacy/security/support/release/PR-template/ledger markers;
+- web manifest JSON validity;
+- unchanged direct runtime dependency set (`flutter`, `shared_preferences`);
+- zero `tools/v27*` or `.github/workflows/v27-*` path in the permanent feature diff.
+
+This evidence was recorded after the successful gate, so the final documentation-complete head must be revalidated before merge. The release may not rely on this earlier SHA alone.
+
 ## V2.6 — Deterministic Writing Rule Expansion
 
 Release version: `2.6.0+11`
