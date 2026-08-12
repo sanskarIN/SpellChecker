@@ -319,3 +319,15 @@ Portable settings carry an explicit selected built-in language ID plus explicit 
 The writing-analysis capture bound does not change language eligibility. `WritingAnalyzer` still checks each enabled rule with the explicitly selected `SpellLanguagePack` and runs only rules whose `supports()` contract matches that pack.
 
 The built-in 200-finding Writing insights policy is shared by English (US) and English (UK). Language selection, per-language personal vocabulary, and per-language writing-rule preferences remain independently persisted exactly as before V2.7.
+
+## V2.8 diagnostics and language selection
+
+Writing-analysis diagnostics are scoped to the active `SpellLanguagePack` and the rules that support it.
+
+When `WritingAnalyzer` runs, only enabled rules whose language eligibility matches the active pack contribute to `totalIssueCount` and `totalIssueCountByRule`. A disabled or unsupported rule contributes no count to that analysis.
+
+Changing from English (US) to English (UK), or vice versa, can therefore change exact writing totals because language-specific normalization, persisted per-language rule choices, and rule eligibility are resolved again for the selected pack.
+
+Diagnostics are not persisted per language. They are computed from the current in-memory text/rule configuration and discarded with the analysis result. Per-language personal vocabulary and writing-rule preference storage remain unchanged.
+
+Portable settings still transfer durable non-document preferences only; V2.8 exact finding counts are deliberately excluded.

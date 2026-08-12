@@ -523,3 +523,38 @@ When analysis is limited, search, review presets, Mechanics/Clarity filters, and
 Batch buttons also use captured wording in the limited state: **Apply captured safe fixes** when no review filter is active and **Apply visible captured safe fixes** when filters are active. The same stale-source and overlap safety rules apply, and one Undo restores the entire accepted batch.
 
 The 200-finding policy is not a maximum document size. Rules still analyse the supplied text so SpellChecker can retain the correct earliest findings in review order.
+
+## V2.8 exact Writing insights totals
+
+When Writing insights has more findings than its built-in 200-finding capture limit, V2.8 can show the exact relationship between the retained review set and all findings observed during the local analysis.
+
+For example:
+
+```text
+Showing the first 200 of 1437 findings in review order.
+1237 additional findings are not retained by the 200-finding capture limit.
+```
+
+The findings badge can display `200/1437`, meaning 200 findings are retained for review while 1,437 findings were observed in total.
+
+### Per-rule totals
+
+Enabled rule rows can also show `Total findings: N`. This is the exact number of findings produced by that enabled/supported rule during the current analysis, even when only some of those findings fit in the retained 200-finding review set.
+
+A rule's total is informational. It is not a button and does not mean all of that rule's findings are currently available for correction.
+
+### Filters and fixes remain captured-only
+
+Search, review presets, category filters, automatic-fixes-only review, individual safe fixes, and batch safe fixes still operate on retained findings when analysis is limited.
+
+Exact totals do not cause SpellChecker to reconstruct or modify findings that were not retained. This preserves the same stale-range and batch-correction safety contract as V2.7.
+
+If filters hide every retained finding while the analysis is limited, the empty state reports the exact uncaptured quantity, for example:
+
+```text
+17 uncaptured findings were not searched.
+```
+
+### Re-run after editing or changing language
+
+Diagnostics describe one analysis snapshot. After changing editor text, language, or enabled writing rules, reopen/re-run Writing insights to obtain current totals. Do not treat an old total as describing the modified document.
