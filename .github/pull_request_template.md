@@ -172,3 +172,23 @@ Complete when relevant.
 - [ ] No persistence format, runtime dependency, network, privacy, or security boundary changed unintentionally.
 - [ ] `what_changed.md` and release documentation are synchronized with the implementation.
 - [ ] No V2.7 helper or disposable workflow is included in the permanent release diff.
+
+## V2.8 exact writing-analysis diagnostics checklist
+
+Complete when relevant.
+
+- [ ] Analyzer-produced overall/per-rule exact totals are internally consistent and immutable.
+- [ ] Direct V2.7-style result construction remains source-compatible when diagnostics are omitted.
+- [ ] Exact totals include uncaptured findings without retaining every uncaptured `WritingIssue` object.
+- [ ] The bounded retained list still equals the global deterministic prefix of unbounded analysis.
+- [ ] Exact-at-limit completeness and true-overflow semantics are covered by focused tests.
+- [ ] Disabled/unsupported rules are excluded from exact totals.
+- [ ] Writing insights exact captured/total, first-N-of-total, per-rule totals, and uncaptured wording are tested.
+- [ ] Limited filters and corrections remain captured-only, stale-safe, overlap-safe, and one-step undoable.
+- [ ] Lazy/scrollable dialog tests navigate real off-screen controls rather than making production content eager.
+- [ ] Exact totals remain local/memory-only and are not silently persisted, logged, exported, uploaded, or used as timing telemetry.
+- [ ] `docs/PERFORMANCE.md` does not describe finding counts/`maxIssues` as a CPU-time or document-size security bound.
+- [ ] `.github/FUNDING.yml` and documented support links remain optional and do not alter governance, support, security, or runtime behavior.
+- [ ] `what_changed.md`, changelog, roadmap, README/web, and all affected technical/user/policy/release docs are synchronized.
+- [ ] `pubspec.yaml` / About versions and tag instructions match the intended V2.8 release.
+- [ ] No `tools/v28*` or disposable `.github/workflows/v28-*` file is included in the permanent release diff.
