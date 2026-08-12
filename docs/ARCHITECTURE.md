@@ -836,3 +836,48 @@ The collector uses the same comparison contract as the public analysis result: s
 `isTruncated` means at least one finding existed outside the retained prefix. The architecture deliberately keeps full enabled-rule scanning, so the bound controls retained finding objects and downstream dialog rendering rather than claiming a hard compute budget.
 
 The editor remains a consumer of the public analyzer API. Writing insights supplies its 200-finding policy through `maxIssues`; the core analyzer does not hard-code an editor-specific cap.
+
+## V2.8 exact writing-analysis diagnostics
+
+V2.8 extends the V2.7 bounded writing-analysis pipeline with deterministic whole-analysis counters while keeping the retained finding set bounded.
+
+### Analysis flow
+
+For each enabled rule that supports the active language pack, `WritingAnalyzer` now performs two independent responsibilities during the same local rule scan:
+
+1. increment exact overall and per-rule finding counters for every yielded `WritingIssue`;
+2. pass each finding through the existing deterministic retained-result path, which stores either every issue in unbounded mode or only the globally earliest `maxIssues` prefix in bounded mode.
+
+The exact counters therefore account for uncaptured findings without requiring the analyzer to retain those `WritingIssue` objects.
+
+### Ordering remains authoritative
+
+The V2.7 review comparator remains the source of truth for retained ordering. Exact diagnostics do not create a second ordering path and do not change which findings survive the bound.
+
+A later rule can still displace a worse retained finding when it yields an earlier globally ordered result. The exact counters are independent of that displacement: every yielded finding is counted exactly once even when its issue object is discarded from the bounded collector.
+
+### Result model boundary
+
+`WritingAnalysisResult` owns immutable analysis metadata:
+
+- retained `issues`;
+- analyzed rule IDs;
+- language ID;
+- V2.7 limit/truncation/completeness metadata;
+- V2.8 exact overall/per-rule totals when available.
+
+Direct construction may omit V2.8 diagnostics for compatibility, while `WritingAnalyzer` always populates them.
+
+### Writing insights integration
+
+`WritingInsightsDialog` consumes, but does not recompute, analyzer diagnostics. When exact totals exist it can render the exact relationship between retained and observed findings, per-rule totals, and the exact uncaptured count. Review search, presets, categories, and safe-fix actions still operate only on retained findings.
+
+A stable `ValueKey<String>('writing-findings-total-badge')` exists for regression tests of the exact captured/total badge. This key is a widget-test integration detail, not a public package API.
+
+The dialog remains lazy/scrollable. Tests navigate the real lazy list instead of forcing normally off-screen rule metadata or findings headers to remain eagerly mounted.
+
+### Privacy and persistence boundary
+
+The exact counters are computed from the same in-memory local analysis that already produces writing findings. They are not written to `shared_preferences`, exported through Portable settings, logged remotely, uploaded, or retained after the dialog/result is discarded.
+
+No network service, analytics pipeline, background job, account system, or runtime dependency was added for V2.8 diagnostics.
