@@ -192,6 +192,13 @@ For storage, synchronization, accounts, cloud services, AI rewriting, analytics,
 
 Do not use normal public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).
 
+
+# Support the project
+
+SpellChecker is free and open source. If the project is useful to you and you would like to support continued development, you can [buy Sanskar a coffee](https://buymeacoffee.com/sanskarIN).
+
+Financial support is optional. It does not provide privileged access to security reports, issue triage, roadmap decisions, releases, or contribution review.
+
 # Privacy-sensitive examples
 
 Never post:

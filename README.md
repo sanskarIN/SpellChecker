@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/sanskarIN/SpellChecker/actions/workflows/ci.yml/badge.svg)](https://github.com/sanskarIN/SpellChecker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-sanskarIN-FFDD00?logo=buymeacoffee&logoColor=000000)](https://buymeacoffee.com/sanskarIN)
 
 SpellChecker is a privacy-first, open-source Flutter spelling utility and writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports explicit language packs, persistent per-language vocabulary and writing-rule preferences, keyboard-first review, batch-safe corrections, and undo-friendly editing workflows.
 
@@ -512,6 +513,10 @@ Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before openin
 ## Security
 
 Do not publish exploitable security details in normal public issues. Follow [SECURITY.md](SECURITY.md) for responsible reporting guidance.
+
+## Support development
+
+If SpellChecker is useful to you and you want to support its open-source development, you can [buy Sanskar a coffee](https://buymeacoffee.com/sanskarIN). Financial support is optional and does not change access to the MIT-licensed project, issue handling, or contribution review.
 
 ## License
 

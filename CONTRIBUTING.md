@@ -421,6 +421,12 @@ These require explicit privacy/security design review before implementation:
 - Runtime remote dictionary/rule downloads.
 - Dynamic external rule/plugin execution.
 
+# Support development
+
+Code, documentation, testing, issue triage, accessibility feedback, and careful bug reports are all valuable contributions. If you also want to support the maintainer financially, the optional project support link is [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN).
+
+Financial support does not change code-review standards, project governance, roadmap priority, security handling, or access to the MIT-licensed source.
+
 # License
 
 By contributing, you agree that your contribution may be distributed under the repository's [MIT License](LICENSE).
