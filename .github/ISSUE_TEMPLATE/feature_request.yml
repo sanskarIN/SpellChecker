@@ -19,7 +19,7 @@ body:
     id: solution
     attributes:
       label: Proposed behavior
-      description: Describe what SpellChecker should do, including keyboard/accessibility behavior, language scope, correction grouping, and persistence semantics when relevant.
+      description: Describe what SpellChecker should do, including keyboard/accessibility behavior, language scope, correction grouping, persistence semantics, bounded-result behavior, and diagnostic metadata when relevant.
     validations:
       required: true
   - type: textarea
@@ -35,10 +35,10 @@ body:
         - Dictionary or language packs
         - Language selection / Unicode rules
         - Writing rules / Writing insights
+        - Writing analysis diagnostics / large-document behavior
         - Writing rule preferences / rule management
         - Writing review search / categories / filters
         - Writing rule reset/default management
-
         - Writing batch correction / conflict handling
         - Suggestions or ranking
         - Text correction / spelling replace all
@@ -56,7 +56,7 @@ body:
     id: compatibility
     attributes:
       label: Compatibility and state
-      description: If relevant, describe existing public APIs, rule IDs, language IDs, transfer formats, preference keys, explicit-empty/default behavior, or undo grouping that the change must preserve or migrate.
+      description: If relevant, describe existing public APIs, result metadata, rule IDs, language IDs, transfer formats, preference keys, explicit-empty/default behavior, bounded-result/captured-only semantics, or undo grouping that the change must preserve or migrate.
   - type: checkboxes
     id: considerations
     attributes:
@@ -68,11 +68,15 @@ body:
           required: false
         - label: I considered per-language state isolation when language-specific behavior is involved.
           required: false
-        - label: I considered stale-range, overlap, and one-step undo behavior for automatic or bulk corrections.
+        - label: I considered stale-range, overlap, captured-only limited-result, and one-step undo behavior for automatic or bulk corrections.
           required: false
         - label: I considered keyboard-only and screen-reader access for new editor controls.
           required: false
+        - label: If this changes diagnostics/performance behavior, I separated deterministic correctness metadata from device-dependent timing and described any privacy impact of document-derived diagnostics.
+          required: false
 
 # V2.3 design note
-
 # Requests that expand portable settings should identify the exact preference, persistence semantics, compatibility/version impact, privacy boundary, and why it belongs in a non-document transfer format.
+
+# V2.8 design note
+# Requests involving exact finding totals or large-document diagnostics should preserve captured-only correction safety, avoid treating maxIssues as a CPU/time security bound, and explain whether document-derived diagnostic metadata would be stored, copied, logged, or transmitted.
