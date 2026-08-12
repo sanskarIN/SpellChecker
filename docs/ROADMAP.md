@@ -215,17 +215,37 @@ Status: implemented.
 - [x] Core and widget regression coverage for bounds, ordering, filtering, fixes, and immutability.
 - [x] No persistence/network/runtime-dependency expansion.
 
+## 2.8 — Writing analysis diagnostics and exact limited counts
+
+Status: implemented.
+
+- [x] Exact analyzer-produced overall finding totals.
+- [x] Exact immutable per-rule finding totals for enabled/supported rules.
+- [x] Exact uncaptured finding count derived from total and retained findings.
+- [x] Backward-compatible direct `WritingAnalysisResult` construction without diagnostics.
+- [x] Consistency validation for overall totals, per-rule totals, captured counts, completeness, and truncation.
+- [x] Bounded analysis still retains only the globally earliest `maxIssues` findings.
+- [x] No extra uncaptured `WritingIssue` retention solely to calculate diagnostics.
+- [x] Writing insights exact `captured/total` badge for limited results.
+- [x] Exact first-N-of-total limited-analysis notice and omitted-count explanation.
+- [x] Exact enabled-rule finding totals in rule metadata.
+- [x] Exact filtered-empty uncaptured count with singular/plural wording.
+- [x] Stable diagnostics widget key and lazy-list-safe widget regression coverage.
+- [x] No elapsed-time telemetry, persistence, network, or runtime-dependency expansion.
+
 ## Future 2.x direction
 
 Possible future work includes:
 
-- Richer deterministic writing-rule catalogues.
-- Additional language-specific writing rules.
+- V2.9 large-document analysis diagnostics UX, including optional user-facing per-rule diagnostic summaries and deterministic export/copy of non-document diagnostic summaries if a concrete workflow justifies it.
+- Richer deterministic writing-rule catalogues with explicit source-range ownership tests.
+- Additional language-specific writing rules and language-pack coverage beyond the two built-in English variants.
 - Additional review presets/categories driven by demonstrated workflows.
 - Additional portable non-document preferences with explicit compatibility/version review.
 - Additional built-in ranker implementations driven by demonstrated ranking needs.
 - Trusted plugin-loading designs with explicit security boundaries.
-- Cross-platform packaging and signing automation.
-- Performance profiling for very large documents.
+- Cross-platform desktop/mobile packaging, signing, and release automation.
+- Repeatable performance benchmarking for very large documents, kept separate from correctness metadata and without persisted document content.
+- Broader accessibility regression coverage for large limited-result dialogs and keyboard-only review.
 
 Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented, reviewed, and user-controlled.
