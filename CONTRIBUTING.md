@@ -456,3 +456,21 @@ Changes to `WritingAnalyzer` bounds must preserve unbounded source compatibility
 Custom-rule tests used for bounded analysis should include out-of-order yields so implementations cannot accidentally depend on registry order. UI contributions must describe incomplete result sets as captured/limited and must retain stale-source and one-step undo safety.
 
 Do not turn the V2.7 finding-retention bound into a claimed CPU/document-size security limit without a separate design and test contract.
+
+## V2.8 diagnostics contributions
+
+Changes to writing-analysis diagnostics must preserve these contracts unless a deliberately documented breaking release changes them:
+
+- analyzer-produced results expose internally consistent exact overall/per-rule totals;
+- direct V2.7-style `WritingAnalysisResult` construction may omit diagnostics;
+- exact totals include uncaptured findings;
+- the bounded retained list remains the global deterministic review-order prefix;
+- exact counting does not require retaining all uncaptured `WritingIssue` objects;
+- filters and corrections remain scoped to retained findings when analysis is truncated;
+- diagnostic maps remain immutable;
+- disabled/unsupported rules do not contribute totals;
+- no timing telemetry or persistence is introduced implicitly.
+
+Add focused core tests for result invariants and widget tests for user-visible count semantics. When testing the Writing insights dialog, navigate its real lazy list instead of making production rows eager for test convenience.
+
+Performance experiments must use synthetic/non-sensitive text. Treat exact counts as document-derived metadata if proposing logging, exporting, persistence, or remote diagnostics.

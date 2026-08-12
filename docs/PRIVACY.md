@@ -352,3 +352,23 @@ The optional writing `maxIssues` bound and the built-in 200-finding Writing insi
 Captured findings, uncaptured finding counts, analysis limits, review search/filter state, and correction history are not newly persisted. The application still has no cloud spelling/grammar service, telemetry, analytics, account requirement, advertising, background document upload, or automatic remote rewriting.
 
 A limited result should be treated as potentially containing sensitive source excerpts just like any other `WritingIssue`; application code must not log or export it by default.
+
+## V2.8 exact diagnostics privacy boundary
+
+V2.8 adds exact overall and per-rule finding counts to analyzer-produced writing results. These values are derived from the same in-memory editor text that Writing insights already analyzes locally.
+
+The new diagnostics are **not**:
+
+- written to `shared_preferences`;
+- included in Portable settings exports;
+- included in personal-dictionary exports;
+- uploaded to a service;
+- sent to analytics or telemetry;
+- written to a remote log;
+- retained as background history after the analysis/dialog is discarded.
+
+Exact counts can still reveal limited characteristics about a document, such as how many findings a rule produced. For that reason they should be treated as document-derived data when adding future logging, debugging, crash reporting, clipboard export, synchronization, or diagnostic-report features.
+
+Any future persistence or export of exact finding totals requires explicit privacy review and user-facing documentation. V2.8 itself keeps them local and memory-only.
+
+The Buy Me a Coffee funding link added to repository documentation is a normal external link. SpellChecker does not contact that site from the application runtime, and no editor text or application state is sent to it by SpellChecker.
