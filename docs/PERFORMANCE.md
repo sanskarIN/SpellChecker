@@ -167,3 +167,50 @@ The analyzer does **not** stop running rules after N findings. It must inspect a
 The built-in Writing insights policy is 200 captured findings. A `200+`-style limited state appears only when another finding beyond the cap has actually been observed. Search, presets, category filters, automatic-fix filtering, and batch actions operate only on the captured prefix when analysis is truncated.
 
 For profiling, measure writing-rule execution and bounded-result maintenance separately. Synthetic workloads should cover many findings from one rule, many enabled rules, out-of-order custom-rule yields, exact-at-limit documents, and true overflow. Avoid wall-clock correctness thresholds unless the runner environment is explicitly controlled.
+
+## V2.8 exact writing-analysis diagnostics
+
+V2.8 adds exact deterministic finding counts to analyzer-produced writing results. These counters improve observability of bounded Writing insights without converting the V2.7 finding-retention bound into a CPU or wall-clock limit.
+
+For each enabled/supported rule, the analyzer continues consuming the rule's findings across the supplied text. Every yielded finding increments the overall and per-rule counters. Only the retained result path is bounded by `maxIssues`.
+
+For example, with `maxIssues: 200`, a result can report:
+
+```text
+capturedIssueCount: 200
+totalIssueCount: 1437
+uncapturedIssueCount: 1237
+```
+
+The analyzer still retains at most 200 `WritingIssue` objects for the bounded result while counting the remaining 1,237 findings as integers.
+
+### What is bounded
+
+- retained `WritingIssue` objects in the result;
+- retained finding list sorting/storage after the bounded collector reaches capacity;
+- downstream Writing insights rendering/filtering/fix candidate work over the retained set.
+
+### What is not bounded by V2.8 diagnostics
+
+- characters, tokens, or lines supplied to an arbitrary writing rule;
+- rule scan time;
+- wall-clock duration;
+- CPU usage of third-party/custom rule implementations;
+- allocations performed internally by a custom rule;
+- number of findings a rule may yield before the analyzer finishes counting them.
+
+Exact totals therefore describe **observed findings**, not a resource budget.
+
+### Benchmarking guidance
+
+When profiling very large documents:
+
+1. use synthetic/non-sensitive generated text;
+2. record document size separately from finding count;
+3. record active language and enabled rule IDs;
+4. record `capturedIssueCount`, `totalIssueCount`, and per-rule exact totals;
+5. measure elapsed time externally in a benchmark harness rather than embedding timing telemetry in production results;
+6. compare unbounded and bounded retention separately from total rule-scan cost;
+7. avoid treating one device/browser measurement as a correctness guarantee.
+
+V2.8 intentionally does not persist benchmark data or document-derived diagnostic totals.

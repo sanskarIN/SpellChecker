@@ -615,3 +615,44 @@ The bounded collector keeps at most `maxIssues` finding objects while preserving
 The analyzer still invokes every enabled and supported rule across the supplied text. This is a finding-retention bound, not a rule-runtime, character-count, or document-length bound.
 
 The built-in Writing insights dialog requests at most 200 captured findings. When overflow is proven, filters operate on captured findings only, and batch actions use **Apply captured safe fixes** or **Apply visible captured safe fixes** wording. Existing stale-source, advisory-skip, overlap-resolution, end-to-start mutation, and one-step undo contracts remain unchanged.
+
+## V2.8 exact finding diagnostics
+
+Writing rules still implement the same `WritingRule.analyze()` contract. V2.8 does not add a required rule member or change a shipped rule ID.
+
+The analyzer now counts every `WritingIssue` yielded by each enabled/supported rule while building the retained result. This creates two distinct per-rule views:
+
+- retained count — how many findings from that rule are present in `WritingAnalysisResult.issues`;
+- exact total count — how many findings that rule yielded during the whole analyzer pass when V2.8 diagnostics are available.
+
+A truncated result may therefore report, for example:
+
+```text
+repeated-space retained findings: 31
+repeated-space total findings:    420
+```
+
+The retained list still contains the globally earliest findings across all rules, not the first N matches from each rule independently.
+
+### Custom rule requirements remain unchanged
+
+A custom rule should continue to:
+
+- be deterministic for a given text/language/configuration;
+- yield exact source ranges and `originalText`;
+- declare stable ID/display metadata;
+- avoid side effects;
+- provide automatic replacements only when deterministic;
+- document expensive behavior if it scans or allocates unusually large structures.
+
+V2.8 exact counters assume each yielded finding represents one logical finding. Rules should not intentionally yield duplicate equivalent findings merely to communicate metadata.
+
+### Diagnostics and correction scope
+
+Exact total counts are informational. They do not authorize correction of uncaptured findings. In a truncated Writing insights result, search, review presets/categories, individual fixes, and batch fixes continue to operate only on retained findings.
+
+A future feature that wants to mutate uncaptured ranges must obtain a complete/current correction-safe issue set rather than reconstructing edits from count metadata.
+
+### Language and preference behavior
+
+Exact per-rule totals are computed only for rules that are enabled and support the active language pack. Per-language persisted rule preferences therefore continue to determine which rules participate. V2.8 adds no preference key and does not persist diagnostic counts.
