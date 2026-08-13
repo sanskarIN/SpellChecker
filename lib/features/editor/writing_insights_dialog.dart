@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/spell_language_pack.dart';
+import '../../writing/writing_analysis_diagnostic_summary.dart';
 import '../../writing/writing_analyzer.dart';
 import '../../writing/writing_issue.dart';
 import '../../writing/writing_review_preset.dart';
@@ -122,6 +124,24 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
       _categories.clear();
       _automaticFixesOnly = false;
     });
+  }
+
+  Future<void> _copyDiagnosticSummary() async {
+    final summary = WritingAnalysisDiagnosticSummary.fromResult(
+      _analysis,
+      rules: _supportedRules,
+    ).toPlainText();
+    await Clipboard.setData(ClipboardData(text: summary));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Diagnostic summary copied. Editor text and finding excerpts were excluded.',
+        ),
+      ),
+    );
   }
 
   void _close({
@@ -303,6 +323,12 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                       'Findings',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
+                  ),
+                  IconButton(
+                    key: const ValueKey<String>('copy-writing-diagnostics'),
+                    tooltip: 'Copy diagnostic summary',
+                    onPressed: _copyDiagnosticSummary,
+                    icon: const Icon(Icons.copy_all_outlined),
                   ),
                   Text(
                     analysis.isTruncated

@@ -150,7 +150,6 @@ Status: implemented.
 - [x] Focused codec/persistence/dialog/widget regression coverage.
 - [x] Complete V2.3 documentation, privacy, release, and repository metadata.
 
-
 ## 2.4 — Suggestion ranking extensibility and determinism
 
 Status: implemented.
@@ -164,7 +163,6 @@ Status: implemented.
 - [x] Existing suffix reattachment, personal-dictionary candidates, detailed suggestion metadata, caching, and suggestion limits remain compatible.
 - [x] Focused custom/default/tie/context/eligibility regression coverage.
 - [x] API/architecture/development/testing/privacy/security/release documentation.
-
 
 ## 2.5 — Bounded analysis and large-document safety
 
@@ -233,11 +231,28 @@ Status: implemented.
 - [x] Stable diagnostics widget key and lazy-list-safe widget regression coverage.
 - [x] No elapsed-time telemetry, persistence, network, or runtime-dependency expansion.
 
+## 2.9 — Shareable writing-analysis diagnostics
+
+Status: implemented.
+
+- [x] Public deterministic `WritingAnalysisDiagnosticSummary` metadata model.
+- [x] Public per-rule `WritingRuleDiagnosticSummary` rows.
+- [x] Stable lexical ordering by writing-rule ID.
+- [x] Exact captured/total/uncaptured diagnostics when V2.8 totals are available.
+- [x] Explicit `unavailable` compatibility output when older directly constructed results omit exact totals.
+- [x] Plain-text format version for reproducible support and bug-report comparisons.
+- [x] Formatter excludes editor text, source excerpts, finding messages, replacements, and source offsets.
+- [x] Explicit Writing insights **Copy diagnostic summary** action.
+- [x] Copy action leaves rule preferences, filters, corrections, and dialog state unchanged.
+- [x] Focused core coverage for deterministic output, limited totals, compatibility results, and empty analysis.
+- [x] Widget regression coverage for exact limited diagnostics and the copy control.
+- [x] Package version advances to `2.9.0+14` with dedicated V2.9 documentation.
+- [x] No persistence-format, telemetry, runtime-dependency, or application-network expansion.
+
 ## Future 2.x direction
 
 Possible future work includes:
 
-- V2.9 large-document analysis diagnostics UX, including optional user-facing per-rule diagnostic summaries and deterministic export/copy of non-document diagnostic summaries if a concrete workflow justifies it.
 - Richer deterministic writing-rule catalogues with explicit source-range ownership tests.
 - Additional language-specific writing rules and language-pack coverage beyond the two built-in English variants.
 - Additional review presets/categories driven by demonstrated workflows.
@@ -247,5 +262,6 @@ Possible future work includes:
 - Cross-platform desktop/mobile packaging, signing, and release automation.
 - Repeatable performance benchmarking for very large documents, kept separate from correctness metadata and without persisted document content.
 - Broader accessibility regression coverage for large limited-result dialogs and keyboard-only review.
+- A future V2.10 milestone should be selected from demonstrated user/contributor workflows rather than adding network behavior by default.
 
 Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented, reviewed, and user-controlled.
