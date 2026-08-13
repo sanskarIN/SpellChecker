@@ -54,9 +54,8 @@ void main() {
       isTruncated: true,
     );
 
-    final summary = WritingAnalysisDiagnosticSummary.fromResult(
-      result,
-    ).toPlainText();
+    final summary = WritingAnalysisDiagnosticSummary.fromResult(result)
+        .toPlainText();
 
     expect(summary, contains('Total findings: unavailable'));
     expect(summary, contains('Uncaptured findings: unavailable'));
@@ -72,9 +71,8 @@ void main() {
       maxIssues: 10,
     );
 
-    final summary = WritingAnalysisDiagnosticSummary.fromResult(
-      result,
-    ).toPlainText();
+    final summary = WritingAnalysisDiagnosticSummary.fromResult(result)
+        .toPlainText();
 
     expect(summary, contains('Analysis status: complete'));
     expect(summary, contains('Total findings: 0'));
