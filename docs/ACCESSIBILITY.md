@@ -340,3 +340,23 @@ When Writing insights proves that more findings exist beyond its capture limit, 
 Limited results avoid an unqualified complete count. Batch labels switch to **captured** wording, and a filtered empty state says **No matching captured findings** when uncaptured findings may still exist.
 
 The existing rule switches, preset/filter controls, finding semantics, keyboard shortcut, safe-fix controls, and dialog scrolling remain available. Tests exercise the limited state with a small synthetic cap rather than relying on display color or a particular viewport size.
+
+## V2.8 exact limited-result diagnostics
+
+V2.8 strengthens the accessible meaning of limited Writing insights results.
+
+When exact totals are available, the limited-analysis explanation communicates both the retained count and total observed count instead of only an ambiguous `N+` state. The wording also states the exact number of findings not retained by the capture limit.
+
+The findings badge is wrapped in descriptive semantics/tooltip behavior and has a stable widget key for regression testing. The visual `captured/total` value is not the only source of meaning: the nearby explanatory text provides the same relationship in full language.
+
+Per-rule rows can expose exact `Total findings: N` metadata. Users should not need color alone to determine whether a rule produced findings or whether the overall result is limited.
+
+### Lazy dialog behavior
+
+Writing insights remains a scrollable lazy list. Keyboard and assistive-technology users may need to navigate through rule management before reaching the findings header/limited-result notice, just as sighted touch/mouse users scroll the dialog.
+
+Testing must preserve this real interaction model rather than making every off-screen control permanently mounted. Changes should continue to avoid focus traps and maintain visible alternatives for keyboard shortcuts.
+
+### Live changes
+
+Review search/filter changes operate on retained findings. When a filtered limited result becomes empty, the empty-state explanation includes the exact uncaptured count when available so assistive-technology users are not told that the whole document has no matching findings.

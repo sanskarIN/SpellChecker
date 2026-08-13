@@ -457,3 +457,43 @@ The built-in V2.7 Writing insights dialog captures at most 200 findings. A limit
 This does not mean analysis failed. Review the captured findings, apply safe captured fixes if desired, edit the text, and open Writing insights again for a fresh analysis. Search and filters only inspect the captured findings while the result is limited.
 
 The limit controls retained finding objects and dialog workload; it is not a hard maximum document length or a promise that rule execution stops after 200 matches.
+
+## V2.8 exact writing-diagnostics troubleshooting
+
+### The badge says `200/900`. Why can I review only 200 findings?
+
+The first number is the retained Writing insights review set. The second is the exact number of findings observed by all enabled/supported rules during that analysis. The built-in dialog intentionally retains at most 200 findings.
+
+Filters and fixes operate only on the retained set when the result is limited.
+
+### A rule says `Total findings: N`, but fewer of that rule's cards are visible
+
+The rule total describes all findings yielded by that rule. The retained 200-finding list is selected by global review order across every enabled rule, so some findings from that rule may fall outside the retained prefix.
+
+Active search/category/fix filters can further reduce the visible subset.
+
+### Totals changed after I switched language or rule settings
+
+That is expected. Exact counts depend on:
+
+- current editor text;
+- active language pack;
+- enabled writing-rule IDs;
+- language eligibility of each rule.
+
+Re-run/reopen Writing insights after those inputs change.
+
+### Totals appear inconsistent
+
+Use a short synthetic example and record:
+
+- selected language;
+- enabled rule IDs;
+- configured `maxIssues` if using the library API;
+- retained count;
+- exact overall total;
+- exact per-rule totals;
+- whether the result is complete/truncated;
+- any active review filters.
+
+The per-rule exact totals should sum to the exact overall total for analyzer-produced results. Do not attach a private document solely to demonstrate a count mismatch.

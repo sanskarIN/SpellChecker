@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v2.1.0 or commit SHA
+      placeholder: v2.8.0 or commit SHA
     validations:
       required: true
   - type: input
@@ -44,6 +44,7 @@ body:
         - Spell checking or suggestions
         - Language selection / language packs
         - Writing insights / local writing rules
+        - Writing analysis diagnostics / exact finding counts
         - Writing rule preference persistence
         - Writing individual safe fix
         - Writing apply-all batch fix / overlap handling
@@ -51,7 +52,6 @@ body:
         - Writing automatic-fixes-only filter
         - Writing apply-visible batch fix
         - Writing reset rules to defaults
-
         - Writing shortcut (Ctrl/Command+Shift+Enter)
         - Unicode tokenization / normalization
         - Inline issue highlighting
@@ -101,6 +101,18 @@ body:
       label: Writing-rule / batch context
       description: If relevant, include rule name/ID, enabled rule IDs (not private text), whether the problem is individual or Apply all safe fixes, applied/skipped counts, overlaps, and whether one Undo restored the pre-batch synthetic text.
   - type: textarea
+    id: diagnostics_context
+    attributes:
+      label: Writing diagnostics context
+      description: For V2.8 count/limited-result problems, include maxIssues when applicable, captured count, exact overall total, exact per-rule totals, complete/truncated state, active review filters, and whether the text/language/rule settings changed after analysis. Use synthetic data only.
+      placeholder: |
+        maxIssues: 200
+        captured: 200
+        total: 437
+        uncaptured: 237
+        truncated: true
+        per-rule totals: repeated-space=300, repeated-word=137
+  - type: textarea
     id: editor_context
     attributes:
       label: Editor and keyboard context
@@ -128,5 +140,7 @@ body:
           required: true
 
 # V2.3 diagnostic note
-
 # For portable-settings/review-preset bugs, include only minimized synthetic JSON/text. Never include private editor documents, personal dictionaries, credentials, or sensitive clipboard data.
+
+# V2.8 diagnostic note
+# Analyzer-produced exact per-rule totals should sum to the exact overall total. Limited-result filters/fixes use retained findings only. Prefer synthetic count examples over private documents.

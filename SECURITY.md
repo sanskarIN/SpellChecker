@@ -281,3 +281,21 @@ V2.7 does not introduce remote rule loading, executable plugins, dynamic code ev
 Callers that accept untrusted very large documents or untrusted third-party rule implementations must enforce their own input-size, execution-time, isolation, or plugin-trust policies. The built-in local rules remain source-controlled and deterministic.
 
 Automatic mutations continue to use exact-source stale checks and conservative overlap handling; a bounded result does not bypass those protections.
+
+## V2.8 writing diagnostics security boundary
+
+Exact V2.8 finding totals are correctness/observability metadata, not an execution sandbox or denial-of-service control.
+
+The analyzer still consumes findings from every enabled/supported rule across the supplied text so it can preserve global ordering and calculate exact totals. Therefore neither `maxIssues` nor `totalIssueCount` should be represented as bounding:
+
+- arbitrary custom-rule CPU time;
+- wall-clock execution time;
+- memory allocated internally by a custom rule;
+- document length;
+- untrusted plugin execution.
+
+Applications embedding SpellChecker with untrusted documents or third-party rule code remain responsible for their own input-size, isolation, timeout, and plugin-trust controls.
+
+Exact totals and per-rule totals are memory-only and are not automatically logged, persisted, uploaded, or exported. A future diagnostic/crash-report feature must treat them as document-derived metadata and must not silently transmit them with user text or source excerpts.
+
+The repository's Buy Me a Coffee link does not change security-reporting priority, disclosure handling, maintainer trust boundaries, or project governance.

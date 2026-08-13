@@ -465,3 +465,45 @@ When modifying writing analysis, test both unbounded and bounded paths. A custom
 New result metadata must preserve these invariants: limits are positive, exact-at-limit results can remain complete, truncation requires a proven overflow finding, and captured lists remain immutable.
 
 UI work must not describe a truncated captured set as the complete document finding set. Filters and batch actions must clearly state captured-only behavior while stale-range and one-step undo protections remain active.
+
+## V2.8 diagnostics development notes
+
+When changing writing-analysis diagnostics, keep counting, retention, filtering, and correction responsibilities separate.
+
+### Analyzer changes
+
+The analyzer owns exact count collection. A change should preserve these invariants:
+
+- every yielded finding from an enabled/supported rule increments the exact overall count once;
+- each finding increments exactly one per-rule total;
+- bounded retention still returns the globally earliest review-order prefix;
+- exact totals include uncaptured findings;
+- uncaptured findings are not retained merely to calculate totals;
+- unbounded analysis remains source-compatible;
+- direct `WritingAnalysisResult` construction may omit V2.8 diagnostics.
+
+Do not move exact counting into Flutter widgets. Widgets consume result metadata and should not rescan rules.
+
+### UI changes
+
+Writing insights is intentionally lazy/scrollable. Controls that are outside the current viewport may not exist in the widget tree. Tests should scroll/navigate to the real control rather than changing production rendering to keep every row mounted.
+
+Use stable keys only for meaningful interaction/diagnostic surfaces. V2.8 exposes `writing-findings-total-badge` for the captured/total display used in regression tests.
+
+### Performance experiments
+
+Keep correctness metadata deterministic. If adding benchmarks, measure time externally in a benchmark/test harness rather than adding wall-clock fields to production analysis results. Use generated/synthetic text and never commit private documents as fixtures.
+
+### Required checks for diagnostics changes
+
+```bash
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test test/writing_analysis_diagnostics_test.dart --reporter expanded
+flutter test test/writing_analysis_limit_widget_test.dart --reporter expanded
+flutter test test/writing_analysis_diagnostics_widget_test.dart --reporter expanded
+flutter test --reporter expanded
+flutter build web --release
+```
+
+Release-sensitive changes should also verify that `flutter pub get` leaves `pubspec.lock` unchanged when no dependency change is intended.

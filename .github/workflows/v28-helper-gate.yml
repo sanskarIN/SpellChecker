@@ -1,0 +1,67 @@
+name: V2.8 Helper Gate
+
+on:
+  pull_request:
+    branches: [v2.8-helper-gate-base]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out V2.8 feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.8-writing-analysis-diagnostics
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Apply guarded pending update
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tools/v28_pending_apply.py
+          message=$(sed -n 's/^# commit-message: //p' tools/v28_pending_apply.py | head -n 1)
+          test -n "$message"
+          echo "$message" > /tmp/v28-commit-message
+          python tools/v28_pending_apply.py
+          rm tools/v28_pending_apply.py
+          dart format lib test
+
+      - name: Validate pending tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          git diff --exit-code -- pubspec.lock
+          dart format --output=none --set-exit-if-changed lib test
+          flutter analyze
+          git diff --check
+          test ! -e tools/v28_pending_apply.py
+
+      - name: Commit guarded update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          if git ls-files --cached 'tools/v28_pending_apply.py' | grep -q .; then
+            echo 'Pending V2.8 helper would remain tracked.' >&2
+            exit 1
+          fi
+          if git diff --cached --quiet; then
+            echo 'No guarded update to commit.'
+          else
+            git commit -m "$(cat /tmp/v28-commit-message)"
+            git push origin HEAD:v2.8-writing-analysis-diagnostics
+          fi
