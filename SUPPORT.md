@@ -192,6 +192,13 @@ For storage, synchronization, accounts, cloud services, AI rewriting, analytics,
 
 Do not use normal public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).
 
+
+# Support the project
+
+SpellChecker is free and open source. If the project is useful to you and you would like to support continued development, you can [buy Sanskar a coffee](https://buymeacoffee.com/sanskarIN).
+
+Financial support is optional. It does not provide privileged access to security reports, issue triage, roadmap decisions, releases, or contribution review.
+
 # Privacy-sensitive examples
 
 Never post:
@@ -244,3 +251,23 @@ For punctuation-spacing/trailing-whitespace bugs, provide a minimal synthetic sa
 When reporting a V2.7 Writing insights problem, include whether the dialog displayed a limited-result notice, the selected language, active review preset/filter state, and whether the issue reproduced after editing/reopening Writing insights. Do not include private document text unless it is necessary and safe to share; a small synthetic reproduction is preferred.
 
 A `200+`-style state means the built-in dialog captured its first 200 findings in review order and observed at least one more. Filters and batch actions then operate on the captured prefix only.
+
+## V2.8 exact diagnostics reports
+
+For a Writing insights count/diagnostics bug, use a minimal synthetic sample and include:
+
+- selected language ID;
+- enabled writing-rule IDs;
+- configured `maxIssues` when using the public analyzer API;
+- retained/captured finding count;
+- exact overall total when present;
+- exact per-rule totals when present;
+- complete/truncated state;
+- active review preset/search/category/fix-only filters;
+- whether editor text, language, or rule settings changed after the analysis.
+
+For analyzer-produced results, exact per-rule totals should sum to the exact overall total, and an exact truncated result should report at least one uncaptured finding.
+
+Do not attach a private large document simply to prove a count mismatch. Repeated synthetic text or a small custom synthetic rule is preferred.
+
+The `captured/total` badge describes one current local analysis snapshot. Reopen Writing insights after editing or switching languages before comparing totals.

@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.7 release:
+Current V2.8 release candidate:
 
 ```text
-2.7.0+12
+2.8.0+13
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -228,8 +228,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.6.0 -m "SpellChecker v2.6.0"
-git push origin v2.6.0
+git tag -a v2.8.0 -m "SpellChecker v2.8.0"
+git push origin v2.8.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -251,7 +251,7 @@ After the tagged workflow passes:
 
 1. Create a GitHub Release for that tag.
 2. Use the matching changelog section as the release-note foundation.
-3. Highlight V2.4 suggestion-ranker extensibility/default compatibility, plus the retained V2.3 review-preset/Portable settings and earlier correction-safety foundation.
+3. Highlight V2.8 exact local writing-analysis diagnostics and retained V2.7 bounded-review safety, while noting compatibility with earlier writing-rule, Portable settings, ranking, and correction-safety foundations.
 4. Mention persistent-data/privacy behavior.
 5. Attach approved artifacts where appropriate.
 6. Verify links/version text.
@@ -298,7 +298,7 @@ Before a release changing dependencies:
 - Confirm CI resolves the same constraints.
 - Update development/privacy/security docs.
 
-V2.4 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
+V2.8 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
 
 # Signing and stores
 
@@ -360,4 +360,36 @@ Tag the verified release only from the exact merged `main` commit:
 ```bash
 git tag -a v2.7.0 <verified-main-sha> -m "SpellChecker 2.7.0"
 git push origin v2.7.0
+```
+
+## V2.8 exact writing-diagnostics release checks
+
+Before tagging V2.8:
+
+1. Verify package/About versions are `2.8.0+13` / `2.8.0`.
+2. Verify analyzer-produced results expose exact `totalIssueCount`, immutable `totalIssueCountByRule`, `hasExactIssueTotals`, and `uncapturedIssueCount`.
+3. Verify direct V2.7-style `WritingAnalysisResult` construction can still omit exact diagnostics.
+4. Verify an unbounded analyzer result reports exact totals equal to its retained result count.
+5. Verify an exact-at-limit bounded result remains complete with zero uncaptured findings.
+6. Verify a true overflow result reports an exact total greater than `capturedIssueCount`, a positive exact uncaptured count, and the correct global retained prefix.
+7. Verify exact per-rule totals sum to the exact overall total and disabled/unsupported rules do not contribute.
+8. Verify Writing insights displays exact first-N-of-total wording and the exact number of findings not retained.
+9. Verify the `writing-findings-total-badge` renders the intended captured/total value when limited.
+10. Verify enabled rule metadata shows exact `Total findings: N` values and the dialog remains lazy/scrollable without inaccessible controls.
+11. Verify limited search/presets/categories/fix-only review and individual/batch fixes remain captured-only.
+12. Verify singular/plural uncaptured-finding wording and filtered-empty limited-result wording.
+13. Verify one Undo still restores a complete pre-batch document and stale-range/overlap safety remains unchanged.
+14. Verify `pubspec.lock` and direct runtime dependencies are unchanged from V2.7 unless an independently reviewed dependency change exists.
+15. Verify `.github/FUNDING.yml`, README, `SUPPORT.md`, and `CONTRIBUTING.md` contain `https://buymeacoffee.com/sanskarIN` and that no application runtime code contacts that service.
+16. Verify `CHANGELOG.md`, `docs/ROADMAP.md`, API/architecture/performance/writing/development/testing/user/accessibility/troubleshooting/language/privacy/security/support/contribution/releasing docs, README/web metadata, and `what_changed.md` describe V2.8 consistently.
+17. Verify no `tools/v28*`, `.github/workflows/v28-*`, or other disposable V2.8 helper/final-gate file is present in the release tree.
+18. Run `flutter pub get`, format verification, analyzer, focused V2.8 diagnostics/limited-dialog tests, the complete regression suite, and `flutter build web --release` on the exact intended release SHA.
+19. Record the exact final release-gate run and permanent-CI run in the V2.8 PR and engineering ledger without changing the validated SHA.
+20. Merge only that exact green feature SHA, then compare the merged `main` tree with the validated feature tree and require zero file differences.
+
+Tag only the verified merged `main` commit:
+
+```bash
+git tag -a v2.8.0 <verified-main-sha> -m "SpellChecker 2.8.0"
+git push origin v2.8.0
 ```

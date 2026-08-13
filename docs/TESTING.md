@@ -450,3 +450,48 @@ Focused tests cover unbounded compatibility, positive-limit validation, exact-at
 Widget tests use a deliberately small capture limit to exercise the limited state without huge fixtures. They verify the accessible overflow explanation, captured-safe-fix wording, returned captured issue ranges, and the filtered empty state that warns additional uncaptured findings may exist.
 
 The complete regression suite must continue protecting V2.6 rule behavior, V2.5 spelling bounds, V2.4 ranking extensibility, Portable settings, persisted rule choices, correction safety, and keyboard/editor workflows.
+
+## V2.8 writing-analysis diagnostics coverage
+
+V2.8 adds focused coverage in `test/writing_analysis_diagnostics_test.dart` and `test/writing_analysis_diagnostics_widget_test.dart`, while strengthening `test/writing_analysis_limit_widget_test.dart`.
+
+### Core diagnostics cases
+
+Tests cover:
+
+- exact overall totals for unbounded analyzer results;
+- exact overall totals for bounded/truncated results;
+- exact `uncapturedIssueCount`;
+- exact immutable per-rule totals;
+- disabled rule exclusion;
+- zero-finding analyzer results;
+- source-compatible direct result construction without diagnostics;
+- rejection of exact totals smaller than captured counts;
+- complete-result exact-total equality;
+- truncated-result proof of at least one uncaptured finding;
+- per-rule total sum consistency;
+- per-rule totals that cannot under-report retained counts for that rule.
+
+### Limited dialog cases
+
+Widget tests prove:
+
+- exact first-N-of-total limited-analysis wording;
+- exact additional/uncaptured quantity;
+- singular and plural grammar for omitted findings;
+- exact enabled-rule total metadata;
+- captured-only batch-fix behavior remains unchanged;
+- filtered-empty limited-review wording reports the exact uncaptured count;
+- the captured/total badge can be inspected through its stable key.
+
+### Lazy list rule
+
+Writing insights uses a lazy list. A finder for an off-screen widget may legitimately return zero widgets until the list is scrolled to that region. Tests must navigate the real scrollable UI before asserting off-screen metadata.
+
+Do not make production lists eager merely to satisfy a fixed test viewport. This is especially important for rule subtitles, limited-analysis notices, findings headers, and bottom actions.
+
+### Regression requirement
+
+Any V2.8 diagnostics defect should receive a focused regression at the lowest layer that reproduces it. If the defect depends on lazy widget lifecycle or viewport position, include the real scroll path in the test instead of replacing the UI with a test-only layout.
+
+The full project suite remains required after focused diagnostics tests so V2.8 cannot regress language state, spelling bounds, review presets, rule persistence, correction safety, keyboard workflows, or prior widget behavior.

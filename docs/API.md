@@ -747,3 +747,79 @@ capturedIssueCount  number of retained findings
 `issues` remains immutable. In bounded mode it contains the globally earliest findings according to the analyzer's existing deterministic comparator. `issueCountByRule` describes retained findings only when a result is truncated.
 
 Passing zero or a negative `maxIssues` throws `ArgumentError`. Constructing inconsistent result metadata, such as a non-positive `issueLimit` or `isTruncated == true` without a limit, also throws `ArgumentError`.
+
+## V2.8 writing-analysis diagnostics
+
+Analyzer-produced `WritingAnalysisResult` values now expose exact deterministic finding totals in addition to the V2.7 retained-result metadata.
+
+### `WritingAnalysisResult.totalIssueCount`
+
+```dart
+int? get totalIssueCount;
+```
+
+For values returned by `WritingAnalyzer.analyze()`, this is the exact number of findings yielded by all enabled, supported rules for the supplied analysis input. It includes findings that were observed but not retained because `maxIssues` limited the captured list.
+
+Direct construction remains source-compatible with V2.7: callers may omit the diagnostic total, in which case `totalIssueCount` is `null` and the result must not be presented as having exact whole-analysis totals.
+
+### `WritingAnalysisResult.totalIssueCountByRule`
+
+```dart
+Map<String, int>? get totalIssueCountByRule;
+```
+
+Analyzer-produced results expose an immutable map from analyzed rule ID to the exact number of findings produced by that rule. Disabled or unsupported rules are not counted. Enabled/supported rules that produce no findings may appear with a zero count according to the analyzer's result construction.
+
+The map describes the same whole-analysis observation pass as `totalIssueCount`; it is not limited to `issues` when the result is truncated.
+
+### `WritingAnalysisResult.hasExactIssueTotals`
+
+```dart
+bool get hasExactIssueTotals;
+```
+
+This is true when exact overall diagnostics are available. Analyzer-produced results return true. Direct V2.7-style result construction may return false.
+
+### `WritingAnalysisResult.uncapturedIssueCount`
+
+```dart
+int? get uncapturedIssueCount;
+```
+
+When exact totals are present this equals:
+
+```text
+totalIssueCount - capturedIssueCount
+```
+
+For complete analyzer results the value is zero. For a genuinely truncated result it is positive. When exact totals are unavailable it is `null`.
+
+### Result consistency requirements
+
+`WritingAnalysisResult` validates exact diagnostics together with the existing V2.7 bounded metadata:
+
+- an exact total cannot be smaller than the retained issue count;
+- a complete result with exact totals must report an exact total equal to the retained count;
+- a truncated result with exact totals must prove at least one uncaptured finding;
+- per-rule exact totals must be non-negative;
+- the per-rule exact-total map must sum to the exact overall total;
+- a per-rule exact total cannot under-report the retained count for that rule;
+- exact diagnostic maps are exposed immutably.
+
+### Analyzer behavior
+
+```dart
+final result = analyzer.analyze(
+  text,
+  languagePack: pack,
+  maxIssues: 200,
+);
+
+print(result.capturedIssueCount);   // retained findings, at most 200
+print(result.totalIssueCount);      // exact findings observed across the full analysis
+print(result.uncapturedIssueCount); // exact omitted count when diagnostics are available
+```
+
+V2.8 does not change the meaning of `maxIssues`. The bound controls retained `WritingIssue` objects and downstream review workload. Enabled/supported rules are still scanned across the supplied text so the analyzer can preserve the correct global review-order prefix and compute exact diagnostics.
+
+The diagnostics are count metadata only. They do not imply a CPU-time limit, wall-clock guarantee, document-size guarantee, network telemetry, or persistence behavior.
