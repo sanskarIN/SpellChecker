@@ -79,9 +79,8 @@ class WritingAnalysisDiagnosticSummary {
 
   bool get hasExactIssueTotals => totalIssueCount != null;
 
-  int? get uncapturedIssueCount => totalIssueCount == null
-      ? null
-      : totalIssueCount! - capturedIssueCount;
+  int? get uncapturedIssueCount =>
+      totalIssueCount == null ? null : totalIssueCount! - capturedIssueCount;
 
   /// Formats the summary as deterministic plain text suitable for copying into
   /// a bug report, performance note, or support discussion.
