@@ -324,6 +324,12 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
+                  IconButton(
+                    key: const ValueKey<String>('copy-writing-diagnostics'),
+                    tooltip: 'Copy diagnostic summary',
+                    onPressed: _copyDiagnosticSummary,
+                    icon: const Icon(Icons.copy_all_outlined),
+                  ),
                   Text(
                     analysis.isTruncated
                         ? '${visibleIssues.length}/${analysis.capturedIssueCount} captured'
@@ -422,12 +428,6 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton.icon(
-          key: const ValueKey<String>('copy-writing-diagnostics'),
-          onPressed: _copyDiagnosticSummary,
-          icon: const Icon(Icons.copy_all_outlined),
-          label: const Text('Copy diagnostic summary'),
-        ),
         TextButton.icon(
           key: const ValueKey<String>('reset-writing-rules'),
           onPressed: () => _close(resetRulePreferences: true),
