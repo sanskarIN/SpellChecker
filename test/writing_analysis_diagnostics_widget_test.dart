@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spellchecker/features/editor/writing_insights_dialog.dart';
 import 'package:spellchecker/language.dart';
@@ -6,6 +7,11 @@ import 'package:spellchecker/writing.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null);
+  });
 
   testWidgets('Writing insights exposes exact multi-rule totals when limited', (
     WidgetTester tester,
@@ -17,36 +23,7 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (BuildContext context) {
-            return Scaffold(
-              body: Center(
-                child: FilledButton(
-                  onPressed: () {
-                    showDialog<WritingInsightsDialogResult>(
-                      context: context,
-                      builder: (BuildContext context) => WritingInsightsDialog(
-                        text: 'abcdefghij',
-                        languagePack: SpellLanguageRegistry.englishUs,
-                        analyzer: analyzer,
-                        initialEnabledRuleIds: const <String>{'alpha', 'beta'},
-                        maxIssues: 2,
-                      ),
-                    );
-                  },
-                  child: const Text('Open insights'),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Open insights'));
-    await tester.pumpAndSettle();
+    await _openInsights(tester, analyzer: analyzer);
 
     final scrollable = _dialogScrollable();
     for (final expected in <String>['Total findings: 3', 'Total findings: 2']) {
@@ -86,6 +63,95 @@ void main() {
     expect(badge.label, isA<Text>());
     expect((badge.label! as Text).data, '2/5');
   });
+
+  testWidgets('Copy diagnostic summary excludes document finding details', (
+    WidgetTester tester,
+  ) async {
+    String? copiedText;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (
+          MethodCall methodCall,
+        ) async {
+          if (methodCall.method == 'Clipboard.setData') {
+            final arguments = methodCall.arguments as Map<Object?, Object?>;
+            copiedText = arguments['text'] as String?;
+          }
+          return null;
+        });
+
+    final analyzer = WritingAnalyzer(
+      rules: const <WritingRule>[
+        _NamedOffsetsRule('alpha', <int>[0, 4, 8]),
+        _NamedOffsetsRule('beta', <int>[2, 6]),
+      ],
+    );
+
+    await _openInsights(tester, analyzer: analyzer);
+
+    final copyButton = find.byKey(
+      const ValueKey<String>('copy-writing-diagnostics'),
+    );
+    await tester.scrollUntilVisible(
+      copyButton,
+      160,
+      scrollable: _dialogScrollable(),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(copyButton);
+    await tester.pumpAndSettle();
+
+    expect(copiedText, isNotNull);
+    expect(copiedText, contains('SpellChecker writing analysis diagnostics'));
+    expect(copiedText, contains('Language: en-US'));
+    expect(copiedText, contains('Captured findings: 2'));
+    expect(copiedText, contains('Total findings: 5'));
+    expect(copiedText, contains('ALPHA [alpha]'));
+    expect(copiedText, contains('BETA [beta]'));
+    expect(copiedText, isNot(contains('abcdefghij')));
+    expect(copiedText, isNot(contains('Synthetic finding')));
+    expect(
+      find.text(
+        'Diagnostic summary copied. Editor text and finding excerpts were excluded.',
+      ),
+      findsOneWidget,
+    );
+  });
+}
+
+Future<void> _openInsights(
+  WidgetTester tester, {
+  required WritingAnalyzer analyzer,
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (BuildContext context) {
+          return Scaffold(
+            body: Center(
+              child: FilledButton(
+                onPressed: () {
+                  showDialog<WritingInsightsDialogResult>(
+                    context: context,
+                    builder: (BuildContext context) => WritingInsightsDialog(
+                      text: 'abcdefghij',
+                      languagePack: SpellLanguageRegistry.englishUs,
+                      analyzer: analyzer,
+                      initialEnabledRuleIds: const <String>{'alpha', 'beta'},
+                      maxIssues: 2,
+                    ),
+                  );
+                },
+                child: const Text('Open insights'),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  );
+
+  await tester.tap(find.text('Open insights'));
+  await tester.pumpAndSettle();
 }
 
 Finder _dialogList() {
