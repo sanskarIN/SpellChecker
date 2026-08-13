@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spellchecker/language.dart';
-import 'package:spellchecker/writing/writing_analysis_diagnostic_summary.dart';
 import 'package:spellchecker/writing.dart';
 
 void main() {
@@ -15,7 +14,7 @@ void main() {
     );
 
     final result = analyzer.analyze(
-      'private document sample',
+      'sample document body',
       languagePack: pack,
       maxIssues: 2,
     );
@@ -31,7 +30,7 @@ void main() {
     expect(summary, contains('Uncaptured findings: 3'));
     expect(summary, contains('Capture limit: 2'));
     expect(summary.indexOf('[alpha]'), lessThan(summary.indexOf('[zeta]')));
-    expect(summary, isNot(contains('private document sample')));
+    expect(summary, isNot(contains('sample document body')));
     expect(summary, isNot(contains('Synthetic finding')));
   });
 
