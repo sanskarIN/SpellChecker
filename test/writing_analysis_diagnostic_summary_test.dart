@@ -15,7 +15,7 @@ void main() {
     );
 
     final result = analyzer.analyze(
-      'secret document body',
+      'private document sample',
       languagePack: pack,
       maxIssues: 2,
     );
@@ -31,7 +31,7 @@ void main() {
     expect(summary, contains('Uncaptured findings: 3'));
     expect(summary, contains('Capture limit: 2'));
     expect(summary.indexOf('[alpha]'), lessThan(summary.indexOf('[zeta]')));
-    expect(summary, isNot(contains('secret document body')));
+    expect(summary, isNot(contains('private document sample')));
     expect(summary, isNot(contains('Synthetic finding')));
   });
 
@@ -39,7 +39,7 @@ void main() {
     const issue = WritingIssue(
       ruleId: 'alpha',
       ruleName: 'Alpha rule',
-      message: 'Do not export this message.',
+      message: 'Sample finding message.',
       start: 0,
       end: 1,
       originalText: 'x',
@@ -54,25 +54,25 @@ void main() {
       isTruncated: true,
     );
 
-    final summary = WritingAnalysisDiagnosticSummary.fromResult(result)
-        .toPlainText();
+    final summary = WritingAnalysisDiagnosticSummary.fromResult(
+      result,
+    ).toPlainText();
 
     expect(summary, contains('Total findings: unavailable'));
     expect(summary, contains('Uncaptured findings: unavailable'));
     expect(summary, contains('1 captured; total unavailable'));
-    expect(summary, isNot(contains('Do not export this message.')));
+    expect(summary, isNot(contains('Sample finding message.')));
     expect(summary, isNot(contains('Text: x')));
   });
 
   test('empty analysis exports an explicit empty rule section', () {
-    final result = WritingAnalyzer(rules: const <WritingRule>[]).analyze(
-      '',
-      languagePack: pack,
-      maxIssues: 10,
-    );
+    final result = WritingAnalyzer(
+      rules: const <WritingRule>[],
+    ).analyze('', languagePack: pack, maxIssues: 10);
 
-    final summary = WritingAnalysisDiagnosticSummary.fromResult(result)
-        .toPlainText();
+    final summary = WritingAnalysisDiagnosticSummary.fromResult(
+      result,
+    ).toPlainText();
 
     expect(summary, contains('Analysis status: complete'));
     expect(summary, contains('Total findings: 0'));
