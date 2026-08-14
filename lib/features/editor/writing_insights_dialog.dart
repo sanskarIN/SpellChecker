@@ -332,7 +332,9 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                       ),
                     ),
                     Semantics(
-                      key: const ValueKey<String>('writing-rules-visible-count'),
+                      key: const ValueKey<String>(
+                        'writing-rules-visible-count',
+                      ),
                       liveRegion: true,
                       label:
                           '${visibleRules.length} visible rules of ${supportedRules.length}',
@@ -396,7 +398,8 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                     const SizedBox(width: 8),
                     Tooltip(
                       message:
-                          analysis.isTruncated && analysis.totalIssueCount != null
+                          analysis.isTruncated &&
+                              analysis.totalIssueCount != null
                           ? '${analysis.capturedIssueCount} captured of ${analysis.totalIssueCount} total findings'
                           : '${visibleIssues.length} visible findings',
                       child: Badge(
@@ -427,7 +430,8 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                   const SizedBox(height: 10),
                   FilledButton.tonalIcon(
                     key: const ValueKey<String>('apply-all-writing-fixes'),
-                    onPressed: () => _close(issuesToFix: visibleAutomaticIssues),
+                    onPressed: () =>
+                        _close(issuesToFix: visibleAutomaticIssues),
                     icon: const Icon(Icons.auto_fix_high),
                     label: Text(
                       analysis.isTruncated
