@@ -45,6 +45,13 @@ class AnalysisBenchmarkSample {
         'must not be negative',
       );
     }
+    if (spellingCapturedIssueCount > spellingScannedTokenCount) {
+      throw ArgumentError.value(
+        spellingCapturedIssueCount,
+        'spellingCapturedIssueCount',
+        'cannot exceed spellingScannedTokenCount',
+      );
+    }
     if (writingCapturedIssueCount < 0) {
       throw ArgumentError.value(
         writingCapturedIssueCount,
@@ -57,6 +64,15 @@ class AnalysisBenchmarkSample {
         writingTotalIssueCount,
         'writingTotalIssueCount',
         'cannot be smaller than writingCapturedIssueCount',
+      );
+    }
+    final hasUncapturedWritingIssues =
+        writingTotalIssueCount > writingCapturedIssueCount;
+    if (writingTruncated != hasUncapturedWritingIssues) {
+      throw ArgumentError.value(
+        writingTruncated,
+        'writingTruncated',
+        'must match whether exact writing totals contain uncaptured issues',
       );
     }
   }
@@ -105,6 +121,7 @@ class AnalysisBenchmarkSummary {
       throw ArgumentError.value(samples, 'samples', 'must not be empty');
     }
     _validateSampleIndexes();
+    _validateScenarioConsistency();
     _validateStableAnalysisOutcome();
   }
 
@@ -165,6 +182,33 @@ class AnalysisBenchmarkSummary {
       if (samples[index].index != index) {
         throw ArgumentError(
           'Benchmark sample indexes must be contiguous and zero-based.',
+        );
+      }
+    }
+  }
+
+  void _validateScenarioConsistency() {
+    for (final sample in samples) {
+      if (sample.spellingCapturedIssueCount > scenario.spellingIssueLimit) {
+        throw ArgumentError(
+          'Spelling captured issues cannot exceed the scenario issue limit.',
+        );
+      }
+      if (sample.spellingTruncated &&
+          sample.spellingCapturedIssueCount != scenario.spellingIssueLimit) {
+        throw ArgumentError(
+          'A truncated spelling sample must fill the scenario issue limit.',
+        );
+      }
+      if (sample.writingCapturedIssueCount > scenario.writingIssueLimit) {
+        throw ArgumentError(
+          'Writing captured findings cannot exceed the scenario issue limit.',
+        );
+      }
+      if (sample.writingTruncated &&
+          sample.writingCapturedIssueCount != scenario.writingIssueLimit) {
+        throw ArgumentError(
+          'A truncated writing sample must fill the scenario issue limit.',
         );
       }
     }
