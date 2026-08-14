@@ -1,0 +1,291 @@
+name: V2.11 release documentation helper
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out V2.11 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-accessibility-review-2026-08-14
+          fetch-depth: 0
+      - name: Configure commit identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Synchronize V2.11 release documentation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          def commit_file(path, message):
+              subprocess.run(['git', 'add', path], check=True)
+              subprocess.run(['git', 'commit', '-m', message], check=True)
+
+          def replace_once(path, old, new, message):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'{path}: replacement anchor not found')
+              updated = text.replace(old, new, 1)
+              p.write_text(updated)
+              commit_file(path, message)
+
+          def transform(path, fn, message):
+              p = Path(path)
+              text = p.read_text()
+              updated = fn(text)
+              if updated == text:
+                  raise SystemExit(f'{path}: transform made no change')
+              p.write_text(updated)
+              commit_file(path, message)
+
+          def append_section(path, marker, section, message):
+              p = Path(path)
+              text = p.read_text()
+              if marker in text:
+                  raise SystemExit(f'{path}: section already present')
+              p.write_text(text.rstrip() + '\n\n' + section.strip() + '\n')
+              commit_file(path, message)
+
+          replace_once(
+              'pubspec.yaml',
+              'version: 2.10.0+15',
+              'version: 2.11.0+16',
+              'release: advance package to 2.11.0+16',
+          )
+
+          def update_about(text):
+              old = "applicationVersion: '2.10.0',"
+              if old not in text:
+                  raise SystemExit('spell_checker_page.dart: About version anchor not found')
+              text = text.replace(old, "applicationVersion: '2.11.0',", 1)
+              old_phrase = 'batch-safe writing fixes, keyboard workflows, and undo-friendly corrections.'
+              new_phrase = 'batch-safe writing fixes, keyboard workflows including keyboard-first Writing insights search/filter review, live accessibility semantics, and undo-friendly corrections.'
+              if old_phrase not in text:
+                  raise SystemExit('spell_checker_page.dart: About description anchor not found')
+              return text.replace(old_phrase, new_phrase, 1)
+
+          transform(
+              'lib/features/editor/spell_checker_page.dart',
+              update_about,
+              'release: report V2.11 in About dialog',
+          )
+
+          def update_widget_test(text):
+              text = text.replace(
+                  "testWidgets('About dialog reports the current V2.10 release',",
+                  "testWidgets('About dialog reports the current V2.11 release',",
+                  1,
+              )
+              if "find.textContaining('2.10.0')" not in text:
+                  raise SystemExit('widget_test.dart: version expectation anchor not found')
+              return text.replace(
+                  "find.textContaining('2.10.0')",
+                  "find.textContaining('2.11.0')",
+                  1,
+              )
+
+          transform(
+              'test/widget_test.dart',
+              update_widget_test,
+              'test: advance About regression to V2.11',
+          )
+
+          def update_readme(text):
+              highlight = '- Developer-run V2.10 deterministic large-document benchmark tooling with synthetic corpus generation, versioned JSON/human reports, and CI smoke coverage.\n'
+              if highlight not in text:
+                  raise SystemExit('README.md: V2.10 highlight anchor not found')
+              text = text.replace(
+                  highlight,
+                  highlight + '- V2.11 keyboard-first Writing insights review with Ctrl/Command+F search focus, deterministic Escape filter clearing, and live rule/finding count semantics.\n',
+                  1,
+              )
+              old = """## Current release\n\n`2.10.0+15`\n\nVersion 2.10 is the **Deterministic Large-Document Benchmarking** release. It adds a developer-run synthetic benchmark harness for bounded spelling and writing analysis, immutable timing/outcome summaries, stable versioned JSON and human-readable reports, strict CLI validation, and permanent CI/release smoke coverage. The benchmark never reads editor documents, adds no telemetry or persistence, and does not turn machine-dependent timing values into correctness thresholds.\n\n"""
+              new = """## Current release\n\n`2.11.0+16`\n\nVersion 2.11 is the **Keyboard-First Writing Insights Accessibility** release. It gives the existing local Writing insights dialog direct Ctrl/Command+F search focus, deterministic two-stage Escape behavior, live semantic rule/finding counts, release-mode validation of the dialog capture bound, and focused keyboard/semantics regressions. It also strengthens the V2.10 benchmark so exact per-rule totals explicitly contain every analyzed rule, including zero-count rules. No new persistence format, runtime dependency, telemetry, account behavior, or application network request is introduced.\n\n"""
+              if old not in text:
+                  raise SystemExit('README.md: current release block not found')
+              text = text.replace(old, new, 1)
+              marker = '## Deterministic large-document benchmark — V2.10\n'
+              section = """## Keyboard-first Writing insights accessibility — V2.11\n\nWhile Writing insights is open, `Ctrl+F` / `Command+F` moves focus to the existing **Search rules and findings** field. Escape is intentionally two-stage: when transient search/category/automatic-fix filters are active it clears the entire transient review query and keeps the dialog open; when the review query is already empty, Escape closes the dialog through the normal result path. A focus anchor inside the shortcut scope keeps these bindings available while keyboard focus moves among dialog controls.\n\nVisible rule and finding counts now expose concise live semantic labels. Limited results keep their existing captured-only safety boundary and, when exact diagnostics are available, announce the relationship between visible, captured, and exact total findings without implying uncaptured findings are reviewable or fixable. `WritingInsightsDialog.maxIssues` is validated at runtime, so invalid non-positive bounds are rejected in release builds as well as tests.\n\nV2.11 does not persist review search/categories/automatic-fix filters, does not add clipboard behavior beyond the existing explicit diagnostic-summary copy action, and does not add network or telemetry behavior. See [V2.11 accessibility contract](docs/V2_11_ACCESSIBILITY.md) and [Accessibility](docs/ACCESSIBILITY.md).\n\n"""
+              if marker not in text:
+                  raise SystemExit('README.md: V2.10 section anchor not found')
+              return text.replace(marker, section + marker, 1)
+
+          transform('README.md', update_readme, 'docs: document V2.11 current release')
+
+          changelog_entry = """## [2.11.0] - 2026-08-14\n\n### Added\n\n- Keyboard-first Writing insights search focus with `Ctrl+F` and `Command+F` routed to the existing transient review-search field.\n- Deterministic two-stage Escape behavior: clear active review search/category/automatic-fix filters first, then close when the transient query is empty.\n- Focus anchoring inside the Writing insights shortcut scope so modal keyboard bindings remain reachable as focus moves among controls.\n- Live semantic labels for visible/total rule counts and complete/limited finding-count relationships.\n- Dedicated V2.11 keyboard and semantics widget suites that preserve the real lazy `ListView` interaction model.\n- Explicit zero-count entries for every analyzed writing rule in deterministic benchmark samples.\n\n### Changed\n\n- Package version advances to `2.11.0+16`; About version advances to `2.11.0`.\n- `WritingInsightsDialog` now rejects non-positive `maxIssues` values through runtime `ArgumentError` validation instead of relying on debug-only enforcement.\n- Benchmark sample validation now requires exact per-rule totals to cover the complete analyzed-rule set, while the runner materializes omitted analyzer zero counts as explicit zeros.\n- Accessibility, API, architecture, development, performance, privacy, release, testing, troubleshooting, user, writing-rule, security, support, contributor, roadmap, issue-template, and pull-request documentation are synchronized with V2.11.\n\n### Compatibility, security, privacy, and validation\n\n- Writing-rule IDs, language IDs, correction algorithms, bounded captured-only safety, persisted rule preferences, Portable settings, personal dictionaries, diagnostic-summary format, and benchmark JSON format remain compatible.\n- Review search, category selection, and automatic-fix filtering remain transient and are not added to persistence or transfer formats.\n- V2.11 adds no runtime dependency, telemetry, account behavior, cloud writing service, document persistence, background upload, or application network request.\n- Benchmark timings remain machine/toolchain observations rather than correctness thresholds.\n\n"""
+          def update_changelog(text):
+              marker = '## [2.10.0] - 2026-08-14\n'
+              if marker not in text:
+                  raise SystemExit('CHANGELOG.md: V2.10 anchor not found')
+              return text.replace(marker, changelog_entry + marker, 1)
+
+          transform('CHANGELOG.md', update_changelog, 'docs: add V2.11 changelog entry')
+
+          roadmap_section = """## 2.11 — Keyboard-first Writing insights accessibility\n\nStatus: implemented.\n\n- [x] Direct `Ctrl+F` / `Command+F` focus for the existing Writing insights review search.\n- [x] Focus anchor inside the modal shortcut scope so bindings remain available during keyboard traversal.\n- [x] Two-stage Escape behavior that clears transient review filters before closing.\n- [x] Search-focus restoration after transient filters are cleared.\n- [x] Live semantic visible/total rule-count state.\n- [x] Live complete/limited finding-count semantics with exact captured/total relationships when available.\n- [x] Release-mode positive `WritingInsightsDialog.maxIssues` validation.\n- [x] Lazy-list-safe keyboard and semantics regression coverage.\n- [x] Benchmark exact per-rule totals cover every analyzed rule, including explicit zero-count rules.\n- [x] Package/About release identity advances to `2.11.0+16` / `2.11.0`.\n- [x] Complete V2.11 accessibility, user, developer, testing, privacy/security, support, release, and repository metadata documentation.\n- [x] No persistence-format, telemetry, application-network, or runtime-dependency expansion.\n\n"""
+          def update_roadmap(text):
+              marker = '## Future 2.x direction\n'
+              if marker not in text:
+                  raise SystemExit('ROADMAP.md: future anchor not found')
+              text = text.replace(marker, roadmap_section + marker, 1)
+              text = text.replace('- Repeatable performance benchmarking for very large documents, kept separate from correctness metadata and without persisted document content.\n', '', 1)
+              text = text.replace('- Broader accessibility regression coverage for large limited-result dialogs and keyboard-only review.\n', '', 1)
+              return text
+
+          transform('docs/ROADMAP.md', update_roadmap, 'docs: mark V2.11 accessibility milestone implemented')
+
+          def update_v211_contract(text):
+              anchor = '# V2.11 keyboard-first Writing insights accessibility\n\n'
+              if anchor not in text:
+                  raise SystemExit('V2_11_ACCESSIBILITY.md: title anchor not found')
+              metadata = 'Release version: `2.11.0+16`\n\nAbout version: `2.11.0`\n\n'
+              return text.replace(anchor, anchor + metadata, 1)
+
+          transform('docs/V2_11_ACCESSIBILITY.md', update_v211_contract, 'docs: record V2.11 release identity')
+
+          def update_accessibility(text):
+              text = text.replace('- Dedicated semantics regression coverage.\n', '', 1)
+              section = """## V2.11 keyboard-first Writing insights accessibility\n\nV2.11 makes the existing lazy Writing insights dialog more predictable for keyboard-only and assistive-technology users without changing its analysis or persistence model.\n\n- `Ctrl+F` / `Command+F` focuses the existing review-search field while the dialog is open.\n- A focus anchor lives inside the shortcut scope so the bindings remain active while focus traverses modal controls.\n- Escape clears the complete transient review query (search, categories, and Automatic fixes only) before it closes the dialog. A second Escape closes once the query is empty.\n- Clearing filters by Escape returns focus to review search.\n- Visible rule and finding counts are live semantic regions with descriptive labels rather than relying on compact `N/M` visual text.\n- Limited finding semantics preserve captured-only truthfulness and announce exact captured/total relationships when exact diagnostics are available.\n- `WritingInsightsDialog.maxIssues` is release-mode validated and rejects non-positive values.\n\nFocused tests keep the production `ListView` lazy: they scroll controls/semantics into the widget tree rather than changing production layout to make assertions easier. Manual review should include keyboard traversal, Ctrl/Command+F from multiple focused controls, first/second Escape behavior, screen-reader count announcements, increased text size, and narrow viewports.\n"""
+              return text.rstrip() + '\n\n' + section + '\n'
+
+          transform('docs/ACCESSIBILITY.md', update_accessibility, 'docs: add V2.11 accessibility contract')
+
+          append_section(
+              'docs/API.md',
+              '## V2.11 runtime and benchmark invariant hardening',
+              """## V2.11 runtime and benchmark invariant hardening\n\n`WritingInsightsDialog` remains an editor-feature widget rather than a new exported writing-model API, but its existing `maxIssues` constructor parameter is now validated at runtime. Values less than or equal to zero throw `ArgumentError` in release and debug builds. The default remains 200.\n\nV2.11 does not change `WritingAnalyzer.analyze()`, `WritingAnalysisResult`, `WritingIssue`, writing-rule IDs, correction APIs, language packs, persistence keys, or diagnostic-summary format. Review keyboard shortcuts and semantic labels operate over the existing analysis/query models.\n\nThe developer benchmark under `tool/` strengthens its internal sample invariant: `writingTotalIssueCountByRule` must contain exactly one non-negative entry for every analyzed writing rule and no other rule. The runner materializes explicit zero values for analyzed rules that produced no findings before constructing a sample. This benchmark tooling remains outside the public package barrels and keeps JSON format version 1.\n""",
+              'docs: describe V2.11 API invariants',
+          )
+
+          append_section(
+              'docs/ARCHITECTURE.md',
+              '## V2.11 Writing insights focus and semantics boundary',
+              """## V2.11 Writing insights focus and semantics boundary\n\nThe Writing insights dialog keeps one transient `WritingReviewQuery` projection over the existing analyzer result. V2.11 adds interaction state around that model, not a second review engine. `CallbackShortcuts` owns Ctrl/Command+F and Escape, while a focus anchor inside the shortcut subtree ensures those bindings remain available as focus moves among modal descendants. The search shortcut requests focus on the existing search `FocusNode`; it does not copy or persist the query.\n\nEscape delegates to a single handler. A non-empty transient query is cleared in one state transition and search focus is restored. An already-empty query closes through the same `_close()` result construction used by the visible Close action, preserving enabled-rule result semantics.\n\nRule/finding count semantics are derived during the same build from `visibleRules`, `visibleIssues`, and the existing bounded-analysis metadata. They do not add storage, asynchronous analysis, telemetry, or a parallel count cache. The dialog's capture limit is validated before state creation so invalid bounds cannot reach analysis in release builds.\n""",
+              'docs: document V2.11 focus architecture',
+          )
+
+          append_section(
+              'docs/DEVELOPMENT.md',
+              '## V2.11 keyboard and semantics development rules',
+              """## V2.11 keyboard and semantics development rules\n\nWriting insights is a lazy modal list. Tests and future controls must preserve that architecture. Do not make off-screen controls eagerly mounted merely to simplify widget tests. Use scrolling/dragging helpers until the target is built, interact while it is mounted, and remember that scrolling to a second lazy child can unmount the first.\n\nWhen adding dialog shortcuts, keep a visible/touch-accessible equivalent and ensure focus remains inside the shortcut scope. `Ctrl/Command+F` currently targets the existing review search. Escape first clears transient review search/category/automatic-fix state and only closes when that query is empty. Changes to this order require accessibility and persistence-boundary review.\n\nCount semantics should describe meaning in words and may use `ExcludeSemantics` around compact visual count text to prevent duplicate announcements. Limited results must continue distinguishing visible, captured, and exact-total findings.\n""",
+              'docs: add V2.11 development guidance',
+          )
+
+          append_section(
+              'docs/PERFORMANCE.md',
+              '## V2.11 accessibility and benchmark-total impact',
+              """## V2.11 accessibility and benchmark-total impact\n\nV2.11 does not increase spelling or writing capture limits and does not add another analysis pass. Keyboard focus handling and live semantic count labels are computed from the already available dialog query/analysis state. The existing 200-finding Writing insights capture policy and captured-only limited-review behavior remain unchanged.\n\nThe benchmark runner now builds a complete exact per-rule total map by adding zero entries for analyzed rules omitted from `WritingAnalysisResult.totalIssueCountByRule`. With the six built-in rules this is a tiny bounded metadata normalization step; it does not retain additional findings or alter timing-threshold policy. Benchmark elapsed times remain descriptive machine/toolchain observations, not correctness gates.\n""",
+              'docs: record V2.11 performance boundaries',
+          )
+
+          append_section(
+              'docs/PRIVACY.md',
+              '## V2.11 keyboard-review privacy boundary',
+              """## V2.11 keyboard-review privacy boundary\n\nV2.11 adds keyboard focus/clearing behavior and live semantic count labels to the existing local Writing insights dialog. It does not introduce a new data source or destination.\n\n- Ctrl/Command+F moves focus to the existing local search field; it does not invoke browser search, a remote service, clipboard access, or telemetry.\n- Escape clears transient review search/categories/automatic-fix filtering in memory before closing; those filters remain absent from preferences and Portable settings.\n- Live semantic labels contain counts/status metadata, not editor text, finding excerpts, replacements, personal vocabulary, or correction history.\n- Runtime capture-limit validation processes only the supplied integer configuration.\n\nThe existing explicit Copy diagnostic summary action remains the only V2.9+ Writing insights clipboard path and still copies only the documented metadata-only diagnostic representation after a user action.\n""",
+              'docs: document V2.11 privacy boundary',
+          )
+
+          def update_releasing(text):
+              old = """Current V2.10 release candidate:\n\n```text\n2.10.0+15\n```\n"""
+              new = """Current V2.11 release candidate:\n\n```text\n2.11.0+16\n```\n"""
+              if old not in text:
+                  raise SystemExit('RELEASING.md: current candidate block not found')
+              text = text.replace(old, new, 1)
+              section = """## V2.11 release-specific checks\n\nBefore tagging `v2.11.0`, additionally verify:\n\n- `pubspec.yaml` reports `2.11.0+16` and About reports `2.11.0`.\n- Ctrl/Command+F focuses Writing insights review search while focus is inside the dialog.\n- First Escape clears active transient review filters and keeps the dialog open; a subsequent Escape closes when the query is empty.\n- Rule/finding live semantics remain reachable in the real lazy list, including exact limited-result wording.\n- Non-positive `WritingInsightsDialog.maxIssues` is rejected in release-mode runtime code.\n- Benchmark samples contain exact per-rule totals for every analyzed rule, including explicit zero entries.\n- The permanent workflow directory contains only intended reusable workflows; all `v211-*` development helpers are removed.\n\nThe normal release gate remains dependency resolution + lockfile cleanliness + formatting + analyze + full tests + synthetic benchmark smoke + release web build.\n"""
+              return text.rstrip() + '\n\n' + section + '\n'
+
+          transform('docs/RELEASING.md', update_releasing, 'docs: advance release procedure to V2.11')
+
+          append_section(
+              'docs/TESTING.md',
+              '## V2.11 focused accessibility coverage',
+              """## V2.11 focused accessibility coverage\n\nV2.11 adds two focused suites:\n\n```bash\nflutter test test/v211_writing_keyboard_test.dart --reporter expanded\nflutter test test/v211_writing_semantics_test.dart --reporter expanded\n```\n\nThey protect Ctrl+F focus routing, two-stage Escape behavior, combined category/automatic-fix clearing, focus restoration, release-mode dialog-bound validation, live rule counts, live complete/limited finding counts, and lazy-list-safe semantics discovery. Tests must scroll the real Writing insights `ListView`; they must not assume every off-screen control remains mounted.\n\nV2.11 also extends `analysis_benchmark_result_test.dart` and `analysis_benchmark_runner_test.dart` so exact per-rule benchmark totals cover every analyzed rule and clean/zero-finding rules appear explicitly with a zero count. The complete repository gate remains `dart format`, `flutter analyze`, the full `flutter test` suite, and the benchmark CLI smoke command; release validation also checks lockfile cleanliness and `flutter build web --release`.\n""",
+              'docs: add V2.11 testing matrix',
+          )
+
+          append_section(
+              'docs/TROUBLESHOOTING.md',
+              '## V2.11 Writing insights keyboard review',
+              """## V2.11 Writing insights keyboard review\n\n### Ctrl/Command+F does not focus review search\n\nConfirm Writing insights is the active modal and keyboard focus is inside it. V2.11 routes Ctrl+F and Command+F to **Search rules and findings** only while that dialog owns focus; the shortcut does not replace browser/application find outside the modal. The visible search field remains available for pointer/touch access.\n\n### Escape did not close Writing insights\n\nIf search text, a category filter, or **Automatic fixes only** is active, the first Escape intentionally clears that transient review query and keeps the dialog open. Search focus is restored. Press Escape again after the query is empty to close. Enabled writing-rule switches are not review filters and are not reset by Escape.\n\n### A rule/finding count is not immediately present in a widget test\n\nWriting insights uses a lazy `ListView`. Scroll until the keyed semantics node is built before inspecting it. Scrolling to another distant child can unmount the first; assert each lazy target while it is mounted.\n""",
+              'docs: add V2.11 troubleshooting guidance',
+          )
+
+          append_section(
+              'docs/USER_GUIDE.md',
+              '## V2.11 keyboard-first Writing insights review',
+              """## V2.11 keyboard-first Writing insights review\n\nOpen Writing insights with the app-bar action or `Ctrl/Command+Shift+Enter`. While the dialog is open:\n\n- Press `Ctrl+F` (or `Command+F`) to move directly to **Search rules and findings**.\n- If review search, category filters, or **Automatic fixes only** is active, press Escape once to clear those temporary filters and keep the dialog open.\n- Press Escape when no temporary review filter is active to close Writing insights.\n\nAfter the first Escape clears filters, focus returns to review search so you can type a new query immediately. Enabled writing-rule switches are separate persistent per-language settings and are not cleared by this shortcut.\n\nRule and finding count changes are exposed as live accessibility state. For limited analysis, the announcement distinguishes visible findings from the captured prefix and exact total when available. Filters and fixes still operate only on captured findings; live totals do not authorize fixes to uncaptured content.\n""",
+              'docs: add V2.11 user keyboard workflow',
+          )
+
+          append_section(
+              'docs/WRITING_RULES.md',
+              '## V2.11 review interaction hardening',
+              """## V2.11 review interaction hardening\n\nV2.11 changes how users navigate/filter Writing insights, not how writing rules match text. Rule IDs, categories, language support, source ranges, replacement metadata, analyzer ordering, bounded capture, and correction safety are unchanged.\n\nThe dialog's Ctrl/Command+F shortcut focuses the existing `WritingReviewQuery.search` input. Escape clears the complete transient query projection (search, categories, automatic-fixes-only) before closing on a subsequent empty-query Escape. This does not mutate `_enabledRuleIds`; per-language enabled-rule preferences remain the established persistent model.\n\nVisible rule/finding counts are live semantics derived from the current query. In limited results, exact overall/per-rule diagnostics remain informational while filtering and automatic fixes stay scoped to retained `WritingIssue` objects.\n""",
+              'docs: document V2.11 writing review behavior',
+          )
+
+          append_section(
+              'CONTRIBUTING.md',
+              '## V2.11 accessibility regression expectations',
+              """## V2.11 accessibility regression expectations\n\nChanges to Writing insights focus, shortcuts, filters, semantics, or dialog layout should preserve the V2.11 keyboard contract and add/update focused widget coverage. Keep pointer/touch-visible equivalents for shortcuts; do not make lazy dialog content eager solely for tests. Exercise Ctrl/Command+F, first/second Escape semantics, transient-versus-persisted state, and screen-reader count meaning when affected.\n\nBenchmark changes must keep exact deterministic outcome metadata internally consistent. Per-rule total maps now cover every analyzed rule, including zero-count rules, while elapsed timing remains unsuitable as an ordinary CI correctness threshold.\n""",
+              'docs: add V2.11 contribution expectations',
+          )
+
+          append_section(
+              'SECURITY.md',
+              '## V2.11 keyboard and semantics security boundary',
+              """## V2.11 keyboard and semantics security boundary\n\nV2.11 keyboard shortcuts operate only inside the local Writing insights widget tree. Ctrl/Command+F requests focus on an existing `FocusNode`; Escape changes transient in-memory review state or closes the modal. Neither shortcut evaluates user input as code, launches a URL, reads arbitrary files, escalates permissions, accesses credentials, or introduces a network/telemetry path.\n\nLive semantic labels expose count/status metadata already derived in memory. They do not include editor text, finding excerpts, replacements, personal vocabulary, ignored words, or correction snapshots. Runtime validation rejects invalid non-positive dialog capture limits before analysis begins.\n""",
+              'docs: add V2.11 security boundary',
+          )
+
+          append_section(
+              'SUPPORT.md',
+              '## V2.11 keyboard/accessibility support',
+              """## V2.11 keyboard/accessibility support\n\nFor V2.11 Writing insights keyboard or semantics problems, report the exact synthetic text, platform/Flutter version, which control had focus, whether Ctrl/Command+F moved to review search, whether the first Escape cleared an active transient query, and whether the second Escape closed. For count announcements, include captured/total metadata and active synthetic filters rather than private document excerpts.\n\nIf a widget regression involves an apparently missing off-screen control, remember that Writing insights is intentionally lazy; reproduce by scrolling the real dialog rather than assuming every item is mounted simultaneously.\n""",
+              'docs: add V2.11 support guidance',
+          )
+
+          def update_bug_template(text):
+              if 'placeholder: v2.10.0 or commit SHA' not in text:
+                  raise SystemExit('bug_report.yml: version placeholder not found')
+              text = text.replace('placeholder: v2.10.0 or commit SHA', 'placeholder: v2.11.0 or commit SHA', 1)
+              anchor = '        - Writing insights / local writing rules\n'
+              if anchor not in text:
+                  raise SystemExit('bug_report.yml: area anchor not found')
+              text = text.replace(anchor, anchor + '        - V2.11 Writing insights keyboard / accessibility review\n', 1)
+              old = 'description: If relevant, include the exact shortcut/control, issue count/position, whether the visible equivalent works, whether text changed after checking/analysis, and whether the problem occurred before or after Undo. Use synthetic text only.'
+              new = 'description: If relevant, include the exact shortcut/control, focused control, Ctrl/Command+F or Escape behavior, active transient review filters, issue count/position, whether the visible equivalent works, whether text changed after checking/analysis, and whether the problem occurred before or after Undo. Use synthetic text only.'
+              if old not in text:
+                  raise SystemExit('bug_report.yml: editor context anchor not found')
+              text = text.replace(old, new, 1)
+              return text.rstrip() + '\n\n# V2.11 accessibility note\n# For Writing insights keyboard/semantics bugs, include focus location, Ctrl/Command+F behavior, first/second Escape behavior, and synthetic visible/captured/total counts. Do not paste private document text.\n'
+
+          transform('.github/ISSUE_TEMPLATE/bug_report.yml', update_bug_template, 'docs: update bug template for V2.11')
+
+          append_section(
+              '.github/ISSUE_TEMPLATE/feature_request.yml',
+              '# V2.11 accessibility design note',
+              """# V2.11 accessibility design note\n# Writing insights interaction proposals should preserve visible equivalents for shortcuts, deterministic transient-filter versus close behavior, lazy-list reachability, and descriptive live semantics without persisting review queries by default.\n""",
+              'docs: add V2.11 feature-request guidance',
+          )
+
+          append_section(
+              '.github/pull_request_template.md',
+              '## V2.11 keyboard/accessibility checklist',
+              """## V2.11 keyboard/accessibility checklist\n\n- [ ] Writing insights shortcut changes keep visible/touch-accessible equivalents.\n- [ ] Ctrl/Command+F and two-stage Escape behavior are preserved or intentionally documented/tested.\n- [ ] Transient review filters remain separate from persisted per-language rule preferences.\n- [ ] Lazy dialog tests scroll real content instead of forcing off-screen widgets to stay mounted.\n- [ ] Rule/finding semantics communicate visible/captured/total meaning without relying on compact visual counts alone.\n- [ ] Benchmark exact per-rule totals cover every analyzed rule, including zero-count rules, when benchmark code changes.\n- [ ] No `v211-*` one-time workflow/helper remains in the permanent tree.\n""",
+              'docs: add V2.11 pull-request checklist',
+          )
+
+          subprocess.run(['git', 'push', 'origin', 'HEAD:v2.11-accessibility-review-2026-08-14'], check=True)
+          PY
