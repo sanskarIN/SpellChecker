@@ -97,14 +97,12 @@ class WritingAnalysisResult {
           'Per-rule total issue counts must sum to totalIssueCount.',
         );
       }
-      for (final issue in this.issues) {
-        final exactCount = this.totalIssueCountByRule![issue.ruleId] ?? 0;
-        final capturedCount = this.issues
-            .where((candidate) => candidate.ruleId == issue.ruleId)
-            .length;
-        if (exactCount < capturedCount) {
+      final capturedCounts = issueCountByRule;
+      for (final entry in capturedCounts.entries) {
+        if ((this.totalIssueCountByRule![entry.key] ?? 0) < entry.value) {
           throw ArgumentError(
-            'A per-rule exact total cannot be smaller than captured findings.',
+            'Per-rule total issue counts cannot be smaller than captured '
+            'counts.',
           );
         }
       }
@@ -114,9 +112,27 @@ class WritingAnalysisResult {
   final List<WritingIssue> issues;
   final Set<String> analyzedRuleIds;
   final String languageId;
+
+  /// Maximum number of captured findings requested by the caller.
+  ///
+  /// `null` means the analysis was unbounded.
   final int? issueLimit;
+
+  /// Whether at least one additional finding existed beyond [issueLimit].
   final bool isTruncated;
+
+  /// Exact number of findings yielded by every analyzed rule, when known.
+  ///
+  /// Results produced by [WritingAnalyzer] always provide this value. It is
+  /// nullable so callers constructing [WritingAnalysisResult] directly using
+  /// the V2.7 constructor shape remain source-compatible.
   final int? totalIssueCount;
+
+  /// Exact per-rule finding totals across the analyzed text, when known.
+  ///
+  /// The map is immutable. Like [totalIssueCount], analyzer-produced results
+  /// always provide it while directly constructed compatibility results may
+  /// omit it.
   final Map<String, int>? totalIssueCountByRule;
 
   bool get isClean => issues.isEmpty;
@@ -124,6 +140,8 @@ class WritingAnalysisResult {
   int get capturedIssueCount => issues.length;
   bool get hasExactIssueTotals => totalIssueCount != null;
 
+  /// Exact number of findings not retained because of [issueLimit], when the
+  /// total is known.
   int? get uncapturedIssueCount =>
       totalIssueCount == null ? null : totalIssueCount! - capturedIssueCount;
 
