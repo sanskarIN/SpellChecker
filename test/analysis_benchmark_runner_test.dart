@@ -25,33 +25,51 @@ void main() {
       expect(summary.samples, hasLength(2));
       expect(summary.representativeSample.spellingCapturedIssueCount, 2);
       expect(summary.representativeSample.spellingTruncated, isTrue);
-      expect(summary.representativeSample.spellingScannedTokenCount, greaterThan(2));
+      expect(
+        summary.representativeSample.spellingScannedTokenCount,
+        greaterThan(2),
+      );
       expect(summary.representativeSample.writingCapturedIssueCount, 5);
-      expect(summary.representativeSample.writingTotalIssueCount, greaterThan(5));
+      expect(
+        summary.representativeSample.writingTotalIssueCount,
+        greaterThan(5),
+      );
       expect(summary.representativeSample.writingTruncated, isTrue);
-      expect(summary.medianSpellingElapsed, isNot(const Duration(microseconds: -1)));
-      expect(summary.medianWritingElapsed, isNot(const Duration(microseconds: -1)));
+      expect(
+        summary.medianSpellingElapsed,
+        isNot(const Duration(microseconds: -1)),
+      );
+      expect(
+        summary.medianWritingElapsed,
+        isNot(const Duration(microseconds: -1)),
+      );
     });
 
-    test('supports the UK language pack with the same synthetic dictionary', () {
-      final summary = AnalysisBenchmarkRunner(
-        scenario: AnalysisBenchmarkScenario(
-          name: 'uk-runner-test',
-          repeats: 1,
-          spellingIssueLimit: 10,
-          writingIssueLimit: 20,
-          suggestionLimit: 0,
-        ),
-        languagePack: SpellLanguageRegistry.englishGb,
-        warmupIterations: 0,
-        measuredIterations: 1,
-      ).run();
+    test(
+      'supports the UK language pack with the same synthetic dictionary',
+      () {
+        final summary = AnalysisBenchmarkRunner(
+          scenario: AnalysisBenchmarkScenario(
+            name: 'uk-runner-test',
+            repeats: 1,
+            spellingIssueLimit: 10,
+            writingIssueLimit: 20,
+            suggestionLimit: 0,
+          ),
+          languagePack: SpellLanguageRegistry.englishGb,
+          warmupIterations: 0,
+          measuredIterations: 1,
+        ).run();
 
-      expect(summary.languageId, 'en-GB');
-      expect(summary.representativeSample.spellingCapturedIssueCount, 1);
-      expect(summary.representativeSample.spellingTruncated, isFalse);
-      expect(summary.representativeSample.writingTotalIssueCount, greaterThan(0));
-    });
+        expect(summary.languageId, 'en-GB');
+        expect(summary.representativeSample.spellingCapturedIssueCount, 1);
+        expect(summary.representativeSample.spellingTruncated, isFalse);
+        expect(
+          summary.representativeSample.writingTotalIssueCount,
+          greaterThan(0),
+        );
+      },
+    );
 
     test('rejects invalid iteration counts', () {
       final scenario = AnalysisBenchmarkScenario(
