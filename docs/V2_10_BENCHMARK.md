@@ -192,3 +192,7 @@ Focused tests cover:
 - human and JSON report privacy boundaries;
 - help/error exit behavior;
 - an end-to-end small JSON benchmark command.
+
+## Writing workload evolution after V2.10
+
+V2.10 shipped with six built-in analyzed writing-rule IDs. V2.11 adds `missing-punctuation-space`, so the default benchmark writing workload now contains seven analyzed rule IDs. This is an intentional workload change, not a benchmark-format change: format version 1 already records sorted `writingAnalyzedRuleIds` and exact per-rule totals so cross-version comparisons can detect it. Compare elapsed values only after accounting for the active rule set.
