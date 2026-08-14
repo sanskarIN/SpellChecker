@@ -3,6 +3,10 @@ import 'analysis_benchmark_result.dart';
 String formatAnalysisBenchmarkSummary(AnalysisBenchmarkSummary summary) {
   final scenario = summary.scenario;
   final sample = summary.representativeSample;
+  final writingRuleIds = sample.writingAnalyzedRuleIds.join(', ');
+  final writingTotals = sample.writingTotalIssueCountByRule.entries
+      .map((entry) => '${entry.key}=${entry.value}')
+      .join(', ');
   final lines = <String>[
     'SpellChecker deterministic analysis benchmark',
     'Language: ${summary.languageId}',
@@ -19,6 +23,8 @@ String formatAnalysisBenchmarkSummary(AnalysisBenchmarkSummary summary) {
     '  Writing captured findings: ${sample.writingCapturedIssueCount}',
     '  Writing total findings: ${sample.writingTotalIssueCount}',
     '  Writing truncated: ${sample.writingTruncated}',
+    '  Writing analyzed rules: ${writingRuleIds.isEmpty ? '(none)' : writingRuleIds}',
+    '  Writing exact totals by rule: ${writingTotals.isEmpty ? '(none)' : writingTotals}',
     '',
     'Timing (microseconds)',
     '  Spelling min/median/max: '
