@@ -1,118 +1,158 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:spellchecker/core/spell_language_pack.dart';
+import 'package:spellchecker/storage/dictionary_preferences.dart';
 import 'package:spellchecker/writing.dart';
 
-import '../lib/storage/dictionary_preferences.dart';
-
 void main() {
-  const preferences = DictionaryPreferences();
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('writing-rule preferences', () {
-    setUp(() {
-      SharedPreferences.setMockInitialValues(<String, Object>{});
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
+  test('returns null when writing rules were never configured', () async {
+    final preferences = DictionaryPreferences();
+
+    expect(await preferences.loadWritingRuleIds(languageId: 'en-US'), isNull);
+  });
+
+  test('persists normalized deterministic writing rule ids', () async {
+    final preferences = DictionaryPreferences();
+
+    await preferences.saveWritingRuleIds(<String>[
+      ' repeated-space ',
+      'repeated-word',
+      'repeated-space',
+      '',
+    ], languageId: 'en-US');
+
+    expect(await preferences.loadWritingRuleIds(languageId: 'en-US'), <String>{
+      'repeated-space',
+      'repeated-word',
     });
 
-    test('missing key remains distinguishable from explicit empty', () async {
-      expect(await preferences.loadWritingRuleIds('en-US'), isNull);
+    final raw = await SharedPreferences.getInstance();
+    expect(
+      raw.getStringList('spellchecker.writing_rule_ids.v1.en-US'),
+      <String>['repeated-space', 'repeated-word'],
+    );
+  });
 
-      await preferences.saveWritingRuleIds('en-US', const <String>{});
+  test('preserves an explicitly empty writing rule set', () async {
+    final preferences = DictionaryPreferences();
 
-      expect(await preferences.loadWritingRuleIds('en-US'), <String>{});
+    await preferences.saveWritingRuleIds(const <String>[], languageId: 'en-US');
+
+    final restored = await preferences.loadWritingRuleIds(languageId: 'en-US');
+    expect(restored, isNotNull);
+    expect(restored, isEmpty);
+  });
+
+  test('isolates writing rule choices by language', () async {
+    final preferences = DictionaryPreferences();
+
+    await preferences.saveWritingRuleIds(const <String>{
+      'repeated-space',
+    }, languageId: SpellLanguageRegistry.englishUs.id);
+    await preferences.saveWritingRuleIds(const <String>{
+      'sentence-capitalization',
+    }, languageId: SpellLanguageRegistry.englishGb.id);
+
+    expect(await preferences.loadWritingRuleIds(languageId: 'en-US'), <String>{
+      'repeated-space',
     });
+    expect(await preferences.loadWritingRuleIds(languageId: 'en-GB'), <String>{
+      'sentence-capitalization',
+    });
+  });
 
-    test('stores sorted stable IDs per language', () async {
-      await preferences.saveWritingRuleIds('en-US', const <String>{
-        'sentence-capitalization',
+  test(
+    'clearing one language restores unset state without touching another',
+    () async {
+      final preferences = DictionaryPreferences();
+
+      await preferences.saveWritingRuleIds(const <String>{
         'repeated-space',
-      });
-      await preferences.saveWritingRuleIds('en-GB', const <String>{
+      }, languageId: 'en-US');
+      await preferences.saveWritingRuleIds(const <String>{
         'repeated-word',
-      });
+      }, languageId: 'en-GB');
 
-      expect(await preferences.loadWritingRuleIds('en-US'), <String>{
-        'sentence-capitalization',
-        'repeated-space',
-      });
-      expect(await preferences.loadWritingRuleIds('en-GB'), <String>{
-        'repeated-word',
-      });
+      await preferences.clearWritingRuleIds(languageId: 'en-US');
 
-      final store = await SharedPreferences.getInstance();
+      expect(await preferences.loadWritingRuleIds(languageId: 'en-US'), isNull);
       expect(
-        store.getStringList('spellchecker.writing_rule_ids.v1.en-US'),
-        <String>['repeated-space', 'sentence-capitalization'],
+        await preferences.loadWritingRuleIds(languageId: 'en-GB'),
+        <String>{'repeated-word'},
       );
-    });
+    },
+  );
 
-    test('unset preferences resolve to current seven-rule defaults', () async {
-      final stored = await preferences.loadWritingRuleIds('en-US');
-      final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
+  test('unset preferences resolve to current seven-rule defaults', () async {
+    final preferences = DictionaryPreferences();
 
-      expect(stored, isNull);
-      expect(effective, hasLength(7));
-      expect(effective, contains('missing-punctuation-space'));
-    });
+    final stored = await preferences.loadWritingRuleIds(languageId: 'en-US');
+    final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
 
-    test('historical explicit six-rule set does not gain V2.11 rule', () async {
-      const historicalSixRuleOverride = <String>{
-        'punctuation-spacing',
-        'repeated-punctuation',
-        'repeated-space',
-        'repeated-word',
-        'sentence-capitalization',
-        'trailing-whitespace',
-      };
-      await preferences.saveWritingRuleIds('en-US', historicalSixRuleOverride);
+    expect(stored, isNull);
+    expect(effective, hasLength(7));
+    expect(effective, contains('missing-punctuation-space'));
+  });
 
-      final stored = await preferences.loadWritingRuleIds('en-US');
-      final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
+  test('historical explicit six-rule set does not gain V2.11 rule', () async {
+    final preferences = DictionaryPreferences();
+    const historicalSixRuleOverride = <String>{
+      'punctuation-spacing',
+      'repeated-punctuation',
+      'repeated-space',
+      'repeated-word',
+      'sentence-capitalization',
+      'trailing-whitespace',
+    };
 
-      expect(stored, historicalSixRuleOverride);
-      expect(effective, hasLength(6));
-      expect(effective, isNot(contains('missing-punctuation-space')));
-    });
-
-    test(
-      'explicit disable-all remains empty after V2.11 rule addition',
-      () async {
-        await preferences.saveWritingRuleIds('en-US', const <String>{});
-
-        final stored = await preferences.loadWritingRuleIds('en-US');
-        final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
-
-        expect(stored, isEmpty);
-        expect(effective, isEmpty);
-      },
+    await preferences.saveWritingRuleIds(
+      historicalSixRuleOverride,
+      languageId: 'en-US',
     );
 
-    test('removing an override restores current seven-rule defaults', () async {
-      await preferences.saveWritingRuleIds('en-US', const <String>{
-        'repeated-space',
-      });
-      await preferences.removeWritingRuleIds('en-US');
+    final stored = await preferences.loadWritingRuleIds(languageId: 'en-US');
+    final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
 
-      final stored = await preferences.loadWritingRuleIds('en-US');
-      final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
+    expect(stored, historicalSixRuleOverride);
+    expect(effective, hasLength(6));
+    expect(effective, isNot(contains('missing-punctuation-space')));
+  });
 
-      expect(stored, isNull);
-      expect(effective, hasLength(7));
-      expect(effective, contains('missing-punctuation-space'));
-    });
+  test('explicit disable-all remains empty after V2.11 rule addition', () async {
+    final preferences = DictionaryPreferences();
 
-    test('reset removes only the selected language override', () async {
-      await preferences.saveWritingRuleIds('en-US', const <String>{
-        'repeated-space',
-      });
-      await preferences.saveWritingRuleIds('en-GB', const <String>{
-        'repeated-word',
-      });
+    await preferences.saveWritingRuleIds(
+      const <String>{},
+      languageId: 'en-US',
+    );
 
-      await preferences.removeWritingRuleIds('en-US');
+    final stored = await preferences.loadWritingRuleIds(languageId: 'en-US');
+    final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
 
-      expect(await preferences.loadWritingRuleIds('en-US'), isNull);
-      expect(await preferences.loadWritingRuleIds('en-GB'), <String>{
-        'repeated-word',
-      });
-    });
+    expect(stored, isEmpty);
+    expect(effective, isEmpty);
+  });
+
+  test('clearing an override restores current seven-rule defaults', () async {
+    final preferences = DictionaryPreferences();
+
+    await preferences.saveWritingRuleIds(
+      const <String>{'repeated-space'},
+      languageId: 'en-US',
+    );
+    await preferences.clearWritingRuleIds(languageId: 'en-US');
+
+    final stored = await preferences.loadWritingRuleIds(languageId: 'en-US');
+    final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
+
+    expect(stored, isNull);
+    expect(effective, hasLength(7));
+    expect(effective, contains('missing-punctuation-space'));
   });
 }
