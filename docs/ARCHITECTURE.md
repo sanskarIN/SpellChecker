@@ -895,3 +895,9 @@ V2.9 strengthens model boundaries without changing the layer split:
 - `WritingAnalysisDiagnosticSummary.fromResult` reads only result/rule metadata, sorts rule rows by stable ID, and formats a deterministic metadata-only representation without reading document text.
 
 The summary model belongs to the writing layer and introduces no storage, UI, clipboard, network, or telemetry dependency.
+
+## V2.10 benchmark tooling boundary
+
+V2.10 adds a developer-tooling layer under `tool/`; it is intentionally outside the application runtime and public package barrels. The benchmark scenario owns deterministic synthetic corpus shape, the runner composes existing public spelling/writing APIs with fresh per-sample state, result models own immutable timing/outcome aggregation and versioned JSON serialization, the reporter owns terminal rendering, and the command/options layer owns CLI validation.
+
+This direction keeps performance observation separate from production `SpellCheckReport` and `WritingAnalysisResult` correctness metadata: runtime analysis models remain deterministic and timing-free, while developer tooling may measure elapsed wall-clock time externally. No storage adapter, editor widget, persisted key, network boundary, or rule/ranker plugin contract is added by V2.10.
