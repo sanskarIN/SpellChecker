@@ -830,3 +830,177 @@ The gate additionally asserted V2.10 package/About/README/changelog/roadmap iden
 At this release gate the candidate has no known formatter failure, analyzer diagnostic, failing automated test, benchmark-validation failure, lockfile drift, or release-web build failure. Timing values remain intentionally excluded from correctness thresholds.
 
 A final ordinary CI run is required after all V2.10 helper workflows are deleted and the ledger is committed. That final helper-free CI result is the merge gate; no `v210-*` helper may enter `main`.
+
+## V2.11 — Keyboard-First Writing Insights Accessibility & Benchmark Invariant Hardening
+
+Release version: `2.11.0+16`
+
+About version: `2.11.0`
+
+V2.11 continues from merged V2.10 `main` commit `303ff7c5883e50298090546d7db76345e444c467`. The milestone implements the roadmap's broader keyboard-only and large limited-result accessibility coverage while preserving the established local-only spelling/writing architecture. During the same repository audit, V2.10 benchmark metadata was strengthened so an exact per-rule total map is genuinely complete for the complete analyzed-rule set.
+
+The work was intentionally split into granular production, regression, formatter, benchmark, release-metadata, documentation, template, diagnostic, and validation commits rather than squashing unrelated changes together.
+
+### Writing insights runtime hardening
+
+`WritingInsightsDialog` now validates `maxIssues` through runtime code before state creation. Values less than or equal to zero throw `ArgumentError` in release and debug builds; the built-in default remains 200.
+
+The dialog adds a dedicated search `FocusNode` and a keyboard shortcut scope with a focus anchor inside that subtree. While Writing insights owns focus:
+
+- `Ctrl+F` focuses the existing **Search rules and findings** field.
+- `Command+F` provides the equivalent macOS shortcut.
+- Escape with any transient review search/category/automatic-fixes-only state clears the complete transient `WritingReviewQuery`, keeps the dialog open, and restores search focus.
+- Escape with an already-empty transient query closes through the existing `_close()` result path.
+
+The focus anchor exists because validation demonstrated that a shortcut wrapper without a guaranteed focused descendant could fail to receive Ctrl/Command+F after focus traversal. V2.11 therefore protects shortcut routing as a modal focus invariant rather than assuming search itself always owns focus.
+
+Enabled writing-rule switches remain separate from review filters. Escape does not reset `_enabledRuleIds`, persisted per-language rule choices, corrections, editor text, diagnostic-summary state, or Portable settings.
+
+### Live accessibility semantics
+
+Writing insights now exposes keyed live semantic regions for the two compact review counts:
+
+- `writing-rules-visible-count` describes the number of currently visible rules relative to the supported rule set.
+- `writing-findings-visible-count` describes the number of visible findings relative to captured findings and, for limited results with exact V2.8 diagnostics, the exact overall total.
+
+Compact visual count strings remain visually available while `ExcludeSemantics` prevents duplicate or ambiguous announcements. Limited results continue to distinguish visible, captured, and uncaptured data instead of presenting the retained prefix as complete.
+
+This metadata does not make uncaptured findings reviewable or fixable. Search, filtering, and automatic corrections still operate only on retained `WritingIssue` objects, preserving the V2.7 captured-only safety boundary.
+
+### Benchmark exact-total invariant repair
+
+The V2.10 benchmark sample contract previously allowed an internally incomplete exact map: a sample could declare analyzed rules `A` and `B`, provide an exact total only for `A`, and still pass if the values present happened to sum to the overall exact total.
+
+`AnalysisBenchmarkSample` now requires `writingTotalIssueCountByRule` to contain exactly one non-negative entry for every `writingAnalyzedRuleIds` value and no other rule. Missing entries are rejected before a sample can enter a summary.
+
+`WritingAnalyzer` intentionally omits zero-count rules from its raw exact per-rule map, so the benchmark runner now materializes an explicit `0` for every analyzed rule that has no finding before constructing a sample. The benchmark therefore reports a complete deterministic outcome even for a clean corpus.
+
+The existing requirements remain in force: rule IDs are non-blank, unique, and sorted snapshots; totals cannot be negative; rule totals must sum to the exact writing total; deterministic analysis outcomes must be identical across measured samples; elapsed times may vary without becoming correctness thresholds.
+
+The benchmark JSON format remains version 1. No public runtime package barrel export, application telemetry, persisted report format, or runtime dependency was added.
+
+### Focused regression coverage
+
+`test/v211_writing_keyboard_test.dart` protects Ctrl+F search focus after keyboard focus moves away from search; focus remaining inside the modal shortcut scope; first Escape clearing an active query and keeping the dialog open; search-focus restoration; second Escape closing an empty-query dialog; combined category plus Automatic fixes only clearing; and real lazy-`ListView` behavior by asserting controls while mounted and scrolling them back into the tree for post-Escape checks.
+
+`test/v211_writing_semantics_test.dart` protects release-mode rejection of non-positive `maxIssues`, live exact finding-count semantics for deliberately limited analysis, live visible/total rule-count semantics, search-filtered count changes, and lazy-list-safe discovery of off-screen semantic nodes.
+
+`test/analysis_benchmark_result_test.dart` adds incomplete exact-map rejection. `test/analysis_benchmark_runner_test.dart` proves a zero-finding corpus still reports the complete six-rule analyzed set with an explicit zero for each rule. `test/widget_test.dart` advances the About-version regression to `2.11.0`.
+
+### Release identity and documentation synchronization
+
+The package advances from `2.10.0+15` to `2.11.0+16`; the About dialog advances from `2.10.0` to `2.11.0`.
+
+The release/documentation pass synchronized the complete V2.11-relevant project surface rather than mechanically rewriting historical release text:
+
+- `README.md` declares V2.11 current and documents keyboard-first Writing insights review.
+- `CHANGELOG.md` contains the dated 2.11.0 release entry.
+- `docs/ROADMAP.md` marks 2.11 implemented and removes completed benchmark/accessibility future bullets.
+- `docs/V2_11_ACCESSIBILITY.md` is the dedicated interaction/accessibility release contract.
+- `docs/V2_10_BENCHMARK.md` records the strengthened complete per-rule exact-total invariant.
+- `docs/ACCESSIBILITY.md`, `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT.md`, `docs/PERFORMANCE.md`, `docs/PRIVACY.md`, `docs/RELEASING.md`, `docs/TESTING.md`, `docs/TROUBLESHOOTING.md`, `docs/USER_GUIDE.md`, and `docs/WRITING_RULES.md` describe the exact V2.11 behavior and compatibility boundaries.
+- `CONTRIBUTING.md`, `SECURITY.md`, and `SUPPORT.md` cover V2.11 keyboard/focus/semantics review requirements.
+- The bug-report, feature-request, and pull-request templates contain V2.11 reproduction/review guidance.
+
+Historical V2.9 and V2.10 sections remain historical. No old release text was globally replaced merely to show the new version.
+
+### Compatibility, persistence, privacy, and security boundaries
+
+V2.11 changes no language ID, writing-rule ID, writing-rule matching algorithm, correction algorithm, personal-dictionary format, settings-transfer format, preference key, suggestion-ranker API, spelling result model, writing diagnostic-summary format, benchmark JSON format, or direct runtime dependency set.
+
+Review search/category/automatic-fix state remains in-memory transient dialog state. Live semantic labels contain count/status metadata rather than editor text, source excerpts, replacement text, personal vocabulary, ignored words, or correction-history snapshots.
+
+Ctrl/Command+F only requests focus on the existing local review field. Escape only changes transient review state or closes the local modal. No shortcut evaluates input as code, launches a URL, reads arbitrary files, uploads a document, or creates a telemetry/network path.
+
+The pre-existing explicit **Copy diagnostic summary** action remains the documented user-initiated clipboard path and continues to copy only the metadata-only diagnostic representation.
+
+### Defects and validation assumptions caught during V2.11 development
+
+The development process caught and corrected real defects or unsafe assumptions instead of treating predecessor green CI as proof of the new milestone:
+
+- `AnalysisBenchmarkSample` initially accepted incomplete exact per-rule maps.
+- Tightening that invariant exposed the runner's need to materialize analyzer-omitted zero-count rules.
+- New Dart code/tests initially required canonical Dart 3.13 formatting.
+- The analyzer caught a relative import from a new test into `lib/`; it was converted to a package import.
+- Initial keyboard tests incorrectly assumed every lazy dialog child remained mounted after scrolling.
+- The first Ctrl+F implementation assumed `CallbackShortcuts` would always have a focused descendant; CI demonstrated otherwise, leading to the focus-anchor production fix.
+- Multiple widget-test iterations exposed additional lazy-list assertions that read controls after scrolling had legitimately unmounted them; assertions were moved to the period in which each control is mounted and post-state checks re-scroll the real production list.
+- A one-time formatter helper encountered a GitHub HTTP 500 after locally creating a commit. The remote branch did not receive that unresolved helper output; the corrected formatter reran after `flutter pub get`, used `sanskarin@outlook.in` as the authorized commit email, and pushed only canonical resolved-project formatting.
+- The first final release-validator script assumed a nested benchmark sample JSON shape. The benchmark command and all 224 tests succeeded, but the validator raised `KeyError: 'writing'`. The gate, not product code, was corrected to the actual stable flat version-1 schema and rerun successfully.
+- The first ledger helper embedded an unindented Markdown body directly inside a YAML heredoc and failed workflow parsing before a job was created. It made no ledger change and was removed; the ledger was then applied through a separate temporary Python helper so workflow YAML stayed minimal and valid.
+
+Temporary formatter, documentation, ledger, and release-validator workflows/scripts were one-time branch tooling only. Every helper is required to be removed before the merge-eligible permanent tree.
+
+### Permanent V2.11 changed-file scope
+
+Relative to V2.10 `main`, the permanent release changes these implementation, test, release, documentation, and template files:
+
+- `.github/ISSUE_TEMPLATE/bug_report.yml`
+- `.github/ISSUE_TEMPLATE/feature_request.yml`
+- `.github/pull_request_template.md`
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
+- `README.md`
+- `SECURITY.md`
+- `SUPPORT.md`
+- `docs/ACCESSIBILITY.md`
+- `docs/API.md`
+- `docs/ARCHITECTURE.md`
+- `docs/DEVELOPMENT.md`
+- `docs/PERFORMANCE.md`
+- `docs/PRIVACY.md`
+- `docs/RELEASING.md`
+- `docs/ROADMAP.md`
+- `docs/TESTING.md`
+- `docs/TROUBLESHOOTING.md`
+- `docs/USER_GUIDE.md`
+- `docs/V2_10_BENCHMARK.md`
+- `docs/V2_11_ACCESSIBILITY.md`
+- `docs/WRITING_RULES.md`
+- `lib/features/editor/spell_checker_page.dart`
+- `lib/features/editor/writing_insights_dialog.dart`
+- `pubspec.yaml`
+- `test/analysis_benchmark_result_test.dart`
+- `test/analysis_benchmark_runner_test.dart`
+- `test/v211_writing_keyboard_test.dart`
+- `test/v211_writing_semantics_test.dart`
+- `test/widget_test.dart`
+- `tool/benchmark/analysis_benchmark_result.dart`
+- `tool/benchmark/analysis_benchmark_runner.dart`
+
+This `what_changed.md` section is the additional permanent release-ledger path, for 33 permanent V2.11 changed paths in total.
+
+Every permanent changed path above was inspected at the diff level during the release audit. Tracked files absent from this permanent change set are byte-identical to the fully audited merged V2.10 base and were intentionally not churned simply to mention V2.11.
+
+### Ordinary functional CI evidence
+
+Permanent ordinary CI run `31778547418` (CI #423) validated helper-free functional/documented candidate `6e57c34c58d00a06616f098822ccaaa17df91201` and passed dependency resolution, canonical formatting for `lib test tool`, `flutter analyze`, the complete Flutter test suite, and the threshold-free benchmark CLI smoke command. The test suite ended with **224 tests passed**.
+
+Ordinary CI run `31778813668` (CI #425) independently reconfirmed the same permanent quality gates after the final release-validator schema correction commit.
+
+### Final V2.11 release-validator evidence
+
+Corrected read-only V2.11 final release-validator run `31778813655` validated the release candidate after all runtime, regression, documentation, and version work and passed every configured stage:
+
+```text
+flutter pub get
+git diff --exit-code -- pubspec.lock
+dart format --output=none --set-exit-if-changed lib test tool
+flutter analyze
+flutter test --reporter expanded
+en-US JSON benchmark: 250 repeats, 1 warmup, 3 measured iterations, 100/100 capture limits, 3 suggestions
+en-GB human benchmark: 50 repeats, 1 warmup, 2 measured iterations, 20/20 capture limits, 2 suggestions
+V2.11 package/About/README/changelog/roadmap/contract/workflow identity assertions
+flutter build web --release
+```
+
+The en-US report check additionally asserted JSON format version 1, lexically sorted analyzed rule IDs, exact per-rule key-set equality with analyzed rule IDs, non-negative integer totals, per-rule sum equality with exact overall writing total, and representative-sample equality with summary-level analysis-outcome rule/totals metadata.
+
+At this gate the candidate had no lockfile drift, formatter failure, analyzer diagnostic, test failure, benchmark-invariant failure, release-identity failure, or web release-build failure.
+
+### Final permanent-tree merge invariant
+
+The release validator and all other V2.11 helpers are deliberately non-permanent. After this ledger is committed, the final branch must contain only the reusable `.github/workflows/ci.yml` and `.github/workflows/release.yml` workflows. An ordinary CI run on the exact documentation-complete helper-free head must pass dependency installation, canonical formatting, analyzer, all 224 Flutter tests, and the benchmark CLI smoke command.
+
+Only that exact final CI-green head is eligible for merge to `main`. The resulting `main` merge commit must then pass the same ordinary push-triggered CI. This establishes a verified zero-failure state for the repository's audited automated gates and V2.11 invariants; it is not a mathematical claim that non-trivial software can contain no undiscovered future defect.
+
