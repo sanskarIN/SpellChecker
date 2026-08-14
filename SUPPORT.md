@@ -271,3 +271,7 @@ For analyzer-produced results, exact per-rule totals should sum to the exact ove
 Do not attach a private large document simply to prove a count mismatch. Repeated synthetic text or a small custom synthetic rule is preferred.
 
 The `captured/total` badge describes one current local analysis snapshot. Reopen Writing insights after editing or switching languages before comparing totals.
+
+## V2.9 diagnostic-summary support reports
+
+For writing-analysis count/ordering problems, maintainers can ask for the deterministic `WritingAnalysisDiagnosticSummary.toPlainText()` output plus the SpellChecker version and a synthetic reproduction. The summary is designed to contain counts and stable rule/language metadata without editor text or finding excerpts. If exact totals show `unavailable`, record whether the result was directly constructed for compatibility rather than returned by `WritingAnalyzer.analyze()`. Do not ask users to post private documents, personal dictionaries, raw correction history, or sensitive finding excerpts in public issues.
