@@ -1,4 +1,3 @@
-import 'package:spellchecker/language.dart';
 import 'package:spellchecker/spell_checker.dart';
 import 'package:spellchecker/writing.dart';
 
@@ -103,7 +102,7 @@ class AnalysisBenchmarkRunner {
       writingElapsed: writingWatch.elapsed,
       spellingScannedTokenCount: spelling.scannedTokenCount,
       spellingCapturedIssueCount: spelling.capturedIssueCount,
-      spellingTruncated: spelling.isTruncated,
+      spellingTruncated: spelling.truncated,
       writingCapturedIssueCount: writing.capturedIssueCount,
       writingTotalIssueCount: writing.totalIssueCount!,
       writingTruncated: writing.isTruncated,
