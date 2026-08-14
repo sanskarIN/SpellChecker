@@ -89,7 +89,10 @@ void main() {
       expect(summary.minWritingElapsed.inMicroseconds, 20);
       expect(summary.medianWritingElapsed.inMicroseconds, 50);
       expect(summary.maxWritingElapsed.inMicroseconds, 80);
-      expect(() => summary.samples.add(source.first), throwsUnsupportedError);
+      expect(
+        () => summary.samples.add(summary.samples.first),
+        throwsUnsupportedError,
+      );
     });
 
     test('uses midpoint average for an even sample count', () {
