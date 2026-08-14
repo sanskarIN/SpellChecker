@@ -39,11 +39,7 @@ jobs:
         run: flutter pub get
 
       - name: Check formatting
-        run: >-
-          dart format --output=show --set-exit-if-changed
-          lib/features/editor/writing_insights_dialog.dart
-          test/v211_writing_keyboard_test.dart
-          test/v211_writing_semantics_test.dart
+        run: dart format --output=none --set-exit-if-changed lib test tool
 
       - name: Analyze
         run: flutter analyze
