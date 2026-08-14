@@ -495,3 +495,20 @@ Do not make production lists eager merely to satisfy a fixed test viewport. This
 Any V2.8 diagnostics defect should receive a focused regression at the lowest layer that reproduces it. If the defect depends on lazy widget lifecycle or viewport position, include the real scroll path in the test instead of replacing the UI with a test-only layout.
 
 The full project suite remains required after focused diagnostics tests so V2.8 cannot regress language state, spelling bounds, review presets, rule persistence, correction safety, keyboard workflows, or prior widget behavior.
+
+# V2.9 diagnostic-summary and hardening regressions
+
+V2.9 release-sensitive coverage additionally verifies:
+
+- `WritingAnalysisDiagnosticSummary` exact bounded totals, lexical rule ordering, compatibility results with unavailable exact totals, stable empty output, and exclusion of editor/finding content;
+- `SpellCheckReport` invalid public constructor states throw at runtime rather than relying on debug-only assertions;
+- `WritingAnalysisResult` rejects findings/totals owned by non-analyzed rules and findings using the wrong result language;
+- `WritingAnalyzer` rejects duplicate rule IDs;
+- custom frequency keys are pack-normalized and normalized duplicates keep the best rank;
+- caller mutation cannot change `SpellLanguagePack.recognizedSuffixes` after construction;
+- sentence capitalization does not treat dot-connected segments such as `example.com` as sentence boundaries;
+- active IME composition preserves Flutter's native composing span even when checked spelling issues exist;
+- text statistics count Unicode words consistently with supported spelling token forms;
+- About/version text is synchronized with the V2.9 package release.
+
+For the release candidate, run the normal format/analyze/full-test gate and `flutter build web --release` on the exact candidate tree. After `flutter pub get`, `pubspec.lock` must remain clean under the supported release toolchain.
