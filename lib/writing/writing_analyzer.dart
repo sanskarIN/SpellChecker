@@ -155,9 +155,7 @@ class WritingAnalysisResult {
 
 class WritingAnalyzer {
   WritingAnalyzer({Iterable<WritingRule>? rules})
-    : _rules = List<WritingRule>.unmodifiable(
-        rules ?? WritingRuleRegistry.builtIns,
-      );
+    : _rules = _validateRules(rules ?? WritingRuleRegistry.builtIns);
 
   final List<WritingRule> _rules;
 
@@ -216,6 +214,21 @@ class WritingAnalyzer {
       totalIssueCountByRule: totalIssueCountByRule,
     );
   }
+}
+
+List<WritingRule> _validateRules(Iterable<WritingRule> rules) {
+  final result = rules.toList(growable: false);
+  final ruleIds = <String>{};
+  for (final rule in result) {
+    if (!ruleIds.add(rule.id)) {
+      throw ArgumentError.value(
+        rule.id,
+        'rules',
+        'contains a duplicate writing-rule ID',
+      );
+    }
+  }
+  return List<WritingRule>.unmodifiable(result);
 }
 
 int _compareWritingIssues(WritingIssue a, WritingIssue b) {
