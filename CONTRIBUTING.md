@@ -482,3 +482,7 @@ For V2.9-sensitive changes, preserve the metadata-only diagnostic-summary bounda
 ## V2.10 benchmark contributions
 
 Benchmark changes must preserve synthetic-only corpus generation, report-text exclusion, fixed benchmark spelling metadata unless intentionally versioned, strict option validation, and threshold-free normal CI. Include focused tests for corpus/result/options/report changes. If the JSON shape changes incompatibly, advance its format version and document migration/consumer impact. Do not add real user documents, private corpora, network telemetry, automatic result upload, or machine-specific pass/fail timing thresholds to normal project validation.
+
+## V2.11 punctuation-rule contributions
+
+Changes to `missing-punctuation-space` must preserve stable ID/source ownership or document a compatibility migration. Expanding punctuation scope requires focused false-positive tests, source-offset/correction tests, repeated-rule ownership review, bounded-diagnostics coverage, preference/default compatibility review, and benchmark workload documentation when the built-in registry changes. Do not broaden periods/colons or repeated punctuation solely to increase finding count without a deterministic low-false-positive ownership design.
