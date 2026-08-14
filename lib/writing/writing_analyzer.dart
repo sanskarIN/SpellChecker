@@ -35,6 +35,18 @@ class WritingAnalysisResult {
         'Captured writing issues cannot exceed the declared issue limit.',
       );
     }
+    for (final issue in this.issues) {
+      if (!this.analyzedRuleIds.contains(issue.ruleId)) {
+        throw ArgumentError(
+          'Captured writing issues must belong to an analyzed rule.',
+        );
+      }
+      if (issue.languageId != languageId) {
+        throw ArgumentError(
+          'Captured writing issues must use the result language.',
+        );
+      }
+    }
     if (totalIssueCount != null && totalIssueCount! < this.issues.length) {
       throw ArgumentError.value(
         totalIssueCount,
@@ -65,6 +77,11 @@ class WritingAnalysisResult {
       }
       var summedCount = 0;
       for (final entry in this.totalIssueCountByRule!.entries) {
+        if (!this.analyzedRuleIds.contains(entry.key)) {
+          throw ArgumentError(
+            'Per-rule total issue counts must belong to analyzed rules.',
+          );
+        }
         if (entry.value < 0) {
           throw ArgumentError.value(
             entry.value,
