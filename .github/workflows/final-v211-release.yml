@@ -1,0 +1,140 @@
+name: V2.11 final release validator
+
+on:
+  push:
+    branches:
+      - v2.11-missing-punctuation-space
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out exact V2.11 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-missing-punctuation-space
+          fetch-depth: 0
+
+      - name: Reject temporary V2.11 helper workflows
+        shell: bash
+        run: |
+          leftovers="$(find .github/workflows -maxdepth 1 -type f -name 'v211-*' -print)"
+          if [ -n "$leftovers" ]; then
+            echo "Temporary V2.11 workflows remain:" >&2
+            echo "$leftovers" >&2
+            exit 1
+          fi
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Show tool versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify lockfile stability
+        run: git diff --exit-code -- pubspec.lock
+
+      - name: Verify canonical formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run complete test suite
+        run: flutter test --reporter expanded
+
+      - name: Validate en-US seven-rule benchmark metadata
+        shell: bash
+        run: |
+          dart run tool/benchmark_large_document.dart \
+            --repeats=250 \
+            --warmup=1 \
+            --iterations=3 \
+            --spelling-limit=200 \
+            --writing-limit=200 \
+            --suggestions=5 \
+            --language=en-US \
+            --json > /tmp/v211-us.json
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+          text = Path('/tmp/v211-us.json').read_text()
+          if 'hello wrld' in text:
+              raise SystemExit('benchmark JSON leaked synthetic corpus text')
+          data = json.loads(text)
+          assert data['formatVersion'] == 1
+          assert data['language'] == 'en-US'
+          assert data['measuredIterations'] == 3
+          outcome = data['analysisOutcome']
+          expected = [
+              'missing-punctuation-space',
+              'punctuation-spacing',
+              'repeated-punctuation',
+              'repeated-space',
+              'repeated-word',
+              'sentence-capitalization',
+              'trailing-whitespace',
+          ]
+          assert outcome['writingAnalyzedRuleIds'] == expected
+          assert sum(outcome['writingTotalIssuesByRule'].values()) == outcome['writingTotalIssues']
+          assert outcome['writingTotalIssuesByRule']['missing-punctuation-space'] > 0
+          assert outcome['spellingCapturedIssues'] <= data['scenario']['spellingIssueLimit']
+          assert outcome['writingCapturedIssues'] <= data['scenario']['writingIssueLimit']
+          PY
+
+      - name: Validate en-GB human benchmark metadata
+        shell: bash
+        run: |
+          dart run tool/benchmark_large_document.dart \
+            --repeats=50 \
+            --warmup=1 \
+            --iterations=2 \
+            --spelling-limit=50 \
+            --writing-limit=100 \
+            --suggestions=2 \
+            --language=en-GB > /tmp/v211-gb.txt
+          grep -q '^Language: en-GB$' /tmp/v211-gb.txt
+          grep -q '^  Writing analyzed rules: missing-punctuation-space, punctuation-spacing, repeated-punctuation, repeated-space, repeated-word, sentence-capitalization, trailing-whitespace$' /tmp/v211-gb.txt
+          grep -q 'missing-punctuation-space=' /tmp/v211-gb.txt
+          if grep -q 'hello wrld' /tmp/v211-gb.txt; then
+            echo 'benchmark human report leaked synthetic corpus text' >&2
+            exit 1
+          fi
+
+      - name: Build release web application
+        run: flutter build web --release
+
+      - name: Verify V2.11 release identity and contracts
+        shell: bash
+        run: |
+          grep -q '^version: 2.11.0+16$' pubspec.yaml
+          grep -q "applicationVersion: '2.11.0'" lib/features/editor/spell_checker_page.dart
+          grep -q '^`2.11.0+16`$' README.md
+          grep -q '^## \[2.11.0\] - 2026-08-14$' CHANGELOG.md
+          grep -q '^## 2.11 — Missing punctuation space mechanics$' docs/ROADMAP.md
+          test -f docs/V2_11_MISSING_PUNCTUATION_SPACE.md
+          grep -q '^missing-punctuation-space' docs/API.md
+          grep -q '^missing-punctuation-space$' docs/WRITING_RULES.md
+          grep -q 'Missing punctuation space' docs/USER_GUIDE.md
+          grep -q '2.11.0+16' docs/RELEASING.md
+          if grep -q 'Richer deterministic writing-rule catalogues with explicit source-range ownership tests' docs/ROADMAP.md; then
+            echo 'Completed V2.11 future roadmap bullet still present' >&2
+            exit 1
+          fi
+          if grep -q 'Repeatable performance benchmarking for very large documents' docs/ROADMAP.md; then
+            echo 'Completed V2.10 benchmark future roadmap bullet still present' >&2
+            exit 1
+          fi
