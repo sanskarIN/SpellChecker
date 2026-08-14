@@ -117,6 +117,18 @@ void main() {
   });
 
   group('WritingAnalyzer', () {
+    test('rejects duplicate rule identifiers', () {
+      expect(
+        () => WritingAnalyzer(
+          rules: const <WritingRule>[
+            RepeatedSpaceRule(),
+            RepeatedSpaceRule(),
+          ],
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('runs enabled rules and returns sorted issues', () {
       final analyzer = WritingAnalyzer();
 
