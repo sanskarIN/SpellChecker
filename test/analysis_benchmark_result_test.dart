@@ -16,6 +16,8 @@ void main() {
     int writingCapturedIssues = 5,
     int writingTotalIssues = 9,
     bool writingTruncated = true,
+    Iterable<String> writingAnalyzedRuleIds = const <String>['rule-a'],
+    Map<String, int>? writingTotalsByRule,
   }) {
     return AnalysisBenchmarkSample(
       index: index,
@@ -27,6 +29,9 @@ void main() {
       writingCapturedIssueCount: writingCapturedIssues,
       writingTotalIssueCount: writingTotalIssues,
       writingTruncated: writingTruncated,
+      writingAnalyzedRuleIds: writingAnalyzedRuleIds,
+      writingTotalIssueCountByRule:
+          writingTotalsByRule ?? <String, int>{'rule-a': writingTotalIssues},
     );
   }
 
@@ -52,6 +57,8 @@ void main() {
           writingCapturedIssueCount: 0,
           writingTotalIssueCount: 0,
           writingTruncated: false,
+          writingAnalyzedRuleIds: const <String>[],
+          writingTotalIssueCountByRule: const <String, int>{},
         ),
         throwsArgumentError,
       );
@@ -66,6 +73,8 @@ void main() {
           writingCapturedIssueCount: 2,
           writingTotalIssueCount: 1,
           writingTruncated: true,
+          writingAnalyzedRuleIds: const <String>['rule-a'],
+          writingTotalIssueCountByRule: const <String, int>{'rule-a': 1},
         ),
         throwsArgumentError,
       );
@@ -101,6 +110,58 @@ void main() {
           writingCapturedIssues: 5,
           writingTotalIssues: 5,
           writingTruncated: true,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('sorts and validates exact writing-rule workload metadata', () {
+      final value = sample(
+        index: 0,
+        spellingMicros: 1,
+        writingMicros: 1,
+        writingAnalyzedRuleIds: const <String>['rule-b', 'rule-a'],
+        writingTotalsByRule: const <String, int>{'rule-b': 4, 'rule-a': 5},
+      );
+
+      expect(value.writingAnalyzedRuleIds, const <String>['rule-a', 'rule-b']);
+      expect(
+        value.writingTotalIssueCountByRule.keys,
+        orderedEquals(const <String>['rule-a', 'rule-b']),
+      );
+      expect(
+        () => value.writingAnalyzedRuleIds.add('rule-c'),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => value.writingTotalIssueCountByRule['rule-a'] = 99,
+        throwsUnsupportedError,
+      );
+
+      expect(
+        () => sample(
+          index: 0,
+          spellingMicros: 1,
+          writingMicros: 1,
+          writingAnalyzedRuleIds: const <String>['rule-a', 'rule-a'],
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => sample(
+          index: 0,
+          spellingMicros: 1,
+          writingMicros: 1,
+          writingTotalsByRule: const <String, int>{'unknown-rule': 9},
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => sample(
+          index: 0,
+          spellingMicros: 1,
+          writingMicros: 1,
+          writingTotalsByRule: const <String, int>{'rule-a': 8},
         ),
         throwsArgumentError,
       );
@@ -182,6 +243,37 @@ void main() {
         ),
         throwsArgumentError,
       );
+
+      expect(
+        () => AnalysisBenchmarkSummary(
+          scenario: scenario,
+          languageId: 'en-US',
+          warmupIterations: 0,
+          samples: <AnalysisBenchmarkSample>[
+            sample(
+              index: 0,
+              spellingMicros: 1,
+              writingMicros: 1,
+              writingAnalyzedRuleIds: const <String>['rule-a', 'rule-b'],
+              writingTotalsByRule: const <String, int>{
+                'rule-a': 5,
+                'rule-b': 4,
+              },
+            ),
+            sample(
+              index: 1,
+              spellingMicros: 2,
+              writingMicros: 2,
+              writingAnalyzedRuleIds: const <String>['rule-a', 'rule-b'],
+              writingTotalsByRule: const <String, int>{
+                'rule-a': 4,
+                'rule-b': 5,
+              },
+            ),
+          ],
+        ),
+        throwsArgumentError,
+      );
     });
 
     test('rejects samples that contradict scenario capture limits', () {
@@ -244,16 +336,34 @@ void main() {
         languageId: 'en-US',
         warmupIterations: 2,
         samples: <AnalysisBenchmarkSample>[
-          sample(index: 0, spellingMicros: 12, writingMicros: 34),
+          sample(
+            index: 0,
+            spellingMicros: 12,
+            writingMicros: 34,
+            writingAnalyzedRuleIds: const <String>['rule-b', 'rule-a'],
+            writingTotalsByRule: const <String, int>{
+              'rule-b': 4,
+              'rule-a': 5,
+            },
+          ),
         ],
       );
       final decoded =
           jsonDecode(summary.toPrettyJson()) as Map<String, dynamic>;
+      final outcome = decoded['analysisOutcome'] as Map<String, dynamic>;
 
       expect(decoded['formatVersion'], AnalysisBenchmarkSummary.formatVersion);
       expect(decoded['language'], 'en-US');
       expect(decoded['warmupIterations'], 2);
       expect(decoded['measuredIterations'], 1);
+      expect(
+        outcome['writingAnalyzedRuleIds'],
+        orderedEquals(const <String>['rule-a', 'rule-b']),
+      );
+      expect(
+        (outcome['writingTotalIssuesByRule'] as Map<String, dynamic>).keys,
+        orderedEquals(const <String>['rule-a', 'rule-b']),
+      );
       expect(
         summary.toPrettyJson(),
         isNot(contains('do-not-export-this-text')),
