@@ -279,3 +279,9 @@ For writing-analysis count/ordering problems, maintainers can ask for the determ
 ## V2.10 benchmark support
 
 For V2.10 benchmark questions, include the exact benchmark command, selected built-in language, Flutter/Dart versions, scenario repetition/limit values, and the metadata-only report output when safe. Use the built-in synthetic corpus; do not attach private documents to reproduce performance observations. Timing differences are meaningful only when the compared environment/toolchain and command are controlled. Malformed options, unsupported language IDs, changing analysis outcomes across measured iterations, or benchmark command crashes are correctness/support issues; a slower number on unrelated hardware by itself is not.
+
+## V2.11 keyboard/accessibility support
+
+For V2.11 Writing insights keyboard or semantics problems, report the exact synthetic text, platform/Flutter version, which control had focus, whether Ctrl/Command+F moved to review search, whether the first Escape cleared an active transient query, and whether the second Escape closed. For count announcements, include captured/total metadata and active synthetic filters rather than private document excerpts.
+
+If a widget regression involves an apparently missing off-screen control, remember that Writing insights is intentionally lazy; reproduce by scrolling the real dialog rather than assuming every item is mounted simultaneously.
