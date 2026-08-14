@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.10 release candidate:
+Current V2.11 release candidate:
 
 ```text
-2.10.0+15
+2.11.0+16
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -401,3 +401,18 @@ git push origin v2.8.0
 Before tagging V2.10, verify package/About versions `2.10.0+15` / `2.10.0`; deterministic scenario generation and option validation; immutable/stable benchmark result aggregation; US/UK runner coverage; human/JSON report exclusion of corpus text; formatter coverage for `tool/`; the threshold-free benchmark smoke command in both CI and release workflows; unchanged runtime dependencies/persistence formats; complete regression tests; and `flutter build web --release`.
 
 Run the documented benchmark command on synthetic data only and record the exact command plus Flutter/Dart versions when publishing comparative timing evidence. Do not fail a release merely because machine-dependent elapsed values differ from another machine. Confirm no temporary V2.10 synchronization/validation workflow remains in the release tree before tagging.
+
+## V2.11 release-specific checks
+
+Before tagging `v2.11.0`, additionally verify:
+
+- `pubspec.yaml` reports `2.11.0+16` and About reports `2.11.0`.
+- Ctrl/Command+F focuses Writing insights review search while focus is inside the dialog.
+- First Escape clears active transient review filters and keeps the dialog open; a subsequent Escape closes when the query is empty.
+- Rule/finding live semantics remain reachable in the real lazy list, including exact limited-result wording.
+- Non-positive `WritingInsightsDialog.maxIssues` is rejected in release-mode runtime code.
+- Benchmark samples contain exact per-rule totals for every analyzed rule, including explicit zero entries.
+- The permanent workflow directory contains only intended reusable workflows; all `v211-*` development helpers are removed.
+
+The normal release gate remains dependency resolution + lockfile cleanliness + formatting + analyze + full tests + synthetic benchmark smoke + release web build.
+
