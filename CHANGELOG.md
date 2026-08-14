@@ -4,6 +4,31 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.11.0] - 2026-08-14
+
+### Added
+
+- Public `MissingPunctuationSpaceRule` with stable ID `missing-punctuation-space`.
+- Conservative automatic fixes for letter-adjacent comma, semicolon, question-mark, and exclamation-mark boundaries.
+- Unicode-letter source-boundary handling with punctuation-only stale-safe replacement ownership.
+- Focused rule, analyzer, bounded-diagnostics, batch-composition, persistence, and widget regression coverage.
+- Dedicated `docs/V2_11_MISSING_PUNCTUATION_SPACE.md` contract.
+
+### Changed
+
+- Built-in writing registry/defaults advance from six to seven deterministic rules.
+- Package version advances to `2.11.0+16`; About version advances to `2.11.0`.
+- V2.10 benchmark regression expectations advance to the seven-rule default writing workload so registry evolution remains explicit in comparisons.
+- Release/user/API/privacy/security/testing/support documentation and issue/PR guidance advance to V2.11.
+
+### Correctness, compatibility, privacy, and security
+
+- Periods and colons are intentionally excluded from V2.11 missing-after-punctuation detection to avoid common domain/abbreviation/URI/time false positives.
+- Numeric/non-letter neighbors and repeated punctuation are excluded; `RepeatedPunctuationRule` remains the specialized owner of punctuation runs.
+- For before-and-after punctuation cleanup, source ranges are adjacent rather than overlapping, so existing `WritingCorrection.applyAll` safety rules remain sufficient.
+- Missing rule preference keys use the new seven-rule registry defaults. Explicit stored rule ID lists and explicit disable-all remain exact and do not silently gain the new rule.
+- V2.11 adds no runtime dependency, preference-key version, network service, telemetry, account behavior, document persistence, or dynamic rule loading.
+
 ## [2.10.0] - 2026-08-14
 
 ### Added
