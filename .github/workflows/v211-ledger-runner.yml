@@ -1,0 +1,36 @@
+name: V2.11 ledger runner
+
+on:
+  push:
+    branches:
+      - v2.11-accessibility-review-2026-08-14
+
+permissions:
+  contents: write
+
+jobs:
+  ledger:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out V2.11 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-accessibility-review-2026-08-14
+          fetch-depth: 0
+      - name: Append engineering ledger
+        run: python3 .github/v211_append_ledger.py
+      - name: Commit and push ledger
+        shell: bash
+        run: |
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+          git add what_changed.md
+          git commit -m "docs: record complete V2.11 engineering ledger"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:v2.11-accessibility-review-2026-08-14; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
