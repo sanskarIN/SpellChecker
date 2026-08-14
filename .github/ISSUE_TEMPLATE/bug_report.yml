@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v2.9.0 or commit SHA
+      placeholder: v2.10.0 or commit SHA
     validations:
       required: true
   - type: input
@@ -45,6 +45,7 @@ body:
         - Language selection / language packs
         - Writing insights / local writing rules
         - Writing analysis diagnostics / exact finding counts
+        - V2.10 deterministic benchmark tooling / report
         - Writing rule preference persistence
         - Writing individual safe fix
         - Writing apply-all batch fix / overlap handling
@@ -82,10 +83,10 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Open SpellChecker
+        1. Open SpellChecker or run the documented benchmark command
         2. Select en-US / en-GB ...
-        3. Enter synthetic text ...
-        4. Check spelling / open Writing insights / apply one or all fixes / Undo ...
+        3. Enter synthetic text or use the built-in synthetic benchmark corpus ...
+        4. Check spelling / open Writing insights / run the benchmark / apply one or all fixes / Undo ...
         5. Observe ...
     validations:
       required: true
@@ -112,6 +113,17 @@ body:
         uncaptured: 237
         truncated: true
         per-rule totals: repeated-space=300, repeated-word=137
+  - type: textarea
+    id: benchmark_context
+    attributes:
+      label: V2.10 benchmark context
+      description: If relevant, include the exact benchmark command/options, language ID, Flutter/Dart versions, synthetic repetition count, captured/total outcome metadata, and whether JSON or human output was used. Do not substitute private document text for the built-in synthetic corpus, and do not report a timing difference as a correctness failure without reproducible controlled-environment evidence.
+      placeholder: |
+        dart run tool/benchmark_large_document.dart --repeats=2000 --iterations=5 --json
+        language: en-US
+        Flutter/Dart: ...
+        spelling captured/truncated: ...
+        writing captured/total/truncated: ...
   - type: textarea
     id: editor_context
     attributes:
@@ -144,3 +156,6 @@ body:
 
 # V2.8/V2.9 diagnostic note
 # Analyzer-produced exact per-rule totals should sum to the exact overall total. Limited-result filters/fixes use retained findings only. V2.9 diagnostic summaries contain counts/rule metadata only. Prefer synthetic metadata/count examples over private documents.
+
+# V2.10 benchmark note
+# Benchmark reports must describe only the built-in synthetic corpus shape, analysis outcomes, and machine-dependent timings. Never benchmark or attach private user documents in a public issue.

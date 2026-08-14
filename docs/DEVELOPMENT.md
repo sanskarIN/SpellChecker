@@ -507,3 +507,13 @@ flutter build web --release
 ```
 
 Release-sensitive changes should also verify that `flutter pub get` leaves `pubspec.lock` unchanged when no dependency change is intended.
+
+## V2.10 benchmark development workflow
+
+Use the benchmark only with its generated synthetic corpus when producing repository/public comparison data:
+
+```bash
+dart run tool/benchmark_large_document.dart --repeats=2000 --warmup=1 --iterations=5 --spelling-limit=200 --writing-limit=200 --suggestions=5 --language=en-US --json
+```
+
+When changing benchmark code, run formatting over `lib test tool`, `flutter analyze`, the complete tests, and at least one small benchmark command. Do not tune implementation behavior solely to one machine's timing, commit timing thresholds to normal correctness tests, or add editor-document ingestion/telemetry as part of benchmark maintenance. Changes to corpus shape, fixed benchmark vocabulary, report format version, or outcome fields require focused tests and performance/privacy documentation review.

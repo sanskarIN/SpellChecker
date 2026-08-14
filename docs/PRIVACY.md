@@ -378,3 +378,11 @@ The Buy Me a Coffee funding link added to repository documentation is a normal e
 `WritingAnalysisDiagnosticSummary` is designed to make support/performance metadata safer to share than a raw `WritingAnalysisResult`. It includes language ID, complete/limited state, capture limit, captured/exact/uncaptured counts when available, stable analyzed rule IDs/display names, and captured/exact per-rule counts.
 
 It deliberately does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal dictionary entries, ignored words, review search/filter state, correction history, timestamps, device identifiers, telemetry, or network metadata. `toPlainText()` is a pure in-memory formatter. Writing insights exposes an explicit **Copy diagnostic summary** control that copies only this formatter output after user action. V2.9 adds no automatic clipboard write, persistence, upload, or background reporting; any future file/network transport requires separate review.
+
+## V2.10 benchmark privacy boundary
+
+The V2.10 large-document benchmark is developer-run tooling under `tool/`. It generates its own source-controlled synthetic corpus and does not read the editor, clipboard, personal dictionary, ignored words, local preferences, correction history, files containing user documents, or application telemetry.
+
+Human and JSON benchmark reports serialize scenario shape, language ID, analysis counts/states, iteration counts, and elapsed microseconds. They deliberately do not serialize the generated corpus text. The benchmark does not persist reports automatically or upload them; shell redirection or external CI artifact handling is controlled by the person/build environment invoking the command.
+
+Benchmark timing can reveal machine/toolchain characteristics, so public reports should include only the minimum environment metadata needed for reproducibility and should never contain private user documents. V2.10 adds no application runtime telemetry, analytics, account behavior, network request, preference key, document persistence, or runtime dependency.

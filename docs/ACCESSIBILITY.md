@@ -364,3 +364,9 @@ Review search/filter changes operate on retained findings. When a filtered limit
 ## V2.9 IME composition hardening
 
 When Flutter reports a valid active IME composing range, the editor delegates text-span construction to Flutter's native composing renderer instead of replacing it with spelling-highlight spans. This keeps composition feedback visible for keyboard/input-method users. After composition is committed, normal checked spelling underlines and active-issue styling resume from current issue state.
+
+## V2.10 developer benchmark accessibility scope
+
+V2.10 adds no new in-app control, focus target, gesture, color-only indicator, or keyboard shortcut. The benchmark is a developer CLI and its human-readable mode uses plain text labels for scenario shape, analysis outcomes, and timing aggregates. `--help` exposes the supported command options without requiring the graphical application.
+
+The existing app accessibility contract remains unchanged; release-version metadata is the only app-visible V2.10 change. Any future in-app performance/diagnostic UI would require a separate accessibility review rather than inheriting the CLI contract automatically.

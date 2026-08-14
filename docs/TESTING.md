@@ -512,3 +512,9 @@ V2.9 release-sensitive coverage additionally verifies:
 - About/version text is synchronized with the V2.9 package release.
 
 For the release candidate, run the normal format/analyze/full-test gate and `flutter build web --release` on the exact candidate tree. After `flutter pub get`, `pubspec.lock` must remain clean under the supported release toolchain.
+
+## V2.10 benchmark regression contract
+
+Benchmark tooling is tested as correctness infrastructure, not with wall-clock thresholds. The V2.10 suite covers deterministic corpus generation and metadata privacy, scenario bound validation, sample/result invariants, odd/even median aggregation, immutable samples, stable outcome validation across iterations, runner behavior for US/UK packs, strict CLI parsing, human/JSON corpus-text exclusion, help/error exits, and a small end-to-end JSON command run.
+
+Permanent CI formatting now includes `tool/`, then runs `flutter analyze`, the complete Flutter test suite, and a tiny synthetic benchmark CLI smoke command. The release workflow repeats those checks before the web build. Timing values themselves must not become pass/fail expectations unless the project later establishes a controlled benchmark environment with an explicitly reviewed policy.

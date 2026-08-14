@@ -10,7 +10,7 @@ For editor changes, mention affected language state, highlighting, spelling/writ
 
 ## Testing
 
-- [ ] `dart format --output=none --set-exit-if-changed lib test` passes locally when practical.
+- [ ] `dart format --output=none --set-exit-if-changed lib test tool` passes locally when practical.
 - [ ] `flutter analyze` passes.
 - [ ] `flutter test --reporter expanded` passes.
 - [ ] `flutter build web --release` passes for release-sensitive changes.
@@ -207,3 +207,21 @@ Complete when relevant.
 - [ ] `flutter pub get` leaves `pubspec.lock` clean on the supported release toolchain.
 - [ ] Exact-tree format, analyze, full tests, and `flutter build web --release` pass before release.
 - [ ] No V2.2/V2.3/V2.8/V2.9 disposable reconciliation workflow/helper remains in the permanent release tree.
+
+## V2.10 deterministic benchmark checklist
+
+Complete when benchmark/tooling/performance-observability behavior is touched.
+
+- [ ] Benchmark inputs remain generated synthetic data; no private/user-document ingestion path was added.
+- [ ] Fixed benchmark dictionary/frequency metadata remains stable or the intentional workload change is versioned/documented.
+- [ ] Warmup and measured iteration validation remains explicit.
+- [ ] Each measured sample uses fresh spelling/writing analysis state.
+- [ ] Measured samples must agree on deterministic analysis outcomes even when elapsed timings differ.
+- [ ] Human/JSON reports exclude corpus text and raw document findings.
+- [ ] Incompatible JSON report changes advance `formatVersion` and are documented.
+- [ ] Timing values remain descriptive and machine-dependent; normal CI does not use performance thresholds.
+- [ ] `tool/` is included in formatting/static-analysis coverage and the benchmark CLI smoke test remains green.
+- [ ] Both built-in language IDs remain covered when language-aware benchmark behavior changes.
+- [ ] No runtime dependency, persistence format, application telemetry, network request, or public runtime API was introduced unintentionally.
+- [ ] `docs/V2_10_BENCHMARK.md`, performance/testing/privacy/security/releasing docs, changelog/roadmap/README, and `what_changed.md` are synchronized.
+- [ ] No temporary V2.10 synchronization/validation workflow remains in the permanent release tree.

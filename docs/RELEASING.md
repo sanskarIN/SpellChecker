@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.9 release candidate:
+Current V2.10 release candidate:
 
 ```text
-2.9.0+14
+2.10.0+15
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -117,9 +117,10 @@ From a clean checkout of the exact intended release commit:
 flutter clean
 flutter pub get
 git diff --exit-code -- pubspec.lock
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test tool
 flutter analyze
 flutter test --reporter expanded
+dart run tool/benchmark_large_document.dart --repeats=4 --warmup=0 --iterations=1 --spelling-limit=2 --writing-limit=5 --suggestions=0 --language=en-US --json
 flutter build web --release
 ```
 
@@ -229,8 +230,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.9.0 -m "SpellChecker v2.9.0"
-git push origin v2.9.0
+git tag -a v2.10.0 -m "SpellChecker v2.10.0"
+git push origin v2.10.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -252,7 +253,7 @@ After the tagged workflow passes:
 
 1. Create a GitHub Release for that tag.
 2. Use the matching changelog section as the release-note foundation.
-3. Highlight V2.9 privacy-safe shareable writing-analysis diagnostic summaries, retained V2.8 exact-count diagnostics, and V2.7 bounded-review safety, while noting compatibility with earlier writing-rule, Portable settings, ranking, and correction-safety foundations.
+3. Highlight V2.10 deterministic synthetic large-document benchmarking, retained V2.9 privacy-safe diagnostic summaries, V2.8 exact-count diagnostics, and V2.7 bounded-review safety, while noting compatibility with earlier writing-rule, Portable settings, ranking, and correction-safety foundations.
 4. Mention persistent-data/privacy behavior.
 5. Attach approved artifacts where appropriate.
 6. Verify links/version text.
@@ -299,7 +300,7 @@ Before a release changing dependencies:
 - Confirm CI resolves the same constraints.
 - Update development/privacy/security docs.
 
-V2.8 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
+V2.10 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
 
 # Signing and stores
 
@@ -394,3 +395,9 @@ Tag only the verified merged `main` commit:
 git tag -a v2.8.0 <verified-main-sha> -m "SpellChecker 2.8.0"
 git push origin v2.8.0
 ```
+
+## V2.10 deterministic benchmark release checks
+
+Before tagging V2.10, verify package/About versions `2.10.0+15` / `2.10.0`; deterministic scenario generation and option validation; immutable/stable benchmark result aggregation; US/UK runner coverage; human/JSON report exclusion of corpus text; formatter coverage for `tool/`; the threshold-free benchmark smoke command in both CI and release workflows; unchanged runtime dependencies/persistence formats; complete regression tests; and `flutter build web --release`.
+
+Run the documented benchmark command on synthetic data only and record the exact command plus Flutter/Dart versions when publishing comparative timing evidence. Do not fail a release merely because machine-dependent elapsed values differ from another machine. Confirm no temporary V2.10 synchronization/validation workflow remains in the release tree before tagging.

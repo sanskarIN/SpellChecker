@@ -478,3 +478,7 @@ Performance experiments must use synthetic/non-sensitive text. Treat exact count
 ## V2.9 diagnostics and hardening contributions
 
 For V2.9-sensitive changes, preserve the metadata-only diagnostic-summary boundary, public runtime result/report invariants, unique writing-rule IDs, language ownership of findings, IME composing visibility, Unicode token/statistics consistency, and deterministic custom-frequency normalization. Add focused regressions for any changed invariant. Before a release-sensitive PR is complete, `flutter pub get` must leave `pubspec.lock` clean and the exact tree must pass format, analyze, full tests, and the release web build. Disposable reconciliation workflows/scripts must not remain in the release tree.
+
+## V2.10 benchmark contributions
+
+Benchmark changes must preserve synthetic-only corpus generation, report-text exclusion, fixed benchmark spelling metadata unless intentionally versioned, strict option validation, and threshold-free normal CI. Include focused tests for corpus/result/options/report changes. If the JSON shape changes incompatibly, advance its format version and document migration/consumer impact. Do not add real user documents, private corpora, network telemetry, automatic result upload, or machine-specific pass/fail timing thresholds to normal project validation.

@@ -249,6 +249,26 @@ Status: implemented.
 - [x] Package version advances to `2.9.0+14` with dedicated V2.9 documentation.
 - [x] No persistence-format, telemetry, runtime-dependency, or application-network expansion.
 
+## 2.10 — Deterministic large-document benchmarking
+
+Status: implemented.
+
+- [x] Source-controlled deterministic synthetic large-document corpus generator.
+- [x] Positive configurable spelling and writing capture bounds plus non-negative suggestion limit.
+- [x] Fixed benchmark dictionary/frequency metadata independent from bundled dictionary growth.
+- [x] Configurable warmup and measured iteration counts.
+- [x] Fresh spelling engine and writing analyzer state for every benchmark sample.
+- [x] Immutable per-iteration timing/outcome samples.
+- [x] Summary-level min/median/max timing aggregates.
+- [x] Deterministic analysis-outcome consistency validation across measured samples.
+- [x] Versioned JSON benchmark report with no corpus-text serialization.
+- [x] Human-readable report with the same privacy boundary.
+- [x] Strict command-line parsing and usage diagnostics.
+- [x] Built-in `en-US` and `en-GB` benchmark selection.
+- [x] Focused benchmark scenario/result/runner/options/reporter/command regression coverage.
+- [x] CI/release formatting coverage for `tool/` and a threshold-free synthetic benchmark smoke run.
+- [x] No public runtime API, persistence-format, telemetry, application-network, or runtime-dependency expansion.
+
 ## Future 2.x direction
 
 Possible future work includes:
@@ -262,6 +282,6 @@ Possible future work includes:
 - Cross-platform desktop/mobile packaging, signing, and release automation.
 - Repeatable performance benchmarking for very large documents, kept separate from correctness metadata and without persisted document content.
 - Broader accessibility regression coverage for large limited-result dialogs and keyboard-only review.
-- A future V2.10 milestone should be selected from demonstrated user/contributor workflows rather than adding network behavior by default.
+- Future 2.x milestones should continue to be selected from demonstrated user/contributor workflows rather than adding network behavior by default.
 
 Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented, reviewed, and user-controlled.
