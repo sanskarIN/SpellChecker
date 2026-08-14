@@ -77,7 +77,7 @@ After a spelling check:
 - One spelling issue is active and receives stronger styling.
 - Selecting/navigating an issue selects its source range in the editor.
 
-Manual typing invalidates the previous spelling snapshot, so old highlights/results are cleared instead of being painted against changed text.
+Manual typing invalidates the previous spelling snapshot, so old highlights/results are cleared instead of being painted against changed text. While an input method editor (IME) has an active composing range, Flutter's native composing visualization takes priority over custom spelling highlights so composition remains visible; checked issue styling resumes after composition is committed.
 
 ## Navigate spelling issues
 
@@ -194,7 +194,9 @@ Current rules:
 
 - **Repeated word** — adjacent duplicate words.
 - **Sentence capitalization** — lowercase supported sentence starts.
-- **Repeated spaces** — repeated horizontal spaces.
+- **Repeated spaces** — repeated interior horizontal spaces.
+- **Punctuation spacing** — horizontal whitespace immediately before supported punctuation.
+- **Trailing whitespace** — horizontal whitespace before line endings or document end.
 - **Repeated punctuation** — repeated identical supported punctuation.
 
 These are deterministic local helpers, not a full grammar parser.
