@@ -1,0 +1,56 @@
+name: V2.11 focused test diagnostics
+
+on:
+  push:
+    branches:
+      - v2.11-missing-punctuation-space
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out V2.11 branch
+        uses: actions/checkout@v7
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Rule unit test
+        continue-on-error: true
+        run: flutter test test/missing_punctuation_space_rule_test.dart --reporter expanded
+
+      - name: Analyzer integration test
+        continue-on-error: true
+        run: flutter test test/missing_punctuation_space_integration_test.dart --reporter expanded
+
+      - name: Preference compatibility test
+        continue-on-error: true
+        run: flutter test test/writing_preferences_test.dart --reporter expanded
+
+      - name: Widget preference test
+        continue-on-error: true
+        run: flutter test test/missing_punctuation_space_widget_test.dart --reporter expanded
+
+      - name: Existing writing rules test
+        continue-on-error: true
+        run: flutter test test/writing_rules_test.dart --reporter expanded
+
+      - name: Benchmark workload test
+        continue-on-error: true
+        run: flutter test test/analysis_benchmark_runner_test.dart --reporter expanded
+
+      - name: Existing widget suite
+        continue-on-error: true
+        run: flutter test test/widget_test.dart --reporter expanded
