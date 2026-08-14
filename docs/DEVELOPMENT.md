@@ -517,3 +517,11 @@ dart run tool/benchmark_large_document.dart --repeats=2000 --warmup=1 --iteratio
 ```
 
 When changing benchmark code, run formatting over `lib test tool`, `flutter analyze`, the complete tests, and at least one small benchmark command. Do not tune implementation behavior solely to one machine's timing, commit timing thresholds to normal correctness tests, or add editor-document ingestion/telemetry as part of benchmark maintenance. Changes to corpus shape, fixed benchmark vocabulary, report format version, or outcome fields require focused tests and performance/privacy documentation review.
+
+## V2.11 keyboard and semantics development rules
+
+Writing insights is a lazy modal list. Tests and future controls must preserve that architecture. Do not make off-screen controls eagerly mounted merely to simplify widget tests. Use scrolling/dragging helpers until the target is built, interact while it is mounted, and remember that scrolling to a second lazy child can unmount the first.
+
+When adding dialog shortcuts, keep a visible/touch-accessible equivalent and ensure focus remains inside the shortcut scope. `Ctrl/Command+F` currently targets the existing review search. Escape first clears transient review search/category/automatic-fix state and only closes when that query is empty. Changes to this order require accessibility and persistence-boundary review.
+
+Count semantics should describe meaning in words and may use `ExcludeSemantics` around compact visual count text to prevent duplicate announcements. Limited results must continue distinguishing visible, captured, and exact-total findings.
