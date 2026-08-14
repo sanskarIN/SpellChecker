@@ -1,0 +1,93 @@
+name: V2.10 benchmark metadata doc sync
+
+on:
+  push:
+    branches:
+      - v2.10-deterministic-benchmarks
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out V2.10 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.10-deterministic-benchmarks
+          fetch-depth: 0
+
+      - name: Synchronize final benchmark metadata docs
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if new in text:
+                  return
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exact replacement once, found {text.count(old)}')
+              p.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'README.md',
+              'Reports include only scenario shape, language, analysis outcome counts/states, and elapsed microseconds; they never serialize the generated corpus text.',
+              'Reports include only scenario shape, language, analysis outcome counts/states, sorted analyzed writing-rule IDs, exact per-rule finding totals, and elapsed microseconds; they never serialize the generated corpus text.',
+          )
+
+          replace_once(
+              'docs/PERFORMANCE.md',
+              'The report records spelling scanned/captured/truncated metadata and writing captured/exact-total/truncated metadata alongside elapsed microseconds.',
+              'The report records spelling scanned/captured/truncated metadata and writing captured/exact-total/truncated metadata, sorted analyzed rule IDs, and sorted exact per-rule totals alongside elapsed microseconds.',
+          )
+
+          replace_once(
+              'docs/V2_10_BENCHMARK.md',
+              '- writing truncation state.\n',
+              '- writing truncation state;\n- sorted analyzed writing-rule IDs;\n- sorted exact per-rule finding totals.\n',
+          )
+          replace_once(
+              'docs/V2_10_BENCHMARK.md',
+              '- deterministic analysis outcome metadata;\n',
+              '- deterministic analysis outcome metadata, including analyzed writing-rule IDs and exact per-rule totals;\n',
+          )
+
+          replace_once(
+              'SECURITY.md',
+              'CLI values are parsed as bounded integer/language configuration and are not evaluated as code.',
+              'CLI values are parsed as validated integer/language configuration and are not evaluated as code.',
+          )
+
+          replace_once(
+              'CHANGELOG.md',
+              '- Immutable per-iteration samples plus summary-level min/median/max microsecond aggregates and deterministic analysis-outcome consistency validation.',
+              '- Immutable per-iteration samples plus summary-level min/median/max microsecond aggregates, sorted analyzed writing-rule IDs/exact per-rule totals, and deterministic analysis-outcome consistency validation.',
+          )
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          commit_one() {
+            path="$1"
+            message="$2"
+            if ! git diff --quiet -- "$path"; then
+              git add "$path"
+              git commit -m "$message"
+            fi
+          }
+
+          commit_one README.md "docs: describe V2.10 writing-rule benchmark metadata"
+          commit_one docs/PERFORMANCE.md "docs: record V2.10 per-rule benchmark workload"
+          commit_one docs/V2_10_BENCHMARK.md "docs: document V2.10 rule workload metadata"
+          commit_one SECURITY.md "docs: clarify V2.10 CLI validation boundary"
+          commit_one CHANGELOG.md "docs: record V2.10 benchmark rule metadata"
+
+          git push origin HEAD:v2.10-deterministic-benchmarks
