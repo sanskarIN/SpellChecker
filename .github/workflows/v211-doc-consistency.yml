@@ -1,0 +1,147 @@
+name: V2.11 documentation consistency sync
+
+on:
+  push:
+    branches:
+      - v2.11-missing-punctuation-space
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out V2.11 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-missing-punctuation-space
+          fetch-depth: 0
+
+      - name: Apply guarded documentation consistency fixes
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if new in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exact replacement once, found {count}: {old!r}')
+              p.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'README.md',
+              'It reports a deterministic automatic fix when a comma, semicolon, question mark, or exclamation mark is directly surrounded by Unicode letters, for example `Hello,world` → `Hello, world`.',
+              'It reports a deterministic automatic fix when a comma, semicolon, question mark, or exclamation mark immediately precedes another Unicode-letter word and follows a Unicode-letter word with optional horizontal whitespace before the punctuation, for example `Hello,world` → `Hello, world` or `Hello ,world` → `Hello, world` when combined with the existing before-punctuation fix.',
+          )
+
+          replace_once(
+              'docs/API.md',
+              '| `punctuation-spacing` | Punctuation spacing | Mechanics | Yes |\n| `trailing-whitespace` | Trailing whitespace | Mechanics | Yes |',
+              '| `punctuation-spacing` | Punctuation spacing | Mechanics | Yes |\n| `missing-punctuation-space` | Missing punctuation space | Mechanics | Yes |\n| `trailing-whitespace` | Trailing whitespace | Mechanics | Yes |',
+          )
+          replace_once(
+              'docs/API.md',
+              'The rule reports punctuation-only source ranges for comma, semicolon, question mark, or exclamation mark directly surrounded by Unicode letters.',
+              'The rule reports punctuation-only source ranges for comma, semicolon, question mark, or exclamation mark that immediately precedes another Unicode letter and follows a Unicode-letter word with optional horizontal whitespace before the punctuation.',
+          )
+
+          replace_once(
+              'docs/USER_GUIDE.md',
+              '- **Punctuation spacing** — horizontal whitespace immediately before supported punctuation.\n- **Trailing whitespace** — horizontal whitespace before line endings or document end.',
+              '- **Punctuation spacing** — horizontal whitespace immediately before supported punctuation.\n- **Missing punctuation space** — missing space after selected punctuation between words.\n- **Trailing whitespace** — horizontal whitespace before line endings or document end.',
+          )
+
+          replace_once(
+              'docs/WRITING_RULES.md',
+              '| `punctuation-spacing` | Punctuation spacing | Mechanics | Info | Yes |\n| `trailing-whitespace` | Trailing whitespace | Mechanics | Info | Yes |',
+              '| `punctuation-spacing` | Punctuation spacing | Mechanics | Info | Yes |\n| `missing-punctuation-space` | Missing punctuation space | Mechanics | Info | Yes |\n| `trailing-whitespace` | Trailing whitespace | Mechanics | Info | Yes |',
+          )
+          replace_once(
+              'docs/WRITING_RULES.md',
+              'It is a Mechanics rule for English (US/UK) that owns only a comma, semicolon, question mark, or exclamation mark directly surrounded by Unicode letters and replaces that punctuation with itself plus one space.',
+              'It is a Mechanics rule for English (US/UK) that owns only a comma, semicolon, question mark, or exclamation mark immediately followed by a Unicode letter when a Unicode-letter word appears before the punctuation with optional horizontal whitespace; it replaces only that punctuation with itself plus one space.',
+          )
+
+          replace_once(
+              'docs/V2_11_MISSING_PUNCTUATION_SPACE.md',
+              'The rule catches selected punctuation marks that are directly surrounded by letters and therefore have no space after the punctuation:',
+              'The rule catches selected punctuation marks that immediately precede another letter and follow a word, allowing optional horizontal whitespace before the punctuation so before- and after-punctuation cleanup can compose:',
+          )
+          replace_once(
+              'docs/V2_11_MISSING_PUNCTUATION_SPACE.md',
+              '## Letter-boundary requirement\n\nA finding is produced only when the punctuation is directly surrounded by Unicode letters.',
+              '## Word-boundary requirement\n\nA finding is produced only when the punctuation is immediately followed by a Unicode letter and a Unicode-letter word appears before it, with zero or more horizontal spaces/tabs allowed between that word and the punctuation. Newlines are not crossed.',
+          )
+          replace_once(
+              'docs/V2_11_MISSING_PUNCTUATION_SPACE.md',
+              'The new rule requires a letter on each side of the punctuation character. In a repeated punctuation run at least one adjacent character is punctuation, so `RepeatedPunctuationRule` remains the specialized owner.',
+              'The new rule requires the punctuation to be immediately followed by a letter. A repeated punctuation run therefore fails that boundary at the first punctuation, while later punctuation lacks the required preceding word pattern; `RepeatedPunctuationRule` remains the specialized owner.',
+          )
+          replace_once(
+              'docs/V2_11_MISSING_PUNCTUATION_SPACE.md',
+              '- comma/semicolon/question/exclamation findings;\n- consecutive eligible boundaries such as `one,two,three`;',
+              '- comma/semicolon/question/exclamation findings;\n- optional horizontal whitespace before punctuation for safe composition with `punctuation-spacing`;\n- consecutive eligible boundaries such as `one,two,three`;',
+          )
+
+          replace_once(
+              'CHANGELOG.md',
+              '- Conservative automatic fixes for letter-adjacent comma, semicolon, question-mark, and exclamation-mark boundaries.',
+              '- Conservative automatic fixes for comma, semicolon, question-mark, and exclamation-mark boundaries that immediately precede another Unicode-letter word, including safe composition when horizontal whitespace exists before the punctuation.',
+          )
+
+          replace_once(
+              'SUPPORT.md',
+              'Distinguish a false negative in an eligible letter+punctuation+letter sequence from intentionally excluded periods/colons, numeric/non-letter neighbors, or repeated punctuation.',
+              'Distinguish a false negative at an eligible word + optional horizontal whitespace + punctuation + letter boundary from intentionally excluded periods/colons, numeric/non-letter neighbors, line breaks, or repeated punctuation.',
+          )
+
+          replace_once(
+              '.github/ISSUE_TEMPLATE/bug_report.yml',
+              '# For missing-punctuation-space bugs include the stable rule ID, language, preference state, and a minimal synthetic letter+punctuation+letter example.',
+              '# For missing-punctuation-space bugs include the stable rule ID, language, preference state, and a minimal synthetic word + optional horizontal whitespace + punctuation + letter example.',
+          )
+
+          replace_once(
+              'docs/RELEASING.md',
+              '3. Highlight V2.10 deterministic synthetic large-document benchmarking, retained V2.9 privacy-safe diagnostic summaries, V2.8 exact-count diagnostics, and V2.7 bounded-review safety, while noting compatibility with earlier writing-rule, Portable settings, ranking, and correction-safety foundations.',
+              '3. Highlight V2.11 missing-punctuation-space source ownership/default-preference compatibility, retained V2.10 deterministic synthetic benchmarking, V2.9 privacy-safe diagnostic summaries, V2.8 exact-count diagnostics, and V2.7 bounded-review safety.',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'V2.10 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.',
+              'V2.11 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.',
+          )
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          commit_one() {
+            path="$1"
+            message="$2"
+            if ! git diff --quiet -- "$path"; then
+              git add "$path"
+              git commit -m "$message"
+            fi
+          }
+
+          commit_one README.md "docs: align V2.11 README boundary ownership"
+          commit_one docs/API.md "docs: add V2.11 rule to current API catalogue"
+          commit_one docs/USER_GUIDE.md "docs: add V2.11 rule to current user catalogue"
+          commit_one docs/WRITING_RULES.md "docs: align current seven-rule catalogue"
+          commit_one docs/V2_11_MISSING_PUNCTUATION_SPACE.md "docs: document composable pre-punctuation whitespace"
+          commit_one CHANGELOG.md "docs: clarify V2.11 punctuation boundary scope"
+          commit_one SUPPORT.md "docs: clarify V2.11 support reproduction boundary"
+          commit_one .github/ISSUE_TEMPLATE/bug_report.yml "docs: clarify V2.11 bug reproduction boundary"
+          commit_one docs/RELEASING.md "docs: align current V2.11 release notes"
+
+          git push origin HEAD:v2.11-missing-punctuation-space
