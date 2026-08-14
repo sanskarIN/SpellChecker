@@ -131,7 +131,24 @@ class AnalysisBenchmarkSample {
       previousRuleId = ruleId;
     }
 
+    if (writingTotalIssueCountByRule.length != writingAnalyzedRuleIds.length) {
+      throw ArgumentError.value(
+        writingTotalIssueCountByRule,
+        'writingTotalIssueCountByRule',
+        'must contain an exact total for every analyzed writing rule',
+      );
+    }
+
     var summedTotal = 0;
+    for (final ruleId in writingAnalyzedRuleIds) {
+      if (!writingTotalIssueCountByRule.containsKey(ruleId)) {
+        throw ArgumentError.value(
+          writingTotalIssueCountByRule,
+          'writingTotalIssueCountByRule',
+          'must contain an exact total for analyzed rule "$ruleId"',
+        );
+      }
+    }
     for (final entry in writingTotalIssueCountByRule.entries) {
       if (!writingAnalyzedRuleIds.contains(entry.key)) {
         throw ArgumentError.value(
