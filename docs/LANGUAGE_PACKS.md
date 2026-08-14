@@ -343,3 +343,7 @@ When a caller supplies a custom `wordFrequencies` map to `SpellCheckerEngine`, i
 The V2.10 developer benchmark accepts the two current built-in IDs, `en-US` and `en-GB`, and passes the selected `SpellLanguagePack` through the existing spelling/writing APIs. The pack still owns tokenization, normalization, suffix behavior, suggestion-distance policy, language identity, and writing-rule support.
 
 For workload stability the benchmark supplies its own fixed synthetic dictionary/frequency metadata to `SpellCheckerEngine`; this does **not** change either built-in pack's application dictionary or persisted vocabulary behavior. Adding a future language pack does not automatically make it a benchmark option: benchmark eligibility must be reviewed/tested explicitly so comparisons remain intentional.
+
+## V2.11 writing-rule language support
+
+`MissingPunctuationSpaceRule` declares English-family support (`en`) and therefore runs for the current `en-US` and `en-GB` built-in packs through the existing `WritingRule.supports` contract. It changes no dictionary, token pattern, word normalizer, suffix list, language ID, or suggestion metadata. Future language packs do not automatically imply linguistic suitability beyond the declared rule support contract.
