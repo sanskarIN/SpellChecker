@@ -1,5 +1,9 @@
 # V2.11 keyboard-first Writing insights accessibility
 
+Release version: `2.11.0+16`
+
+About version: `2.11.0`
+
 SpellChecker V2.11 hardens the existing local Writing insights workflow for keyboard-only and assistive-technology review without changing writing-rule semantics, persistence formats, correction behavior, or document privacy boundaries.
 
 ## Goals
