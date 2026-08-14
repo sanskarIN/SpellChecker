@@ -13,7 +13,14 @@ class AnalysisBenchmarkSample {
     required this.writingCapturedIssueCount,
     required this.writingTotalIssueCount,
     required this.writingTruncated,
-  }) {
+    required Iterable<String> writingAnalyzedRuleIds,
+    required Map<String, int> writingTotalIssueCountByRule,
+  }) : writingAnalyzedRuleIds = List<String>.unmodifiable(
+         _sortedStrings(writingAnalyzedRuleIds),
+       ),
+       writingTotalIssueCountByRule = Map<String, int>.unmodifiable(
+         _sortedIntMap(writingTotalIssueCountByRule),
+       ) {
     if (index < 0) {
       throw ArgumentError.value(index, 'index', 'must not be negative');
     }
@@ -75,6 +82,7 @@ class AnalysisBenchmarkSample {
         'must match whether exact writing totals contain uncaptured issues',
       );
     }
+    _validateWritingRuleMetadata();
   }
 
   final int index;
@@ -86,6 +94,8 @@ class AnalysisBenchmarkSample {
   final int writingCapturedIssueCount;
   final int writingTotalIssueCount;
   final bool writingTruncated;
+  final List<String> writingAnalyzedRuleIds;
+  final Map<String, int> writingTotalIssueCountByRule;
 
   Map<String, Object> toJson() => <String, Object>{
     'index': index,
@@ -97,7 +107,54 @@ class AnalysisBenchmarkSample {
     'writingCapturedIssues': writingCapturedIssueCount,
     'writingTotalIssues': writingTotalIssueCount,
     'writingTruncated': writingTruncated,
+    'writingAnalyzedRuleIds': writingAnalyzedRuleIds,
+    'writingTotalIssuesByRule': writingTotalIssueCountByRule,
   };
+
+  void _validateWritingRuleMetadata() {
+    String? previousRuleId;
+    for (final ruleId in writingAnalyzedRuleIds) {
+      if (ruleId.trim().isEmpty) {
+        throw ArgumentError.value(
+          ruleId,
+          'writingAnalyzedRuleIds',
+          'must not contain blank rule IDs',
+        );
+      }
+      if (ruleId == previousRuleId) {
+        throw ArgumentError.value(
+          ruleId,
+          'writingAnalyzedRuleIds',
+          'must not contain duplicate rule IDs',
+        );
+      }
+      previousRuleId = ruleId;
+    }
+
+    var summedTotal = 0;
+    for (final entry in writingTotalIssueCountByRule.entries) {
+      if (!writingAnalyzedRuleIds.contains(entry.key)) {
+        throw ArgumentError.value(
+          entry.key,
+          'writingTotalIssueCountByRule',
+          'must belong to an analyzed writing rule',
+        );
+      }
+      if (entry.value < 0) {
+        throw ArgumentError.value(
+          entry.value,
+          'writingTotalIssueCountByRule[${entry.key}]',
+          'must not be negative',
+        );
+      }
+      summedTotal += entry.value;
+    }
+    if (summedTotal != writingTotalIssueCount) {
+      throw ArgumentError(
+        'Per-rule writing totals must sum to writingTotalIssueCount.',
+      );
+    }
+  }
 }
 
 class AnalysisBenchmarkSummary {
@@ -169,6 +226,9 @@ class AnalysisBenchmarkSummary {
       'writingCapturedIssues': representativeSample.writingCapturedIssueCount,
       'writingTotalIssues': representativeSample.writingTotalIssueCount,
       'writingTruncated': representativeSample.writingTruncated,
+      'writingAnalyzedRuleIds': representativeSample.writingAnalyzedRuleIds,
+      'writingTotalIssuesByRule':
+          representativeSample.writingTotalIssueCountByRule,
     },
     'samples': samples
         .map((AnalysisBenchmarkSample sample) => sample.toJson())
@@ -224,7 +284,15 @@ class AnalysisBenchmarkSummary {
           sample.spellingTruncated == first.spellingTruncated &&
           sample.writingCapturedIssueCount == first.writingCapturedIssueCount &&
           sample.writingTotalIssueCount == first.writingTotalIssueCount &&
-          sample.writingTruncated == first.writingTruncated;
+          sample.writingTruncated == first.writingTruncated &&
+          _sameStrings(
+            sample.writingAnalyzedRuleIds,
+            first.writingAnalyzedRuleIds,
+          ) &&
+          _sameIntMap(
+            sample.writingTotalIssueCountByRule,
+            first.writingTotalIssueCountByRule,
+          );
       if (!matches) {
         throw ArgumentError(
           'All measured samples must produce the same deterministic analysis '
@@ -233,6 +301,40 @@ class AnalysisBenchmarkSummary {
       }
     }
   }
+}
+
+List<String> _sortedStrings(Iterable<String> values) {
+  return values.toList(growable: false)..sort();
+}
+
+Map<String, int> _sortedIntMap(Map<String, int> values) {
+  final entries = values.entries.toList(growable: false)
+    ..sort((left, right) => left.key.compareTo(right.key));
+  return <String, int>{for (final entry in entries) entry.key: entry.value};
+}
+
+bool _sameStrings(List<String> left, List<String> right) {
+  if (left.length != right.length) {
+    return false;
+  }
+  for (var index = 0; index < left.length; index++) {
+    if (left[index] != right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool _sameIntMap(Map<String, int> left, Map<String, int> right) {
+  if (left.length != right.length) {
+    return false;
+  }
+  for (final entry in left.entries) {
+    if (right[entry.key] != entry.value) {
+      return false;
+    }
+  }
+  return true;
 }
 
 Duration _median(Iterable<Duration> values) {
