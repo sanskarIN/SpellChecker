@@ -1,6 +1,6 @@
 # Public API
 
-SpellChecker 2.10 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, writing-analysis diagnostic-summary, and portable-settings APIs through three public barrels.
+SpellChecker 2.11 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, writing-analysis diagnostic-summary, and portable-settings APIs through three public barrels.
 
 ## Imports
 
@@ -860,3 +860,11 @@ V2.10 adds developer tooling under `tool/benchmark/` and the `tool/benchmark_lar
 The benchmark composes the existing public spelling/language/writing APIs from outside the application runtime. V2.10 therefore adds no supported runtime package API surface, no application timing field on `SpellCheckReport` or `WritingAnalysisResult`, and no timing telemetry contract. Consumers that need performance measurements should treat the `tool/` implementation as repository developer tooling rather than a semver-stable library API.
 
 See [V2.10 benchmark](V2_10_BENCHMARK.md) and [Performance](PERFORMANCE.md).
+
+# V2.11 `MissingPunctuationSpaceRule`
+
+`package:spellchecker/writing.dart` exports `MissingPunctuationSpaceRule`. Its stable ID is `missing-punctuation-space`, category is Mechanics, severity is info, and it supports the current English language family.
+
+The rule reports punctuation-only source ranges for comma, semicolon, question mark, or exclamation mark directly surrounded by Unicode letters. Its deterministic replacement is the same punctuation plus one horizontal space. Periods/colons, numeric/non-letter neighbors, and repeated punctuation are deliberately excluded.
+
+The built-in registry now contains seven rules and the new ID participates in `WritingRuleRegistry.defaultEnabledRuleIds`. Existing `WritingRule`, `WritingIssue`, `WritingAnalysisResult`, `WritingCorrection`, diagnostic-summary, language-pack, storage, and benchmark public/runtime constructor contracts remain unchanged. See [V2.11 rule contract](V2_11_MISSING_PUNCTUATION_SPACE.md).
