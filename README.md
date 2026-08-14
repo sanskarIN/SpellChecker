@@ -29,7 +29,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - **Apply visible safe fixes (N)** when review filters are active.
 - **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
-- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, trailing-whitespace, and repeated-punctuation rules.
+- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, missing-punctuation-space, trailing-whitespace, and repeated-punctuation rules.
 - **Apply all safe fixes** for non-overlapping current writing findings.
 - Stale-range-safe individual and batch writing corrections.
 - One-step undo for a complete writing-fix batch.
@@ -58,9 +58,19 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.10.0+15`
+`2.11.0+16`
 
-Version 2.10 is the **Deterministic Large-Document Benchmarking** release. It adds a developer-run synthetic benchmark harness for bounded spelling and writing analysis, immutable timing/outcome summaries, stable versioned JSON and human-readable reports, strict CLI validation, and permanent CI/release smoke coverage. The benchmark never reads editor documents, adds no telemetry or persistence, and does not turn machine-dependent timing values into correctness thresholds.
+Version 2.11 is the **Missing Punctuation Space** release. It adds a conservative deterministic English mechanics rule for missing spaces after comma, semicolon, question-mark, and exclamation-mark word boundaries. The rule uses punctuation-only source ownership, composes safely with the existing before-punctuation spacing rule, preserves explicit stored rule sets, advances current registry defaults to seven rules, and makes the changed benchmark writing workload visible through V2.10 rule-ID/per-rule-total metadata.
+
+## Missing punctuation space — V2.11
+
+Writing insights now includes **Missing punctuation space** (`missing-punctuation-space`) for English (US) and English (UK). It reports a deterministic automatic fix when a comma, semicolon, question mark, or exclamation mark is directly surrounded by Unicode letters, for example `Hello,world` → `Hello, world`.
+
+Periods and colons are intentionally outside this rule to avoid broad false positives in domains/abbreviations, URI-like schemes, and time-like text. Numeric/non-letter neighbors and repeated punctuation are also excluded. The issue owns only the punctuation character and replaces it with the same punctuation plus one space, preserving the existing stale-source validation model.
+
+For `Hello ,world`, the existing `punctuation-spacing` rule owns the space before the comma while V2.11 owns the comma itself; the adjacent non-overlapping fixes can therefore be applied safely in one batch. Unset/reset writing-rule preferences receive the current seven-rule default set, while explicit stored rule lists—including a historical six-rule V2.10 list or explicit disable-all—remain exact user choices.
+
+The V2.10 benchmark remains developer tooling, but its default writing workload now visibly contains seven analyzed rule IDs. See [V2.11 rule contract](docs/V2_11_MISSING_PUNCTUATION_SPACE.md).
 
 ## Deterministic large-document benchmark — V2.10
 
