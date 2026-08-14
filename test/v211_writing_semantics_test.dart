@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:spellchecker/features/editor/writing_insights_dialog.dart';
 import 'package:spellchecker/language.dart';
 import 'package:spellchecker/writing.dart';
-
-import '../lib/features/editor/writing_insights_dialog.dart';
 
 void main() {
   final analyzer = WritingAnalyzer();
