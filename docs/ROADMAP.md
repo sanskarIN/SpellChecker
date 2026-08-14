@@ -269,6 +269,23 @@ Status: implemented.
 - [x] CI/release formatting coverage for `tool/` and a threshold-free synthetic benchmark smoke run.
 - [x] No public runtime API, persistence-format, telemetry, application-network, or runtime-dependency expansion.
 
+## 2.11 — Missing punctuation space mechanics
+
+Status: implemented.
+
+- [x] Stable public `missing-punctuation-space` rule ID and Mechanics category.
+- [x] English US/UK support through the existing language-family rule contract.
+- [x] Deterministic comma/semicolon/question/exclamation missing-space findings.
+- [x] Conservative period/colon exclusions for domain/abbreviation/URI/time safety.
+- [x] Unicode-letter boundary support and UTF-16-compatible source offsets.
+- [x] Repeated-punctuation ownership remains isolated to the specialized rule.
+- [x] Punctuation-only source ownership with stale-safe automatic replacement.
+- [x] Adjacent non-overlapping batch composition with before-punctuation spacing.
+- [x] Seven-rule default registry with exact explicit-preference compatibility.
+- [x] Bounded-analysis exact total/per-rule diagnostics.
+- [x] V2.10 benchmark seven-rule workload visibility.
+- [x] Rule/analyzer/batch/persistence/widget regression coverage and release documentation.
+
 ## Future 2.x direction
 
 Possible future work includes:
