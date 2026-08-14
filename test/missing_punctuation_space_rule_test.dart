@@ -55,6 +55,20 @@ void main() {
       },
     );
 
+    test('allows horizontal whitespace before punctuation for composition', () {
+      const text = 'Hello  ,world\t;again';
+
+      final issues = rule.analyze(text, us).toList();
+
+      expect(issues, hasLength(2));
+      expect(issues.map((issue) => issue.originalText), <String>[',', ';']);
+      expect(issues.map((issue) => issue.start), orderedEquals(<int>[7, 14]));
+      for (final issue in issues) {
+        expect(text.substring(issue.start, issue.end), issue.originalText);
+        expect(issue.end - issue.start, 1);
+      }
+    });
+
     test('supports Unicode letters while preserving UTF-16 source offsets', () {
       const text = 'café,naïve!Résumé';
 
