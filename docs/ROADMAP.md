@@ -290,14 +290,12 @@ Status: implemented.
 
 Possible future work includes:
 
-- Richer deterministic writing-rule catalogues with explicit source-range ownership tests.
 - Additional language-specific writing rules and language-pack coverage beyond the two built-in English variants.
 - Additional review presets/categories driven by demonstrated workflows.
 - Additional portable non-document preferences with explicit compatibility/version review.
 - Additional built-in ranker implementations driven by demonstrated ranking needs.
 - Trusted plugin-loading designs with explicit security boundaries.
 - Cross-platform desktop/mobile packaging, signing, and release automation.
-- Repeatable performance benchmarking for very large documents, kept separate from correctness metadata and without persisted document content.
 - Broader accessibility regression coverage for large limited-result dialogs and keyboard-only review.
 - Future 2.x milestones should continue to be selected from demonstrated user/contributor workflows rather than adding network behavior by default.
 
