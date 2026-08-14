@@ -225,3 +225,13 @@ Complete when benchmark/tooling/performance-observability behavior is touched.
 - [ ] No runtime dependency, persistence format, application telemetry, network request, or public runtime API was introduced unintentionally.
 - [ ] `docs/V2_10_BENCHMARK.md`, performance/testing/privacy/security/releasing docs, changelog/roadmap/README, and `what_changed.md` are synchronized.
 - [ ] No temporary V2.10 synchronization/validation workflow remains in the permanent release tree.
+
+## V2.11 keyboard/accessibility checklist
+
+- [ ] Writing insights shortcut changes keep visible/touch-accessible equivalents.
+- [ ] Ctrl/Command+F and two-stage Escape behavior are preserved or intentionally documented/tested.
+- [ ] Transient review filters remain separate from persisted per-language rule preferences.
+- [ ] Lazy dialog tests scroll real content instead of forcing off-screen widgets to stay mounted.
+- [ ] Rule/finding semantics communicate visible/captured/total meaning without relying on compact visual counts alone.
+- [ ] Benchmark exact per-rule totals cover every analyzed rule, including zero-count rules, when benchmark code changes.
+- [ ] No `v211-*` one-time workflow/helper remains in the permanent tree.
