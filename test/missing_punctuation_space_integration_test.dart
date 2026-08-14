@@ -13,10 +13,7 @@ void main() {
       );
 
       expect(result.analyzedRuleIds, hasLength(7));
-      expect(
-        result.analyzedRuleIds,
-        contains('missing-punctuation-space'),
-      );
+      expect(result.analyzedRuleIds, contains('missing-punctuation-space'));
       expect(result.issueCountByRule['missing-punctuation-space'], 1);
       expect(result.totalIssueCountByRule?['missing-punctuation-space'], 1);
     });
@@ -39,10 +36,9 @@ void main() {
         enabledRuleIds: const <String>{'missing-punctuation-space'},
       );
 
-      expect(
-        result.analyzedRuleIds,
-        const <String>{'missing-punctuation-space'},
-      );
+      expect(result.analyzedRuleIds, const <String>{
+        'missing-punctuation-space',
+      });
       expect(result.issues, hasLength(2));
       expect(
         result.issues.every(
@@ -51,10 +47,9 @@ void main() {
         isTrue,
       );
       expect(result.totalIssueCount, 2);
-      expect(
-        result.totalIssueCountByRule,
-        const <String, int>{'missing-punctuation-space': 2},
-      );
+      expect(result.totalIssueCountByRule, const <String, int>{
+        'missing-punctuation-space': 2,
+      });
     });
 
     test('bounded diagnostics retain exact totals for the new rule', () {
@@ -69,38 +64,40 @@ void main() {
       expect(result.totalIssueCount, 4);
       expect(result.uncapturedIssueCount, 2);
       expect(result.isTruncated, isTrue);
-      expect(
-        result.totalIssueCountByRule,
-        const <String, int>{'missing-punctuation-space': 4},
-      );
+      expect(result.totalIssueCountByRule, const <String, int>{
+        'missing-punctuation-space': 4,
+      });
     });
 
-    test('adjacent before-and-after punctuation fixes compose in one batch', () {
-      const text = 'Hello ,world';
-      final result = WritingAnalyzer().analyze(
-        text,
-        languagePack: pack,
-        enabledRuleIds: const <String>{
-          'punctuation-spacing',
-          'missing-punctuation-space',
-        },
-      );
+    test(
+      'adjacent before-and-after punctuation fixes compose in one batch',
+      () {
+        const text = 'Hello ,world';
+        final result = WritingAnalyzer().analyze(
+          text,
+          languagePack: pack,
+          enabledRuleIds: const <String>{
+            'punctuation-spacing',
+            'missing-punctuation-space',
+          },
+        );
 
-      expect(result.issues, hasLength(2));
-      expect(
-        result.issues.map((issue) => issue.ruleId),
-        orderedEquals(const <String>[
-          'punctuation-spacing',
-          'missing-punctuation-space',
-        ]),
-      );
-      expect(result.issues[0].end, result.issues[1].start);
+        expect(result.issues, hasLength(2));
+        expect(
+          result.issues.map((issue) => issue.ruleId),
+          orderedEquals(const <String>[
+            'punctuation-spacing',
+            'missing-punctuation-space',
+          ]),
+        );
+        expect(result.issues[0].end, result.issues[1].start);
 
-      final correction = WritingCorrection.applyAll(text, result.issues);
-      expect(correction.appliedCount, 2);
-      expect(correction.skippedCount, 0);
-      expect(correction.text, 'Hello, world');
-    });
+        final correction = WritingCorrection.applyAll(text, result.issues);
+        expect(correction.appliedCount, 2);
+        expect(correction.skippedCount, 0);
+        expect(correction.text, 'Hello, world');
+      },
+    );
 
     test('repeated punctuation remains owned by its specialized rule', () {
       final result = WritingAnalyzer().analyze(
