@@ -29,6 +29,20 @@ void main() {
     await tester.pump();
   }
 
+  Future<void> scrollUntilBuilt(WidgetTester tester, Finder finder) async {
+    final insightsList = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(ListView),
+    );
+    expect(insightsList, findsOneWidget);
+
+    for (var index = 0; index < 8 && finder.evaluate().isEmpty; index++) {
+      await tester.drag(insightsList, const Offset(0, -220));
+      await tester.pumpAndSettle();
+    }
+    expect(finder, findsOneWidget);
+  }
+
   testWidgets('Ctrl+F focuses Writing insights search', (
     WidgetTester tester,
   ) async {
@@ -99,18 +113,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Writing insights'), findsOneWidget);
-    await tester.ensureVisible(mechanics);
-    await tester.ensureVisible(automatic);
+    final search = find.byKey(const ValueKey<String>('writing-review-search'));
+    expect(search, findsOneWidget);
+    expect(tester.widget<TextField>(search).focusNode!.hasFocus, isTrue);
+
+    await scrollUntilBuilt(tester, mechanics);
     expect(tester.widget<FilterChip>(mechanics).selected, isFalse);
+
+    await scrollUntilBuilt(tester, automatic);
     expect(tester.widget<SwitchListTile>(automatic).value, isFalse);
-    expect(
-      tester
-          .widget<TextField>(
-            find.byKey(const ValueKey<String>('writing-review-search')),
-          )
-          .focusNode!
-          .hasFocus,
-      isTrue,
-    );
   });
 }
