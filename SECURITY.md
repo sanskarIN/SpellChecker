@@ -303,3 +303,9 @@ The repository's Buy Me a Coffee link does not change security-reporting priorit
 ## V2.9 diagnostic-summary security boundary
 
 The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. It does not read or serialize editor text, finding excerpts/messages, replacements, source offsets, personal vocabulary, correction history, timestamps, device identifiers, or network metadata. It adds no automatic clipboard write, persistence, telemetry, or remote logging behavior. The current Writing insights **Copy diagnostic summary** control is an explicit user action and copies only the safe formatted summary; any future file/network transport requires separate security/privacy review and must not silently substitute raw `WritingIssue` data for the safe summary.
+
+## V2.10 benchmark security boundary
+
+The V2.10 benchmark is source-controlled developer tooling, not an application service, plugin loader, or execution sandbox. CLI values are parsed as bounded integer/language configuration and are not evaluated as code. Unsupported language IDs and malformed/duplicate options are rejected.
+
+The benchmark uses generated synthetic text and fixed in-process dictionary metadata. It does not automatically read arbitrary document paths, execute imported content, contact a remote endpoint, write preferences, or upload results. Timing numbers are descriptive machine-local measurements and must not be treated as a security/resource guarantee. Untrusted third-party rule code or arbitrarily large externally supplied documents remain outside this benchmark's threat/resource boundary.
