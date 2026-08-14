@@ -1,0 +1,45 @@
+name: V2.11 resolved formatter helper
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out V2.11 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-accessibility-review-2026-08-14
+          fetch-depth: 0
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve packages
+        run: flutter pub get
+      - name: Format V2.11 dialog with resolved analysis options
+        run: dart format lib/features/editor/writing_insights_dialog.dart
+      - name: Commit and push formatter output
+        shell: bash
+        run: |
+          if git diff --quiet -- lib/features/editor/writing_insights_dialog.dart; then
+            exit 0
+          fi
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+          git add lib/features/editor/writing_insights_dialog.dart
+          git commit -m "style: format V2.11 Writing insights dialog"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:v2.11-accessibility-review-2026-08-14; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
