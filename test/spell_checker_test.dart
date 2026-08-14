@@ -53,6 +53,30 @@ void main() {
       expect(suggestions, <String>['cut', 'cat']);
     });
 
+    test('normalizes custom frequency keys before ranking', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{'Cat', 'CUT'},
+        wordFrequencies: <String, int>{'CUT': 1, 'CAT': 100},
+      );
+
+      final suggestions = engine.suggestionsFor('cot');
+
+      expect(suggestions, <String>['cut', 'cat']);
+    });
+
+    test('keeps the best rank when frequency keys normalize together', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{'cat', 'cut'},
+        wordFrequencies: <String, int>{'CUT': 50, 'cut': 1, 'cat': 100},
+      );
+
+      final details = engine.suggestionDetailsFor('cot');
+      final cut = details.singleWhere((detail) => detail.word == 'cut');
+
+      expect(cut.frequencyRank, 1);
+      expect(details.first.word, 'cut');
+    });
+
     test('limits suggestions during a full text check', () {
       final engine = SpellCheckerEngine(
         dictionary: <String>{'hello', 'help', 'hero'},
