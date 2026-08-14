@@ -229,7 +229,7 @@ dart run tool/benchmark_large_document.dart --repeats=2000 --warmup=1 --iteratio
 
 Add `--json` for the stable version-1 machine-readable report. The default scenario repeats a source-controlled synthetic chunk; no editor document, clipboard content, personal dictionary, or persisted preference is read. A fixed synthetic spelling dictionary/frequency map keeps benchmark eligibility stable when bundled vocabulary changes.
 
-Every sample creates a fresh `SpellCheckerEngine` and `WritingAnalyzer`. Warmup samples are discarded; measured samples must produce identical analysis outcomes or summary construction fails. The report records spelling scanned/captured/truncated metadata and writing captured/exact-total/truncated metadata alongside elapsed microseconds.
+Every sample creates a fresh `SpellCheckerEngine` and `WritingAnalyzer`. Warmup samples are discarded; measured samples must produce identical analysis outcomes or summary construction fails. The report records spelling scanned/captured/truncated metadata and writing captured/exact-total/truncated metadata, sorted analyzed rule IDs, and sorted exact per-rule totals alongside elapsed microseconds.
 
 Min/median/max timings are descriptive only. They vary with hardware, operating system, Flutter/Dart version, process scheduling, build/runtime mode, and other machine conditions. CI therefore executes a small smoke scenario solely to prove the benchmark command and report path work; it does not compare timing values against a threshold.
 
