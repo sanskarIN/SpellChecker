@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v2.10.0 or commit SHA
+      placeholder: v2.11.0 or commit SHA
     validations:
       required: true
   - type: input
@@ -159,3 +159,6 @@ body:
 
 # V2.10 benchmark note
 # Benchmark reports must describe only the built-in synthetic corpus shape, analysis outcomes, and machine-dependent timings. Never benchmark or attach private user documents in a public issue.
+
+# V2.11 writing-rule note
+# For missing-punctuation-space bugs include the stable rule ID, language, preference state, and a minimal synthetic letter+punctuation+letter example. Periods/colons, numeric/non-letter neighbors, and repeated punctuation are intentionally excluded.
