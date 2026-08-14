@@ -1,6 +1,6 @@
 # Public API
 
-SpellChecker 2.9 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, writing-analysis diagnostic-summary, and portable-settings APIs through three public barrels.
+SpellChecker 2.10 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, writing-analysis diagnostic-summary, and portable-settings APIs through three public barrels.
 
 ## Imports
 
@@ -852,3 +852,11 @@ final reportText = summary.toPlainText();
 `WritingAnalysisDiagnosticSummary` exposes language ID, captured count, optional exact total, optional capture limit, truncation state, immutable rule rows, `hasExactIssueTotals`, `uncapturedIssueCount`, and format version `1`. Each `WritingRuleDiagnosticSummary` contains rule ID/display name plus captured and optional exact total counts.
 
 The formatter does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal vocabulary, ignored words, review filters, correction history, timestamps, device identifiers, telemetry, or network metadata. Constructing/formatting the summary has no persistence, clipboard, or network side effect.
+
+# V2.10 developer benchmark API boundary
+
+V2.10 adds developer tooling under `tool/benchmark/` and the `tool/benchmark_large_document.dart` command. These benchmark scenario/result/runner/options/reporter/command types are intentionally **not** exported from `package:spellchecker/spell_checker.dart`, `package:spellchecker/language.dart`, or `package:spellchecker/writing.dart`.
+
+The benchmark composes the existing public spelling/language/writing APIs from outside the application runtime. V2.10 therefore adds no supported runtime package API surface, no application timing field on `SpellCheckReport` or `WritingAnalysisResult`, and no timing telemetry contract. Consumers that need performance measurements should treat the `tool/` implementation as repository developer tooling rather than a semver-stable library API.
+
+See [V2.10 benchmark](V2_10_BENCHMARK.md) and [Performance](PERFORMANCE.md).
