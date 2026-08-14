@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Format, analyze, and test
+    name: Format, analyze, test, and benchmark smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -39,10 +39,22 @@ jobs:
         run: flutter pub get
 
       - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format --output=none --set-exit-if-changed lib test tool
 
       - name: Analyze
         run: flutter analyze
 
       - name: Test
         run: flutter test --reporter expanded
+
+      - name: Benchmark CLI smoke test
+        run: >-
+          dart run tool/benchmark_large_document.dart
+          --repeats=4
+          --warmup=0
+          --iterations=1
+          --spelling-limit=2
+          --writing-limit=5
+          --suggestions=0
+          --language=en-US
+          --json
