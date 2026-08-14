@@ -214,3 +214,7 @@ When profiling very large documents:
 7. avoid treating one device/browser measurement as a correctness guarantee.
 
 V2.8 intentionally does not persist benchmark data or document-derived diagnostic totals.
+
+## V2.9 diagnostic-summary cost
+
+`WritingAnalysisDiagnosticSummary.fromResult` does not re-run writing rules or re-scan editor text. It reads already-produced result count metadata, derives captured per-rule counts from the retained findings, sorts analyzed rule IDs, and formats one row per analyzed rule. Its cost is tied to retained findings/analyzed-rule metadata rather than document length beyond the analysis work that already occurred. It does not change V2.7 `maxIssues` or V2.8 exact-count semantics.
