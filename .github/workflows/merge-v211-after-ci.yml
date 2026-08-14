@@ -1,0 +1,111 @@
+name: V2.11 merge after final CI
+
+on:
+  push:
+    branches:
+      - v2.11-missing-punctuation-space
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+concurrency:
+  group: v211-final-merge
+  cancel-in-progress: true
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: v2.11-missing-punctuation-space
+      PR_NUMBER: '71'
+
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-missing-punctuation-space
+          fetch-depth: 0
+
+      - name: Wait for ledger-complete permanent candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            git fetch origin "$BRANCH" >/dev/null 2>&1
+            remote="origin/$BRANCH"
+            files="$(git ls-tree -r --name-only "$remote" .github/workflows | sort)"
+            if git show "$remote:what_changed.md" | grep -q '^## V2.11 — Missing Punctuation Space Mechanics$' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/v211-' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/final-v211-release.yml$' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/ledger-v211-sync.yml$' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/rescue-v211-cleanup.yml$'; then
+              expected="$(printf '%s\n' \
+                '.github/workflows/ci.yml' \
+                '.github/workflows/merge-v211-after-ci.yml' \
+                '.github/workflows/release.yml' | sort)"
+              if [ "$files" = "$expected" ]; then
+                git reset --hard "$remote"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo 'Timed out waiting for the ledger-complete permanent candidate.' >&2
+          exit 1
+
+      - name: Remove this finalizer and push exact permanent-tree head
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/merge-v211-after-ci.yml
+          git commit -m "ci: remove V2.11 merge finalizer"
+          git push origin HEAD:"$BRANCH"
+          echo "FINAL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Wait for ordinary CI on exact final head
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            run_id="$(gh run list --workflow ci.yml --branch "$BRANCH" --status success --limit 60 --json databaseId,headSha --jq ".[] | select(.headSha == \"$FINAL_SHA\") | .databaseId" | head -n1)"
+            if [ -n "$run_id" ]; then
+              echo "FINAL_CI_RUN=$run_id" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for ordinary CI on $FINAL_SHA" >&2
+          exit 1
+
+      - name: Verify exact final tree before merge
+        shell: bash
+        run: |
+          git fetch origin "$BRANCH"
+          test "$(git rev-parse origin/$BRANCH)" = "$FINAL_SHA"
+          workflows="$(git ls-tree -r --name-only "$FINAL_SHA" .github/workflows | sort)"
+          expected="$(printf '%s\n' '.github/workflows/ci.yml' '.github/workflows/release.yml' | sort)"
+          test "$workflows" = "$expected"
+          git show "$FINAL_SHA:what_changed.md" | grep -q '^## V2.11 — Missing Punctuation Space Mechanics$'
+          echo "Final ordinary CI run: $FINAL_CI_RUN"
+
+      - name: Merge PR 71 preserving granular commits
+        shell: bash
+        run: |
+          response="$(gh api --method PUT \
+            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/merge" \
+            -f sha="$FINAL_SHA" \
+            -f merge_method=merge \
+            -f commit_title='Merge V2.11 missing punctuation space mechanics' \
+            -f commit_message='Merge the fully validated V2.11 deterministic missing-punctuation-space milestone while preserving its granular implementation, regression-test, documentation, validation, and cleanup history.')"
+          printf '%s\n' "$response"
+          python3 - "$response" <<'PY'
+          import json, sys
+          payload = json.loads(sys.argv[1])
+          if payload.get('merged') is not True:
+              raise SystemExit(f"PR merge failed: {payload}")
+          PY
