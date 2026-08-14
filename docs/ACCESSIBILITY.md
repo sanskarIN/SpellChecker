@@ -311,7 +311,6 @@ For significant UI changes verify when practical:
 
 Potential improvements include:
 
-- Dedicated semantics regression coverage.
 - High-contrast platform review.
 - Optional shortcut customization.
 - Refined non-duplicative announcements after bulk fixes/undo.
@@ -370,3 +369,18 @@ When Flutter reports a valid active IME composing range, the editor delegates te
 V2.10 adds no new in-app control, focus target, gesture, color-only indicator, or keyboard shortcut. The benchmark is a developer CLI and its human-readable mode uses plain text labels for scenario shape, analysis outcomes, and timing aggregates. `--help` exposes the supported command options without requiring the graphical application.
 
 The existing app accessibility contract remains unchanged; release-version metadata is the only app-visible V2.10 change. Any future in-app performance/diagnostic UI would require a separate accessibility review rather than inheriting the CLI contract automatically.
+
+## V2.11 keyboard-first Writing insights accessibility
+
+V2.11 makes the existing lazy Writing insights dialog more predictable for keyboard-only and assistive-technology users without changing its analysis or persistence model.
+
+- `Ctrl+F` / `Command+F` focuses the existing review-search field while the dialog is open.
+- A focus anchor lives inside the shortcut scope so the bindings remain active while focus traverses modal controls.
+- Escape clears the complete transient review query (search, categories, and Automatic fixes only) before it closes the dialog. A second Escape closes once the query is empty.
+- Clearing filters by Escape returns focus to review search.
+- Visible rule and finding counts are live semantic regions with descriptive labels rather than relying on compact `N/M` visual text.
+- Limited finding semantics preserve captured-only truthfulness and announce exact captured/total relationships when exact diagnostics are available.
+- `WritingInsightsDialog.maxIssues` is release-mode validated and rejects non-positive values.
+
+Focused tests keep the production `ListView` lazy: they scroll controls/semantics into the widget tree rather than changing production layout to make assertions easier. Manual review should include keyboard traversal, Ctrl/Command+F from multiple focused controls, first/second Escape behavior, screen-reader count announcements, increased text size, and narrow viewports.
+
