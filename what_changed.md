@@ -554,3 +554,74 @@ Those files remain part of the compatibility surface and are intentionally left 
 ### Release invariant
 
 The V2.6 release is considered complete only when the permanent `main` tree contains the helper-free `2.6.0+11` release, both new public rules and exports, the six-rule registry, the refined repeated-space ownership, all focused/legacy regression coverage, synchronized release documentation including this ledger, synchronized web metadata, and no temporary `tools/v26*` or `.github/workflows/v26-*` release-gate artifacts.
+
+## V2.9 zero-error hardening audit — 2026-08-14
+
+This audit continues from the merged V2.9 diagnostic-summary baseline at commit `5b16c18c1dba9a9c1a1e1522199467c319254d10`. The work was intentionally split into small implementation, regression-test, formatting, configuration, workflow, dependency, and documentation commits for reviewability.
+
+### Production correctness fixes
+
+- Replaced `SpellCheckReport` debug-only constructor assertions with runtime validation so invalid report metadata is rejected in release builds as well as debug builds. Runtime checks cover negative scanned-token counts, non-positive limits, truncated reports without limits, captured issue counts above the declared limit, and scanned-token counts smaller than captured issue counts.
+- Made `SpellLanguagePack.recognizedSuffixes` a defensive immutable snapshot so caller-owned list mutation cannot change pack behavior after construction.
+- Normalized custom `SpellCheckerEngine.wordFrequencies` keys through the active language pack, discarded empty normalized keys, and retained the best/lower rank when multiple source keys normalize to the same word.
+- Tightened sentence-capitalization boundary detection so terminal punctuation must be followed by separating whitespace before the next token; dot-connected text such as `example.com` no longer creates a false sentence boundary.
+- Strengthened `WritingAnalysisResult` runtime consistency checks so captured findings must belong to analyzed rules and the result language, and exact per-rule totals may contain only analyzed rule IDs.
+- Made `WritingAnalyzer` reject duplicate configured rule IDs before analysis so enablement, persistence, ordering, and diagnostics cannot become ambiguous.
+- Preserved Flutter's native active IME composing span while text composition is in progress instead of replacing it with custom spelling-highlight spans.
+- Made `TextStatistics` word counting Unicode-letter aware with the same supported internal apostrophe/hyphen token forms used by spelling tokenization.
+- Corrected the About dialog release version from stale `2.8.0` to `2.9.0`.
+
+### Regression coverage added
+
+- Added release-mode constructor-invariant tests for `SpellCheckReport`.
+- Added immutable recognized-suffix configuration coverage.
+- Added custom frequency-key normalization and normalized-duplicate ranking coverage.
+- Added dot-connected sentence-boundary coverage.
+- Added `WritingAnalysisResult` analyzed-rule/language/per-rule-total ownership coverage.
+- Added duplicate writing-rule-ID rejection coverage.
+- Added active IME composition rendering coverage in the spell-check editing controller.
+- Added Unicode text-statistics coverage.
+- Added V2.9 About-dialog version coverage.
+
+### Toolchain and dependency hygiene
+
+- Synchronized analyzer exclusions with the Flutter 3.47 project/tooling layout used by CI.
+- Applied the exact Dart 3.13 formatter output required by CI.
+- Refreshed `pubspec.lock` with Flutter 3.47 so `flutter pub get` no longer dirties the tracked lockfile. The refresh includes `matcher 0.12.20`, `meta 1.19.0`, `test_api 0.7.12`, and `vector_math 2.4.2`.
+
+### Workflow cleanup
+
+- Removed obsolete one-time V2.2, V2.3, and V2.8 reconciliation workflows from the permanent tree. Those workflows had write permissions and their own release-tree checks stated that disposable helper workflows must not remain after reconciliation.
+- Restored the permanent workflow directory to the normal `ci.yml` and tagged `release.yml` workflows after each temporary diagnostic/synchronization helper completed.
+
+### V2.9 release/documentation synchronization
+
+- Updated README current-release metadata to `2.9.0+14` and documented the public privacy-safe writing-analysis diagnostic summary.
+- Added the missing `2.9.0` changelog entry.
+- Updated API documentation for V2.9, six built-in writing-rule IDs, runtime model invariants, Unicode statistics, immutable language configuration, normalized custom frequencies, and `WritingAnalysisDiagnosticSummary`.
+- Advanced release instructions from the stale V2.8 candidate/tag to `2.9.0+14` / `v2.9.0`, and added the lockfile-clean verification requirement.
+- Updated architecture, language-pack, privacy, testing, troubleshooting, user-guide, writing-rule, accessibility, performance, contribution, security, support, issue-template, and pull-request-template documentation to match the V2.9 implementation and hardening contracts.
+- Kept the V2.9 diagnostic-summary privacy contract exact: the model contains counts/rule/language metadata only and has no automatic clipboard, persistence, telemetry, or network side effect.
+
+### Repository-wide audit coverage
+
+The audit explicitly inspected the complete tracked project surface rather than only files already failing CI: top-level Dart barrels/startup, every core engine/model/codec/statistics file, all bundled dictionary/frequency data, both storage adapters, every writing model/analyzer/rule, every editor widget/controller/dialog, every test file, all GitHub templates/workflows/metadata, root governance/release/security/support files, all documentation files, and the tracked web host files. Files with no demonstrated defect or drift were intentionally left unchanged.
+
+### Validation evidence
+
+Before this audit-log commit, the repair branch passed the permanent CI format/analyze/full-test workflow on the code/configuration hardening head. This final release-validator run then completed all release-sensitive checks on the synchronized V2.9 candidate using Flutter stable / Dart from the CI toolchain:
+
+```text
+flutter pub get
+git diff --exit-code -- pubspec.lock
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test --reporter expanded
+flutter build web --release
+```
+
+All commands above completed successfully before this section was committed. A final ordinary CI run is required again after removing the one-time validator so the permanent-tree head is independently checked with the repository's normal workflow.
+
+### Result
+
+The audited candidate has no known remaining formatter error, analyzer diagnostic, failing automated test, lockfile drift, or release-web build failure. This is a verified zero-failure state for the repository's automated gates and the audited invariants above; it is not a claim that any non-trivial software can be mathematically guaranteed to contain zero undiscovered future bugs.
