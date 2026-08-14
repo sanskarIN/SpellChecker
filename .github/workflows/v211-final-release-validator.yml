@@ -1,0 +1,85 @@
+name: V2.11 final release validator
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Show tool versions
+        run: |
+          flutter --version
+          dart --version
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Verify lockfile is stable
+        run: git diff --exit-code -- pubspec.lock
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool
+      - name: Analyze
+        run: flutter analyze
+      - name: Run complete tests
+        run: flutter test --reporter expanded
+      - name: Validate US benchmark report invariants
+        shell: bash
+        run: |
+          dart run tool/benchmark_large_document.dart \
+            --repeats=250 \
+            --warmup=1 \
+            --iterations=3 \
+            --spelling-limit=100 \
+            --writing-limit=100 \
+            --suggestions=3 \
+            --language=en-US \
+            --json > /tmp/v211-benchmark.json
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('/tmp/v211-benchmark.json').read_text())
+          assert data['formatVersion'] == 1
+          sample = data['samples'][0]
+          rule_ids = sample['writing']['analyzedRuleIds']
+          totals = sample['writing']['totalIssueCountByRule']
+          assert rule_ids == sorted(rule_ids)
+          assert set(rule_ids) == set(totals)
+          assert all(isinstance(totals[rule_id], int) and totals[rule_id] >= 0 for rule_id in rule_ids)
+          assert sum(totals.values()) == sample['writing']['totalIssueCount']
+          PY
+      - name: Validate UK benchmark command
+        run: >-
+          dart run tool/benchmark_large_document.dart
+          --repeats=50
+          --warmup=1
+          --iterations=2
+          --spelling-limit=20
+          --writing-limit=20
+          --suggestions=2
+          --language=en-GB
+      - name: Verify V2.11 release metadata
+        shell: bash
+        run: |
+          grep -F 'version: 2.11.0+16' pubspec.yaml
+          grep -F "applicationVersion: '2.11.0'" lib/features/editor/spell_checker_page.dart
+          grep -F '`2.11.0+16`' README.md
+          grep -F '## [2.11.0] - 2026-08-14' CHANGELOG.md
+          grep -F '## 2.11 — Keyboard-first Writing insights accessibility' docs/ROADMAP.md
+          grep -F 'Release version: `2.11.0+16`' docs/V2_11_ACCESSIBILITY.md
+          test -f .github/workflows/ci.yml
+          test -f .github/workflows/release.yml
+          test -f .github/workflows/v211-final-release-validator.yml
+          test "$(find .github/workflows -maxdepth 1 -type f -name 'v211-*' | wc -l)" -eq 1
+      - name: Build release web application
+        run: flutter build web --release
