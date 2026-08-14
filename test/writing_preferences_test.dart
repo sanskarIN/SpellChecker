@@ -72,15 +72,18 @@ void main() {
       expect(effective, isNot(contains('missing-punctuation-space')));
     });
 
-    test('explicit disable-all remains empty after V2.11 rule addition', () async {
-      await preferences.saveWritingRuleIds('en-US', const <String>{});
+    test(
+      'explicit disable-all remains empty after V2.11 rule addition',
+      () async {
+        await preferences.saveWritingRuleIds('en-US', const <String>{});
 
-      final stored = await preferences.loadWritingRuleIds('en-US');
-      final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
+        final stored = await preferences.loadWritingRuleIds('en-US');
+        final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
 
-      expect(stored, isEmpty);
-      expect(effective, isEmpty);
-    });
+        expect(stored, isEmpty);
+        expect(effective, isEmpty);
+      },
+    );
 
     test('removing an override restores current seven-rule defaults', () async {
       await preferences.saveWritingRuleIds('en-US', const <String>{
