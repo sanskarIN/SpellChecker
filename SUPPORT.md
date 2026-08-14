@@ -275,3 +275,7 @@ The `captured/total` badge describes one current local analysis snapshot. Reopen
 ## V2.9 diagnostic-summary support reports
 
 For writing-analysis count/ordering problems, maintainers can ask for the deterministic `WritingAnalysisDiagnosticSummary.toPlainText()` output plus the SpellChecker version and a synthetic reproduction. The summary is designed to contain counts and stable rule/language metadata without editor text or finding excerpts. If exact totals show `unavailable`, record whether the result was directly constructed for compatibility rather than returned by `WritingAnalyzer.analyze()`. Do not ask users to post private documents, personal dictionaries, raw correction history, or sensitive finding excerpts in public issues.
+
+## V2.10 benchmark support
+
+For V2.10 benchmark questions, include the exact benchmark command, selected built-in language, Flutter/Dart versions, scenario repetition/limit values, and the metadata-only report output when safe. Use the built-in synthetic corpus; do not attach private documents to reproduce performance observations. Timing differences are meaningful only when the compared environment/toolchain and command are controlled. Malformed options, unsupported language IDs, changing analysis outcomes across measured iterations, or benchmark command crashes are correctness/support issues; a slower number on unrelated hardware by itself is not.
