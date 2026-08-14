@@ -56,14 +56,20 @@ void main() {
     final search = find.byKey(const ValueKey<String>('writing-review-search'));
     await tester.enterText(search, 'clarity');
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey<String>('clear-writing-review-filters')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('clear-writing-review-filters')),
+      findsOneWidget,
+    );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
 
     expect(find.text('Writing insights'), findsOneWidget);
     expect(tester.widget<TextField>(search).controller!.text, isEmpty);
-    expect(find.byKey(const ValueKey<String>('clear-writing-review-filters')), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('clear-writing-review-filters')),
+      findsNothing,
+    );
     expect(tester.widget<TextField>(search).focusNode!.hasFocus, isTrue);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -80,25 +86,34 @@ void main() {
     await tester.tap(
       find.byKey(const ValueKey<String>('writing-category-mechanics')),
     );
-    await tester.tap(find.byKey(const ValueKey<String>('automatic-fixes-only')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('automatic-fixes-only')),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey<String>('clear-writing-review-filters')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('clear-writing-review-filters')),
+      findsOneWidget,
+    );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
 
     expect(find.text('Writing insights'), findsOneWidget);
     expect(
-      tester.widget<FilterChip>(
-        find.byKey(const ValueKey<String>('writing-category-mechanics')),
-      ).selected,
+      tester
+          .widget<FilterChip>(
+            find.byKey(const ValueKey<String>('writing-category-mechanics')),
+          )
+          .selected,
       isFalse,
     );
     expect(
-      tester.widget<SwitchListTile>(
-        find.byKey(const ValueKey<String>('automatic-fixes-only')),
-      ).value,
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const ValueKey<String>('automatic-fixes-only')),
+          )
+          .value,
       isFalse,
     );
   });
