@@ -511,3 +511,9 @@ Pass the relevant configured `WritingRule` values to `WritingAnalysisDiagnosticS
 ### I need to report a diagnostics bug
 
 Prefer the V2.9 metadata-only summary or a synthetic minimal example. Do not attach a private document, raw finding excerpts, personal vocabulary, or correction history unless a private security/support channel explicitly requires and authorizes it.
+
+## V2.10 benchmark troubleshooting
+
+If the benchmark command rejects an option, run `dart run tool/benchmark_large_document.dart --help` and use the documented `--name=value` forms. Repeated options are rejected deliberately, numeric bounds/iteration counts must satisfy their positive/non-negative contracts, and language IDs are limited to the built-in `en-US` / `en-GB` packs.
+
+If analysis outcomes differ between measured samples, treat that as a determinism defect and report the exact commit/command using synthetic data. If only elapsed times differ, first compare Flutter/Dart versions, hardware, runtime load, build/runtime mode, options, and commit; timing variation alone is expected and is not a normal correctness failure.
