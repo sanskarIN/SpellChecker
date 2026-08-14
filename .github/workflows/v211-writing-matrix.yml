@@ -1,0 +1,44 @@
+name: V2.11 writing-test matrix diagnostics
+
+on:
+  push:
+    branches:
+      - v2.11-missing-punctuation-space
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    outputs:
+      files: ${{ steps.files.outputs.files }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: files
+        shell: bash
+        run: |
+          python3 <<'PY' >> "$GITHUB_OUTPUT"
+          import glob, json
+          print('files=' + json.dumps(sorted(glob.glob('test/writing_*.dart'))))
+          PY
+
+  test:
+    needs: prepare
+    if: needs.prepare.outputs.files != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        file: ${{ fromJson(needs.prepare.outputs.files) }}
+    name: ${{ matrix.file }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test "${{ matrix.file }}" --reporter expanded
