@@ -102,11 +102,11 @@ void main() {
     await tester.ensureVisible(mechanics);
     await tester.tap(mechanics);
     await tester.pumpAndSettle();
+    expect(tester.widget<FilterChip>(mechanics).selected, isTrue);
+
     await tester.ensureVisible(automatic);
     await tester.tap(automatic);
     await tester.pumpAndSettle();
-
-    expect(tester.widget<FilterChip>(mechanics).selected, isTrue);
     expect(tester.widget<SwitchListTile>(automatic).value, isTrue);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
