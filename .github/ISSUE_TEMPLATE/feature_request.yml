@@ -19,7 +19,7 @@ body:
     id: solution
     attributes:
       label: Proposed behavior
-      description: Describe what SpellChecker should do, including keyboard/accessibility behavior, language scope, correction grouping, persistence semantics, bounded-result behavior, and diagnostic metadata when relevant.
+      description: Describe what SpellChecker should do, including keyboard/accessibility behavior, language scope, correction grouping, persistence semantics, bounded-result behavior, diagnostic metadata, and benchmark/tooling impact when relevant.
     validations:
       required: true
   - type: textarea
@@ -36,6 +36,7 @@ body:
         - Language selection / Unicode rules
         - Writing rules / Writing insights
         - Writing analysis diagnostics / large-document behavior
+        - Deterministic benchmark / developer tooling
         - Writing rule preferences / rule management
         - Writing review search / categories / filters
         - Writing rule reset/default management
@@ -56,7 +57,7 @@ body:
     id: compatibility
     attributes:
       label: Compatibility and state
-      description: If relevant, describe existing public APIs, result metadata, rule IDs, language IDs, transfer formats, preference keys, explicit-empty/default behavior, bounded-result/captured-only semantics, or undo grouping that the change must preserve or migrate.
+      description: If relevant, describe existing public APIs, result metadata, rule IDs, language IDs, transfer formats, preference keys, explicit-empty/default behavior, bounded-result/captured-only semantics, benchmark report format, or undo grouping that the change must preserve or migrate.
   - type: checkboxes
     id: considerations
     attributes:
@@ -74,9 +75,14 @@ body:
           required: false
         - label: If this changes diagnostics/performance behavior, I separated deterministic correctness metadata from device-dependent timing and described any privacy impact of document-derived diagnostics.
           required: false
+        - label: If this changes benchmark tooling, I kept public examples synthetic-only and avoided machine-specific timing thresholds as normal correctness gates.
+          required: false
 
 # V2.3 design note
 # Requests that expand portable settings should identify the exact preference, persistence semantics, compatibility/version impact, privacy boundary, and why it belongs in a non-document transfer format.
 
 # V2.8 design note
 # Requests involving exact finding totals or large-document diagnostics should preserve captured-only correction safety, avoid treating maxIssues as a CPU/time security bound, and explain whether document-derived diagnostic metadata would be stored, copied, logged, or transmitted.
+
+# V2.10 benchmark note
+# Benchmark/tooling proposals should preserve generated synthetic inputs by default, distinguish deterministic outcome regressions from machine-dependent elapsed-time variation, and version incompatible report-format changes explicitly.
