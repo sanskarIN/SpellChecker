@@ -269,6 +269,23 @@ Status: implemented.
 - [x] CI/release formatting coverage for `tool/` and a threshold-free synthetic benchmark smoke run.
 - [x] No public runtime API, persistence-format, telemetry, application-network, or runtime-dependency expansion.
 
+## 2.11 — Keyboard-first Writing insights accessibility
+
+Status: implemented.
+
+- [x] Direct `Ctrl+F` / `Command+F` focus for the existing Writing insights review search.
+- [x] Focus anchor inside the modal shortcut scope so bindings remain available during keyboard traversal.
+- [x] Two-stage Escape behavior that clears transient review filters before closing.
+- [x] Search-focus restoration after transient filters are cleared.
+- [x] Live semantic visible/total rule-count state.
+- [x] Live complete/limited finding-count semantics with exact captured/total relationships when available.
+- [x] Release-mode positive `WritingInsightsDialog.maxIssues` validation.
+- [x] Lazy-list-safe keyboard and semantics regression coverage.
+- [x] Benchmark exact per-rule totals cover every analyzed rule, including explicit zero-count rules.
+- [x] Package/About release identity advances to `2.11.0+16` / `2.11.0`.
+- [x] Complete V2.11 accessibility, user, developer, testing, privacy/security, support, release, and repository metadata documentation.
+- [x] No persistence-format, telemetry, application-network, or runtime-dependency expansion.
+
 ## Future 2.x direction
 
 Possible future work includes:
@@ -280,8 +297,6 @@ Possible future work includes:
 - Additional built-in ranker implementations driven by demonstrated ranking needs.
 - Trusted plugin-loading designs with explicit security boundaries.
 - Cross-platform desktop/mobile packaging, signing, and release automation.
-- Repeatable performance benchmarking for very large documents, kept separate from correctness metadata and without persisted document content.
-- Broader accessibility regression coverage for large limited-result dialogs and keyboard-only review.
 - Future 2.x milestones should continue to be selected from demonstrated user/contributor workflows rather than adding network behavior by default.
 
 Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented, reviewed, and user-controlled.
