@@ -95,6 +95,11 @@ class AnalysisBenchmarkRunner {
       maxIssues: scenario.writingIssueLimit,
     );
     writingWatch.stop();
+    final writingTotals = writing.totalIssueCountByRule!;
+    final completeWritingTotals = <String, int>{
+      for (final ruleId in writing.analyzedRuleIds)
+        ruleId: writingTotals[ruleId] ?? 0,
+    };
 
     return AnalysisBenchmarkSample(
       index: index,
@@ -107,7 +112,7 @@ class AnalysisBenchmarkRunner {
       writingTotalIssueCount: writing.totalIssueCount!,
       writingTruncated: writing.isTruncated,
       writingAnalyzedRuleIds: writing.analyzedRuleIds,
-      writingTotalIssueCountByRule: writing.totalIssueCountByRule!,
+      writingTotalIssueCountByRule: completeWritingTotals,
     );
   }
 }
