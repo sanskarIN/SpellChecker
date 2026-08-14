@@ -360,3 +360,7 @@ Testing must preserve this real interaction model rather than making every off-s
 ### Live changes
 
 Review search/filter changes operate on retained findings. When a filtered limited result becomes empty, the empty-state explanation includes the exact uncaptured count when available so assistive-technology users are not told that the whole document has no matching findings.
+
+## V2.9 IME composition hardening
+
+When Flutter reports a valid active IME composing range, the editor delegates text-span construction to Flutter's native composing renderer instead of replacing it with spelling-highlight spans. This keeps composition feedback visible for keyboard/input-method users. After composition is committed, normal checked spelling underlines and active-issue styling resume from current issue state.
