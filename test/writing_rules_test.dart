@@ -120,10 +120,7 @@ void main() {
     test('rejects duplicate rule identifiers', () {
       expect(
         () => WritingAnalyzer(
-          rules: const <WritingRule>[
-            RepeatedSpaceRule(),
-            RepeatedSpaceRule(),
-          ],
+          rules: const <WritingRule>[RepeatedSpaceRule(), RepeatedSpaceRule()],
         ),
         throwsArgumentError,
       );
