@@ -517,3 +517,9 @@ Prefer the V2.9 metadata-only summary or a synthetic minimal example. Do not att
 If the benchmark command rejects an option, run `dart run tool/benchmark_large_document.dart --help` and use the documented `--name=value` forms. Repeated options are rejected deliberately, numeric bounds/iteration counts must satisfy their positive/non-negative contracts, and language IDs are limited to the built-in `en-US` / `en-GB` packs.
 
 If analysis outcomes differ between measured samples, treat that as a determinism defect and report the exact commit/command using synthetic data. If only elapsed times differ, first compare Flutter/Dart versions, hardware, runtime load, build/runtime mode, options, and commit; timing variation alone is expected and is not a normal correctness failure.
+
+## Missing punctuation space is not reported
+
+First confirm **Missing punctuation space** is enabled in Writing insights. A user with an explicit pre-V2.11 rule override does not automatically gain the new ID; reset rules to defaults if current defaults are desired.
+
+The rule intentionally ignores periods/colons, numbers/non-letter neighbors, already-spaced punctuation, and repeated punctuation. `example.com`, `mailto:user@example.com`, `12:30`, `1,000`, and `Really??Yes` are therefore not V2.11 missing-space findings by design. Re-run analysis after correcting repeated punctuation if a single-punctuation missing-space boundary becomes exposed.
