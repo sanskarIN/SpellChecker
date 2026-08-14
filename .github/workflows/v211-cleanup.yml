@@ -44,8 +44,8 @@ jobs:
           path = Path('docs/ROADMAP.md')
           text = path.read_text()
           bullets = [
-              '- Richer deterministic writing-rule catalogue with explicit source-range ownership and stable IDs.\n',
-              '- Repeatable performance benchmarking across representative large-document corpora.\n',
+              '- Richer deterministic writing-rule catalogues with explicit source-range ownership tests.\n',
+              '- Repeatable performance benchmarking for very large documents, kept separate from correctness metadata and without persisted document content.\n',
           ]
           for bullet in bullets:
               count = text.count(bullet)
