@@ -77,7 +77,8 @@ void main() {
         throwsArgumentError,
       );
       expect(
-        () => AnalysisBenchmarkOptions.parse(const <String>['--suggestions=-1']),
+        () =>
+            AnalysisBenchmarkOptions.parse(const <String>['--suggestions=-1']),
         throwsArgumentError,
       );
     });
