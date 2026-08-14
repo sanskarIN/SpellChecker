@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.10 release candidate:
+Current V2.11 release candidate:
 
 ```text
-2.10.0+15
+2.11.0+16
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -230,8 +230,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.10.0 -m "SpellChecker v2.10.0"
-git push origin v2.10.0
+git tag -a v2.11.0 -m "SpellChecker v2.11.0"
+git push origin v2.11.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -401,3 +401,9 @@ git push origin v2.8.0
 Before tagging V2.10, verify package/About versions `2.10.0+15` / `2.10.0`; deterministic scenario generation and option validation; immutable/stable benchmark result aggregation; US/UK runner coverage; human/JSON report exclusion of corpus text; formatter coverage for `tool/`; the threshold-free benchmark smoke command in both CI and release workflows; unchanged runtime dependencies/persistence formats; complete regression tests; and `flutter build web --release`.
 
 Run the documented benchmark command on synthetic data only and record the exact command plus Flutter/Dart versions when publishing comparative timing evidence. Do not fail a release merely because machine-dependent elapsed values differ from another machine. Confirm no temporary V2.10 synchronization/validation workflow remains in the release tree before tagging.
+
+## V2.11 missing punctuation space release checks
+
+Before tagging V2.11 verify `2.11.0+16` / About `2.11.0`; seven built-in/default rule IDs; conservative punctuation exclusions; Unicode/source-range behavior; repeated-punctuation ownership; adjacent batch composition; bounded exact totals; unset/default versus explicit-six/explicit-empty preference behavior; Writing-insights widget behavior; seven-rule benchmark metadata; complete format/analyze/test/benchmark smoke; lockfile stability; and `flutter build web --release`.
+
+Confirm no temporary `v211-*` helper workflow remains in the release tree and update `what_changed.md` with exact final CI/release evidence before merge.
