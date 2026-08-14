@@ -482,3 +482,9 @@ For V2.9-sensitive changes, preserve the metadata-only diagnostic-summary bounda
 ## V2.10 benchmark contributions
 
 Benchmark changes must preserve synthetic-only corpus generation, report-text exclusion, fixed benchmark spelling metadata unless intentionally versioned, strict option validation, and threshold-free normal CI. Include focused tests for corpus/result/options/report changes. If the JSON shape changes incompatibly, advance its format version and document migration/consumer impact. Do not add real user documents, private corpora, network telemetry, automatic result upload, or machine-specific pass/fail timing thresholds to normal project validation.
+
+## V2.11 accessibility regression expectations
+
+Changes to Writing insights focus, shortcuts, filters, semantics, or dialog layout should preserve the V2.11 keyboard contract and add/update focused widget coverage. Keep pointer/touch-visible equivalents for shortcuts; do not make lazy dialog content eager solely for tests. Exercise Ctrl/Command+F, first/second Escape semantics, transient-versus-persisted state, and screen-reader count meaning when affected.
+
+Benchmark changes must keep exact deterministic outcome metadata internally consistent. Per-rule total maps now cover every analyzed rule, including zero-count rules, while elapsed timing remains unsuitable as an ordinary CI correctness threshold.

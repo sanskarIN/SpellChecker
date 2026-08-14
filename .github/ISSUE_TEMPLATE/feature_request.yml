@@ -86,3 +86,6 @@ body:
 
 # V2.10 benchmark note
 # Benchmark/tooling proposals should preserve generated synthetic inputs by default, distinguish deterministic outcome regressions from machine-dependent elapsed-time variation, and version incompatible report-format changes explicitly.
+
+# V2.11 accessibility design note
+# Writing insights interaction proposals should preserve visible equivalents for shortcuts, deterministic transient-filter versus close behavior, lazy-list reachability, and descriptive live semantics without persisting review queries by default.

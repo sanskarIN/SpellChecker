@@ -386,3 +386,14 @@ The V2.10 large-document benchmark is developer-run tooling under `tool/`. It ge
 Human and JSON benchmark reports serialize scenario shape, language ID, analysis counts/states, iteration counts, and elapsed microseconds. They deliberately do not serialize the generated corpus text. The benchmark does not persist reports automatically or upload them; shell redirection or external CI artifact handling is controlled by the person/build environment invoking the command.
 
 Benchmark timing can reveal machine/toolchain characteristics, so public reports should include only the minimum environment metadata needed for reproducibility and should never contain private user documents. V2.10 adds no application runtime telemetry, analytics, account behavior, network request, preference key, document persistence, or runtime dependency.
+
+## V2.11 keyboard-review privacy boundary
+
+V2.11 adds keyboard focus/clearing behavior and live semantic count labels to the existing local Writing insights dialog. It does not introduce a new data source or destination.
+
+- Ctrl/Command+F moves focus to the existing local search field; it does not invoke browser search, a remote service, clipboard access, or telemetry.
+- Escape clears transient review search/categories/automatic-fix filtering in memory before closing; those filters remain absent from preferences and Portable settings.
+- Live semantic labels contain counts/status metadata, not editor text, finding excerpts, replacements, personal vocabulary, or correction history.
+- Runtime capture-limit validation processes only the supplied integer configuration.
+
+The existing explicit Copy diagnostic summary action remains the only V2.9+ Writing insights clipboard path and still copies only the documented metadata-only diagnostic representation after a user action.

@@ -518,3 +518,16 @@ For the release candidate, run the normal format/analyze/full-test gate and `flu
 Benchmark tooling is tested as correctness infrastructure, not with wall-clock thresholds. The V2.10 suite covers deterministic corpus generation and metadata privacy, scenario bound validation, sample/result invariants, odd/even median aggregation, immutable samples, stable outcome validation across iterations, runner behavior for US/UK packs, strict CLI parsing, human/JSON corpus-text exclusion, help/error exits, and a small end-to-end JSON command run.
 
 Permanent CI formatting now includes `tool/`, then runs `flutter analyze`, the complete Flutter test suite, and a tiny synthetic benchmark CLI smoke command. The release workflow repeats those checks before the web build. Timing values themselves must not become pass/fail expectations unless the project later establishes a controlled benchmark environment with an explicitly reviewed policy.
+
+## V2.11 focused accessibility coverage
+
+V2.11 adds two focused suites:
+
+```bash
+flutter test test/v211_writing_keyboard_test.dart --reporter expanded
+flutter test test/v211_writing_semantics_test.dart --reporter expanded
+```
+
+They protect Ctrl+F focus routing, two-stage Escape behavior, combined category/automatic-fix clearing, focus restoration, release-mode dialog-bound validation, live rule counts, live complete/limited finding counts, and lazy-list-safe semantics discovery. Tests must scroll the real Writing insights `ListView`; they must not assume every off-screen control remains mounted.
+
+V2.11 also extends `analysis_benchmark_result_test.dart` and `analysis_benchmark_runner_test.dart` so exact per-rule benchmark totals cover every analyzed rule and clean/zero-finding rules appear explicitly with a zero count. The complete repository gate remains `dart format`, `flutter analyze`, the full `flutter test` suite, and the benchmark CLI smoke command; release validation also checks lockfile cleanliness and `flutter build web --release`.

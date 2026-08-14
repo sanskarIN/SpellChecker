@@ -571,3 +571,15 @@ Diagnostics describe one analysis snapshot. After changing editor text, language
 ## V2.10 developer benchmark note
 
 V2.10's large-document benchmark is repository developer tooling, not an editor feature. Regular SpellChecker use does not require running it and no benchmark control appears in the application UI. Maintainers/contributors who need controlled synthetic performance comparisons should use `tool/benchmark_large_document.dart` and the dedicated [V2.10 benchmark guide](V2_10_BENCHMARK.md). The command does not read the current editor document.
+
+## V2.11 keyboard-first Writing insights review
+
+Open Writing insights with the app-bar action or `Ctrl/Command+Shift+Enter`. While the dialog is open:
+
+- Press `Ctrl+F` (or `Command+F`) to move directly to **Search rules and findings**.
+- If review search, category filters, or **Automatic fixes only** is active, press Escape once to clear those temporary filters and keep the dialog open.
+- Press Escape when no temporary review filter is active to close Writing insights.
+
+After the first Escape clears filters, focus returns to review search so you can type a new query immediately. Enabled writing-rule switches are separate persistent per-language settings and are not cleared by this shortcut.
+
+Rule and finding count changes are exposed as live accessibility state. For limited analysis, the announcement distinguishes visible findings from the captured prefix and exact total when available. Filters and fixes still operate only on captured findings; live totals do not authorize fixes to uncaptured content.

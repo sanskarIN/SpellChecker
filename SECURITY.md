@@ -309,3 +309,9 @@ The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. 
 The V2.10 benchmark is source-controlled developer tooling, not an application service, plugin loader, or execution sandbox. CLI values are parsed as validated integer/language configuration and are not evaluated as code. Unsupported language IDs and malformed/duplicate options are rejected.
 
 The benchmark uses generated synthetic text and fixed in-process dictionary metadata. It does not automatically read arbitrary document paths, execute imported content, contact a remote endpoint, write preferences, or upload results. Timing numbers are descriptive machine-local measurements and must not be treated as a security/resource guarantee. Untrusted third-party rule code or arbitrarily large externally supplied documents remain outside this benchmark's threat/resource boundary.
+
+## V2.11 keyboard and semantics security boundary
+
+V2.11 keyboard shortcuts operate only inside the local Writing insights widget tree. Ctrl/Command+F requests focus on an existing `FocusNode`; Escape changes transient in-memory review state or closes the modal. Neither shortcut evaluates user input as code, launches a URL, reads arbitrary files, escalates permissions, accesses credentials, or introduces a network/telemetry path.
+
+Live semantic labels expose count/status metadata already derived in memory. They do not include editor text, finding excerpts, replacements, personal vocabulary, ignored words, or correction snapshots. Runtime validation rejects invalid non-positive dialog capture limits before analysis begins.

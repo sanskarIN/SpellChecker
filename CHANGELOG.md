@@ -4,6 +4,31 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.11.0] - 2026-08-14
+
+### Added
+
+- Keyboard-first Writing insights search focus with `Ctrl+F` and `Command+F` routed to the existing transient review-search field.
+- Deterministic two-stage Escape behavior: clear active review search/category/automatic-fix filters first, then close when the transient query is empty.
+- Focus anchoring inside the Writing insights shortcut scope so modal keyboard bindings remain reachable as focus moves among controls.
+- Live semantic labels for visible/total rule counts and complete/limited finding-count relationships.
+- Dedicated V2.11 keyboard and semantics widget suites that preserve the real lazy `ListView` interaction model.
+- Explicit zero-count entries for every analyzed writing rule in deterministic benchmark samples.
+
+### Changed
+
+- Package version advances to `2.11.0+16`; About version advances to `2.11.0`.
+- `WritingInsightsDialog` now rejects non-positive `maxIssues` values through runtime `ArgumentError` validation instead of relying on debug-only enforcement.
+- Benchmark sample validation now requires exact per-rule totals to cover the complete analyzed-rule set, while the runner materializes omitted analyzer zero counts as explicit zeros.
+- Accessibility, API, architecture, development, performance, privacy, release, testing, troubleshooting, user, writing-rule, security, support, contributor, roadmap, issue-template, and pull-request documentation are synchronized with V2.11.
+
+### Compatibility, security, privacy, and validation
+
+- Writing-rule IDs, language IDs, correction algorithms, bounded captured-only safety, persisted rule preferences, Portable settings, personal dictionaries, diagnostic-summary format, and benchmark JSON format remain compatible.
+- Review search, category selection, and automatic-fix filtering remain transient and are not added to persistence or transfer formats.
+- V2.11 adds no runtime dependency, telemetry, account behavior, cloud writing service, document persistence, background upload, or application network request.
+- Benchmark timings remain machine/toolchain observations rather than correctness thresholds.
+
 ## [2.10.0] - 2026-08-14
 
 ### Added

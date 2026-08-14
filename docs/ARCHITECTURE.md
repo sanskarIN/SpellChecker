@@ -901,3 +901,11 @@ The summary model belongs to the writing layer and introduces no storage, UI, cl
 V2.10 adds a developer-tooling layer under `tool/`; it is intentionally outside the application runtime and public package barrels. The benchmark scenario owns deterministic synthetic corpus shape, the runner composes existing public spelling/writing APIs with fresh per-sample state, result models own immutable timing/outcome aggregation and versioned JSON serialization, the reporter owns terminal rendering, and the command/options layer owns CLI validation.
 
 This direction keeps performance observation separate from production `SpellCheckReport` and `WritingAnalysisResult` correctness metadata: runtime analysis models remain deterministic and timing-free, while developer tooling may measure elapsed wall-clock time externally. No storage adapter, editor widget, persisted key, network boundary, or rule/ranker plugin contract is added by V2.10.
+
+## V2.11 Writing insights focus and semantics boundary
+
+The Writing insights dialog keeps one transient `WritingReviewQuery` projection over the existing analyzer result. V2.11 adds interaction state around that model, not a second review engine. `CallbackShortcuts` owns Ctrl/Command+F and Escape, while a focus anchor inside the shortcut subtree ensures those bindings remain available as focus moves among modal descendants. The search shortcut requests focus on the existing search `FocusNode`; it does not copy or persist the query.
+
+Escape delegates to a single handler. A non-empty transient query is cleared in one state transition and search focus is restored. An already-empty query closes through the same `_close()` result construction used by the visible Close action, preserving enabled-rule result semantics.
+
+Rule/finding count semantics are derived during the same build from `visibleRules`, `visibleIssues`, and the existing bounded-analysis metadata. They do not add storage, asynchronous analysis, telemetry, or a parallel count cache. The dialog's capture limit is validated before state creation so invalid bounds cannot reach analysis in release builds.

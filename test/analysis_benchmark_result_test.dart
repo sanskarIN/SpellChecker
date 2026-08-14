@@ -165,6 +165,16 @@ void main() {
         ),
         throwsArgumentError,
       );
+      expect(
+        () => sample(
+          index: 0,
+          spellingMicros: 1,
+          writingMicros: 1,
+          writingAnalyzedRuleIds: const <String>['rule-a', 'rule-b'],
+          writingTotalsByRule: const <String, int>{'rule-a': 9},
+        ),
+        throwsArgumentError,
+      );
     });
   });
 

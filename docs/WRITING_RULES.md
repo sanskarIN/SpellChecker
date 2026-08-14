@@ -670,3 +670,11 @@ V2.9 also exports `WritingAnalysisDiagnosticSummary` / `WritingRuleDiagnosticSum
 The V2.10 benchmark constructs the normal `WritingAnalyzer()` and therefore exercises the current built-in deterministic registry against generated synthetic text. It does not add, remove, rename, enable, persist, or dynamically load a writing rule. All six existing stable IDs/defaults and their source-range/correction contracts remain unchanged.
 
 The benchmark records only captured/exact-total/truncated writing outcome metadata and elapsed time. It does not serialize `WritingIssue` source text/messages into the benchmark report and does not convert writing `maxIssues` into a CPU-time guarantee.
+
+## V2.11 review interaction hardening
+
+V2.11 changes how users navigate/filter Writing insights, not how writing rules match text. Rule IDs, categories, language support, source ranges, replacement metadata, analyzer ordering, bounded capture, and correction safety are unchanged.
+
+The dialog's Ctrl/Command+F shortcut focuses the existing `WritingReviewQuery.search` input. Escape clears the complete transient query projection (search, categories, automatic-fixes-only) before closing on a subsequent empty-query Escape. This does not mutate `_enabledRuleIds`; per-language enabled-rule preferences remain the established persistent model.
+
+Visible rule/finding counts are live semantics derived from the current query. In limited results, exact overall/per-rule diagnostics remain informational while filtering and automatic fixes stay scoped to retained `WritingIssue` objects.

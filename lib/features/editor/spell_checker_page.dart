@@ -717,12 +717,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '2.10.0',
+      applicationVersion: '2.11.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, deterministic extensible suggestion ranking, bounded large-document spelling and Writing insights results with exact local finding diagnostics, expanded deterministic local writing rules, temporary review presets/search/filters, portable non-document preferences, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows, and undo-friendly corrections.',
+          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, deterministic extensible suggestion ranking, bounded large-document spelling and Writing insights results with exact local finding diagnostics, expanded deterministic local writing rules, temporary review presets/search/filters, portable non-document preferences, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows including keyboard-first Writing insights search/filter review, live accessibility semantics, and undo-friendly corrections.',
         ),
       ],
     );

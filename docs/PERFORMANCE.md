@@ -234,3 +234,9 @@ Every sample creates a fresh `SpellCheckerEngine` and `WritingAnalyzer`. Warmup 
 Min/median/max timings are descriptive only. They vary with hardware, operating system, Flutter/Dart version, process scheduling, build/runtime mode, and other machine conditions. CI therefore executes a small smoke scenario solely to prove the benchmark command and report path work; it does not compare timing values against a threshold.
 
 For comparisons, keep the command/options, Flutter/Dart versions, machine/runtime mode, and repository commit constant. Prefer multiple measured iterations and compare medians. Never replace the built-in synthetic corpus with private user documents for public benchmark reports.
+
+## V2.11 accessibility and benchmark-total impact
+
+V2.11 does not increase spelling or writing capture limits and does not add another analysis pass. Keyboard focus handling and live semantic count labels are computed from the already available dialog query/analysis state. The existing 200-finding Writing insights capture policy and captured-only limited-review behavior remain unchanged.
+
+The benchmark runner now builds a complete exact per-rule total map by adding zero entries for analyzed rules omitted from `WritingAnalysisResult.totalIssueCountByRule`. With the six built-in rules this is a tiny bounded metadata normalization step; it does not retain additional findings or alter timing-threshold policy. Benchmark elapsed times remain descriptive machine/toolchain observations, not correctness gates.

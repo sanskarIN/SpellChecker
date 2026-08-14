@@ -517,3 +517,17 @@ Prefer the V2.9 metadata-only summary or a synthetic minimal example. Do not att
 If the benchmark command rejects an option, run `dart run tool/benchmark_large_document.dart --help` and use the documented `--name=value` forms. Repeated options are rejected deliberately, numeric bounds/iteration counts must satisfy their positive/non-negative contracts, and language IDs are limited to the built-in `en-US` / `en-GB` packs.
 
 If analysis outcomes differ between measured samples, treat that as a determinism defect and report the exact commit/command using synthetic data. If only elapsed times differ, first compare Flutter/Dart versions, hardware, runtime load, build/runtime mode, options, and commit; timing variation alone is expected and is not a normal correctness failure.
+
+## V2.11 Writing insights keyboard review
+
+### Ctrl/Command+F does not focus review search
+
+Confirm Writing insights is the active modal and keyboard focus is inside it. V2.11 routes Ctrl+F and Command+F to **Search rules and findings** only while that dialog owns focus; the shortcut does not replace browser/application find outside the modal. The visible search field remains available for pointer/touch access.
+
+### Escape did not close Writing insights
+
+If search text, a category filter, or **Automatic fixes only** is active, the first Escape intentionally clears that transient review query and keeps the dialog open. Search focus is restored. Press Escape again after the query is empty to close. Enabled writing-rule switches are not review filters and are not reset by Escape.
+
+### A rule/finding count is not immediately present in a widget test
+
+Writing insights uses a lazy `ListView`. Scroll until the keyed semantics node is built before inspecting it. Scrolling to another distant child can unmount the first; assert each lazy target while it is mounted.
