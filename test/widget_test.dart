@@ -139,4 +139,16 @@ void main() {
     expect(find.text('Personal dictionary — English (US)'), findsOneWidget);
     expect(find.text('flutter'), findsOneWidget);
   });
+
+  testWidgets('About dialog reports the current V2.9 release', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('About SpellChecker'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('2.9.0'), findsOneWidget);
+  });
 }
