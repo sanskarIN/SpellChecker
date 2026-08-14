@@ -5,6 +5,15 @@ import '../tool/benchmark/analysis_benchmark_runner.dart';
 import '../tool/benchmark/analysis_benchmark_scenario.dart';
 
 void main() {
+  const expectedWritingRuleIds = <String>[
+    'punctuation-spacing',
+    'repeated-punctuation',
+    'repeated-space',
+    'repeated-word',
+    'sentence-capitalization',
+    'trailing-whitespace',
+  ];
+
   group('AnalysisBenchmarkRunner', () {
     test('runs deterministic bounded spelling and writing analysis', () {
       final scenario = AnalysisBenchmarkScenario(
@@ -20,21 +29,24 @@ void main() {
         warmupIterations: 1,
         measuredIterations: 2,
       ).run();
+      final sample = summary.representativeSample;
 
       expect(summary.languageId, 'en-US');
       expect(summary.samples, hasLength(2));
-      expect(summary.representativeSample.spellingCapturedIssueCount, 2);
-      expect(summary.representativeSample.spellingTruncated, isTrue);
+      expect(sample.spellingCapturedIssueCount, 2);
+      expect(sample.spellingTruncated, isTrue);
+      expect(sample.spellingScannedTokenCount, greaterThan(2));
+      expect(sample.writingCapturedIssueCount, 5);
+      expect(sample.writingTotalIssueCount, greaterThan(5));
+      expect(sample.writingTruncated, isTrue);
+      expect(sample.writingAnalyzedRuleIds, expectedWritingRuleIds);
       expect(
-        summary.representativeSample.spellingScannedTokenCount,
-        greaterThan(2),
+        sample.writingTotalIssueCountByRule.values.fold<int>(
+          0,
+          (total, value) => total + value,
+        ),
+        sample.writingTotalIssueCount,
       );
-      expect(summary.representativeSample.writingCapturedIssueCount, 5);
-      expect(
-        summary.representativeSample.writingTotalIssueCount,
-        greaterThan(5),
-      );
-      expect(summary.representativeSample.writingTruncated, isTrue);
       expect(
         summary.medianSpellingElapsed,
         isNot(const Duration(microseconds: -1)),
@@ -60,13 +72,19 @@ void main() {
           warmupIterations: 0,
           measuredIterations: 1,
         ).run();
+        final sample = summary.representativeSample;
 
         expect(summary.languageId, 'en-GB');
-        expect(summary.representativeSample.spellingCapturedIssueCount, 1);
-        expect(summary.representativeSample.spellingTruncated, isFalse);
+        expect(sample.spellingCapturedIssueCount, 1);
+        expect(sample.spellingTruncated, isFalse);
+        expect(sample.writingTotalIssueCount, greaterThan(0));
+        expect(sample.writingAnalyzedRuleIds, expectedWritingRuleIds);
         expect(
-          summary.representativeSample.writingTotalIssueCount,
-          greaterThan(0),
+          sample.writingTotalIssueCountByRule.values.fold<int>(
+            0,
+            (total, value) => total + value,
+          ),
+          sample.writingTotalIssueCount,
         );
       },
     );
