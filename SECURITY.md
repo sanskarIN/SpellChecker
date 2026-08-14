@@ -309,3 +309,9 @@ The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. 
 The V2.10 benchmark is source-controlled developer tooling, not an application service, plugin loader, or execution sandbox. CLI values are parsed as validated integer/language configuration and are not evaluated as code. Unsupported language IDs and malformed/duplicate options are rejected.
 
 The benchmark uses generated synthetic text and fixed in-process dictionary metadata. It does not automatically read arbitrary document paths, execute imported content, contact a remote endpoint, write preferences, or upload results. Timing numbers are descriptive machine-local measurements and must not be treated as a security/resource guarantee. Untrusted third-party rule code or arbitrarily large externally supplied documents remain outside this benchmark's threat/resource boundary.
+
+## V2.11 punctuation-space correction boundary
+
+`MissingPunctuationSpaceRule` is source-controlled compiled Dart code and cannot execute document content. The automatic fix owns the existing punctuation character, allowing unchanged `WritingCorrection` exact-source validation before mutation.
+
+Periods/colons and repeated punctuation are deliberately outside the rule's ownership, reducing ambiguous correction scope. Before-punctuation whitespace and after-punctuation insertion use adjacent non-overlapping source ranges, so batch correction retains existing deterministic ordering/stale/overlap protections. No dynamic rule loading, permission, remote service, telemetry, or new persistence/security boundary is added.
