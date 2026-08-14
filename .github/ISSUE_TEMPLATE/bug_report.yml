@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v2.10.0 or commit SHA
+      placeholder: v2.11.0 or commit SHA
     validations:
       required: true
   - type: input
@@ -44,6 +44,7 @@ body:
         - Spell checking or suggestions
         - Language selection / language packs
         - Writing insights / local writing rules
+        - V2.11 Writing insights keyboard / accessibility review
         - Writing analysis diagnostics / exact finding counts
         - V2.10 deterministic benchmark tooling / report
         - Writing rule preference persistence
@@ -128,7 +129,7 @@ body:
     id: editor_context
     attributes:
       label: Editor and keyboard context
-      description: If relevant, include the exact shortcut/control, issue count/position, whether the visible equivalent works, whether text changed after checking/analysis, and whether the problem occurred before or after Undo. Use synthetic text only.
+      description: If relevant, include the exact shortcut/control, focused control, Ctrl/Command+F or Escape behavior, active transient review filters, issue count/position, whether the visible equivalent works, whether text changed after checking/analysis, and whether the problem occurred before or after Undo. Use synthetic text only.
   - type: textarea
     id: persistence
     attributes:
@@ -159,3 +160,6 @@ body:
 
 # V2.10 benchmark note
 # Benchmark reports must describe only the built-in synthetic corpus shape, analysis outcomes, and machine-dependent timings. Never benchmark or attach private user documents in a public issue.
+
+# V2.11 accessibility note
+# For Writing insights keyboard/semantics bugs, include focus location, Ctrl/Command+F behavior, first/second Escape behavior, and synthetic visible/captured/total counts. Do not paste private document text.
