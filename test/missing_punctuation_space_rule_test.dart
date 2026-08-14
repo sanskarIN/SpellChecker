@@ -98,13 +98,11 @@ void main() {
       expect(issue.end, 6);
       expect(issue.originalText, ',');
       expect(issue.replacement, ', ');
-      expect(
-        WritingCorrection.apply(text, issue),
-        const WritingCorrectionResult(
-          text: 'Hello, world',
-          applied: true,
-        ),
-      );
+
+      final correction = WritingCorrection.apply(text, issue);
+      expect(correction.applied, isTrue);
+      expect(correction.text, 'Hello, world');
+      expect(correction.caretOffset, 7);
     });
   });
 }
