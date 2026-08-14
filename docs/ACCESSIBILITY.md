@@ -370,3 +370,7 @@ When Flutter reports a valid active IME composing range, the editor delegates te
 V2.10 adds no new in-app control, focus target, gesture, color-only indicator, or keyboard shortcut. The benchmark is a developer CLI and its human-readable mode uses plain text labels for scenario shape, analysis outcomes, and timing aggregates. `--help` exposes the supported command options without requiring the graphical application.
 
 The existing app accessibility contract remains unchanged; release-version metadata is the only app-visible V2.10 change. Any future in-app performance/diagnostic UI would require a separate accessibility review rather than inheriting the CLI contract automatically.
+
+## V2.11 Writing insights accessibility
+
+V2.11 adds no new standalone app control or keyboard shortcut. The new rule appears through the existing labeled `SwitchListTile` rule-management UI and ordinary writing finding/fix controls, so rule name, message, source range, automatic fix, filters, batch behavior, and keyboard-open workflow inherit the existing Writing-insights semantics. The About version is the only unrelated app-visible metadata change.
