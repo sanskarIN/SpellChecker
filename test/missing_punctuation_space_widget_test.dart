@@ -66,7 +66,10 @@ void main() {
     expect(tester.widget<SwitchListTile>(ruleSwitch).value, isTrue);
 
     await scrollToFindings(tester);
-    expect(find.text('Add a space after this punctuation mark.'), findsOneWidget);
+    expect(
+      find.text('Add a space after this punctuation mark.'),
+      findsOneWidget,
+    );
     expect(find.text('Apply safe fix'), findsOneWidget);
     await tester.tap(find.text('Apply safe fix'));
     await tester.pumpAndSettle();
