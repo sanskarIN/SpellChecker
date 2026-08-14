@@ -306,6 +306,6 @@ The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. 
 
 ## V2.10 benchmark security boundary
 
-The V2.10 benchmark is source-controlled developer tooling, not an application service, plugin loader, or execution sandbox. CLI values are parsed as bounded integer/language configuration and are not evaluated as code. Unsupported language IDs and malformed/duplicate options are rejected.
+The V2.10 benchmark is source-controlled developer tooling, not an application service, plugin loader, or execution sandbox. CLI values are parsed as validated integer/language configuration and are not evaluated as code. Unsupported language IDs and malformed/duplicate options are rejected.
 
 The benchmark uses generated synthetic text and fixed in-process dictionary metadata. It does not automatically read arbitrary document paths, execute imported content, contact a remote endpoint, write preferences, or upload results. Timing numbers are descriptive machine-local measurements and must not be treated as a security/resource guarantee. Untrusted third-party rule code or arbitrarily large externally supplied documents remain outside this benchmark's threat/resource boundary.
