@@ -153,13 +153,17 @@ void main() {
           sample(index: 0, spellingMicros: 12, writingMicros: 34),
         ],
       );
-      final decoded = jsonDecode(summary.toPrettyJson()) as Map<String, dynamic>;
+      final decoded =
+          jsonDecode(summary.toPrettyJson()) as Map<String, dynamic>;
 
       expect(decoded['formatVersion'], AnalysisBenchmarkSummary.formatVersion);
       expect(decoded['language'], 'en-US');
       expect(decoded['warmupIterations'], 2);
       expect(decoded['measuredIterations'], 1);
-      expect(summary.toPrettyJson(), isNot(contains('do-not-export-this-text')));
+      expect(
+        summary.toPrettyJson(),
+        isNot(contains('do-not-export-this-text')),
+      );
     });
   });
 }
