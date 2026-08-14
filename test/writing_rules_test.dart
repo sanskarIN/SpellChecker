@@ -136,7 +136,7 @@ void main() {
 
       expect(result.languageId, 'en-US');
       expect(result.isClean, isFalse);
-      expect(result.analyzedRuleIds, hasLength(6));
+      expect(result.analyzedRuleIds, hasLength(7));
       expect(
         result.issues.map((issue) => issue.start),
         orderedEquals(
@@ -148,20 +148,29 @@ void main() {
       expect(result.issueCountByRule['repeated-space'], 1);
       expect(result.issueCountByRule['repeated-punctuation'], 1);
       expect(result.issueCountByRule['punctuation-spacing'], isNull);
+      expect(result.issueCountByRule['missing-punctuation-space'], isNull);
       expect(result.issueCountByRule['trailing-whitespace'], isNull);
     });
 
     test('new rules are enabled by default and address mixed mechanics', () {
       final analyzer = WritingAnalyzer();
 
-      final result = analyzer.analyze('Hello  !\nWorld  ', languagePack: pack);
+      final result = analyzer.analyze(
+        'Hello  !\nWorld  \nAgain,here',
+        languagePack: pack,
+      );
 
       expect(
         result.analyzedRuleIds,
-        containsAll(<String>{'punctuation-spacing', 'trailing-whitespace'}),
+        containsAll(<String>{
+          'punctuation-spacing',
+          'missing-punctuation-space',
+          'trailing-whitespace',
+        }),
       );
       expect(result.issueCountByRule['punctuation-spacing'], 1);
-      expect(result.issueCountByRule['trailing-whitespace'], 1);
+      expect(result.issueCountByRule['missing-punctuation-space'], 1);
+      expect(result.issueCountByRule['trailing-whitespace'], 2);
     });
 
     test('can disable all but one rule', () {
@@ -182,6 +191,7 @@ void main() {
       const rules = <WritingRule>[
         RepeatedWordRule(),
         PunctuationSpacingRule(),
+        MissingPunctuationSpaceRule(),
         TrailingWhitespaceRule(),
       ];
 
@@ -197,12 +207,20 @@ void main() {
         isA<PunctuationSpacingRule>(),
       );
       expect(
+        WritingRuleRegistry.byId('missing-punctuation-space'),
+        isA<MissingPunctuationSpaceRule>(),
+      );
+      expect(
         WritingRuleRegistry.byId('trailing-whitespace'),
         isA<TrailingWhitespaceRule>(),
       );
       expect(
         WritingRuleRegistry.defaultEnabledRuleIds,
-        containsAll(<String>{'punctuation-spacing', 'trailing-whitespace'}),
+        containsAll(<String>{
+          'punctuation-spacing',
+          'missing-punctuation-space',
+          'trailing-whitespace',
+        }),
       );
     });
   });
