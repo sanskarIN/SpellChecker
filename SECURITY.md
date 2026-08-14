@@ -299,3 +299,7 @@ Applications embedding SpellChecker with untrusted documents or third-party rule
 Exact totals and per-rule totals are memory-only and are not automatically logged, persisted, uploaded, or exported. A future diagnostic/crash-report feature must treat them as document-derived metadata and must not silently transmit them with user text or source excerpts.
 
 The repository's Buy Me a Coffee link does not change security-reporting priority, disclosure handling, maintainer trust boundaries, or project governance.
+
+## V2.9 diagnostic-summary security boundary
+
+The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. It does not read or serialize editor text, finding excerpts/messages, replacements, source offsets, personal vocabulary, correction history, timestamps, device identifiers, or network metadata. It adds no automatic clipboard write, persistence, transport, telemetry, or remote logging behavior. Future UI/file/network transport of diagnostics requires separate security/privacy review and must not silently substitute raw `WritingIssue` data for the safe summary.
