@@ -19,6 +19,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Bounded large-document spelling analysis with an explicit first-200 issue UI policy and safe limited-result messaging.
 - Bounded Writing insights analysis with an explicit first-200 finding policy, exact observed/per-rule totals, captured/total diagnostics, and captured-only limited-review/fix semantics.
 - Deterministic privacy-safe V2.9 writing-analysis diagnostic summaries containing counts and rule metadata only.
+- Developer-run V2.10 deterministic large-document benchmark tooling with synthetic corpus generation, versioned JSON/human reports, and CI smoke coverage.
 - Optional local **Writing insights** with configurable deterministic rules.
 
 - Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
@@ -57,9 +58,29 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.9.0+14`
+`2.10.0+15`
 
-Version 2.9 is the **Shareable Writing-Analysis Diagnostics** release. It adds a deterministic `WritingAnalysisDiagnosticSummary` layer over V2.8 exact finding counts so bug reports, performance investigations, and support discussions can share language, capture-state, count, and rule metadata without serializing editor text, finding excerpts/messages, replacements, or source offsets. The V2.9 hardening pass also closes release-only invariant gaps, preserves active IME composing spans, aligns Unicode word statistics with spelling tokenization, normalizes custom frequency metadata, and removes obsolete reconciliation workflows.
+Version 2.10 is the **Deterministic Large-Document Benchmarking** release. It adds a developer-run synthetic benchmark harness for bounded spelling and writing analysis, immutable timing/outcome summaries, stable versioned JSON and human-readable reports, strict CLI validation, and permanent CI/release smoke coverage. The benchmark never reads editor documents, adds no telemetry or persistence, and does not turn machine-dependent timing values into correctness thresholds.
+
+## Deterministic large-document benchmark — V2.10
+
+V2.10 adds a developer-run benchmark target built from generated synthetic text and a fixed benchmark dictionary/frequency table, so corpus shape and spelling eligibility remain stable when bundled dictionaries evolve. Each measured iteration creates fresh spelling/analyzer state and records bounded spelling scan metadata plus exact writing-analysis totals.
+
+```bash
+dart run tool/benchmark_large_document.dart \
+  --repeats=2000 \
+  --warmup=1 \
+  --iterations=5 \
+  --spelling-limit=200 \
+  --writing-limit=200 \
+  --suggestions=5 \
+  --language=en-US \
+  --json
+```
+
+Omit `--json` for the human-readable report. Reports include only scenario shape, language, analysis outcome counts/states, and elapsed microseconds; they never serialize the generated corpus text. Timings are machine/toolchain dependent and are intended for controlled comparisons, not pass/fail correctness thresholds. Both `en-US` and `en-GB` are supported.
+
+The benchmark lives under `tool/` and is not an application telemetry feature or a new public runtime API. CI runs only a tiny synthetic smoke scenario to verify the command remains executable; it does not enforce timing targets. See [Performance and large-document behavior](docs/PERFORMANCE.md).
 
 ## Shareable writing-analysis diagnostics — V2.9
 
