@@ -29,6 +29,11 @@ void main() {
           writingCapturedIssueCount: 4,
           writingTotalIssueCount: 8,
           writingTruncated: true,
+          writingAnalyzedRuleIds: const <String>['rule-b', 'rule-a'],
+          writingTotalIssueCountByRule: const <String, int>{
+            'rule-b': 3,
+            'rule-a': 5,
+          },
         ),
       ],
     );
@@ -39,6 +44,8 @@ void main() {
     expect(report, contains('Language: en-US'));
     expect(report, contains('Spelling min/median/max: 10/10/10'));
     expect(report, contains('Writing total findings: 8'));
+    expect(report, contains('Writing analyzed rules: rule-a, rule-b'));
+    expect(report, contains('Writing exact totals by rule: rule-a=5, rule-b=3'));
     expect(report, contains('generated synthetically'));
     expect(report, isNot(contains('never-print-this-corpus')));
   });
