@@ -41,7 +41,9 @@ class SpellCheckEditingController extends TextEditingController {
     TextStyle? style,
     required bool withComposing,
   }) {
-    if (_issues.isEmpty || text.isEmpty || _hasActiveComposingRange(withComposing)) {
+    if (_issues.isEmpty ||
+        text.isEmpty ||
+        _hasActiveComposingRange(withComposing)) {
       return super.buildTextSpan(
         context: context,
         style: style,
