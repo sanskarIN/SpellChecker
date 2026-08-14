@@ -11,7 +11,7 @@ The project follows semantic versioning for public releases where practical.
 - Deterministic generated large-document benchmark scenario with validated spelling/writing capture bounds and suggestion limits.
 - Fixed synthetic benchmark dictionary/frequency metadata so benchmark spelling eligibility does not drift with bundled vocabulary updates.
 - Fresh-state spelling and writing benchmark runner with configurable warmup and measured iterations.
-- Immutable per-iteration samples plus summary-level min/median/max microsecond aggregates and deterministic analysis-outcome consistency validation.
+- Immutable per-iteration samples plus summary-level min/median/max microsecond aggregates, sorted analyzed writing-rule IDs/exact per-rule totals, and deterministic analysis-outcome consistency validation.
 - Version-1 JSON benchmark report and a human-readable terminal report; both exclude corpus text.
 - Strict CLI options for repetitions, warmups, iterations, spelling/writing limits, suggestions, built-in language selection, JSON output, and help.
 - Focused tests for scenario generation, result invariants/aggregation, runner behavior, option parsing, report privacy, and command execution.
