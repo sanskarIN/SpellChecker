@@ -50,10 +50,7 @@ void main() {
       mutableSuffixes.add("'re");
 
       expect(pack.recognizedSuffixes, <String>["'s"]);
-      expect(
-        () => pack.recognizedSuffixes.add("'ve"),
-        throwsUnsupportedError,
-      );
+      expect(() => pack.recognizedSuffixes.add("'ve"), throwsUnsupportedError);
     });
   });
 
