@@ -10,18 +10,23 @@ void main() {
     required int index,
     required int spellingMicros,
     required int writingMicros,
+    int spellingScannedTokens = 20,
+    int spellingCapturedIssues = 4,
+    bool spellingTruncated = true,
+    int writingCapturedIssues = 5,
     int writingTotalIssues = 9,
+    bool writingTruncated = true,
   }) {
     return AnalysisBenchmarkSample(
       index: index,
       spellingElapsed: Duration(microseconds: spellingMicros),
       writingElapsed: Duration(microseconds: writingMicros),
-      spellingScannedTokenCount: 20,
-      spellingCapturedIssueCount: 4,
-      spellingTruncated: true,
-      writingCapturedIssueCount: 5,
+      spellingScannedTokenCount: spellingScannedTokens,
+      spellingCapturedIssueCount: spellingCapturedIssues,
+      spellingTruncated: spellingTruncated,
+      writingCapturedIssueCount: writingCapturedIssues,
       writingTotalIssueCount: writingTotalIssues,
-      writingTruncated: true,
+      writingTruncated: writingTruncated,
     );
   }
 
@@ -60,6 +65,41 @@ void main() {
           spellingTruncated: false,
           writingCapturedIssueCount: 2,
           writingTotalIssueCount: 1,
+          writingTruncated: true,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => sample(
+          index: 0,
+          spellingMicros: 1,
+          writingMicros: 1,
+          spellingScannedTokens: 2,
+          spellingCapturedIssues: 3,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('requires writing truncation to match exact uncaptured findings', () {
+      expect(
+        () => sample(
+          index: 0,
+          spellingMicros: 1,
+          writingMicros: 1,
+          writingCapturedIssues: 5,
+          writingTotalIssues: 9,
+          writingTruncated: false,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => sample(
+          index: 0,
+          spellingMicros: 1,
+          writingMicros: 1,
+          writingCapturedIssues: 5,
+          writingTotalIssues: 5,
           writingTruncated: true,
         ),
         throwsArgumentError,
@@ -137,6 +177,60 @@ void main() {
               spellingMicros: 2,
               writingMicros: 2,
               writingTotalIssues: 10,
+            ),
+          ],
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects samples that contradict scenario capture limits', () {
+      expect(
+        () => AnalysisBenchmarkSummary(
+          scenario: scenario,
+          languageId: 'en-US',
+          warmupIterations: 0,
+          samples: <AnalysisBenchmarkSample>[
+            sample(
+              index: 0,
+              spellingMicros: 1,
+              writingMicros: 1,
+              spellingCapturedIssues: 5,
+              spellingTruncated: false,
+            ),
+          ],
+        ),
+        throwsArgumentError,
+      );
+
+      expect(
+        () => AnalysisBenchmarkSummary(
+          scenario: scenario,
+          languageId: 'en-US',
+          warmupIterations: 0,
+          samples: <AnalysisBenchmarkSample>[
+            sample(
+              index: 0,
+              spellingMicros: 1,
+              writingMicros: 1,
+              spellingCapturedIssues: 3,
+            ),
+          ],
+        ),
+        throwsArgumentError,
+      );
+
+      expect(
+        () => AnalysisBenchmarkSummary(
+          scenario: scenario,
+          languageId: 'en-US',
+          warmupIterations: 0,
+          samples: <AnalysisBenchmarkSample>[
+            sample(
+              index: 0,
+              spellingMicros: 1,
+              writingMicros: 1,
+              writingCapturedIssues: 4,
             ),
           ],
         ),
