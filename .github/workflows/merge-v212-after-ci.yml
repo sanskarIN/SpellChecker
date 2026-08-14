@@ -1,0 +1,111 @@
+name: V2.12 merge after final CI
+
+on:
+  push:
+    branches:
+      - v2.12-unicode-combining-boundaries
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+concurrency:
+  group: v212-final-merge
+  cancel-in-progress: true
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: v2.12-unicode-combining-boundaries
+      PR_NUMBER: '72'
+
+    steps:
+      - name: Check out V2.12 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.12-unicode-combining-boundaries
+          fetch-depth: 0
+
+      - name: Wait for ledger-complete permanent candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 180); do
+            git fetch origin "$BRANCH" >/dev/null 2>&1
+            remote="origin/$BRANCH"
+            files="$(git ls-tree -r --name-only "$remote" .github/workflows | sort)"
+            if git show "$remote:what_changed.md" | grep -q '^## V2.12 — Unicode Combining-Mark Writing Boundaries$' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/v212-' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/final-v212-release.yml$' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/ledger-v212-sync.yml$'; then
+              expected="$(printf '%s\n' \
+                '.github/workflows/ci.yml' \
+                '.github/workflows/merge-v212-after-ci.yml' \
+                '.github/workflows/release.yml' | sort)"
+              if [ "$files" = "$expected" ]; then
+                git reset --hard "$remote"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo 'Timed out waiting for the V2.12 ledger-complete candidate.' >&2
+          exit 1
+
+      - name: Remove this finalizer and push exact permanent-tree head
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/merge-v212-after-ci.yml
+          git commit -m "ci: remove V2.12 merge finalizer"
+          git push origin HEAD:"$BRANCH"
+          echo "FINAL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Wait for ordinary CI on exact final head
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 180); do
+            run_id="$(gh run list --workflow ci.yml --branch "$BRANCH" --status success --limit 80 --json databaseId,headSha --jq ".[] | select(.headSha == \"$FINAL_SHA\") | .databaseId" | head -n1)"
+            if [ -n "$run_id" ]; then
+              echo "FINAL_CI_RUN=$run_id" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for ordinary CI on $FINAL_SHA" >&2
+          exit 1
+
+      - name: Verify exact final tree before merge
+        shell: bash
+        run: |
+          git fetch origin "$BRANCH"
+          test "$(git rev-parse origin/$BRANCH)" = "$FINAL_SHA"
+          workflows="$(git ls-tree -r --name-only "$FINAL_SHA" .github/workflows | sort)"
+          expected="$(printf '%s\n' '.github/workflows/ci.yml' '.github/workflows/release.yml' | sort)"
+          test "$workflows" = "$expected"
+          git show "$FINAL_SHA:what_changed.md" | grep -q '^## V2.12 — Unicode Combining-Mark Writing Boundaries$'
+          git show "$FINAL_SHA:pubspec.yaml" | grep -q '^version: 2.12.0+17$'
+          echo "Final ordinary CI run: $FINAL_CI_RUN"
+
+      - name: Merge PR 72 preserving granular commits
+        shell: bash
+        run: |
+          response="$(gh api --method PUT \
+            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/merge" \
+            -f sha="$FINAL_SHA" \
+            -f merge_method=merge \
+            -f commit_title='Merge V2.12 Unicode combining-mark writing boundaries' \
+            -f commit_message='Merge the fully validated V2.12 Unicode combining-mark boundary hardening while preserving its granular regression, implementation, documentation, validation, ledger, and cleanup history.')"
+          printf '%s\n' "$response"
+          python3 - "$response" <<'PY'
+          import json, sys
+          payload = json.loads(sys.argv[1])
+          if payload.get('merged') is not True:
+              raise SystemExit(f"PR merge failed: {payload}")
+          PY

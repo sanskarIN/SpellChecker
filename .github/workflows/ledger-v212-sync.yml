@@ -1,0 +1,236 @@
+name: V2.12 engineering ledger sync
+
+on:
+  push:
+    branches:
+      - v2.12-unicode-combining-boundaries
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: v212-ledger-finalization
+  cancel-in-progress: true
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: v2.12-unicode-combining-boundaries
+
+    steps:
+      - name: Check out V2.12 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.12-unicode-combining-boundaries
+          fetch-depth: 0
+
+      - name: Wait for same helper-free head to pass CI and release validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 150); do
+            git fetch origin "$BRANCH" main >/dev/null 2>&1
+            head_sha="$(git rev-parse "origin/$BRANCH")"
+            helpers="$(git ls-tree -r --name-only "origin/$BRANCH" .github/workflows | grep '^\.github/workflows/v212-.*\.yml$' || true)"
+            if [ -n "$helpers" ]; then
+              sleep 10
+              continue
+            fi
+
+            validator_run="$(gh run list --workflow final-v212-release.yml --branch "$BRANCH" --status success --limit 40 --json databaseId,headSha --jq ".[] | select(.headSha == \"$head_sha\") | .databaseId" | head -n1)"
+            ci_run="$(gh run list --workflow ci.yml --branch "$BRANCH" --status success --limit 60 --json databaseId,headSha --jq ".[] | select(.headSha == \"$head_sha\") | .databaseId" | head -n1)"
+
+            if [ -n "$validator_run" ] && [ -n "$ci_run" ]; then
+              base_sha="$(git merge-base origin/main "$head_sha")"
+              echo "V212_VALIDATED_SHA=$head_sha" >> "$GITHUB_ENV"
+              echo "V212_BASE_SHA=$base_sha" >> "$GITHUB_ENV"
+              echo "V212_VALIDATOR_RUN=$validator_run" >> "$GITHUB_ENV"
+              echo "V212_FUNCTIONAL_CI_RUN=$ci_run" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Timed out waiting for helper-free V2.12 validation.' >&2
+          exit 1
+
+      - name: Refresh exact validated branch
+        run: |
+          git fetch origin "$BRANCH" main
+          git reset --hard "$V212_VALIDATED_SHA"
+
+      - name: Append complete V2.12 engineering ledger
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import os
+          import subprocess
+          import textwrap
+          from pathlib import Path
+
+          base = os.environ['V212_BASE_SHA']
+          head = os.environ['V212_VALIDATED_SHA']
+          ci_run = os.environ['V212_FUNCTIONAL_CI_RUN']
+          validator_run = os.environ['V212_VALIDATOR_RUN']
+          commit_count = subprocess.check_output(
+              ['git', 'rev-list', '--count', f'{base}..{head}'], text=True
+          ).strip()
+          paths = subprocess.check_output(
+              ['git', 'diff', '--name-only', f'{base}..{head}'], text=True
+          ).splitlines()
+
+          section = textwrap.dedent(r'''
+          ## V2.12 — Unicode Combining-Mark Writing Boundaries
+
+          Release version: `2.12.0+17`
+
+          About version: `2.12.0`
+
+          V2.12 is a Unicode correctness hardening release for the V2.11 `missing-punctuation-space` rule. It fixes a representation-sensitive false negative: a visually accented letter can be encoded either as one precomposed code point or as a base Unicode letter followed by one or more combining marks. V2.11 handled the precomposed form but its preceding boundary stopped at a bare `\p{L}`, so a combining mark between that base letter and punctuation prevented an otherwise eligible finding.
+
+          ### Production matcher fix
+
+          The preceding boundary changes from:
+
+          ```text
+          Unicode letter
+          ```
+
+          to:
+
+          ```text
+          Unicode letter + zero or more Unicode combining marks
+          ```
+
+          before the unchanged V2.11 sequence of optional horizontal spaces/tabs, selected punctuation, and an immediate following Unicode letter.
+
+          The implementation uses the Unicode property categories already supported by Dart `RegExp` in Unicode mode:
+
+          ```text
+          \p{L}\p{M}*
+          ```
+
+          This recognizes decomposed examples such as `cafe\u0301,naive` and clusters with multiple marks such as `a\u0301\u0327;word`.
+
+          ### Source-range ownership preserved
+
+          The complete preceding letter-plus-mark cluster is consumed only to calculate the punctuation's correct UTF-16 offset. The `WritingIssue` still owns only the punctuation character and still replaces only that punctuation with itself plus one horizontal space.
+
+          V2.12 therefore does **not** normalize the document, rewrite combining marks, widen the automatic correction range, or introduce a zero-length insertion. Existing stale-source validation and correction caret behavior remain applicable.
+
+          ### V2.11 batch composition preserved
+
+          The V2.11 optional pre-punctuation whitespace contract remains intact. For decomposed text such as `cafe\u0301 ,naive`, `punctuation-spacing` owns the stray horizontal whitespace and `missing-punctuation-space` owns the comma. Their ranges remain adjacent and non-overlapping, so one deterministic batch produces `cafe\u0301, naive` while retaining the decomposed accent representation.
+
+          ### Exclusions preserved
+
+          V2.12 does not broaden punctuation grammar. Periods and colons remain excluded. Numeric/non-letter and repeated-punctuation ownership rules remain unchanged. A combining mark without a preceding Unicode base letter does not create a word boundary.
+
+          ### Focused regression coverage
+
+          `test/missing_punctuation_space_unicode_test.dart` verifies:
+
+          - decomposed accented text before punctuation;
+          - multiple consecutive combining marks;
+          - exact UTF-16 punctuation offsets;
+          - adjacent batch composition with pre-punctuation whitespace;
+          - a combining mark alone is not a valid word boundary;
+          - period/colon exclusions remain intact with decomposed text.
+
+          Existing V2.11 rule, analyzer, bounded-diagnostic, preference, widget, and benchmark regressions remain part of the complete suite.
+
+          ### Public API and registry compatibility
+
+          V2.12 adds no new public type, rule ID, constructor, preference key, language ID, correction API, diagnostic-summary field, or benchmark JSON field.
+
+          The built-in writing registry remains seven rules. `missing-punctuation-space` retains its stable ID and public export. The V2.10 benchmark's analyzed-rule ID workload remains the same seven-rule set as V2.11; only documents containing the newly supported decomposed boundary can produce a different per-rule finding total.
+
+          ### Release identity and documentation
+
+          - `pubspec.yaml` advances from `2.11.0+16` to `2.12.0+17`.
+          - About metadata advances from `2.11.0` to `2.12.0` with widget coverage.
+          - README, changelog, roadmap, API, writing rules, architecture, performance, testing, development, privacy, security, language-pack, accessibility, user-guide, troubleshooting, support, contributing, release, issue-template, PR-template, and V2.11 follow-up documentation describe the Unicode boundary contract.
+          - `docs/V2_12_UNICODE_COMBINING_BOUNDARIES.md` is the dedicated compatibility document.
+
+          ### Privacy and security boundary
+
+          The change is an in-process Unicode boundary match over the text already supplied to local `WritingAnalyzer`. V2.12 adds no network request, analytics, telemetry, account behavior, document persistence, preference key, runtime dependency, dynamic rule loading, or automatic Unicode normalization. The user's original Unicode sequence remains unchanged except for an explicitly applied punctuation-space correction.
+
+          ### Complete tracked-file audit boundary
+
+          V2.12 starts from merged V2.11 base `__V212_BASE_SHA__`. Immediately before this ledger commit, validated candidate `__V212_VALIDATED_SHA__` is `__V212_COMMIT_COUNT__` granular commits ahead of that base with `__V212_PATH_COUNT__` changed paths. Every V2.12 changed path was reviewed through direct code/test/document inspection, guarded exact transformation, or executable validation; unchanged tracked paths remain byte-identical to the fully validated V2.11 base.
+
+          ### Development defects caught and corrected
+
+          - The representation-sensitive V2.11 false negative was isolated with a regression committed before the matcher repair.
+          - The production change was limited to the preceding Unicode cluster boundary instead of introducing document-wide normalization.
+          - Exact punctuation offsets and batch adjacency were tested explicitly so consuming combining marks for recognition could not silently widen correction ownership.
+          - Release metadata was guarded behind a self-removing functional gate, preventing version/document advancement before format/analyze/focused/full-test/benchmark success.
+          - Final release validation requires helper-workflow cleanup before lockfile/format/analyze/test/benchmark/web evidence can be accepted.
+
+          ### Helper-free functional CI evidence
+
+          Ordinary CI run `__V212_FUNCTIONAL_CI_RUN__` validated helper-free candidate `__V212_VALIDATED_SHA__` successfully using the repository's permanent gates: dependency installation, canonical `lib test tool` formatting, `flutter analyze`, the complete Flutter test suite, and the threshold-free benchmark CLI smoke command.
+
+          ### Read-only final V2.12 release-validator evidence
+
+          Read-only validator run `__V212_VALIDATOR_RUN__` validated the same SHA `__V212_VALIDATED_SHA__` and passed:
+
+          ```text
+          flutter pub get
+          git diff --exit-code -- pubspec.lock
+          dart format --output=none --set-exit-if-changed lib test tool
+          flutter analyze
+          flutter test test/missing_punctuation_space_unicode_test.dart --reporter expanded
+          flutter test --reporter expanded
+          en-US JSON benchmark: 250 repetitions, 1 warmup, 3 measured iterations
+          en-GB human benchmark: 50 repetitions, 1 warmup, 2 measured iterations
+          flutter build web --release
+          ```
+
+          The validator also confirms the unchanged sorted seven-rule benchmark workload, exact per-rule-total sum consistency, configured capture limits, corpus-text exclusion, package/About/README/changelog/roadmap identity, the V2.12 contract document, Unicode matcher shape, and current release documentation.
+
+          ### Result at the V2.12 gate
+
+          The recorded V2.12 candidate has no known formatter failure, analyzer diagnostic, failing focused/full automated test, benchmark compatibility failure, lockfile drift, or release-web build failure at the validated gate. Benchmark timings remain descriptive and are not correctness thresholds.
+
+          This ledger is written only after ordinary CI and the read-only final validator succeed on the same helper-free SHA. The ledger sync and validator are then removed, and one final ordinary CI run is required on the exact permanent-tree head before merge. No V2.12 temporary helper/finalization workflow may enter `main`.
+          ''')
+
+          section = (
+              section
+              .replace('__V212_BASE_SHA__', base)
+              .replace('__V212_VALIDATED_SHA__', head)
+              .replace('__V212_FUNCTIONAL_CI_RUN__', ci_run)
+              .replace('__V212_VALIDATOR_RUN__', validator_run)
+              .replace('__V212_COMMIT_COUNT__', commit_count)
+              .replace('__V212_PATH_COUNT__', str(len(paths)))
+          )
+
+          path = Path('what_changed.md')
+          text = path.read_text()
+          heading = '## V2.12 — Unicode Combining-Mark Writing Boundaries'
+          if heading not in text:
+              path.write_text(text.rstrip() + '\n\n' + section.strip() + '\n')
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- what_changed.md; then
+            git add what_changed.md
+            git commit -m "docs: record complete V2.12 engineering changes"
+          fi
+
+      - name: Remove validator and ledger workflows, then push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/final-v212-release.yml .github/workflows/ledger-v212-sync.yml
+          git commit -m "ci: remove V2.12 finalization workflows"
+          git fetch origin "$BRANCH"
+          git rebase "origin/$BRANCH"
+          git push origin HEAD:"$BRANCH"

@@ -1,0 +1,287 @@
+name: V2.12 release documentation sync
+
+on:
+  push:
+    branches:
+      - v2.12-unicode-combining-boundaries
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v212-release-doc-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out V2.12 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.12-unicode-combining-boundaries
+          fetch-depth: 0
+
+      - name: Wait for successful helper-free functional candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            git fetch origin v2.12-unicode-combining-boundaries >/dev/null 2>&1
+            remote=origin/v2.12-unicode-combining-boundaries
+            files="$(git ls-tree -r --name-only "$remote" .github/workflows)"
+            if ! printf '%s\n' "$files" | grep -q '^\.github/workflows/v212-unicode-fix.yml$' \
+              && ! printf '%s\n' "$files" | grep -q '^\.github/workflows/v212-functional-gate.yml$' \
+              && git show "$remote:lib/writing/rules/missing_punctuation_space_rule.dart" | grep -Fq "\\p{L}\\p{M}*"; then
+              git reset --hard "$remote"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Timed out waiting for successful V2.12 functional candidate.' >&2
+          exit 1
+
+      - name: Apply V2.12 release and documentation updates
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if new in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exact replacement once, found {count}: {old!r}')
+              p.write_text(text.replace(old, new, 1))
+
+          def insert_before(path, marker, heading, section):
+              p = Path(path)
+              text = p.read_text()
+              if heading in text:
+                  return
+              count = text.count(marker)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected marker once, found {count}: {marker!r}')
+              p.write_text(text.replace(marker, section + marker, 1))
+
+          def append_section(path, heading, section):
+              p = Path(path)
+              text = p.read_text()
+              if heading in text:
+                  return
+              p.write_text(text.rstrip() + '\n\n' + section.strip() + '\n')
+
+          replace_once('pubspec.yaml', 'version: 2.11.0+16', 'version: 2.12.0+17')
+          replace_once(
+              'lib/features/editor/spell_checker_page.dart',
+              "applicationVersion: '2.11.0',",
+              "applicationVersion: '2.12.0',",
+          )
+          replace_once(
+              'test/widget_test.dart',
+              "testWidgets('About dialog reports the current V2.11 release',",
+              "testWidgets('About dialog reports the current V2.12 release',",
+          )
+          replace_once(
+              'test/widget_test.dart',
+              "expect(find.textContaining('2.11.0'), findsOneWidget);",
+              "expect(find.textContaining('2.12.0'), findsOneWidget);",
+          )
+
+          replace_once('README.md', '`2.11.0+16`', '`2.12.0+17`')
+          replace_once(
+              'README.md',
+              'Version 2.11 is the **Missing Punctuation Space** release. It adds a conservative deterministic English mechanics rule for missing spaces after comma, semicolon, question-mark, and exclamation-mark word boundaries. The rule uses punctuation-only source ownership, composes safely with the existing before-punctuation spacing rule, preserves explicit stored rule sets, advances current registry defaults to seven rules, and makes the changed benchmark writing workload visible through V2.10 rule-ID/per-rule-total metadata.',
+              'Version 2.12 is the **Unicode Combining-Mark Boundary Hardening** release. It makes the V2.11 missing-punctuation-space rule recognize decomposed Unicode letter clusters such as `cafe\\u0301,naive` without normalizing or rewriting document text. Punctuation-only source ownership, optional pre-punctuation whitespace composition, conservative punctuation exclusions, the seven-rule registry, explicit preference compatibility, and the V2.10 benchmark schema remain unchanged.',
+          )
+          insert_before(
+              'README.md',
+              '## Missing punctuation space — V2.11\n',
+              '## Unicode combining-mark boundaries — V2.12',
+              '''## Unicode combining-mark boundaries — V2.12\n\nThe V2.11 `missing-punctuation-space` rule now recognizes a preceding Unicode letter followed by zero or more combining marks before optional horizontal whitespace and the owned punctuation. This makes precomposed and decomposed accented text behave consistently, for example `café,naïve` and `cafe\\u0301,naive`, while preserving exact source text and UTF-16 offsets.\n\nV2.12 does not normalize editor text. The automatic finding still owns only the punctuation character and still excludes periods, colons, numeric/non-letter boundaries, and repeated punctuation. The built-in registry remains seven rules and the default benchmark rule-ID workload is unchanged from V2.11. See [V2.12 Unicode boundary contract](docs/V2_12_UNICODE_COMBINING_BOUNDARIES.md).\n\n''',
+          )
+
+          insert_before(
+              'CHANGELOG.md',
+              '## [2.11.0] - 2026-08-14\n',
+              '## [2.12.0] - 2026-08-14',
+              '''## [2.12.0] - 2026-08-14\n\n### Fixed\n\n- `missing-punctuation-space` now recognizes decomposed Unicode letter clusters when one or more combining marks appear between the preceding base letter and punctuation.\n- Multiple combining marks are supported without expanding the automatic issue range beyond the punctuation character.\n- Decomposed Unicode text with stray pre-punctuation horizontal whitespace still composes safely with `punctuation-spacing` in one batch.\n\n### Added\n\n- Focused V2.12 regressions for decomposed accented text, multiple combining marks, exact UTF-16 punctuation offsets, adjacent batch ownership, mark-only exclusion, and preserved period/colon exclusions.\n- Dedicated `docs/V2_12_UNICODE_COMBINING_BOUNDARIES.md` compatibility contract.\n\n### Changed\n\n- Package version advances to `2.12.0+17`; About version advances to `2.12.0`.\n- Current Unicode/rule/testing/privacy/security/release documentation advances to V2.12.\n\n### Compatibility, privacy, and security\n\n- The stable rule ID, seven-rule registry, preference keys, explicit stored rule sets, writing-analysis result model, correction model, diagnostic-summary format, and benchmark JSON format remain unchanged.\n- V2.12 does not normalize user text, add a runtime dependency, persist document-derived data, transmit text, or add telemetry/network behavior.\n\n''',
+          )
+
+          insert_before(
+              'docs/ROADMAP.md',
+              '## Future 2.x direction\n',
+              '## 2.12 — Unicode combining-mark writing boundaries',
+              '''## 2.12 — Unicode combining-mark writing boundaries\n\nStatus: implemented.\n\n- [x] Detect decomposed letter-plus-combining-mark clusters before V2.11 punctuation boundaries.\n- [x] Support multiple Unicode combining marks without widening the owned correction range.\n- [x] Preserve UTF-16 source offsets and punctuation-only stale-source validation.\n- [x] Preserve optional pre-punctuation whitespace composition with `punctuation-spacing`.\n- [x] Reject a combining mark that is not attached to a preceding Unicode letter.\n- [x] Preserve period/colon, numeric/non-letter, and repeated-punctuation exclusions.\n- [x] Preserve the seven-rule registry, preference compatibility, and V2.10 benchmark schema/workload identity.\n- [x] Add focused Unicode regressions, complete-suite validation, release docs, and engineering ledger.\n\n''',
+          )
+
+          append_section(
+              'docs/API.md',
+              '# V2.12 Unicode combining-mark boundary compatibility',
+              '''# V2.12 Unicode combining-mark boundary compatibility\n\n`MissingPunctuationSpaceRule` keeps the same public type, stable ID, category, language support, severity, and punctuation-only replacement contract. V2.12 expands only the internal preceding word boundary from `Unicode letter` to `Unicode letter + zero or more Unicode combining marks`.\n\nThe rule does not normalize source text. `WritingIssue.start`/`end` remain UTF-16 offsets into the exact caller-supplied string, and the issue still owns only the selected punctuation character. Public constructor signatures and the seven-rule registry shape are unchanged. See [V2.12 Unicode boundary contract](V2_12_UNICODE_COMBINING_BOUNDARIES.md).\n''',
+          )
+          append_section(
+              'docs/WRITING_RULES.md',
+              '## V2.12 decomposed Unicode boundary hardening',
+              '''## V2.12 decomposed Unicode boundary hardening\n\nThe `missing-punctuation-space` rule now treats a preceding Unicode base letter plus any following combining marks as one word-side cluster for boundary detection. Optional spaces/tabs before punctuation and punctuation-only source ownership remain unchanged.\n\nThis recognizes canonically equivalent decomposed text without modifying the document's normalization form. A combining mark by itself does not satisfy the word boundary. The stable rule ID, default seven-rule registry, punctuation scope, and persisted preference semantics are unchanged.\n''',
+          )
+          append_section(
+              'docs/ARCHITECTURE.md',
+              '## V2.12 Unicode boundary ownership',
+              '''## V2.12 Unicode boundary ownership\n\nV2.12 changes only the recognition side of `MissingPunctuationSpaceRule`: the preceding word-side match can include Unicode combining marks attached to a base letter. The correction side remains punctuation-only, so no new normalization layer, storage adapter, editor mutation path, or overlap policy is introduced.\n\nThis separation keeps Unicode recognition more faithful while preserving the existing `WritingIssue`/`WritingCorrection` source ownership architecture.\n''',
+          )
+          append_section(
+              'docs/PERFORMANCE.md',
+              '## V2.12 combining-mark boundary cost',
+              '''## V2.12 combining-mark boundary cost\n\nV2.12 adds a zero-or-more combining-mark component to the existing linear V2.11 matcher. It does not add another writing-rule pass. The built-in registry remains seven rules, and the V2.10 benchmark analyzed-rule ID set is unchanged from V2.11.\n\nBenchmark exact per-rule finding totals may change only for corpora that contain decomposed combining-mark boundaries newly recognized by this fix; the source-controlled default synthetic corpus remains schema-compatible and normal CI retains no machine-timing threshold.\n''',
+          )
+          append_section(
+              'docs/TESTING.md',
+              '## V2.12 Unicode combining-mark regression contract',
+              '''## V2.12 Unicode combining-mark regression contract\n\nFocused tests verify decomposed accented text, multiple combining marks, exact UTF-16 punctuation offsets, optional pre-punctuation whitespace batch composition, mark-only exclusion, and period/colon exclusions. The complete Flutter suite must remain green so V2.11 preference/widget/bounded-diagnostic behavior and earlier releases are not regressed.\n\nFormatting continues to cover `lib test tool`, analyzer remains required, benchmark smoke remains threshold-free, and final release validation includes lockfile stability plus `flutter build web --release`.\n''',
+          )
+          append_section(
+              'docs/DEVELOPMENT.md',
+              '## V2.12 Unicode boundary development guidance',
+              '''## V2.12 Unicode boundary development guidance\n\nWhen writing source-range rules, test both precomposed and decomposed Unicode representations where combining marks can sit between a visible letter and punctuation. Recognition may consume the complete cluster to locate a boundary, but automatic correction ownership should remain as narrow as possible and must not silently normalize unrelated source text.\n\nAny future Unicode-boundary expansion needs focused source-offset, stale-correction, exclusion, and batch-overlap tests in addition to the complete suite.\n''',
+          )
+          append_section(
+              'docs/PRIVACY.md',
+              '## V2.12 Unicode boundary privacy behavior',
+              '''## V2.12 Unicode boundary privacy behavior\n\nThe change is an in-memory local matcher over text already supplied to `WritingAnalyzer`. It does not normalize, persist, log, upload, or otherwise transform the document outside an explicitly applied punctuation correction. V2.12 adds no preference key, telemetry, analytics, account behavior, cloud service, or runtime dependency.\n''',
+          )
+          append_section(
+              'SECURITY.md',
+              '## V2.12 combining-mark source-range safety',
+              '''## V2.12 combining-mark source-range safety\n\nCombining marks are consumed only while locating the eligible punctuation boundary; they are not included in the automatic issue range. `WritingCorrection` therefore continues to validate the existing punctuation character exactly before mutation. V2.12 adds no Unicode normalization pass, dynamic code, network processing, permission, or new trust boundary.\n''',
+          )
+          append_section(
+              'docs/LANGUAGE_PACKS.md',
+              '## V2.12 Unicode combining marks in writing boundaries',
+              '''## V2.12 Unicode combining marks in writing boundaries\n\nThe English-family `missing-punctuation-space` rule now recognizes combining marks attached to the preceding Unicode letter. This is writing-rule boundary behavior and does not change language IDs, dictionaries, normalizers, token patterns, suffixes, frequencies, or suggestion metadata. The source string is preserved in its supplied normalization form.\n''',
+          )
+          append_section(
+              'docs/ACCESSIBILITY.md',
+              '## V2.12 accessibility scope',
+              '''## V2.12 accessibility scope\n\nV2.12 adds no new control, focus order, shortcut, or semantics widget. It makes an existing Writing-insights rule surface the same labeled finding/fix UI for decomposed Unicode text that precomposed text already receives. About metadata advances to 2.12.0.\n''',
+          )
+          append_section(
+              'docs/USER_GUIDE.md',
+              '## Unicode combining-mark punctuation boundaries — V2.12',
+              '''## Unicode combining-mark punctuation boundaries — V2.12\n\nMissing punctuation space now recognizes decomposed accented text as well as precomposed text. For example, a document that stores the visible `é` as `e` plus a combining acute accent can still receive the same comma/semicolon/question/exclamation spacing fix. SpellChecker preserves the document's existing Unicode representation; applying the fix changes only the punctuation spacing.\n''',
+          )
+          append_section(
+              'docs/TROUBLESHOOTING.md',
+              '## Decomposed accented text and punctuation spacing',
+              '''## Decomposed accented text and punctuation spacing\n\nV2.12 supports one Unicode base letter followed by one or more combining marks before the eligible punctuation boundary. If an apparent letter still is not recognized, reduce the report to synthetic code points and include whether the sequence contains a base letter, combining marks, horizontal whitespace, and one of `, ; ? !`. Periods and colons remain intentionally excluded.\n''',
+          )
+          append_section(
+              'SUPPORT.md',
+              '## V2.12 Unicode boundary support reports',
+              '''## V2.12 Unicode boundary support reports\n\nFor a combining-mark boundary report, use minimal synthetic text and include escaped code points when possible (for example `e\\u0301,word`) so precomposed/decomposed behavior can be distinguished without sharing a private document. Include the selected language and stable rule ID `missing-punctuation-space`.\n''',
+          )
+          append_section(
+              'CONTRIBUTING.md',
+              '## V2.12 Unicode-boundary contributions',
+              '''## V2.12 Unicode-boundary contributions\n\nUnicode boundary changes need precomposed/decomposed regression cases, multiple-mark cases where applicable, exact UTF-16 source offsets, correction ownership assertions, false-positive exclusions, and complete-suite validation. Do not introduce document-wide Unicode normalization as an incidental fix for a local writing-rule boundary.\n''',
+          )
+
+          replace_once(
+              'docs/RELEASING.md',
+              'Current V2.11 release candidate:\n\n```text\n2.11.0+16\n```',
+              'Current V2.12 release candidate:\n\n```text\n2.12.0+17\n```',
+          )
+          replace_once(
+              'docs/RELEASING.md',
+              'git tag -a v2.11.0 -m "SpellChecker v2.11.0"\ngit push origin v2.11.0',
+              'git tag -a v2.12.0 -m "SpellChecker v2.12.0"\ngit push origin v2.12.0',
+          )
+          append_section(
+              'docs/RELEASING.md',
+              '## V2.12 Unicode boundary release checks',
+              '''## V2.12 Unicode boundary release checks\n\nBefore tagging V2.12 verify package `2.12.0+17`, About `2.12.0`, focused decomposed/multiple-combining-mark regressions, exact punctuation ownership/UTF-16 offsets, preserved V2.11 exclusions and batch composition, unchanged seven-rule registry/preferences/benchmark schema, canonical `lib test tool` formatting, analyzer, complete tests, benchmark smoke, lockfile stability, and `flutter build web --release`.\n\nNo temporary `v212-*` workflow may remain in the release tree, and `what_changed.md` must record the exact helper-free CI/release evidence before merge.\n''',
+          )
+
+          append_section(
+              '.github/ISSUE_TEMPLATE/bug_report.yml',
+              '# V2.12 Unicode boundary note',
+              '''# V2.12 Unicode boundary note\n# For combining-mark boundary bugs use synthetic escaped code points when possible, state precomposed/decomposed form, selected language, stable rule ID, expected punctuation range, and whether pre-punctuation horizontal whitespace is present.\n''',
+          )
+          append_section(
+              '.github/ISSUE_TEMPLATE/feature_request.yml',
+              '# V2.12 Unicode-boundary design note',
+              '''# V2.12 Unicode-boundary design note\n# Unicode boundary expansions must define source-range ownership, normalization policy, UTF-16 offset behavior, false-positive exclusions, and interaction with existing correction/batch rules.\n''',
+          )
+          append_section(
+              '.github/pull_request_template.md',
+              '## V2.12 Unicode combining-boundary checklist',
+              '''## V2.12 Unicode combining-boundary checklist\n\n- [ ] Precomposed/decomposed Unicode behavior is covered.\n- [ ] Multiple combining marks and mark-only exclusions are covered where relevant.\n- [ ] UTF-16 source offsets and punctuation-only stale-safe ownership remain exact.\n- [ ] V2.11 punctuation exclusions and adjacent batch composition remain intact.\n- [ ] Seven-rule registry/preferences and V2.10 benchmark schema are unchanged or explicitly migrated.\n- [ ] Version/changelog/roadmap/API/privacy/security/release docs and `what_changed.md` are current.\n- [ ] Format/analyze/full tests/benchmark smoke/lockfile/release-web gates pass.\n- [ ] No temporary `v212-*` workflow remains in the permanent tree.\n''',
+          )
+          append_section(
+              'docs/V2_11_MISSING_PUNCTUATION_SPACE.md',
+              '## V2.12 Unicode combining-mark follow-up',
+              '''## V2.12 Unicode combining-mark follow-up\n\nV2.12 preserves this rule's punctuation scope and source ownership while allowing Unicode combining marks attached to the preceding base letter. Decomposed accented text therefore receives the same missing-space behavior without normalization. See [V2.12 Unicode boundary contract](V2_12_UNICODE_COMBINING_BOUNDARIES.md).\n''',
+          )
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          commit_one() {
+            path="$1"; message="$2"
+            if ! git diff --quiet -- "$path"; then
+              git add "$path"
+              git commit -m "$message"
+            fi
+          }
+
+          commit_one pubspec.yaml "chore: advance package version to 2.12.0+17"
+          commit_one lib/features/editor/spell_checker_page.dart "chore: update About metadata for V2.12"
+          commit_one test/widget_test.dart "test: expect V2.12 About metadata"
+          commit_one README.md "docs: publish V2.12 README"
+          commit_one CHANGELOG.md "docs: add V2.12 changelog"
+          commit_one docs/ROADMAP.md "docs: mark V2.12 Unicode boundary milestone implemented"
+          commit_one docs/API.md "docs: document V2.12 Unicode API compatibility"
+          commit_one docs/WRITING_RULES.md "docs: document V2.12 writing boundary behavior"
+          commit_one docs/ARCHITECTURE.md "docs: document V2.12 Unicode ownership architecture"
+          commit_one docs/PERFORMANCE.md "docs: document V2.12 boundary performance scope"
+          commit_one docs/TESTING.md "docs: define V2.12 regression contract"
+          commit_one docs/DEVELOPMENT.md "docs: add V2.12 Unicode development guidance"
+          commit_one docs/PRIVACY.md "docs: document V2.12 privacy boundary"
+          commit_one SECURITY.md "docs: document V2.12 source-range security"
+          commit_one docs/LANGUAGE_PACKS.md "docs: document V2.12 language boundary scope"
+          commit_one docs/ACCESSIBILITY.md "docs: document V2.12 accessibility scope"
+          commit_one docs/USER_GUIDE.md "docs: add V2.12 user guidance"
+          commit_one docs/TROUBLESHOOTING.md "docs: add V2.12 troubleshooting"
+          commit_one SUPPORT.md "docs: add V2.12 support guidance"
+          commit_one CONTRIBUTING.md "docs: add V2.12 contribution guidance"
+          commit_one docs/RELEASING.md "docs: advance release procedure to V2.12"
+          commit_one .github/ISSUE_TEMPLATE/bug_report.yml "docs: add V2.12 bug-report guidance"
+          commit_one .github/ISSUE_TEMPLATE/feature_request.yml "docs: add V2.12 feature-request guidance"
+          commit_one .github/pull_request_template.md "docs: add V2.12 PR checklist"
+          commit_one docs/V2_11_MISSING_PUNCTUATION_SPACE.md "docs: link V2.12 Unicode follow-up"
+
+      - name: Canonically format release metadata tests
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          dart format test/widget_test.dart
+          if ! git diff --quiet -- test/widget_test.dart; then
+            git add test/widget_test.dart
+            git commit -m "style: format V2.12 About regression"
+          fi
+
+      - name: Remove release sync and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/v212-release-sync.yml
+          git commit -m "ci: remove one-time V2.12 release documentation sync"
+          git push origin HEAD:v2.12-unicode-combining-boundaries
