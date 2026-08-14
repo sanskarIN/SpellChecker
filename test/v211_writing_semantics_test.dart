@@ -8,10 +8,7 @@ void main() {
   final analyzer = WritingAnalyzer();
   final enabledRuleIds = analyzer.rules.map((rule) => rule.id).toSet();
 
-  Future<void> scrollUntilBuilt(
-    WidgetTester tester,
-    Finder finder,
-  ) async {
+  Future<void> scrollUntilBuilt(WidgetTester tester, Finder finder) async {
     final insightsList = find.descendant(
       of: find.byType(AlertDialog),
       matching: find.byType(ListView),
