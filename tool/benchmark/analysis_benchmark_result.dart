@@ -197,9 +197,7 @@ Duration _median(Iterable<Duration> values) {
   if (sorted.length.isOdd) {
     return Duration(microseconds: sorted[middle]);
   }
-  return Duration(
-    microseconds: (sorted[middle - 1] + sorted[middle]) ~/ 2,
-  );
+  return Duration(microseconds: (sorted[middle - 1] + sorted[middle]) ~/ 2);
 }
 
 Duration _minimum(Iterable<Duration> values) {
