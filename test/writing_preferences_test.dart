@@ -124,28 +124,30 @@ void main() {
     expect(effective, isNot(contains('missing-punctuation-space')));
   });
 
-  test('explicit disable-all remains empty after V2.11 rule addition', () async {
-    final preferences = DictionaryPreferences();
+  test(
+    'explicit disable-all remains empty after V2.11 rule addition',
+    () async {
+      final preferences = DictionaryPreferences();
 
-    await preferences.saveWritingRuleIds(
-      const <String>{},
-      languageId: 'en-US',
-    );
+      await preferences.saveWritingRuleIds(
+        const <String>{},
+        languageId: 'en-US',
+      );
 
-    final stored = await preferences.loadWritingRuleIds(languageId: 'en-US');
-    final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
+      final stored = await preferences.loadWritingRuleIds(languageId: 'en-US');
+      final effective = stored ?? WritingRuleRegistry.defaultEnabledRuleIds;
 
-    expect(stored, isEmpty);
-    expect(effective, isEmpty);
-  });
+      expect(stored, isEmpty);
+      expect(effective, isEmpty);
+    },
+  );
 
   test('clearing an override restores current seven-rule defaults', () async {
     final preferences = DictionaryPreferences();
 
-    await preferences.saveWritingRuleIds(
-      const <String>{'repeated-space'},
-      languageId: 'en-US',
-    );
+    await preferences.saveWritingRuleIds(const <String>{
+      'repeated-space',
+    }, languageId: 'en-US');
     await preferences.clearWritingRuleIds(languageId: 'en-US');
 
     final stored = await preferences.loadWritingRuleIds(languageId: 'en-US');
