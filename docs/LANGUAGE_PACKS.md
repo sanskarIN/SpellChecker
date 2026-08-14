@@ -331,3 +331,9 @@ Changing from English (US) to English (UK), or vice versa, can therefore change 
 Diagnostics are not persisted per language. They are computed from the current in-memory text/rule configuration and discarded with the analysis result. Per-language personal vocabulary and writing-rule preference storage remain unchanged.
 
 Portable settings still transfer durable non-document preferences only; V2.8 exact finding counts are deliberately excluded.
+
+## V2.9 configuration hardening
+
+`SpellLanguagePack` defensively snapshots its dictionary, frequency map, and recognized-suffix list at construction. Mutating caller-owned collections after pack creation therefore cannot silently change token acceptance or suffix behavior.
+
+When a caller supplies a custom `wordFrequencies` map to `SpellCheckerEngine`, its keys are normalized through the active pack just like dictionary words. Empty normalized keys are discarded, and when multiple input keys normalize to the same word the lowest rank value is kept. This preserves deterministic frequency-aware ordering for mixed-case/custom-normalizer inputs.
