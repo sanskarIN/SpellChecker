@@ -4,6 +4,36 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.9.0] - 2026-08-14
+
+### Added
+
+- Public `WritingAnalysisDiagnosticSummary` and `WritingRuleDiagnosticSummary` models with deterministic lexical rule ordering.
+- `WritingAnalysisDiagnosticSummary.fromResult(...)` for metadata-only snapshots over V2.8 exact diagnostics and `toPlainText()` for stable shareable text.
+- Focused V2.9 coverage for bounded exact totals, compatibility results without exact totals, empty results, deterministic ordering, and exclusion of document/finding content from diagnostic summaries.
+- Regression coverage for release-mode report/result invariants, normalized custom frequency keys, immutable suffix configuration, dot-connected sentence boundaries, IME composition, Unicode statistics, duplicate writing-rule IDs, and V2.9 About/version metadata.
+
+### Changed
+
+- Package version is `2.9.0+14`; the About dialog reports `2.9.0`.
+- `SpellCheckReport` constructor consistency checks now execute at runtime instead of relying on debug-only assertions.
+- `WritingAnalysisResult` now rejects captured findings owned by non-analyzed rules, findings with a different result language, and per-rule totals for non-analyzed rules.
+- `WritingAnalyzer` rejects duplicate configured rule IDs so persisted IDs and diagnostics remain unambiguous.
+- Custom suggestion-frequency keys are normalized through the active language pack; normalized duplicates retain the best (lowest) frequency rank.
+- `SpellLanguagePack` defensively snapshots recognized suffix configuration in addition to dictionary/frequency collections.
+- Sentence-capitalization boundaries require separating whitespace after terminal punctuation, preventing dot-connected text such as `example.com` from being treated as a new sentence.
+- Inline spelling highlighting preserves Flutter's native active IME composing span while composition is in progress.
+- `TextStatistics` counts Unicode-letter words and supported apostrophe/hyphen forms consistently with the spelling tokenizer.
+- Flutter 3.47/Dart 3.13 analyzer/formatter configuration and resolved transitive dependency metadata are synchronized with the CI toolchain.
+- Obsolete V2.2, V2.3, and V2.8 one-time reconciliation workflows are removed from the permanent release tree.
+
+### Compatibility, security, privacy, and validation
+
+- V2.8 analyzer/result APIs, capture semantics, exact totals, writing-rule IDs, preference formats, Portable settings, correction safety, ranking extension points, and language IDs remain source/data compatible for valid inputs.
+- The V2.9 diagnostic formatter contains counts and rule metadata only and does not read editor text, finding messages/excerpts, replacements, or source offsets.
+- V2.9 adds no runtime dependency, analytics, telemetry, account behavior, cloud writing service, persistence format, automatic clipboard write, or application network request.
+- The hardening audit validates formatting, static analysis, the complete Flutter test suite, and the release web build on the final candidate tree before merge.
+
 ## [2.8.0] - 2026-08-12
 
 ### Added
