@@ -225,3 +225,16 @@ Complete when benchmark/tooling/performance-observability behavior is touched.
 - [ ] No runtime dependency, persistence format, application telemetry, network request, or public runtime API was introduced unintentionally.
 - [ ] `docs/V2_10_BENCHMARK.md`, performance/testing/privacy/security/releasing docs, changelog/roadmap/README, and `what_changed.md` are synchronized.
 - [ ] No temporary V2.10 synchronization/validation workflow remains in the permanent release tree.
+
+## V2.11 missing punctuation space checklist
+
+- [ ] Stable `missing-punctuation-space` ID/category/language support is preserved.
+- [ ] Punctuation scope/exclusions have focused false-positive tests.
+- [ ] Unicode/source offsets and punctuation-only stale-safe replacement are covered.
+- [ ] `punctuation-spacing` adjacency and `repeated-punctuation` ownership remain deterministic.
+- [ ] Seven-rule defaults and explicit stored preference compatibility are covered.
+- [ ] Bounded exact totals/per-rule diagnostics remain correct.
+- [ ] Writing-insights widget behavior and undo/batch safety remain covered.
+- [ ] V2.10 benchmark expected rule workload and documentation are synchronized.
+- [ ] Version/changelog/roadmap/API/privacy/security/release docs and `what_changed.md` are current.
+- [ ] No temporary `v211-*` workflow remains in the permanent tree.
