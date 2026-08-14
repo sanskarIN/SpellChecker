@@ -32,8 +32,9 @@ class SpellCheckerEngine {
              .map(languagePack.normalizeWord)
              .where((String word) => word.isNotEmpty),
        ),
-       _wordFrequencies = Map<String, int>.unmodifiable(
+       _wordFrequencies = _normalizeWordFrequencies(
          wordFrequencies ?? languagePack.wordFrequencies,
+         languagePack,
        );
 
   final SpellLanguagePack languagePack;
@@ -325,6 +326,24 @@ class SpellCheckerEngine {
   }
 
   String _normalize(String word) => languagePack.normalizeWord(word);
+}
+
+Map<String, int> _normalizeWordFrequencies(
+  Map<String, int> frequencies,
+  SpellLanguagePack languagePack,
+) {
+  final normalized = <String, int>{};
+  for (final entry in frequencies.entries) {
+    final word = languagePack.normalizeWord(entry.key);
+    if (word.isEmpty) {
+      continue;
+    }
+    final existingRank = normalized[word];
+    if (existingRank == null || entry.value < existingRank) {
+      normalized[word] = entry.value;
+    }
+  }
+  return Map<String, int>.unmodifiable(normalized);
 }
 
 class _WordParts {
