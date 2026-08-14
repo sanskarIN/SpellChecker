@@ -1,6 +1,6 @@
 # Public API
 
-SpellChecker 2.4 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, and portable-settings APIs through three public barrels.
+SpellChecker 2.9 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, writing-analysis diagnostic-summary, and portable-settings APIs through three public barrels.
 
 ## Imports
 
@@ -55,7 +55,7 @@ A pack contains:
 - Suggestion-source metadata.
 - Suggestion edit-distance policy.
 
-The spelling engine delegates tokenization, normalization, dictionary lookup behavior, and suggestion metadata to the selected pack.
+The spelling engine delegates tokenization, normalization, dictionary lookup behavior, and suggestion metadata to the selected pack. Pack dictionary, frequency, and recognized-suffix collections are defensive immutable snapshots after construction.
 
 See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md).
 
@@ -75,7 +75,7 @@ final engine = SpellCheckerEngine(
 );
 ```
 
-A custom dictionary/frequency set can still be supplied where supported by the constructor. Existing `SpellCheckerEngine()` callers remain source-compatible and default to `en-US`.
+A custom dictionary/frequency set can still be supplied where supported by the constructor. Both custom dictionary words and custom frequency keys are normalized through the selected language pack; when multiple frequency keys normalize to the same word, the lowest rank value is retained. Existing `SpellCheckerEngine()` callers remain source-compatible and default to `en-US`.
 
 ## `check`
 
@@ -318,6 +318,8 @@ words
 sentences
 ```
 
+Word counting is Unicode-letter aware and keeps supported internal straight/curly apostrophes and ASCII/Unicode hyphen forms inside the same word token.
+
 # Writing-rule API
 
 ## `WritingRule`
@@ -350,6 +352,8 @@ Current IDs:
 repeated-word
 sentence-capitalization
 repeated-space
+punctuation-spacing
+trailing-whitespace
 repeated-punctuation
 ```
 
@@ -695,7 +699,7 @@ complete               !truncated
 capturedIssueCount     issues.length
 ```
 
-The report does not claim `scannedTokenCount` is the document's total token count when `truncated` is true; analysis returns at the first proven overflow unknown token.
+The report does not claim `scannedTokenCount` is the document's total token count when `truncated` is true; analysis returns at the first proven overflow unknown token. The public constructor enforces its consistency invariants at runtime in debug and release builds: non-negative scanned counts, positive optional limits, a declared limit for truncated reports, captured issues not exceeding the limit, and scanned-token counts not smaller than captured issue counts.
 
 ## `SpellCheckerEngine.analyze`
 
@@ -801,7 +805,9 @@ For complete analyzer results the value is zero. For a genuinely truncated resul
 - an exact total cannot be smaller than the retained issue count;
 - a complete result with exact totals must report an exact total equal to the retained count;
 - a truncated result with exact totals must prove at least one uncaptured finding;
-- per-rule exact totals must be non-negative;
+- captured findings must belong to a rule listed in `analyzedRuleIds`;
+- captured findings must use the same `languageId` as the result;
+- per-rule exact totals must be non-negative and may contain only analyzed rule IDs;
 - the per-rule exact-total map must sum to the exact overall total;
 - a per-rule exact total cannot under-report the retained count for that rule;
 - exact diagnostic maps are exposed immutably.
@@ -823,3 +829,26 @@ print(result.uncapturedIssueCount); // exact omitted count when diagnostics are 
 V2.8 does not change the meaning of `maxIssues`. The bound controls retained `WritingIssue` objects and downstream review workload. Enabled/supported rules are still scanned across the supplied text so the analyzer can preserve the correct global review-order prefix and compute exact diagnostics.
 
 The diagnostics are count metadata only. They do not imply a CPU-time limit, wall-clock guarantee, document-size guarantee, network telemetry, or persistence behavior.
+
+# V2.9 writing-analysis diagnostic summary
+
+`package:spellchecker/writing.dart` exports `WritingAnalysisDiagnosticSummary` and `WritingRuleDiagnosticSummary`.
+
+```dart
+final result = WritingAnalyzer().analyze(
+  text,
+  languagePack: SpellLanguageRegistry.englishUs,
+  maxIssues: 200,
+);
+final summary = WritingAnalysisDiagnosticSummary.fromResult(
+  result,
+  rules: WritingRuleRegistry.builtIns,
+);
+final reportText = summary.toPlainText();
+```
+
+`fromResult` snapshots only analysis metadata. Rule rows are ordered lexically by stable rule ID regardless of iterable/set insertion order. If a direct compatibility result omits V2.8 exact totals, the summary preserves that uncertainty and renders exact total/uncaptured values as unavailable rather than guessing.
+
+`WritingAnalysisDiagnosticSummary` exposes language ID, captured count, optional exact total, optional capture limit, truncation state, immutable rule rows, `hasExactIssueTotals`, `uncapturedIssueCount`, and format version `1`. Each `WritingRuleDiagnosticSummary` contains rule ID/display name plus captured and optional exact total counts.
+
+The formatter does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal vocabulary, ignored words, review filters, correction history, timestamps, device identifiers, telemetry, or network metadata. Constructing/formatting the summary has no persistence, clipboard, or network side effect.
