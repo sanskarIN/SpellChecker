@@ -1,0 +1,401 @@
+name: V2.11 engineering ledger sync
+
+on:
+  push:
+    branches:
+      - v2.11-missing-punctuation-space
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: v211-ledger-finalization
+  cancel-in-progress: true
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: v2.11-missing-punctuation-space
+      BASE_SHA: 303ff7c5883e50298090546d7db76345e444c467
+
+    steps:
+      - name: Check out V2.11 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-missing-punctuation-space
+          fetch-depth: 0
+
+      - name: Wait for the same helper-free head to pass CI and release validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 90); do
+            git fetch origin "$BRANCH" >/dev/null 2>&1
+            head_sha="$(git rev-parse "origin/$BRANCH")"
+            helpers="$(git ls-tree -r --name-only "origin/$BRANCH" .github/workflows | grep '^\.github/workflows/v211-.*\.yml$' || true)"
+            if [ -n "$helpers" ]; then
+              sleep 10
+              continue
+            fi
+
+            validator_run="$(gh run list --workflow final-v211-release.yml --branch "$BRANCH" --status success --limit 30 --json databaseId,headSha --jq ".[] | select(.headSha == \"$head_sha\") | .databaseId" | head -n1)"
+            ci_run="$(gh run list --workflow ci.yml --branch "$BRANCH" --status success --limit 50 --json databaseId,headSha --jq ".[] | select(.headSha == \"$head_sha\") | .databaseId" | head -n1)"
+
+            if [ -n "$validator_run" ] && [ -n "$ci_run" ]; then
+              echo "V211_VALIDATED_SHA=$head_sha" >> "$GITHUB_ENV"
+              echo "V211_VALIDATOR_RUN=$validator_run" >> "$GITHUB_ENV"
+              echo "V211_FUNCTIONAL_CI_RUN=$ci_run" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Timed out waiting for helper-free CI/release validation.' >&2
+          exit 1
+
+      - name: Refresh exact validated branch
+        run: |
+          git fetch origin "$BRANCH"
+          git reset --hard "$V211_VALIDATED_SHA"
+
+      - name: Append complete V2.11 engineering ledger
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import os
+          import subprocess
+          import textwrap
+          from pathlib import Path
+
+          base = os.environ['BASE_SHA']
+          head = os.environ['V211_VALIDATED_SHA']
+          ci_run = os.environ['V211_FUNCTIONAL_CI_RUN']
+          validator_run = os.environ['V211_VALIDATOR_RUN']
+          commit_count = subprocess.check_output(
+              ['git', 'rev-list', '--count', f'{base}..{head}'],
+              text=True,
+          ).strip()
+          paths = subprocess.check_output(
+              ['git', 'diff', '--name-only', f'{base}..{head}'],
+              text=True,
+          ).splitlines()
+
+          section = textwrap.dedent(r'''
+          ## V2.11 — Missing Punctuation Space Mechanics
+
+          Release version: `2.11.0+16`
+
+          About version: `2.11.0`
+
+          V2.11 continues the roadmap's richer deterministic writing-rule catalogue with a deliberately narrow, source-owned mechanics rule instead of a broad grammar/parser expansion. The release adds `missing-punctuation-space`, advances current built-in writing defaults from six to seven rules, preserves exact explicit preference overrides, keeps bounded-analysis diagnostics exact, and makes the changed default writing workload visible through the V2.10 benchmark metadata rather than hiding it behind timing changes.
+
+          ### Stable public rule contract
+
+          `lib/writing/rules/missing_punctuation_space_rule.dart` introduces `MissingPunctuationSpaceRule` and `lib/writing.dart` exports it through the existing public writing barrel.
+
+          Stable metadata:
+
+          ```text
+          ID: missing-punctuation-space
+          Name: Missing punctuation space
+          Category: Mechanics
+          Severity: info
+          Automatic fix: yes
+          Language family: en
+          ```
+
+          The rule therefore supports both current English built-in packs, `en-US` and `en-GB`, through the existing language-family `WritingRule.supports` contract. It changes no language ID, dictionary, token pattern, normalizer, suffix list, suggestion policy, or language-pack persistence behavior.
+
+          ### Conservative punctuation scope
+
+          V2.11 recognizes only comma, semicolon, question mark, and exclamation mark boundaries:
+
+          ```text
+          , ; ? !
+          ```
+
+          Periods are deliberately excluded because direct letter/period/letter sequences are common in domains and abbreviations. Colons are deliberately excluded because letter/colon/letter can appear in URI-like schemes and digit/colon/digit is common in times. This is a deterministic low-false-positive mechanics rule, not a claim of complete punctuation grammar.
+
+          Numeric and non-letter boundaries remain outside the rule. Examples intentionally not owned include `1,000`, `word;9`, `value,_name`, a leading `?word`, or punctuation already followed by whitespace/line boundaries.
+
+          Repeated punctuation remains outside the new rule. Runs such as `??`, `!!`, `,,`, and `;;` remain owned by `RepeatedPunctuationRule`; a fresh analysis after collapsing a run can expose a newly eligible missing-space boundary if one then exists.
+
+          ### Composable word/punctuation boundary
+
+          The final V2.11 production matcher is intentionally more precise than the first implementation attempt:
+
+          ```text
+          Unicode letter + zero or more horizontal spaces/tabs + selected punctuation + Unicode letter
+          ```
+
+          Newlines are not crossed.
+
+          Allowing optional horizontal whitespace before the punctuation is required for deterministic composition with the existing `punctuation-spacing` rule. For `Hello ,world`:
+
+          - `punctuation-spacing` owns the horizontal whitespace before the comma;
+          - `missing-punctuation-space` owns the comma itself;
+          - those ranges are adjacent rather than overlapping;
+          - `WritingCorrection.applyAll` can safely produce `Hello, world` in one batch without widget-specific mutation logic.
+
+          The new issue still owns **only the punctuation character** and replaces it with the same punctuation plus one horizontal space. That avoids zero-length insertion findings and preserves the existing exact-original-text stale-source validation performed by `WritingCorrection`.
+
+          Unicode letters are supported while offsets remain Dart/Flutter UTF-16 source offsets, matching the rest of the correction model.
+
+          ### Registry and default behavior
+
+          `WritingRuleRegistry.builtIns` now contains seven rules:
+
+          ```text
+          repeated-word
+          sentence-capitalization
+          repeated-space
+          punctuation-spacing
+          missing-punctuation-space
+          trailing-whitespace
+          repeated-punctuation
+          ```
+
+          `WritingRuleRegistry.byId('missing-punctuation-space')` resolves the new rule and `defaultEnabledRuleIds` includes it.
+
+          No `WritingRule`, `WritingIssue`, `WritingAnalysisResult`, `WritingCorrection`, diagnostic-summary, language-pack, or storage constructor signature changed.
+
+          ### Migration-free writing-rule preferences
+
+          V2.11 deliberately keeps the existing versioned preference key family. There is no migration that rewrites stored rule sets.
+
+          The three established states remain distinct:
+
+          ```text
+          missing key       -> current registry defaults (now seven rules)
+          stored ID list    -> exact explicit enabled set
+          stored empty list -> explicit disable-all
+          ```
+
+          Regression coverage proves that:
+
+          - a user with no stored override receives the new seven-rule default set;
+          - a historical explicit V2.10 six-rule set remains exactly six and does not silently gain `missing-punctuation-space`;
+          - explicit disable-all remains empty;
+          - clearing/resetting the selected language override returns that language to the current seven-rule defaults;
+          - another language's explicit override remains isolated.
+
+          Production `DictionaryPreferences` was not modified for V2.11; the existing null-versus-explicit-set contract already provides the required compatibility behavior.
+
+          ### Bounded analysis and exact diagnostics
+
+          The rule participates in the unchanged V2.7/V2.8 bounded writing-analysis model.
+
+          When `maxIssues` is supplied:
+
+          - retained findings remain bounded;
+          - exact overall `totalIssueCount` remains available for analyzer-produced results;
+          - `totalIssueCountByRule['missing-punctuation-space']` remains exact;
+          - `uncapturedIssueCount` remains exact;
+          - search/filter/fix behavior stays captured-only when a result is truncated.
+
+          Focused V2.11 coverage includes a four-finding synthetic document captured with `maxIssues: 2`, proving two retained findings, exact total four, exact uncaptured count two, truncation true, and exact per-rule total four.
+
+          ### V2.10 benchmark workload evolution
+
+          V2.10 intentionally made analyzed writing-rule IDs and exact per-rule totals part of its benchmark report so registry evolution would be visible.
+
+          V2.11 advances the default writing benchmark workload from six to seven analyzed rules. Benchmark regression expectations now require the sorted set:
+
+          ```text
+          missing-punctuation-space
+          punctuation-spacing
+          repeated-punctuation
+          repeated-space
+          repeated-word
+          sentence-capitalization
+          trailing-whitespace
+          ```
+
+          Both US and UK benchmark tests assert the seven-rule set and exact per-rule-total sum consistency. The JSON report format remains version 1 because the fields already existed; this is an intentional workload change, not a report-schema change. Cross-version timing comparisons must account for the changed active rule set and normal CI remains threshold-free.
+
+          ### Focused rule regression coverage
+
+          `test/missing_punctuation_space_rule_test.dart` covers:
+
+          - stable ID/name/category/severity/language support;
+          - comma, semicolon, question-mark, and exclamation-mark findings;
+          - consecutive eligible boundaries such as `one,two,three,four`;
+          - optional horizontal whitespace before punctuation;
+          - Unicode letter boundaries and UTF-16-compatible ranges;
+          - already-spaced and line-boundary exclusions;
+          - period/colon exclusions;
+          - numeric/non-letter exclusions;
+          - repeated-punctuation ownership;
+          - exact punctuation-only `originalText`/range/replacement behavior;
+          - stale-safe single correction and post-insertion caret position.
+
+          ### Analyzer, batch, and diagnostic integration coverage
+
+          `test/missing_punctuation_space_integration_test.dart` covers:
+
+          - seven-rule default analyzer membership;
+          - registry lookup/default enablement;
+          - explicit single-rule enablement;
+          - bounded exact diagnostics for the new rule;
+          - adjacent `punctuation-spacing` plus `missing-punctuation-space` batch composition;
+          - repeated-punctuation specialized ownership.
+
+          `test/writing_rules_test.dart` advances the generic registry/analyzer expectations from six to seven rules and verifies the new ID in the current default catalogue.
+
+          ### Persistence and Writing-insights UI coverage
+
+          `test/writing_preferences_test.dart` preserves the existing persistence regressions and adds V2.11 default/explicit-set compatibility cases against the **real** `DictionaryPreferences` API.
+
+          `test/missing_punctuation_space_widget_test.dart` proves:
+
+          - unset preferences show the new Writing-insights switch enabled;
+          - `Hello,world` produces the new finding;
+          - `Apply safe fix` changes the editor to `Hello, world` and exposes normal correction undo;
+          - a persisted V2.10-era explicit six-rule list shows the V2.11 switch disabled and does not report the new finding.
+
+          The existing Writing-insights controls, filters, batch behavior, keyboard shortcut, semantics, and correction-history implementation are reused; V2.11 adds no new standalone app control.
+
+          ### Focused diagnostic evidence during development
+
+          When the first complete suite reported a test-stage failure without a useful aggregated log through the connector, read-only diagnostic run `31770773378` executed the relevant suites individually. Rule unit, analyzer integration, preference compatibility, V2.11 widget behavior, existing writing rules, benchmark workload, and the existing core widget suite all completed successfully after the ownership fix.
+
+          A later matrix diagnostic enumerated the remaining `test/writing_*.dart` files as independent jobs so existing review/query/preset/diagnostic suites could not be silently skipped during compatibility investigation.
+
+          ### Release identity
+
+          - `pubspec.yaml` advances from `2.10.0+15` to `2.11.0+16`.
+          - the About dialog advances from `2.10.0` to `2.11.0`;
+          - the About widget regression expectation advances to V2.11;
+          - README/changelog/roadmap/release docs identify V2.11 as the current release candidate;
+          - V2.10 benchmark documentation records the seven-rule post-V2.10 workload evolution.
+
+          No runtime dependency or lockfile dependency version is intentionally changed by V2.11.
+
+          ### Privacy and security boundary
+
+          `MissingPunctuationSpaceRule` is source-controlled compiled Dart code running locally against the in-memory text already supplied to `WritingAnalyzer`.
+
+          V2.11 adds no:
+
+          - application network request;
+          - cloud spelling/grammar service;
+          - analytics or telemetry;
+          - advertising/account behavior;
+          - document persistence/history;
+          - new preference key/version;
+          - runtime package dependency;
+          - dynamic rule download/plugin execution.
+
+          Findings remain ordinary in-memory `WritingIssue` values. The automatic fix owns an existing punctuation character, so existing source-range validation is retained instead of introducing an unverifiable zero-length insertion.
+
+          ### Documentation, templates, and release process
+
+          V2.11 synchronizes current release behavior across README, changelog, roadmap, API, writing rules, architecture, performance, testing, development, privacy, security, language-pack, accessibility, user-guide, troubleshooting, support, contribution, release instructions, the dedicated V2.11 rule guide, V2.10 benchmark workload notes, bug/feature issue templates, and the pull-request checklist.
+
+          The release documentation also corrects the remaining stale V2.10 automated-release-check example so current automated checks format `lib test tool` and exercise the threshold-free benchmark CLI smoke command.
+
+          ### Complete tracked-file audit boundary
+
+          V2.11 starts from merged V2.10 commit `303ff7c5883e50298090546d7db76345e444c467`, whose repository surface had already passed the complete V2.10 code/config/test/document audit plus exact CI/release-web validation.
+
+          Immediately before the `what_changed.md` ledger commit, the helper-free validated V2.11 head is `__V211_VALIDATED_SHA__`, `__V211_COMMIT_COUNT__` granular commits ahead of that V2.10 base and zero commits behind `main`, with `__V211_PATH_COUNT__` permanent changed paths. Every changed path was reviewed through direct source/test/config/document inspection, exact PR patch comparison, executable validation, or guarded documentation transformation. Every tracked path absent from the compare set is byte-identical to the fully audited V2.10 base and was intentionally not churned simply to mention V2.11.
+
+          The permanent V2.11 functional diff covers:
+
+          - the new public rule implementation;
+          - the writing barrel export;
+          - exactly one analyzer import plus one built-in registry entry;
+          - package/About release identity;
+          - focused rule/analyzer/persistence/widget/benchmark regressions;
+          - current documentation and release templates;
+          - the requested `what_changed.md` ledger as the final permanent audit path.
+
+          ### Defects caught and fixed during V2.11 development
+
+          The development audit found and corrected multiple real problems instead of treating predecessor green CI as proof that the new milestone was correct:
+
+          1. The first correction test tried to compare a partial `WritingCorrectionResult` object even though the model requires a caret offset and does not use value equality; the test was rewritten to assert `applied`, final text, and caret explicitly.
+          2. Dart 3.13 formatting differences in new unit/integration tests were committed as style-only fixes before analyzer/test evaluation.
+          3. An early full-file registry edit accidentally dropped V2.10 analyzer documentation comments and replaced the efficient captured-count validation with repeated per-issue rescanning. Direct PR-patch audit caught the unintended churn; the exact V2.10 analyzer implementation was restored, leaving only the intended new-rule import and registry entry.
+          4. The first V2.11 preference regression used an incorrect storage-adapter constructor/API, a prohibited relative `lib` import, and a nonexistent removal method. `flutter analyze` caught the mistake; the test was rewritten against the real package import, named `languageId` arguments, and `clearWritingRuleIds`. Production storage code was not changed to satisfy a mistaken test.
+          5. The corrected preference test then received its canonical Dart formatter rewrite as a separate style commit.
+          6. The first roadmap cleanup helper used an empty replacement guard that treated an empty string as already present, leaving two completed future bullets behind. The exact compare audit caught that documentation defect.
+          7. The first explicit roadmap cleanup used wording that did not exactly match the repository's current bullets and failed before pushing either local cleanup commit; current branch text was then read directly and the exact two completed V2.10/V2.11 bullets were removed in a separate documentation commit.
+          8. The first production matcher required the punctuation's immediate left neighbor to be a letter, so `Hello ,world` could not produce both before- and after-punctuation fixes as the ownership design required. The matcher was corrected to permit optional horizontal space/tab before the punctuation while still owning only the punctuation character; focused tests cover this composition explicitly.
+          9. That ownership correction made earlier “directly surrounded by letters” documentation stale. Current README/API/writing-rule/V2.11/support/issue text was reconciled to the actual word + optional horizontal whitespace + punctuation + immediate letter boundary.
+          10. The first documentation-consistency helper assumed two current rule catalogues were Markdown tables, but those lists are fenced text blocks; the helper failed without pushing. A section-aware replacement was used instead and the current seven-rule catalogues were verified directly.
+          11. The release-doc audit found current GitHub Release/dependency wording still saying V2.10 and an automated-check block still formatting only `lib test`; V2.11 release instructions now reflect `lib test tool`, benchmark smoke, V2.11 identity, and unchanged runtime dependency scope.
+          12. Full-suite compatibility investigation used focused and matrix diagnostics instead of weakening expected findings or disabling the new default rule to make tests pass.
+
+          ### Helper-free functional CI evidence
+
+          Ordinary CI run `__V211_FUNCTIONAL_CI_RUN__` validated helper-free V2.11 candidate `__V211_VALIDATED_SHA__` and completed the repository's permanent gates successfully:
+
+          ```text
+          flutter pub get
+          dart format --output=none --set-exit-if-changed lib test tool
+          flutter analyze
+          flutter test --reporter expanded
+          dart run tool/benchmark_large_document.dart --repeats=4 --warmup=0 --iterations=1 --spelling-limit=2 --writing-limit=5 --suggestions=0 --language=en-US --json
+          ```
+
+          ### Read-only final V2.11 release-validator evidence
+
+          Read-only final validator run `__V211_VALIDATOR_RUN__` validated the same head `__V211_VALIDATED_SHA__` and passed:
+
+          ```text
+          flutter pub get
+          git diff --exit-code -- pubspec.lock
+          dart format --output=none --set-exit-if-changed lib test tool
+          flutter analyze
+          flutter test --reporter expanded
+          en-US JSON benchmark: 250 repetitions, 1 warmup, 3 measured iterations
+          en-GB human benchmark: 50 repetitions, 1 warmup, 2 measured iterations
+          flutter build web --release
+          ```
+
+          The validator additionally requires no `v211-*` temporary workflow, checks package/About/README/changelog/roadmap identity, verifies the dedicated V2.11 document, verifies the current API/Writing Rules/User Guide seven-rule catalogues, requires the two completed roadmap future bullets to be absent, confirms JSON format version 1, confirms the sorted seven-rule benchmark workload, confirms exact per-rule totals sum to exact total findings, requires the new rule to produce benchmark findings, respects configured capture limits, and verifies corpus-text exclusion from both JSON and human benchmark reports.
+
+          ### Result at the release gate
+
+          The validated V2.11 candidate has no known remaining formatter failure, analyzer diagnostic, failing automated test, benchmark validation failure, lockfile drift, or release-web build failure at the recorded gate. Machine-dependent benchmark timings remain deliberately outside correctness thresholds.
+
+          This ledger is committed only after the same helper-free head passes both ordinary CI and the read-only release validator. The ledger-sync workflow and validator are then removed from the branch, and one final ordinary CI run is required on that exact permanent-tree head before merge. No temporary V2.11 helper or finalization workflow may enter `main`.
+          ''')
+
+          section = (
+              section
+              .replace('__V211_VALIDATED_SHA__', head)
+              .replace('__V211_FUNCTIONAL_CI_RUN__', ci_run)
+              .replace('__V211_VALIDATOR_RUN__', validator_run)
+              .replace('__V211_COMMIT_COUNT__', commit_count)
+              .replace('__V211_PATH_COUNT__', str(len(paths)))
+          )
+
+          path = Path('what_changed.md')
+          text = path.read_text()
+          heading = '## V2.11 — Missing Punctuation Space Mechanics'
+          if heading not in text:
+              path.write_text(text.rstrip() + '\n\n' + section.strip() + '\n')
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- what_changed.md; then
+            git add what_changed.md
+            git commit -m "docs: record complete V2.11 engineering changes"
+          fi
+
+      - name: Remove finalization workflows and push permanent tree
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/final-v211-release.yml .github/workflows/ledger-v211-sync.yml
+          git commit -m "ci: remove V2.11 finalization workflows"
+          git fetch origin "$BRANCH"
+          git rebase "origin/$BRANCH"
+          git push origin HEAD:"$BRANCH"
