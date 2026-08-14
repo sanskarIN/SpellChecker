@@ -43,6 +43,46 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('buildTextSpan preserves active IME composing decoration', (
+    WidgetTester tester,
+  ) async {
+    final controller = SpellCheckEditingController();
+    controller.value = const TextEditingValue(
+      text: 'Helo',
+      selection: TextSelection.collapsed(offset: 4),
+      composing: TextRange(start: 0, end: 4),
+    );
+    controller.setIssues(const <SpellIssue>[
+      SpellIssue(word: 'Helo', start: 0, end: 4),
+    ], activeIssueIndex: 0);
+
+    late TextSpan span;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (BuildContext context) {
+            span = controller.buildTextSpan(
+              context: context,
+              style: const TextStyle(fontSize: 16),
+              withComposing: true,
+            );
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+
+    final children = span.children!.whereType<TextSpan>().toList();
+    final composingSpan = children.singleWhere(
+      (TextSpan child) => child.text == 'Helo',
+    );
+    expect(span.toPlainText(), 'Helo');
+    expect(composingSpan.style?.decoration, TextDecoration.underline);
+    expect(composingSpan.style?.backgroundColor, isNull);
+
+    controller.dispose();
+  });
+
   test('clearIssues resets highlighting state', () {
     final controller = SpellCheckEditingController(text: 'Helo');
     controller.setIssues(const <SpellIssue>[
