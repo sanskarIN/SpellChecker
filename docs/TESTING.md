@@ -518,3 +518,9 @@ For the release candidate, run the normal format/analyze/full-test gate and `flu
 Benchmark tooling is tested as correctness infrastructure, not with wall-clock thresholds. The V2.10 suite covers deterministic corpus generation and metadata privacy, scenario bound validation, sample/result invariants, odd/even median aggregation, immutable samples, stable outcome validation across iterations, runner behavior for US/UK packs, strict CLI parsing, human/JSON corpus-text exclusion, help/error exits, and a small end-to-end JSON command run.
 
 Permanent CI formatting now includes `tool/`, then runs `flutter analyze`, the complete Flutter test suite, and a tiny synthetic benchmark CLI smoke command. The release workflow repeats those checks before the web build. Timing values themselves must not become pass/fail expectations unless the project later establishes a controlled benchmark environment with an explicitly reviewed policy.
+
+## V2.11 missing punctuation space regression contract
+
+V2.11 regression coverage verifies stable rule metadata, US/UK support, comma/semicolon/question/exclamation findings, consecutive eligible boundaries, Unicode letters, already-spaced text, period/colon exclusions, numeric/non-letter exclusions, repeated-punctuation ownership, exact punctuation-only source ranges, stale-safe correction, seven-rule registry/defaults, explicit single-rule analysis, bounded exact diagnostics, adjacent batch composition, preference compatibility, Writing-insights default/explicit-override behavior, and the seven-rule V2.10 benchmark workload.
+
+Preference tests must distinguish an unset key from explicit empty and from a historical explicit six-rule set. Widget tests must prove both default enablement and explicit-override non-enable behavior.
