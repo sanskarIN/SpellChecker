@@ -45,7 +45,10 @@ void main() {
     expect(report, contains('Spelling min/median/max: 10/10/10'));
     expect(report, contains('Writing total findings: 8'));
     expect(report, contains('Writing analyzed rules: rule-a, rule-b'));
-    expect(report, contains('Writing exact totals by rule: rule-a=5, rule-b=3'));
+    expect(
+      report,
+      contains('Writing exact totals by rule: rule-a=5, rule-b=3'),
+    );
     expect(report, contains('generated synthetically'));
     expect(report, isNot(contains('never-print-this-corpus')));
   });
