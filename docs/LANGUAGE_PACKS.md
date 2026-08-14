@@ -337,3 +337,9 @@ Portable settings still transfer durable non-document preferences only; V2.8 exa
 `SpellLanguagePack` defensively snapshots its dictionary, frequency map, and recognized-suffix list at construction. Mutating caller-owned collections after pack creation therefore cannot silently change token acceptance or suffix behavior.
 
 When a caller supplies a custom `wordFrequencies` map to `SpellCheckerEngine`, its keys are normalized through the active pack just like dictionary words. Empty normalized keys are discarded, and when multiple input keys normalize to the same word the lowest rank value is kept. This preserves deterministic frequency-aware ordering for mixed-case/custom-normalizer inputs.
+
+## V2.10 benchmark language behavior
+
+The V2.10 developer benchmark accepts the two current built-in IDs, `en-US` and `en-GB`, and passes the selected `SpellLanguagePack` through the existing spelling/writing APIs. The pack still owns tokenization, normalization, suffix behavior, suggestion-distance policy, language identity, and writing-rule support.
+
+For workload stability the benchmark supplies its own fixed synthetic dictionary/frequency metadata to `SpellCheckerEngine`; this does **not** change either built-in pack's application dictionary or persisted vocabulary behavior. Adding a future language pack does not automatically make it a benchmark option: benchmark eligibility must be reviewed/tested explicitly so comparisons remain intentional.
