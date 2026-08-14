@@ -571,3 +571,9 @@ Diagnostics describe one analysis snapshot. After changing editor text, language
 ## V2.10 developer benchmark note
 
 V2.10's large-document benchmark is repository developer tooling, not an editor feature. Regular SpellChecker use does not require running it and no benchmark control appears in the application UI. Maintainers/contributors who need controlled synthetic performance comparisons should use `tool/benchmark_large_document.dart` and the dedicated [V2.10 benchmark guide](V2_10_BENCHMARK.md). The command does not read the current editor document.
+
+## Missing punctuation space — V2.11
+
+Writing insights includes **Missing punctuation space** by default for users following current registry defaults. Examples include `Hello,world` → `Hello, world`, `Try;again` → `Try; again`, `Really?Yes` → `Really? Yes`, and `Great!Next` → `Great! Next`.
+
+The rule intentionally does not flag periods/colons such as `example.com`, `mailto:user@example.com`, or `12:30`; numeric/non-letter boundaries and repeated punctuation are also outside its scope. Users with an explicit previously saved rule list keep exactly that list. Use **Reset rules to defaults** to return to the current seven-rule defaults.
