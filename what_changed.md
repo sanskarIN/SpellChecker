@@ -620,7 +620,7 @@ flutter test --reporter expanded
 flutter build web --release
 ```
 
-All commands above completed successfully before this section was committed. A final ordinary CI run is required again after removing the one-time validator so the permanent-tree head is independently checked with the repository's normal workflow.
+All commands above completed successfully before this section was committed. After removing the one-time validator and the final documentation-only synchronization helper, the permanent-tree head was independently checked by the repository's ordinary CI workflow; dependency installation, formatting, `flutter analyze`, and the full Flutter test suite all completed successfully.
 
 ### Result
 
