@@ -279,3 +279,7 @@ For writing-analysis count/ordering problems, maintainers can ask for the determ
 ## V2.10 benchmark support
 
 For V2.10 benchmark questions, include the exact benchmark command, selected built-in language, Flutter/Dart versions, scenario repetition/limit values, and the metadata-only report output when safe. Use the built-in synthetic corpus; do not attach private documents to reproduce performance observations. Timing differences are meaningful only when the compared environment/toolchain and command are controlled. Malformed options, unsupported language IDs, changing analysis outcomes across measured iterations, or benchmark command crashes are correctness/support issues; a slower number on unrelated hardware by itself is not.
+
+## V2.11 missing punctuation space support
+
+For V2.11 reports include the stable rule ID `missing-punctuation-space`, selected language, whether the rule preference was unset/default or explicitly stored, and a minimal synthetic boundary. Distinguish a false negative in an eligible letter+punctuation+letter sequence from intentionally excluded periods/colons, numeric/non-letter neighbors, or repeated punctuation. For batch issues include adjacent `punctuation-spacing` findings and applied/skipped counts using synthetic text only.
