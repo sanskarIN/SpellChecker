@@ -51,12 +51,16 @@ jobs:
           data = json.loads(Path('/tmp/v211-benchmark.json').read_text())
           assert data['formatVersion'] == 1
           sample = data['samples'][0]
-          rule_ids = sample['writing']['analyzedRuleIds']
-          totals = sample['writing']['totalIssueCountByRule']
+          rule_ids = sample['writingAnalyzedRuleIds']
+          totals = sample['writingTotalIssuesByRule']
           assert rule_ids == sorted(rule_ids)
           assert set(rule_ids) == set(totals)
           assert all(isinstance(totals[rule_id], int) and totals[rule_id] >= 0 for rule_id in rule_ids)
-          assert sum(totals.values()) == sample['writing']['totalIssueCount']
+          assert sum(totals.values()) == sample['writingTotalIssues']
+          outcome = data['analysisOutcome']
+          assert outcome['writingAnalyzedRuleIds'] == rule_ids
+          assert outcome['writingTotalIssuesByRule'] == totals
+          assert outcome['writingTotalIssues'] == sample['writingTotalIssues']
           PY
       - name: Validate UK benchmark command
         run: >-
