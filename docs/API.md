@@ -860,3 +860,11 @@ V2.10 adds developer tooling under `tool/benchmark/` and the `tool/benchmark_lar
 The benchmark composes the existing public spelling/language/writing APIs from outside the application runtime. V2.10 therefore adds no supported runtime package API surface, no application timing field on `SpellCheckReport` or `WritingAnalysisResult`, and no timing telemetry contract. Consumers that need performance measurements should treat the `tool/` implementation as repository developer tooling rather than a semver-stable library API.
 
 See [V2.10 benchmark](V2_10_BENCHMARK.md) and [Performance](PERFORMANCE.md).
+
+## V2.11 runtime and benchmark invariant hardening
+
+`WritingInsightsDialog` remains an editor-feature widget rather than a new exported writing-model API, but its existing `maxIssues` constructor parameter is now validated at runtime. Values less than or equal to zero throw `ArgumentError` in release and debug builds. The default remains 200.
+
+V2.11 does not change `WritingAnalyzer.analyze()`, `WritingAnalysisResult`, `WritingIssue`, writing-rule IDs, correction APIs, language packs, persistence keys, or diagnostic-summary format. Review keyboard shortcuts and semantic labels operate over the existing analysis/query models.
+
+The developer benchmark under `tool/` strengthens its internal sample invariant: `writingTotalIssueCountByRule` must contain exactly one non-negative entry for every analyzed writing rule and no other rule. The runner materializes explicit zero values for analyzed rules that produced no findings before constructing a sample. This benchmark tooling remains outside the public package barrels and keeps JSON format version 1.
