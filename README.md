@@ -20,6 +20,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Bounded Writing insights analysis with an explicit first-200 finding policy, exact observed/per-rule totals, captured/total diagnostics, and captured-only limited-review/fix semantics.
 - Deterministic privacy-safe V2.9 writing-analysis diagnostic summaries containing counts and rule metadata only.
 - Developer-run V2.10 deterministic large-document benchmark tooling with synthetic corpus generation, versioned JSON/human reports, and CI smoke coverage.
+- V2.11 keyboard-first Writing insights review with Ctrl/Command+F search focus, deterministic Escape filter clearing, and live rule/finding count semantics.
 - Optional local **Writing insights** with configurable deterministic rules.
 
 - Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
@@ -58,9 +59,17 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.10.0+15`
+`2.11.0+16`
 
-Version 2.10 is the **Deterministic Large-Document Benchmarking** release. It adds a developer-run synthetic benchmark harness for bounded spelling and writing analysis, immutable timing/outcome summaries, stable versioned JSON and human-readable reports, strict CLI validation, and permanent CI/release smoke coverage. The benchmark never reads editor documents, adds no telemetry or persistence, and does not turn machine-dependent timing values into correctness thresholds.
+Version 2.11 is the **Keyboard-First Writing Insights Accessibility** release. It gives the existing local Writing insights dialog direct Ctrl/Command+F search focus, deterministic two-stage Escape behavior, live semantic rule/finding counts, release-mode validation of the dialog capture bound, and focused keyboard/semantics regressions. It also strengthens the V2.10 benchmark so exact per-rule totals explicitly contain every analyzed rule, including zero-count rules. No new persistence format, runtime dependency, telemetry, account behavior, or application network request is introduced.
+
+## Keyboard-first Writing insights accessibility — V2.11
+
+While Writing insights is open, `Ctrl+F` / `Command+F` moves focus to the existing **Search rules and findings** field. Escape is intentionally two-stage: when transient search/category/automatic-fix filters are active it clears the entire transient review query and keeps the dialog open; when the review query is already empty, Escape closes the dialog through the normal result path. A focus anchor inside the shortcut scope keeps these bindings available while keyboard focus moves among dialog controls.
+
+Visible rule and finding counts now expose concise live semantic labels. Limited results keep their existing captured-only safety boundary and, when exact diagnostics are available, announce the relationship between visible, captured, and exact total findings without implying uncaptured findings are reviewable or fixable. `WritingInsightsDialog.maxIssues` is validated at runtime, so invalid non-positive bounds are rejected in release builds as well as tests.
+
+V2.11 does not persist review search/categories/automatic-fix filters, does not add clipboard behavior beyond the existing explicit diagnostic-summary copy action, and does not add network or telemetry behavior. See [V2.11 accessibility contract](docs/V2_11_ACCESSIBILITY.md) and [Accessibility](docs/ACCESSIBILITY.md).
 
 ## Deterministic large-document benchmark — V2.10
 
