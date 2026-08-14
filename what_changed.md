@@ -625,3 +625,208 @@ All commands above completed successfully before this section was committed. Aft
 ### Result
 
 The audited candidate has no known remaining formatter error, analyzer diagnostic, failing automated test, lockfile drift, or release-web build failure. This is a verified zero-failure state for the repository's automated gates and the audited invariants above; it is not a claim that any non-trivial software can be mathematically guaranteed to contain zero undiscovered future bugs.
+## V2.10 — Deterministic Large-Document Benchmarking
+
+Release version: `2.10.0+15`
+
+About version: `2.10.0`
+
+V2.10 implements the roadmap's repeatable large-document performance-observation milestone as developer-run tooling rather than application telemetry. It composes the existing bounded spelling and writing-analysis APIs over generated synthetic text, keeps production result models timing-free, and makes benchmark workload/output contracts deterministic enough for controlled cross-commit comparisons.
+
+### Deterministic synthetic scenario
+
+`tool/benchmark/analysis_benchmark_scenario.dart` adds `AnalysisBenchmarkScenario`.
+
+- The standard corpus is generated from a source-controlled synthetic chunk and repeat count.
+- Repetitions use one newline separator, making generated character count deterministic.
+- Scenario name must be non-blank.
+- Repeat count and spelling/writing capture limits must be positive.
+- Suggestion limit must be non-negative, allowing deliberate zero-suggestion scans.
+- Custom chunks must be non-empty.
+- `toJsonMetadata()` exposes only scenario shape and never serializes corpus text.
+
+The standard chunk deliberately exercises a stable spelling misspelling plus repeated spaces, repeated words, punctuation-spacing/repetition, sentence-capitalization, and trailing-whitespace writing-rule paths.
+
+### Stable spelling workload
+
+`tool/benchmark/analysis_benchmark_runner.dart` supplies a fixed source-controlled benchmark dictionary and frequency table rather than depending on the complete evolving bundled vocabulary. This prevents normal dictionary expansion from silently changing benchmark spelling eligibility.
+
+The selected `SpellLanguagePack` still owns tokenization, normalization, suffix behavior, suggestion-distance policy, language identity, and language-aware writing support.
+
+Each warmup/measured iteration creates a fresh `SpellCheckerEngine` and `WritingAnalyzer`, preventing suggestion-cache or mutable session state from contaminating later samples.
+
+### Immutable benchmark result model
+
+`tool/benchmark/analysis_benchmark_result.dart` adds `AnalysisBenchmarkSample` and `AnalysisBenchmarkSummary`.
+
+Each sample records:
+
+- zero-based iteration index;
+- spelling and writing elapsed durations;
+- spelling scanned-token/captured-issue/truncation metadata;
+- writing captured/exact-total/truncation metadata;
+- sorted analyzed writing-rule IDs;
+- sorted exact per-rule writing totals.
+
+Runtime validation rejects negative indexes/durations/counts, spelling captures above scanned tokens, impossible writing totals, writing truncation inconsistent with exact uncaptured counts, blank/duplicate rule IDs, totals for non-analyzed rules, negative rule totals, and per-rule sums that disagree with the exact overall writing total.
+
+Rule-ID lists, per-rule maps, and sample collections are defensive immutable snapshots.
+
+### Cross-model scenario consistency
+
+`AnalysisBenchmarkSummary` additionally rejects samples that contradict the scenario:
+
+- spelling captures cannot exceed the configured spelling limit;
+- a truncated spelling sample must fill that capture limit;
+- writing captures cannot exceed the configured writing limit;
+- a truncated writing sample must fill that capture limit;
+- sample indexes must be contiguous and zero-based;
+- at least one measured sample is required;
+- language ID must be non-blank;
+- warmup count must be non-negative.
+
+Across measured iterations, every deterministic outcome must remain identical: spelling scanned/captured/truncated values, writing captured/exact-total/truncated values, analyzed rule IDs, and exact per-rule totals. Elapsed times may vary; analysis workload/outcomes may not.
+
+### Timing aggregation
+
+The summary exposes spelling/writing minimum, median, and maximum durations.
+
+Odd-size medians select the middle sorted microsecond value. Even-size medians use the integer midpoint of the two middle values. Timings are descriptive machine/toolchain observations and are never correctness thresholds.
+
+Timing data remains outside `SpellCheckReport` and `WritingAnalysisResult`, preserving deterministic production result contracts.
+
+### Versioned JSON and human reports
+
+Benchmark JSON uses `formatVersion == 1` and contains language, scenario shape, warmup/measured iteration counts, min/median/max timings, deterministic spelling outcomes, writing captured/exact/truncated outcomes, analyzed rule IDs, exact per-rule totals, and individual measured samples.
+
+The JSON report never serializes generated corpus text. Any incompatible future shape change must advance the format version.
+
+`tool/benchmark/analysis_benchmark_reporter.dart` renders the same workload and aggregate timing metadata in human-readable form, including sorted analyzed rule IDs and exact per-rule totals, while excluding corpus text.
+
+### Strict CLI configuration and exit behavior
+
+`tool/benchmark/analysis_benchmark_options.dart` supports:
+
+- `--repeats=N`
+- `--warmup=N`
+- `--iterations=N`
+- `--spelling-limit=N`
+- `--writing-limit=N`
+- `--suggestions=N`
+- `--language=ID`
+- `--json`
+- `--help`
+
+Malformed, unknown, duplicate, missing-value, and non-integer options are rejected before execution. Current benchmark language IDs are `en-US` and `en-GB`.
+
+`tool/benchmark/analysis_benchmark_command.dart` distinguishes configuration from execution failures:
+
+- help returns 0;
+- malformed/unsupported configuration returns usage error 64 with usage text;
+- deterministic execution/invariant failure returns software error 70 without misleading usage text;
+- successful human/JSON execution returns 0.
+
+`tool/benchmark_large_document.dart` is the thin stdout/stderr/exit-code entrypoint.
+
+### Focused benchmark tests
+
+V2.10 adds six layered benchmark test files:
+
+- `test/analysis_benchmark_scenario_test.dart`
+- `test/analysis_benchmark_result_test.dart`
+- `test/analysis_benchmark_runner_test.dart`
+- `test/analysis_benchmark_options_test.dart`
+- `test/analysis_benchmark_reporter_test.dart`
+- `test/analysis_benchmark_command_test.dart`
+
+Coverage includes deterministic corpus construction, metadata privacy, invalid bounds, result/scenario invariants, defensive immutability, odd/even medians, stable multi-sample outcomes, both built-in language packs, all six writing-rule IDs, exact per-rule sum consistency, CLI parsing/errors, human/JSON corpus exclusion, and an end-to-end JSON command run.
+
+The existing widget suite also advances the About-version assertion to `2.10.0`.
+
+### Permanent CI and release validation
+
+`.github/workflows/ci.yml` now formats `lib test tool`, runs `flutter analyze`, executes the complete Flutter tests, and runs a tiny synthetic benchmark CLI smoke command with no timing threshold.
+
+`.github/workflows/release.yml` repeats format/analyze/test/benchmark smoke before `flutter build web --release` and artifact upload.
+
+Timing values are never normal CI pass/fail thresholds.
+
+### Version and compatibility boundaries
+
+- `pubspec.yaml` advances to `2.10.0+15`.
+- The About dialog reports `2.10.0`.
+- Benchmark classes live under `tool/` and are intentionally not exported through public package barrels.
+- No runtime dependency was added.
+- No public spelling/writing runtime API, persisted preference key, transfer format, language ID, writing-rule ID, correction contract, storage adapter, or editor workflow was changed by the benchmark milestone.
+- `shared_preferences` remains the application-local preference runtime dependency.
+
+### Privacy and security boundaries
+
+The benchmark generates its own source-controlled synthetic text. It does not automatically read editor documents, clipboard content, personal vocabulary, ignored words, preferences, correction history, raw findings, or arbitrary document files.
+
+Human/JSON reports serialize shape/count/rule/timing metadata only and exclude corpus text. The benchmark does not automatically persist or upload reports.
+
+CLI values are validated data, not evaluated code. The benchmark adds no analytics, telemetry, advertising, account system, cloud grammar/spelling service, background upload, or application runtime network request.
+
+Machine-dependent timings are not CPU/wall-clock/security guarantees and are not used as correctness thresholds.
+
+### Documentation and repository metadata synchronized
+
+V2.10 updates README, changelog, roadmap, performance/testing/development/privacy/security/releasing/architecture/API/language-pack/writing-rule/accessibility/user-guide/troubleshooting/support/contribution documentation, bug/feature issue templates, and the pull-request checklist. `docs/V2_10_BENCHMARK.md` is the dedicated benchmark contract.
+
+Templates request synthetic-only reproduction information and distinguish deterministic outcome failures from unrelated machine timing variation.
+
+### Complete tracked-file audit boundary
+
+V2.10 starts from merged V2.9 hardening commit `1c33a95142cb951b5a8d3e69aedd5e81bfac6434`, whose complete repository surface had already passed the V2.9 code/config/test/document audit and exact final validation.
+
+Immediately before the final release-validator helper was added, compare from that base to helper-free functional candidate `ccb7a0e250f7fe859c15e383aea78c72792026fd` reported 73 granular development commits, zero commits behind main, and exactly 40 permanent changed paths. Every V2.10 changed path was reviewed through direct source/test/config inspection or guarded exact documentation transformations. Every tracked path absent from the compare set is byte-identical to the fully audited V2.9 base and was intentionally not churned merely to mention V2.10.
+
+The permanent functional diff covers both issue templates, the PR template, both permanent workflows, root release/governance/support documents, all V2.10-relevant technical/user docs plus the new dedicated benchmark guide, About/package version metadata, six benchmark test files plus the About widget test, and the benchmark implementation/CLI files under `tool/`.
+
+This `what_changed.md` update is the additional permanent release-ledger path.
+
+### Defects found and fixed during V2.10 development
+
+The development audit caught and fixed real defects instead of treating predecessor green CI as proof of new-code correctness:
+
+- canonical Dart 3.13 formatting drift in new benchmark tests/result code;
+- a benchmark-result test that cleared its source list before reading `source.first`;
+- an unnecessary language import in the runner;
+- an invalid `SpellCheckReport.isTruncated` reference, corrected to the real `truncated` contract;
+- initially weak cross-model sample/scenario invariants;
+- command execution failures initially being mislabeled as option/usage failures;
+- benchmark reports initially omitting analyzed writing-rule IDs and exact per-rule totals needed to reproduce the writing workload;
+- stale documentation wording that called validated CLI integers “bounded” when no arbitrary maximum is imposed;
+- the first release-validator YAML definition embedding an unindented Markdown heredoc, causing workflow-parse failure before any project command ran. The validator was split into a compact read-only gate plus a separate ledger-sync write step.
+
+### Functional CI evidence
+
+Ordinary CI run `31768678031` (CI #340) validated helper-free functional candidate `ccb7a0e250f7fe859c15e383aea78c72792026fd` and passed:
+
+- dependency resolution;
+- canonical `lib test tool` formatting;
+- `flutter analyze`;
+- the complete Flutter test suite;
+- the threshold-free benchmark CLI smoke command.
+
+### Final V2.10 release-validator evidence
+
+Read-only V2.10 final release-validator run `31768853528` validated candidate `8d654ece6fb3bcb686f4e2aaf9e79224600b7b4c` and passed every configured stage:
+
+```text
+flutter pub get
+git diff --exit-code -- pubspec.lock
+dart format --output=none --set-exit-if-changed lib test tool
+flutter analyze
+flutter test --reporter expanded
+en-US JSON benchmark: 250 repeats, 1 warmup, 3 measured iterations
+en-GB human benchmark: 50 repeats, 1 warmup, 2 measured iterations
+flutter build web --release
+```
+
+The gate additionally asserted V2.10 package/About/README/changelog/roadmap identity, JSON format version 1, the sorted six-rule analyzed writing set, exact per-rule-total sum consistency, capture-limit consistency, corpus-text exclusion in JSON and human reports, and absence of every other `v210-*` temporary workflow.
+
+At this release gate the candidate has no known formatter failure, analyzer diagnostic, failing automated test, benchmark-validation failure, lockfile drift, or release-web build failure. Timing values remain intentionally excluded from correctness thresholds.
+
+A final ordinary CI run is required after all V2.10 helper workflows are deleted and the ledger is committed. That final helper-free CI result is the merge gate; no `v210-*` helper may enter `main`.
