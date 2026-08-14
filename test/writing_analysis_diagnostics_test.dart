@@ -137,6 +137,48 @@ void main() {
       expect(result.hasExactIssueTotals, isFalse);
     });
 
+    test('captured issues must belong to analyzed rules', () {
+      const issue = WritingIssue(
+        ruleId: 'beta',
+        ruleName: 'Beta',
+        message: 'Review this.',
+        start: 0,
+        end: 1,
+        originalText: 'a',
+        languageId: 'en-US',
+      );
+
+      expect(
+        () => WritingAnalysisResult(
+          issues: const <WritingIssue>[issue],
+          analyzedRuleIds: const <String>{'alpha'},
+          languageId: 'en-US',
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('captured issues must match the result language', () {
+      const issue = WritingIssue(
+        ruleId: 'alpha',
+        ruleName: 'Alpha',
+        message: 'Review this.',
+        start: 0,
+        end: 1,
+        originalText: 'a',
+        languageId: 'en-GB',
+      );
+
+      expect(
+        () => WritingAnalysisResult(
+          issues: const <WritingIssue>[issue],
+          analyzedRuleIds: const <String>{'alpha'},
+          languageId: 'en-US',
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('exact totals reject fewer findings than captured', () {
       const issue = WritingIssue(
         ruleId: 'alpha',
@@ -213,6 +255,21 @@ void main() {
           languageId: 'en-US',
           totalIssueCount: 0,
           totalIssueCountByRule: const <String, int>{'alpha': 1},
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('per-rule totals must belong to analyzed rules', () {
+      expect(
+        () => WritingAnalysisResult(
+          issues: const <WritingIssue>[],
+          analyzedRuleIds: const <String>{'alpha'},
+          languageId: 'en-US',
+          totalIssueCount: 1,
+          totalIssueCountByRule: const <String, int>{'beta': 1},
+          issueLimit: 1,
+          isTruncated: true,
         ),
         throwsArgumentError,
       );
