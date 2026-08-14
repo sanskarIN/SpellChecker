@@ -9,6 +9,7 @@ The project follows semantic versioning for public releases where practical.
 ### Added
 
 - Public `WritingAnalysisDiagnosticSummary` and `WritingRuleDiagnosticSummary` models with deterministic lexical rule ordering.
+- Explicit Writing insights **Copy diagnostic summary** action that copies only the privacy-safe formatted diagnostic metadata after a user action.
 - `WritingAnalysisDiagnosticSummary.fromResult(...)` for metadata-only snapshots over V2.8 exact diagnostics and `toPlainText()` for stable shareable text.
 - Focused V2.9 coverage for bounded exact totals, compatibility results without exact totals, empty results, deterministic ordering, and exclusion of document/finding content from diagnostic summaries.
 - Regression coverage for release-mode report/result invariants, normalized custom frequency keys, immutable suffix configuration, dot-connected sentence boundaries, IME composition, Unicode statistics, duplicate writing-rule IDs, and V2.9 About/version metadata.
