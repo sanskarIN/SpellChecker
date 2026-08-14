@@ -217,8 +217,10 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
             _focusSearch,
         const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
       },
-      child: AlertDialog(
-        title: const Row(
+      child: Focus(
+        autofocus: true,
+        child: AlertDialog(
+          title: const Row(
           children: <Widget>[
             Icon(Icons.auto_fix_high_outlined),
             SizedBox(width: 10),
@@ -498,6 +500,7 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
           ),
           TextButton(onPressed: () => _close(), child: const Text('Close')),
         ],
+        ),
       ),
     );
   }
