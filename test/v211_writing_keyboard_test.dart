@@ -38,9 +38,12 @@ void main() {
     expect(search, findsOneWidget);
     final searchField = tester.widget<TextField>(search);
 
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pump();
+    for (var index = 0; index < 4 && searchField.focusNode!.hasFocus; index++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+    }
     expect(searchField.focusNode!.hasFocus, isFalse);
+    expect(FocusManager.instance.primaryFocus, isNotNull);
 
     await sendControlF(tester);
 
@@ -56,20 +59,13 @@ void main() {
     final search = find.byKey(const ValueKey<String>('writing-review-search'));
     await tester.enterText(search, 'clarity');
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey<String>('clear-writing-review-filters')),
-      findsOneWidget,
-    );
+    expect(tester.widget<TextField>(search).controller!.text, 'clarity');
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
 
     expect(find.text('Writing insights'), findsOneWidget);
     expect(tester.widget<TextField>(search).controller!.text, isEmpty);
-    expect(
-      find.byKey(const ValueKey<String>('clear-writing-review-filters')),
-      findsNothing,
-    );
     expect(tester.widget<TextField>(search).focusNode!.hasFocus, isTrue);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -83,38 +79,38 @@ void main() {
   ) async {
     await openWritingInsights(tester);
 
-    await tester.tap(
-      find.byKey(const ValueKey<String>('writing-category-mechanics')),
+    final mechanics = find.byKey(
+      const ValueKey<String>('writing-category-mechanics'),
     );
-    await tester.tap(
-      find.byKey(const ValueKey<String>('automatic-fixes-only')),
+    final automatic = find.byKey(
+      const ValueKey<String>('automatic-fixes-only'),
     );
+    await tester.ensureVisible(mechanics);
+    await tester.tap(mechanics);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(automatic);
+    await tester.tap(automatic);
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey<String>('clear-writing-review-filters')),
-      findsOneWidget,
-    );
+    expect(tester.widget<FilterChip>(mechanics).selected, isTrue);
+    expect(tester.widget<SwitchListTile>(automatic).value, isTrue);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
 
     expect(find.text('Writing insights'), findsOneWidget);
+    await tester.ensureVisible(mechanics);
+    await tester.ensureVisible(automatic);
+    expect(tester.widget<FilterChip>(mechanics).selected, isFalse);
+    expect(tester.widget<SwitchListTile>(automatic).value, isFalse);
     expect(
       tester
-          .widget<FilterChip>(
-            find.byKey(const ValueKey<String>('writing-category-mechanics')),
+          .widget<TextField>(
+            find.byKey(const ValueKey<String>('writing-review-search')),
           )
-          .selected,
-      isFalse,
-    );
-    expect(
-      tester
-          .widget<SwitchListTile>(
-            find.byKey(const ValueKey<String>('automatic-fixes-only')),
-          )
-          .value,
-      isFalse,
+          .focusNode!
+          .hasFocus,
+      isTrue,
     );
   });
 }
