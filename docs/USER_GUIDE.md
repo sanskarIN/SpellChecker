@@ -567,3 +567,7 @@ If filters hide every retained finding while the analysis is limited, the empty 
 ### Re-run after editing or changing language
 
 Diagnostics describe one analysis snapshot. After changing editor text, language, or enabled writing rules, reopen/re-run Writing insights to obtain current totals. Do not treat an old total as describing the modified document.
+
+## V2.10 developer benchmark note
+
+V2.10's large-document benchmark is repository developer tooling, not an editor feature. Regular SpellChecker use does not require running it and no benchmark control appears in the application UI. Maintainers/contributors who need controlled synthetic performance comparisons should use `tool/benchmark_large_document.dart` and the dedicated [V2.10 benchmark guide](V2_10_BENCHMARK.md). The command does not read the current editor document.
