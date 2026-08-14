@@ -91,7 +91,9 @@ All measured samples must agree on:
 - spelling truncation state;
 - writing captured finding count;
 - writing exact total finding count;
-- writing truncation state.
+- writing truncation state;
+- sorted analyzed writing-rule IDs;
+- sorted exact per-rule finding totals.
 
 If those values change between measured samples, summary construction fails with an argument error. That is treated as a determinism/correctness problem rather than being hidden by timing aggregation.
 
@@ -121,7 +123,7 @@ The JSON report contains:
 - scenario shape metadata;
 - warmup/measured iteration counts;
 - spelling/writing min/median/max timings;
-- deterministic analysis outcome metadata;
+- deterministic analysis outcome metadata, including analyzed writing-rule IDs and exact per-rule totals;
 - individual measured timing/outcome samples.
 
 It does not contain corpus text.
