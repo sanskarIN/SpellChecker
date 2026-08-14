@@ -670,3 +670,11 @@ V2.9 also exports `WritingAnalysisDiagnosticSummary` / `WritingRuleDiagnosticSum
 The V2.10 benchmark constructs the normal `WritingAnalyzer()` and therefore exercises the current built-in deterministic registry against generated synthetic text. It does not add, remove, rename, enable, persist, or dynamically load a writing rule. All six existing stable IDs/defaults and their source-range/correction contracts remain unchanged.
 
 The benchmark records only captured/exact-total/truncated writing outcome metadata and elapsed time. It does not serialize `WritingIssue` source text/messages into the benchmark report and does not convert writing `maxIssues` into a CPU-time guarantee.
+
+## V2.11 missing punctuation space ownership
+
+V2.11 adds `missing-punctuation-space` to the built-in default registry. It is a Mechanics rule for English (US/UK) that owns only a comma, semicolon, question mark, or exclamation mark directly surrounded by Unicode letters and replaces that punctuation with itself plus one space.
+
+The conservative exclusions are part of the stable correctness contract: periods/colons, numeric/non-letter neighbors, and repeated punctuation are not owned by this rule. Repeated runs remain under `repeated-punctuation`; whitespace before punctuation remains under `punctuation-spacing`. Adjacent before/after punctuation fixes therefore compose without overlap.
+
+Preference semantics do not change: missing override -> current seven-rule defaults; explicit stored ID list -> exact list; stored empty list -> disable-all. See [V2.11 rule contract](V2_11_MISSING_PUNCTUATION_SPACE.md).
