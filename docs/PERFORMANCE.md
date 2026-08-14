@@ -218,3 +218,19 @@ V2.8 intentionally does not persist benchmark data or document-derived diagnosti
 ## V2.9 diagnostic-summary cost
 
 `WritingAnalysisDiagnosticSummary.fromResult` does not re-run writing rules or re-scan editor text. It reads already-produced result count metadata, derives captured per-rule counts from the retained findings, sorts analyzed rule IDs, and formats one row per analyzed rule. Its cost is tied to retained findings/analyzed-rule metadata rather than document length beyond the analysis work that already occurred. It does not change V2.7 `maxIssues` or V2.8 exact-count semantics.
+
+## V2.10 deterministic benchmark harness
+
+V2.10 implements the external benchmark harness anticipated by the V2.8 profiling guidance. Run it from a dependency-resolved checkout:
+
+```bash
+dart run tool/benchmark_large_document.dart --repeats=2000 --warmup=1 --iterations=5 --spelling-limit=200 --writing-limit=200 --suggestions=5 --language=en-US
+```
+
+Add `--json` for the stable version-1 machine-readable report. The default scenario repeats a source-controlled synthetic chunk; no editor document, clipboard content, personal dictionary, or persisted preference is read. A fixed synthetic spelling dictionary/frequency map keeps benchmark eligibility stable when bundled vocabulary changes.
+
+Every sample creates a fresh `SpellCheckerEngine` and `WritingAnalyzer`. Warmup samples are discarded; measured samples must produce identical analysis outcomes or summary construction fails. The report records spelling scanned/captured/truncated metadata and writing captured/exact-total/truncated metadata alongside elapsed microseconds.
+
+Min/median/max timings are descriptive only. They vary with hardware, operating system, Flutter/Dart version, process scheduling, build/runtime mode, and other machine conditions. CI therefore executes a small smoke scenario solely to prove the benchmark command and report path work; it does not compare timing values against a threshold.
+
+For comparisons, keep the command/options, Flutter/Dart versions, machine/runtime mode, and repository commit constant. Prefer multiple measured iterations and compare medians. Never replace the built-in synthetic corpus with private user documents for public benchmark reports.
