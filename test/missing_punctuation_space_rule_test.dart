@@ -40,14 +40,20 @@ void main() {
       }
     });
 
-    test('finds overlapping comma boundaries without skipping the next word', () {
-      const text = 'one,two,three,four';
+    test(
+      'finds overlapping comma boundaries without skipping the next word',
+      () {
+        const text = 'one,two,three,four';
 
-      final issues = rule.analyze(text, us).toList();
+        final issues = rule.analyze(text, us).toList();
 
-      expect(issues, hasLength(3));
-      expect(issues.map((issue) => issue.start), orderedEquals(<int>[3, 7, 13]));
-    });
+        expect(issues, hasLength(3));
+        expect(
+          issues.map((issue) => issue.start),
+          orderedEquals(<int>[3, 7, 13]),
+        );
+      },
+    );
 
     test('supports Unicode letters while preserving UTF-16 source offsets', () {
       const text = 'café,naïve!Résumé';
@@ -63,10 +69,7 @@ void main() {
     });
 
     test('ignores already spaced punctuation and line boundaries', () {
-      expect(
-        rule.analyze('Hello, world; again? Yes!\nNext', us),
-        isEmpty,
-      );
+      expect(rule.analyze('Hello, world; again? Yes!\nNext', us), isEmpty);
     });
 
     test('intentionally excludes periods and colons', () {
@@ -80,10 +83,7 @@ void main() {
     });
 
     test('ignores numeric separators and non-letter neighbors', () {
-      expect(
-        rule.analyze('1,000;2 ?word!  value,_name;9', us),
-        isEmpty,
-      );
+      expect(rule.analyze('1,000;2 ?word!  value,_name;9', us), isEmpty);
     });
 
     test('leaves repeated punctuation to repeated-punctuation ownership', () {
