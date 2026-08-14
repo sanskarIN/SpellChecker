@@ -106,6 +106,8 @@ class AnalysisBenchmarkRunner {
       writingCapturedIssueCount: writing.capturedIssueCount,
       writingTotalIssueCount: writing.totalIssueCount!,
       writingTruncated: writing.isTruncated,
+      writingAnalyzedRuleIds: writing.analyzedRuleIds,
+      writingTotalIssueCountByRule: writing.totalIssueCountByRule!,
     );
   }
 }
