@@ -95,6 +95,8 @@ All measured samples must agree on:
 - sorted analyzed writing-rule IDs;
 - sorted exact per-rule finding totals.
 
+The benchmark sample contains an exact per-rule entry for every analyzed writing rule. If `WritingAnalyzer` has no finding for an analyzed rule, the runner materializes that rule with a total of `0` rather than omitting it. Sample construction rejects incomplete or extra rule-total entries, and the complete per-rule map must sum to the exact overall writing total.
+
 If those values change between measured samples, summary construction fails with an argument error. That is treated as a determinism/correctness problem rather than being hidden by timing aggregation.
 
 ## Timing aggregation
@@ -123,7 +125,7 @@ The JSON report contains:
 - scenario shape metadata;
 - warmup/measured iteration counts;
 - spelling/writing min/median/max timings;
-- deterministic analysis outcome metadata, including analyzed writing-rule IDs and exact per-rule totals;
+- deterministic analysis outcome metadata, including analyzed writing-rule IDs and a complete exact per-rule total map (including explicit zero totals);
 - individual measured timing/outcome samples.
 
 It does not contain corpus text.
@@ -181,7 +183,8 @@ Focused tests cover:
 - deterministic corpus construction;
 - scenario metadata and corpus-text exclusion;
 - argument validation;
-- sample/result invariants;
+- sample/result invariants, including complete per-rule totals;
+- explicit zero totals for analyzed rules with no findings;
 - immutable sample snapshots;
 - odd/even median aggregation;
 - stable analysis-outcome enforcement;
