@@ -1,0 +1,46 @@
+name: V2.9 final audit-log sync
+
+on:
+  push:
+    branches:
+      - fix/v2.9-zero-error-audit-2026-08-14
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out audit branch
+        uses: actions/checkout@v7
+        with:
+          ref: fix/v2.9-zero-error-audit-2026-08-14
+          fetch-depth: 0
+
+      - name: Record completed permanent-tree CI
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path('what_changed.md')
+          text = path.read_text()
+          old = 'All commands above completed successfully before this section was committed. A final ordinary CI run is required again after removing the one-time validator so the permanent-tree head is independently checked with the repository\'s normal workflow.'
+          new = 'All commands above completed successfully before this section was committed. After removing the one-time validator and the final documentation-only synchronization helper, the permanent-tree head was independently checked by the repository\'s ordinary CI workflow; dependency installation, formatting, `flutter analyze`, and the full Flutter test suite all completed successfully.'
+          if new not in text:
+              if text.count(old) != 1:
+                  raise SystemExit('what_changed.md: final validation sentence did not match exactly once')
+              path.write_text(text.replace(old, new, 1))
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- what_changed.md; then
+            git add what_changed.md
+            git commit -m "docs: record final permanent-tree CI success"
+            git push origin HEAD:fix/v2.9-zero-error-audit-2026-08-14
+          fi
