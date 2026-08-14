@@ -517,3 +517,9 @@ dart run tool/benchmark_large_document.dart --repeats=2000 --warmup=1 --iteratio
 ```
 
 When changing benchmark code, run formatting over `lib test tool`, `flutter analyze`, the complete tests, and at least one small benchmark command. Do not tune implementation behavior solely to one machine's timing, commit timing thresholds to normal correctness tests, or add editor-document ingestion/telemetry as part of benchmark maintenance. Changes to corpus shape, fixed benchmark vocabulary, report format version, or outcome fields require focused tests and performance/privacy documentation review.
+
+## V2.11 rule-development ownership guidance
+
+When extending punctuation mechanics, define source-range ownership before adding regex coverage. New fixes must not create zero-length stale-unverifiable mutations or overlap an existing specialized rule without an explicit deterministic conflict policy. V2.11 intentionally leaves periods/colons and repeated punctuation outside `missing-punctuation-space` rather than broadening detection until low-false-positive ownership is demonstrated.
+
+Run formatting over `lib test tool`, analyzer, the complete tests, and benchmark smoke after registry changes. When built-in defaults change, add preference/widget regressions for unset versus explicit stored sets and advance benchmark expected rule metadata so the workload change is reviewable.
