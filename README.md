@@ -78,7 +78,7 @@ dart run tool/benchmark_large_document.dart \
   --json
 ```
 
-Omit `--json` for the human-readable report. Reports include only scenario shape, language, analysis outcome counts/states, and elapsed microseconds; they never serialize the generated corpus text. Timings are machine/toolchain dependent and are intended for controlled comparisons, not pass/fail correctness thresholds. Both `en-US` and `en-GB` are supported.
+Omit `--json` for the human-readable report. Reports include only scenario shape, language, analysis outcome counts/states, sorted analyzed writing-rule IDs, exact per-rule finding totals, and elapsed microseconds; they never serialize the generated corpus text. Timings are machine/toolchain dependent and are intended for controlled comparisons, not pass/fail correctness thresholds. Both `en-US` and `en-GB` are supported.
 
 The benchmark lives under `tool/` and is not an application telemetry feature or a new public runtime API. CI runs only a tiny synthetic smoke scenario to verify the command remains executable; it does not enforce timing targets. See [Performance and large-document behavior](docs/PERFORMANCE.md).
 
