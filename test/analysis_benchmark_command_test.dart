@@ -37,6 +37,27 @@ void main() {
       expect(errors.last, contains('--language=ID'));
     });
 
+    test('returns software error for deterministic execution failure', () {
+      final output = <String>[];
+      final errors = <String>[];
+
+      final code = runAnalysisBenchmarkCommand(
+        const <String>['--repeats=2'],
+        writeOutput: output.add,
+        writeError: errors.add,
+        executeBenchmark: (_, _) {
+          throw ArgumentError('unstable benchmark outcome');
+        },
+      );
+
+      expect(code, 70);
+      expect(output, isEmpty);
+      expect(errors, hasLength(1));
+      expect(errors.single, contains('Benchmark execution error'));
+      expect(errors.single, contains('unstable benchmark outcome'));
+      expect(errors.single, isNot(contains('Usage:')));
+    });
+
     test('runs a small JSON benchmark successfully', () {
       final output = <String>[];
       final errors = <String>[];
