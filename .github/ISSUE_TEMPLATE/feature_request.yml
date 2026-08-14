@@ -86,3 +86,6 @@ body:
 
 # V2.10 benchmark note
 # Benchmark/tooling proposals should preserve generated synthetic inputs by default, distinguish deterministic outcome regressions from machine-dependent elapsed-time variation, and version incompatible report-format changes explicitly.
+
+# V2.11 punctuation-rule design note
+# Requests to broaden missing-punctuation-space must define low-false-positive punctuation scope, source-range ownership, interaction with repeated/before-punctuation rules, preference/default compatibility, and benchmark workload impact.
