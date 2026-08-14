@@ -369,7 +369,7 @@ The new diagnostics are **not**:
 
 Exact counts can still reveal limited characteristics about a document, such as how many findings a rule produced. For that reason they should be treated as document-derived data when adding future logging, debugging, crash reporting, clipboard export, synchronization, or diagnostic-report features.
 
-Any persistence, automatic upload, telemetry, or application-owned clipboard/file export of exact finding totals requires explicit privacy review and user-facing documentation. V2.8 keeps raw result diagnostics local and memory-only; V2.9 adds only the separately documented metadata-only formatter and no automatic transport.
+Any new persistence, automatic upload, telemetry, file export, or network transport of exact finding totals requires explicit privacy review and user-facing documentation. V2.8 keeps raw result diagnostics local and memory-only. V2.9 adds the separately documented metadata-only formatter plus an explicit Writing insights clipboard action that copies only that privacy-safe representation after the user selects it; there is no automatic transport.
 
 The Buy Me a Coffee funding link added to repository documentation is a normal external link. SpellChecker does not contact that site from the application runtime, and no editor text or application state is sent to it by SpellChecker.
 
@@ -377,4 +377,4 @@ The Buy Me a Coffee funding link added to repository documentation is a normal e
 
 `WritingAnalysisDiagnosticSummary` is designed to make support/performance metadata safer to share than a raw `WritingAnalysisResult`. It includes language ID, complete/limited state, capture limit, captured/exact/uncaptured counts when available, stable analyzed rule IDs/display names, and captured/exact per-rule counts.
 
-It deliberately does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal dictionary entries, ignored words, review search/filter state, correction history, timestamps, device identifiers, telemetry, or network metadata. `toPlainText()` is a pure in-memory formatter; V2.9 adds no automatic clipboard write, persistence, upload, or background reporting. A future UI transport must remain explicit and must use the privacy-safe representation rather than raw findings unless separately reviewed.
+It deliberately does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal dictionary entries, ignored words, review search/filter state, correction history, timestamps, device identifiers, telemetry, or network metadata. `toPlainText()` is a pure in-memory formatter. Writing insights exposes an explicit **Copy diagnostic summary** control that copies only this formatter output after user action. V2.9 adds no automatic clipboard write, persistence, upload, or background reporting; any future file/network transport requires separate review.
