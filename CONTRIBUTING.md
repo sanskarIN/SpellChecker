@@ -474,3 +474,7 @@ Changes to writing-analysis diagnostics must preserve these contracts unless a d
 Add focused core tests for result invariants and widget tests for user-visible count semantics. When testing the Writing insights dialog, navigate its real lazy list instead of making production rows eager for test convenience.
 
 Performance experiments must use synthetic/non-sensitive text. Treat exact counts as document-derived metadata if proposing logging, exporting, persistence, or remote diagnostics.
+
+## V2.9 diagnostics and hardening contributions
+
+For V2.9-sensitive changes, preserve the metadata-only diagnostic-summary boundary, public runtime result/report invariants, unique writing-rule IDs, language ownership of findings, IME composing visibility, Unicode token/statistics consistency, and deterministic custom-frequency normalization. Add focused regressions for any changed invariant. Before a release-sensitive PR is complete, `flutter pub get` must leave `pubspec.lock` clean and the exact tree must pass format, analyze, full tests, and the release web build. Disposable reconciliation workflows/scripts must not remain in the release tree.
