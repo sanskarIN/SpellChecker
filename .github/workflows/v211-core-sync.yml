@@ -1,0 +1,276 @@
+name: V2.11 core accessibility sync
+
+on:
+  push:
+    branches:
+      - v2.11-accessibility-review-2026-08-14
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out V2.11 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.11-accessibility-review-2026-08-14
+          fetch-depth: 0
+
+      - name: Configure commit identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add release-safe dialog bound validation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/editor/writing_insights_dialog.dart')
+          text = path.read_text()
+          old = """  const WritingInsightsDialog({
+    super.key,
+    required this.text,
+    required this.languagePack,
+    required this.analyzer,
+    required this.initialEnabledRuleIds,
+    this.maxIssues = defaultMaxIssues,
+  }) : assert(maxIssues > 0);
+
+  static const int defaultMaxIssues = 200;
+"""
+          new = """  WritingInsightsDialog({
+    super.key,
+    required this.text,
+    required this.languagePack,
+    required this.analyzer,
+    required this.initialEnabledRuleIds,
+    int maxIssues = defaultMaxIssues,
+  }) : maxIssues = _validateMaxIssues(maxIssues);
+
+  static const int defaultMaxIssues = 200;
+
+  static int _validateMaxIssues(int value) {
+    if (value <= 0) {
+      throw ArgumentError.value(value, 'maxIssues', 'must be positive');
+    }
+    return value;
+  }
+"""
+          if text.count(old) != 1:
+              raise SystemExit('constructor guard did not match exactly once')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git add lib/features/editor/writing_insights_dialog.dart
+          git commit -m "fix: validate writing dialog issue limit at runtime"
+          git push origin HEAD:v2.11-accessibility-review-2026-08-14
+
+      - name: Add keyboard-first review shortcuts
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/editor/writing_insights_dialog.dart')
+          text = path.read_text()
+
+          old = """class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
+  final TextEditingController _searchController = TextEditingController();
+
+  late Set<String> _enabledRuleIds;
+"""
+          new = """class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode(
+    debugLabel: 'writing-review-search',
+  );
+
+  late Set<String> _enabledRuleIds;
+"""
+          if text.count(old) != 1:
+              raise SystemExit('focus-node insertion anchor mismatch')
+          text = text.replace(old, new, 1)
+
+          old = """  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+"""
+          new = """  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+"""
+          if text.count(old) != 1:
+              raise SystemExit('dispose anchor mismatch')
+          text = text.replace(old, new, 1)
+
+          old = """  void _clearReviewFilters() {
+    _searchController.clear();
+    setState(() {
+      _categories.clear();
+      _automaticFixesOnly = false;
+    });
+  }
+
+  Future<void> _copyDiagnosticSummary() async {
+"""
+          new = """  void _clearReviewFilters() {
+    _searchController.clear();
+    setState(() {
+      _categories.clear();
+      _automaticFixesOnly = false;
+    });
+  }
+
+  void _focusSearch() {
+    _searchFocusNode.requestFocus();
+  }
+
+  void _handleEscape() {
+    if (!_query.isEmpty) {
+      _clearReviewFilters();
+      _searchFocusNode.requestFocus();
+      return;
+    }
+    _close();
+  }
+
+  Future<void> _copyDiagnosticSummary() async {
+"""
+          if text.count(old) != 1:
+              raise SystemExit('shortcut-method anchor mismatch')
+          text = text.replace(old, new, 1)
+
+          old = """    return AlertDialog(
+      title: const Row(
+"""
+          new = """    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true):
+            _focusSearch,
+        const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
+            _focusSearch,
+        const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
+      },
+      child: AlertDialog(
+        title: const Row(
+"""
+          if text.count(old) != 1:
+              raise SystemExit('dialog wrapper anchor mismatch')
+          text = text.replace(old, new, 1)
+
+          old = """              TextField(
+                key: const ValueKey<String>('writing-review-search'),
+                controller: _searchController,
+"""
+          new = """              TextField(
+                key: const ValueKey<String>('writing-review-search'),
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+"""
+          if text.count(old) != 1:
+              raise SystemExit('search focus anchor mismatch')
+          text = text.replace(old, new, 1)
+
+          old = """        TextButton(onPressed: () => _close(), child: const Text('Close')),
+      ],
+    );
+  }
+}
+"""
+          new = """        TextButton(onPressed: () => _close(), child: const Text('Close')),
+      ],
+      ),
+    );
+  }
+}
+"""
+          if text.count(old) != 1:
+              raise SystemExit('dialog wrapper close anchor mismatch')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git add lib/features/editor/writing_insights_dialog.dart
+          git commit -m "feat: add keyboard-first Writing insights shortcuts"
+          git push origin HEAD:v2.11-accessibility-review-2026-08-14
+
+      - name: Add live rule and finding count semantics
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/editor/writing_insights_dialog.dart')
+          text = path.read_text()
+
+          old = """                  Text('${visibleRules.length}/${supportedRules.length}'),
+"""
+          new = """                  Semantics(
+                    liveRegion: true,
+                    label:
+                        '${visibleRules.length} visible rules of ${supportedRules.length}',
+                    child: ExcludeSemantics(
+                      child: Text(
+                        '${visibleRules.length}/${supportedRules.length}',
+                      ),
+                    ),
+                  ),
+"""
+          if text.count(old) != 1:
+              raise SystemExit('rule-count anchor mismatch')
+          text = text.replace(old, new, 1)
+
+          old = """                  Text(
+                    analysis.isTruncated
+                        ? '${visibleIssues.length}/${analysis.capturedIssueCount} captured'
+                        : '${visibleIssues.length}/${analysis.capturedIssueCount}',
+                  ),
+"""
+          new = """                  Semantics(
+                    key: const ValueKey<String>(
+                      'writing-findings-visible-count',
+                    ),
+                    liveRegion: true,
+                    label: analysis.isTruncated
+                        ? analysis.totalIssueCount == null
+                              ? '${visibleIssues.length} visible findings. ${analysis.capturedIssueCount} captured findings, with additional uncaptured findings.'
+                              : '${visibleIssues.length} visible findings. ${analysis.capturedIssueCount} captured of ${analysis.totalIssueCount} total findings.'
+                        : '${visibleIssues.length} visible findings of ${analysis.capturedIssueCount} captured findings.',
+                    child: ExcludeSemantics(
+                      child: Text(
+                        analysis.isTruncated
+                            ? '${visibleIssues.length}/${analysis.capturedIssueCount} captured'
+                            : '${visibleIssues.length}/${analysis.capturedIssueCount}',
+                      ),
+                    ),
+                  ),
+"""
+          if text.count(old) != 1:
+              raise SystemExit('finding-count anchor mismatch')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git add lib/features/editor/writing_insights_dialog.dart
+          git commit -m "feat: announce Writing insights count changes"
+          git push origin HEAD:v2.11-accessibility-review-2026-08-14
+
+      - name: Set up Flutter formatter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Apply canonical Dart formatting
+        shell: bash
+        run: |
+          dart format lib/features/editor/writing_insights_dialog.dart
+          if ! git diff --quiet -- lib/features/editor/writing_insights_dialog.dart; then
+            git add lib/features/editor/writing_insights_dialog.dart
+            git commit -m "style: format V2.11 Writing insights accessibility"
+            git push origin HEAD:v2.11-accessibility-review-2026-08-14
+          fi
