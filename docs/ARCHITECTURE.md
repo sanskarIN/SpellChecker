@@ -901,3 +901,9 @@ The summary model belongs to the writing layer and introduces no storage, UI, cl
 V2.10 adds a developer-tooling layer under `tool/`; it is intentionally outside the application runtime and public package barrels. The benchmark scenario owns deterministic synthetic corpus shape, the runner composes existing public spelling/writing APIs with fresh per-sample state, result models own immutable timing/outcome aggregation and versioned JSON serialization, the reporter owns terminal rendering, and the command/options layer owns CLI validation.
 
 This direction keeps performance observation separate from production `SpellCheckReport` and `WritingAnalysisResult` correctness metadata: runtime analysis models remain deterministic and timing-free, while developer tooling may measure elapsed wall-clock time externally. No storage adapter, editor widget, persisted key, network boundary, or rule/ranker plugin contract is added by V2.10.
+
+## V2.11 punctuation-boundary rule ownership
+
+The built-in writing registry now contains seven source-controlled deterministic rules. V2.11 adds a narrow ownership boundary rather than a general punctuation parser: `punctuation-spacing` owns horizontal whitespace before punctuation, `missing-punctuation-space` owns one eligible punctuation character when followed immediately by another letter, and `repeated-punctuation` owns repeated punctuation runs.
+
+These distinct source ranges let the unchanged `WritingCorrection` stale/overlap engine compose adjacent safe fixes without widget-specific mutation logic. The new rule is public through the existing writing barrel; no storage, editor, network, plugin-loading, or language-pack architecture layer is added.
