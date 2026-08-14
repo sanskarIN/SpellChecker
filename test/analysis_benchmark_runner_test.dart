@@ -57,6 +57,33 @@ void main() {
       );
     });
 
+    test('materializes exact zero totals for analyzed rules', () {
+      final summary = AnalysisBenchmarkRunner(
+        scenario: AnalysisBenchmarkScenario(
+          name: 'zero-rule-totals',
+          repeats: 1,
+          spellingIssueLimit: 5,
+          writingIssueLimit: 5,
+          suggestionLimit: 0,
+          chunk: 'Hello world.',
+        ),
+        languagePack: SpellLanguageRegistry.englishUs,
+        warmupIterations: 0,
+        measuredIterations: 1,
+      ).run();
+      final sample = summary.representativeSample;
+
+      expect(sample.writingTotalIssueCount, 0);
+      expect(sample.writingCapturedIssueCount, 0);
+      expect(sample.writingTruncated, isFalse);
+      expect(sample.writingAnalyzedRuleIds, expectedWritingRuleIds);
+      expect(
+        sample.writingTotalIssueCountByRule.keys,
+        orderedEquals(expectedWritingRuleIds),
+      );
+      expect(sample.writingTotalIssueCountByRule.values, everyElement(0));
+    });
+
     test(
       'supports the UK language pack with the same synthetic dictionary',
       () {
