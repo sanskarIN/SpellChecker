@@ -386,3 +386,9 @@ The V2.10 large-document benchmark is developer-run tooling under `tool/`. It ge
 Human and JSON benchmark reports serialize scenario shape, language ID, analysis counts/states, iteration counts, and elapsed microseconds. They deliberately do not serialize the generated corpus text. The benchmark does not persist reports automatically or upload them; shell redirection or external CI artifact handling is controlled by the person/build environment invoking the command.
 
 Benchmark timing can reveal machine/toolchain characteristics, so public reports should include only the minimum environment metadata needed for reproducibility and should never contain private user documents. V2.10 adds no application runtime telemetry, analytics, account behavior, network request, preference key, document persistence, or runtime dependency.
+
+## V2.11 missing punctuation space privacy boundary
+
+The new rule analyzes only the in-memory text already supplied to `WritingAnalyzer` and creates ordinary in-memory `WritingIssue` values. It does not persist finding text, source excerpts, replacements, or document history and adds no telemetry/network behavior.
+
+V2.11 introduces no new preference key. The existing per-language rule-ID list can contain `missing-punctuation-space` after a user changes rule choices. An unset key uses current seven-rule defaults; explicit stored lists/explicit empty remain exact. V2.11 adds no runtime dependency, cloud analysis, analytics, account requirement, or background upload.
