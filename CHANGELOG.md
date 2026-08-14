@@ -4,6 +4,32 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.10.0] - 2026-08-14
+
+### Added
+
+- Deterministic generated large-document benchmark scenario with validated spelling/writing capture bounds and suggestion limits.
+- Fixed synthetic benchmark dictionary/frequency metadata so benchmark spelling eligibility does not drift with bundled vocabulary updates.
+- Fresh-state spelling and writing benchmark runner with configurable warmup and measured iterations.
+- Immutable per-iteration samples plus summary-level min/median/max microsecond aggregates and deterministic analysis-outcome consistency validation.
+- Version-1 JSON benchmark report and a human-readable terminal report; both exclude corpus text.
+- Strict CLI options for repetitions, warmups, iterations, spelling/writing limits, suggestions, built-in language selection, JSON output, and help.
+- Focused tests for scenario generation, result invariants/aggregation, runner behavior, option parsing, report privacy, and command execution.
+- Permanent CI and tagged-release benchmark smoke commands using a tiny synthetic workload.
+
+### Changed
+
+- Package version advances to `2.10.0+15`; About version advances to `2.10.0`.
+- Formatter validation now includes tracked Dart under `tool/` in addition to `lib/` and `test/`.
+- V2.10 release, roadmap, performance, testing, development, privacy, security, support, contribution, architecture, troubleshooting, and bug-report guidance document the benchmark contract.
+
+### Compatibility, performance, security, and privacy
+
+- V2.10 changes no spelling/writing public runtime API, language ID, writing-rule ID, persisted preference key, transfer format, correction behavior, or application UI workflow beyond release-version metadata.
+- Benchmark timing values are explicitly machine/toolchain dependent and are not correctness thresholds.
+- The benchmark corpus is generated from a source-controlled synthetic chunk and the JSON/human reports serialize scenario shape and counts/timings, not corpus text.
+- V2.10 adds no runtime dependency, analytics, telemetry, account behavior, cloud writing service, document persistence, background upload, or application network request.
+
 ## [2.9.0] - 2026-08-14
 
 ### Added
