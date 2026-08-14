@@ -234,3 +234,9 @@ Every sample creates a fresh `SpellCheckerEngine` and `WritingAnalyzer`. Warmup 
 Min/median/max timings are descriptive only. They vary with hardware, operating system, Flutter/Dart version, process scheduling, build/runtime mode, and other machine conditions. CI therefore executes a small smoke scenario solely to prove the benchmark command and report path work; it does not compare timing values against a threshold.
 
 For comparisons, keep the command/options, Flutter/Dart versions, machine/runtime mode, and repository commit constant. Prefer multiple measured iterations and compare medians. Never replace the built-in synthetic corpus with private user documents for public benchmark reports.
+
+## V2.11 seven-rule writing workload
+
+V2.11 adds one linear deterministic writing-rule scan over the supplied text. As with all existing rules, bounded `maxIssues` limits retained findings rather than guaranteeing CPU time. Exact overall/per-rule totals still require the analyzer to observe every enabled supported finding.
+
+The V2.10 benchmark records analyzed rule IDs and exact per-rule totals specifically so this registry change is visible: the default V2.11 writing benchmark workload contains seven analyzed rule IDs rather than six. Cross-version timing comparisons must therefore account for the changed workload instead of attributing all elapsed-time difference to implementation speed. Normal CI remains threshold-free.
