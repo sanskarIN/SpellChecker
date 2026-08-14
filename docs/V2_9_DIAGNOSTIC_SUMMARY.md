@@ -90,4 +90,4 @@ V2.9 regression coverage verifies that:
 
 ## Privacy and security
 
-The feature adds no network request, persistence format, clipboard side effect, account behavior, telemetry, runtime dependency, background processing, or document retention by itself. Any user-interface copy action should copy only `toPlainText()` output and should remain an explicit user action.
+The summary model/formatter adds no network request, persistence format, clipboard side effect, account behavior, telemetry, runtime dependency, background processing, or document retention by itself. Writing insights provides an explicit **Copy diagnostic summary** action that copies only `toPlainText()` output after the user selects it; the UI does not copy raw findings or editor text.

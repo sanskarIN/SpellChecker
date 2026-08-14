@@ -81,6 +81,67 @@ void main() {
       );
     });
   });
+
+  group('SpellCheckReport', () {
+    const issue = SpellIssue(word: 'wrld', start: 0, end: 4);
+
+    test('rejects negative scanned token counts at runtime', () {
+      expect(
+        () => SpellCheckReport(
+          issues: const <SpellIssue>[],
+          scannedTokenCount: -1,
+          truncated: false,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects non-positive issue limits at runtime', () {
+      expect(
+        () => SpellCheckReport(
+          issues: const <SpellIssue>[],
+          scannedTokenCount: 0,
+          truncated: false,
+          issueLimit: 0,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('requires an issue limit for truncated reports at runtime', () {
+      expect(
+        () => SpellCheckReport(
+          issues: const <SpellIssue>[issue],
+          scannedTokenCount: 2,
+          truncated: true,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects captured issues beyond the declared limit', () {
+      expect(
+        () => SpellCheckReport(
+          issues: const <SpellIssue>[issue, issue],
+          scannedTokenCount: 2,
+          truncated: false,
+          issueLimit: 1,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects token counts smaller than captured issue counts', () {
+      expect(
+        () => SpellCheckReport(
+          issues: const <SpellIssue>[issue],
+          scannedTokenCount: 0,
+          truncated: false,
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
 }
 
 class _RecordingRanker implements SpellSuggestionRanker {

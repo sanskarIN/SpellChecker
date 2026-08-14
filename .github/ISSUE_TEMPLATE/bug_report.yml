@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: SpellChecker version or commit
-      placeholder: v2.8.0 or commit SHA
+      placeholder: v2.9.0 or commit SHA
     validations:
       required: true
   - type: input
@@ -104,7 +104,7 @@ body:
     id: diagnostics_context
     attributes:
       label: Writing diagnostics context
-      description: For V2.8 count/limited-result problems, include maxIssues when applicable, captured count, exact overall total, exact per-rule totals, complete/truncated state, active review filters, and whether the text/language/rule settings changed after analysis. Use synthetic data only.
+      description: For V2.8/V2.9 count, limited-result, or diagnostic-summary problems, include maxIssues when applicable, captured count, exact overall total, exact per-rule totals, complete/truncated state, active review filters, and whether the text/language/rule settings changed after analysis. Use synthetic data only.
       placeholder: |
         maxIssues: 200
         captured: 200
@@ -142,5 +142,5 @@ body:
 # V2.3 diagnostic note
 # For portable-settings/review-preset bugs, include only minimized synthetic JSON/text. Never include private editor documents, personal dictionaries, credentials, or sensitive clipboard data.
 
-# V2.8 diagnostic note
-# Analyzer-produced exact per-rule totals should sum to the exact overall total. Limited-result filters/fixes use retained findings only. Prefer synthetic count examples over private documents.
+# V2.8/V2.9 diagnostic note
+# Analyzer-produced exact per-rule totals should sum to the exact overall total. Limited-result filters/fixes use retained findings only. V2.9 diagnostic summaries contain counts/rule metadata only. Prefer synthetic metadata/count examples over private documents.

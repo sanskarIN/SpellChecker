@@ -192,3 +192,18 @@ Complete when relevant.
 - [ ] `what_changed.md`, changelog, roadmap, README/web, and all affected technical/user/policy/release docs are synchronized.
 - [ ] `pubspec.yaml` / About versions and tag instructions match the intended V2.8 release.
 - [ ] No `tools/v28*` or disposable `.github/workflows/v28-*` file is included in the permanent release diff.
+
+## V2.9 diagnostic-summary / hardening checklist
+
+Complete when relevant.
+
+- [ ] Diagnostic summaries remain deterministic and metadata-only; raw editor text/findings are not serialized.
+- [ ] Compatibility results without V2.8 exact totals remain representable without guessed counts.
+- [ ] `SpellCheckReport` / `WritingAnalysisResult` runtime consistency invariants remain enforced in release builds.
+- [ ] Writing analyzer rule IDs remain unique and finding/total ownership matches analyzed rule IDs/language.
+- [ ] Language-pack configuration remains immutable after construction and custom frequency keys follow pack normalization.
+- [ ] IME composing feedback and Unicode token/statistics behavior have focused regressions when touched.
+- [ ] `pubspec.yaml`/About/README/changelog/releasing/tag instructions match the intended V2.9 release.
+- [ ] `flutter pub get` leaves `pubspec.lock` clean on the supported release toolchain.
+- [ ] Exact-tree format, analyze, full tests, and `flutter build web --release` pass before release.
+- [ ] No V2.2/V2.3/V2.8/V2.9 disposable reconciliation workflow/helper remains in the permanent release tree.

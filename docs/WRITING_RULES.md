@@ -656,3 +656,11 @@ A future feature that wants to mutate uncaptured ranges must obtain a complete/c
 ### Language and preference behavior
 
 Exact per-rule totals are computed only for rules that are enabled and support the active language pack. Per-language persisted rule preferences therefore continue to determine which rules participate. V2.8 adds no preference key and does not persist diagnostic counts.
+
+## V2.9 analyzer/result hardening and diagnostic summaries
+
+`WritingAnalyzer` now rejects duplicate configured rule IDs at construction. A stable rule ID identifies persistence, filtering, totals, and diagnostic rows; allowing two configured rules to share it would make those contracts ambiguous.
+
+`WritingAnalysisResult` additionally validates that every captured issue belongs to an analyzed rule and uses the result language, and that exact per-rule total keys belong to analyzed rules. These are runtime public-value invariants, not debug-only assertions.
+
+V2.9 also exports `WritingAnalysisDiagnosticSummary` / `WritingRuleDiagnosticSummary`. The summary derives deterministic count/rule metadata from a result, sorts rows by stable rule ID, represents missing V2.8 exact totals as unavailable, and deliberately omits document text, excerpts, messages, replacements, and source offsets. See [V2_9_DIAGNOSTIC_SUMMARY.md](V2_9_DIAGNOSTIC_SUMMARY.md).

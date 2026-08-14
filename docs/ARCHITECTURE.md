@@ -198,7 +198,7 @@ Responsibilities:
 
 ## Text statistics
 
-`TextStatistics` calculates character, word, and sentence counts.
+`TextStatistics` calculates character, Unicode-aware word, and sentence counts using the same supported internal apostrophe/hyphen forms as spelling tokenization.
 
 # Writing-rules layer
 
@@ -229,6 +229,8 @@ Current built-ins:
 repeated-word
 sentence-capitalization
 repeated-space
+punctuation-spacing
+trailing-whitespace
 repeated-punctuation
 ```
 
@@ -881,3 +883,15 @@ The dialog remains lazy/scrollable. Tests navigate the real lazy list instead of
 The exact counters are computed from the same in-memory local analysis that already produces writing findings. They are not written to `shared_preferences`, exported through Portable settings, logged remotely, uploaded, or retained after the dialog/result is discarded.
 
 No network service, analytics pipeline, background job, account system, or runtime dependency was added for V2.8 diagnostics.
+
+# V2.9 hardening and diagnostic-summary flow
+
+V2.9 strengthens model boundaries without changing the layer split:
+
+- `SpellCheckReport` validates public report invariants at runtime in release builds.
+- `WritingAnalysisResult` validates captured-rule ownership, result language ownership, and exact per-rule diagnostic ownership.
+- `WritingAnalyzer` rejects duplicate configured rule IDs before analysis so persistence and diagnostics remain unambiguous.
+- `SpellCheckEditingController` delegates to Flutter's native composing-span renderer while a valid IME composing range is active; checked spelling highlights resume after composition is committed.
+- `WritingAnalysisDiagnosticSummary.fromResult` reads only result/rule metadata, sorts rule rows by stable ID, and formats a deterministic metadata-only representation without reading document text.
+
+The summary model belongs to the writing layer and introduces no storage, UI, clipboard, network, or telemetry dependency.

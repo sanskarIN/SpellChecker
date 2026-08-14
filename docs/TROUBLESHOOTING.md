@@ -17,7 +17,7 @@ flutter pub get
 
 Confirm the Dart SDK satisfies `pubspec.yaml` and Flutter stable is installed.
 
-SpellChecker 2.1 keeps the small runtime dependency surface: Flutter plus `shared_preferences` for local settings.
+SpellChecker 2.9 keeps the small runtime dependency surface: Flutter plus `shared_preferences` for local settings.
 
 ## Analyzer reports formatting or lint issues
 
@@ -497,3 +497,17 @@ Use a short synthetic example and record:
 - any active review filters.
 
 The per-rule exact totals should sum to the exact overall total for analyzer-produced results. Do not attach a private document solely to demonstrate a count mismatch.
+
+## V2.9 diagnostic-summary troubleshooting
+
+### A diagnostic summary says `unavailable` for exact totals
+
+This is expected for a directly constructed compatibility `WritingAnalysisResult` that omitted the optional V2.8 exact-total fields. V2.9 does not invent totals. Analyzer-produced results provide exact totals and therefore normally render numeric total/uncaptured values.
+
+### A diagnostic summary contains a rule ID instead of a friendly rule name
+
+Pass the relevant configured `WritingRule` values to `WritingAnalysisDiagnosticSummary.fromResult(..., rules: ...)`. Unknown rule IDs intentionally fall back to their stable ID rather than guessing a display label.
+
+### I need to report a diagnostics bug
+
+Prefer the V2.9 metadata-only summary or a synthetic minimal example. Do not attach a private document, raw finding excerpts, personal vocabulary, or correction history unless a private security/support channel explicitly requires and authorizes it.

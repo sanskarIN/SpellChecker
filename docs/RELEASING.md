@@ -27,10 +27,10 @@ Flutter version format:
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.8 release candidate:
+Current V2.9 release candidate:
 
 ```text
-2.8.0+13
+2.9.0+14
 ```
 
 Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
@@ -116,6 +116,7 @@ From a clean checkout of the exact intended release commit:
 ```bash
 flutter clean
 flutter pub get
+git diff --exit-code -- pubspec.lock
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --reporter expanded
@@ -228,8 +229,8 @@ From verified `main`:
 ```bash
 git checkout main
 git pull --ff-only
-git tag -a v2.8.0 -m "SpellChecker v2.8.0"
-git push origin v2.8.0
+git tag -a v2.9.0 -m "SpellChecker v2.9.0"
+git push origin v2.9.0
 ```
 
 Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
@@ -251,7 +252,7 @@ After the tagged workflow passes:
 
 1. Create a GitHub Release for that tag.
 2. Use the matching changelog section as the release-note foundation.
-3. Highlight V2.8 exact local writing-analysis diagnostics and retained V2.7 bounded-review safety, while noting compatibility with earlier writing-rule, Portable settings, ranking, and correction-safety foundations.
+3. Highlight V2.9 privacy-safe shareable writing-analysis diagnostic summaries, retained V2.8 exact-count diagnostics, and V2.7 bounded-review safety, while noting compatibility with earlier writing-rule, Portable settings, ranking, and correction-safety foundations.
 4. Mention persistent-data/privacy behavior.
 5. Attach approved artifacts where appropriate.
 6. Verify links/version text.

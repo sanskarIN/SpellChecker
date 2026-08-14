@@ -8,10 +8,34 @@ class SpellCheckReport {
     required this.scannedTokenCount,
     required this.truncated,
     this.issueLimit,
-  }) : assert(scannedTokenCount >= 0),
-       assert(issueLimit == null || issueLimit > 0),
-       assert(!truncated || issueLimit != null),
-       issues = List<SpellIssue>.unmodifiable(issues);
+  }) : issues = List<SpellIssue>.unmodifiable(issues) {
+    if (scannedTokenCount < 0) {
+      throw ArgumentError.value(
+        scannedTokenCount,
+        'scannedTokenCount',
+        'must not be negative',
+      );
+    }
+    if (issueLimit != null && issueLimit! <= 0) {
+      throw ArgumentError.value(issueLimit, 'issueLimit', 'must be positive');
+    }
+    if (truncated && issueLimit == null) {
+      throw ArgumentError(
+        'A truncated spelling report must declare its issue limit.',
+      );
+    }
+    if (issueLimit != null && this.issues.length > issueLimit!) {
+      throw ArgumentError(
+        'Captured spelling issues cannot exceed the declared issue limit.',
+      );
+    }
+    if (scannedTokenCount < this.issues.length) {
+      throw ArgumentError(
+        'The scanned token count cannot be smaller than the captured issue '
+        'count.',
+      );
+    }
+  }
 
   /// Captured spelling issues in source order.
   final List<SpellIssue> issues;

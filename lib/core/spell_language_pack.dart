@@ -16,10 +16,11 @@ class SpellLanguagePack {
     required this.tokenPattern,
     required this.validWordPattern,
     required this.normalizer,
-    this.recognizedSuffixes = const <String>[],
+    List<String> recognizedSuffixes = const <String>[],
     this.suggestionSource = 'bundled',
   }) : dictionary = Set<String>.unmodifiable(dictionary),
-       wordFrequencies = Map<String, int>.unmodifiable(wordFrequencies);
+       wordFrequencies = Map<String, int>.unmodifiable(wordFrequencies),
+       recognizedSuffixes = List<String>.unmodifiable(recognizedSuffixes);
 
   final String id;
   final String languageCode;

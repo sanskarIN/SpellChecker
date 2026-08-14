@@ -30,6 +30,28 @@ void main() {
       expect(pack.normalizeWord('Writer’s'), "writer's");
       expect(pack.normalizeWord('open‑source'), 'open-source');
     });
+
+    test('defensively copies recognized suffix configuration', () {
+      final mutableSuffixes = <String>["'s"];
+      final base = SpellLanguageRegistry.englishUs;
+      final pack = SpellLanguagePack(
+        id: 'en-test',
+        languageCode: 'en',
+        regionCode: 'TEST',
+        displayName: 'English (Test)',
+        dictionary: <String>{'test'},
+        wordFrequencies: const <String, int>{},
+        tokenPattern: base.tokenPattern,
+        validWordPattern: base.validWordPattern,
+        normalizer: base.normalizer,
+        recognizedSuffixes: mutableSuffixes,
+      );
+
+      mutableSuffixes.add("'re");
+
+      expect(pack.recognizedSuffixes, <String>["'s"]);
+      expect(() => pack.recognizedSuffixes.add("'ve"), throwsUnsupportedError);
+    });
   });
 
   group('language-aware SpellCheckerEngine', () {

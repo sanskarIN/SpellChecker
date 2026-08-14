@@ -18,6 +18,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Stable lexical tie-breaking for custom ranker ties.
 - Bounded large-document spelling analysis with an explicit first-200 issue UI policy and safe limited-result messaging.
 - Bounded Writing insights analysis with an explicit first-200 finding policy, exact observed/per-rule totals, captured/total diagnostics, and captured-only limited-review/fix semantics.
+- Deterministic privacy-safe V2.9 writing-analysis diagnostic summaries containing counts and rule metadata only.
 - Optional local **Writing insights** with configurable deterministic rules.
 
 - Writing-rule categories with source-compatible **Mechanics** default and built-in **Clarity** review.
@@ -56,9 +57,28 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.8.0+13`
+`2.9.0+14`
 
-Version 2.8 is the **Writing Analysis Diagnostics & Exact Limited Counts** release. It keeps the V2.7 200-finding retained-review safety contract while adding exact whole-analysis and per-rule finding counts to analyzer-produced results. Writing insights can now distinguish `200 captured of 1437 total` from an unknown `200+` state without retaining every uncaptured `WritingIssue`. Filters and corrections remain captured-only for limited results, and V2.8 adds no persistence format, runtime dependency, analytics, telemetry, or application network behavior.
+Version 2.9 is the **Shareable Writing-Analysis Diagnostics** release. It adds a deterministic `WritingAnalysisDiagnosticSummary` layer over V2.8 exact finding counts so bug reports, performance investigations, and support discussions can share language, capture-state, count, and rule metadata without serializing editor text, finding excerpts/messages, replacements, or source offsets. The V2.9 hardening pass also closes release-only invariant gaps, preserves active IME composing spans, aligns Unicode word statistics with spelling tokenization, normalizes custom frequency metadata, and removes obsolete reconciliation workflows.
+
+## Shareable writing-analysis diagnostics — V2.9
+
+`WritingAnalysisDiagnosticSummary.fromResult(...)` builds an immutable metadata snapshot from a `WritingAnalysisResult`. Pass the analyzer's rules when human-readable rule names are desired; rows are always emitted in lexical rule-ID order.
+
+```dart
+final result = WritingAnalyzer().analyze(
+  text,
+  languagePack: SpellLanguageRegistry.englishUs,
+  maxIssues: 200,
+);
+final summary = WritingAnalysisDiagnosticSummary.fromResult(
+  result,
+  rules: WritingRuleRegistry.builtIns,
+);
+final reportText = summary.toPlainText();
+```
+
+The summary includes language ID, complete/limited status, capture limit, captured/exact/uncaptured counts when available, analyzed rule IDs/display names, and captured/exact per-rule counts. It deliberately excludes editor text, source excerpts, finding messages, replacements, source offsets, personal vocabulary, ignored words, review filters, correction history, timestamps, device identifiers, telemetry, and network metadata. The model itself has no clipboard, persistence, or network side effect. Writing insights exposes an explicit **Copy diagnostic summary** action that copies only the privacy-safe `toPlainText()` representation after user input; it never copies editor text or finding excerpts as part of that action.
 
 ## Exact Writing insights diagnostics — V2.8
 

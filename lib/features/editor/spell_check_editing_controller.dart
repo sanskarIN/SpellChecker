@@ -41,7 +41,9 @@ class SpellCheckEditingController extends TextEditingController {
     TextStyle? style,
     required bool withComposing,
   }) {
-    if (_issues.isEmpty || text.isEmpty) {
+    if (_issues.isEmpty ||
+        text.isEmpty ||
+        _hasActiveComposingRange(withComposing)) {
       return super.buildTextSpan(
         context: context,
         style: style,
@@ -99,6 +101,15 @@ class SpellCheckEditingController extends TextEditingController {
     }
 
     return TextSpan(style: baseStyle, children: children);
+  }
+
+  bool _hasActiveComposingRange(bool withComposing) {
+    final composing = value.composing;
+    return withComposing &&
+        composing.isValid &&
+        !composing.isCollapsed &&
+        composing.start >= 0 &&
+        composing.end <= text.length;
   }
 
   bool _isValidIssue(SpellIssue issue, int cursor) {

@@ -77,7 +77,7 @@ After a spelling check:
 - One spelling issue is active and receives stronger styling.
 - Selecting/navigating an issue selects its source range in the editor.
 
-Manual typing invalidates the previous spelling snapshot, so old highlights/results are cleared instead of being painted against changed text.
+Manual typing invalidates the previous spelling snapshot, so old highlights/results are cleared instead of being painted against changed text. While an input method editor (IME) has an active composing range, Flutter's native composing visualization takes priority over custom spelling highlights so composition remains visible; checked issue styling resumes after composition is committed.
 
 ## Navigate spelling issues
 
@@ -136,6 +136,13 @@ The dialog displays:
 - Suggested replacement for deterministic fixes.
 - **Apply safe fix** on individually fixable findings.
 - **Apply all safe fixes (N)** when at least one automatic fix is available.
+- **Copy diagnostic summary** beside the Findings heading for a privacy-safe metadata-only support snapshot.
+
+## Copy diagnostic summary — V2.9
+
+Select **Copy diagnostic summary** in Writing insights when you need reproducible analysis metadata for a bug report, performance investigation, or support discussion. The explicit action copies the deterministic `WritingAnalysisDiagnosticSummary.toPlainText()` output to the local clipboard.
+
+The copied text includes language ID, complete/limited state, capture limit, captured/exact/uncaptured counts when available, and captured/exact per-rule counts. It excludes editor text, source excerpts, finding messages, replacements, and source offsets. The copy occurs only after you select the control; SpellChecker does not automatically place diagnostics on the clipboard or upload them.
 
 ## Review search and filters — V2.2
 
@@ -194,7 +201,9 @@ Current rules:
 
 - **Repeated word** — adjacent duplicate words.
 - **Sentence capitalization** — lowercase supported sentence starts.
-- **Repeated spaces** — repeated horizontal spaces.
+- **Repeated spaces** — repeated interior horizontal spaces.
+- **Punctuation spacing** — horizontal whitespace immediately before supported punctuation.
+- **Trailing whitespace** — horizontal whitespace before line endings or document end.
 - **Repeated punctuation** — repeated identical supported punctuation.
 
 These are deterministic local helpers, not a full grammar parser.

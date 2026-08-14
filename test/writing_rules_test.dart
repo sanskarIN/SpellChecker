@@ -35,6 +35,16 @@ void main() {
       ]);
     });
 
+    test('sentence capitalization ignores dot-connected word segments', () {
+      const rule = SentenceCapitalizationRule();
+
+      final issues = rule
+          .analyze('Visit example.com today. next sentence', pack)
+          .toList();
+
+      expect(issues.map((issue) => issue.originalText), <String>['next']);
+    });
+
     test('repeated space rule keeps newlines outside its scope', () {
       const rule = RepeatedSpaceRule();
 
@@ -107,6 +117,15 @@ void main() {
   });
 
   group('WritingAnalyzer', () {
+    test('rejects duplicate rule identifiers', () {
+      expect(
+        () => WritingAnalyzer(
+          rules: const <WritingRule>[RepeatedSpaceRule(), RepeatedSpaceRule()],
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('runs enabled rules and returns sorted issues', () {
       final analyzer = WritingAnalyzer();
 
