@@ -1,0 +1,129 @@
+name: V2.9 copy-action doc sync
+
+on:
+  push:
+    branches:
+      - fix/v2.9-zero-error-audit-2026-08-14
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out audit branch
+        uses: actions/checkout@v7
+        with:
+          ref: fix/v2.9-zero-error-audit-2026-08-14
+          fetch-depth: 0
+
+      - name: Correct V2.9 copy-action documentation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          from textwrap import dedent
+
+          def replace_once(path, old, new, sentinel=None):
+              p = Path(path)
+              text = p.read_text()
+              old = dedent(old)
+              new = dedent(new)
+              if sentinel is not None and sentinel in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one guarded match, found {count}')
+              p.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'README.md',
+              'The model itself has no clipboard, persistence, or network side effect.',
+              'The model itself has no clipboard, persistence, or network side effect. Writing insights exposes an explicit **Copy diagnostic summary** action that copies only the privacy-safe `toPlainText()` representation after user input; it never copies editor text or finding excerpts as part of that action.',
+              sentinel='Writing insights exposes an explicit **Copy diagnostic summary** action',
+          )
+
+          replace_once(
+              'CHANGELOG.md',
+              '- Public `WritingAnalysisDiagnosticSummary` and `WritingRuleDiagnosticSummary` models with deterministic lexical rule ordering.\n',
+              '- Public `WritingAnalysisDiagnosticSummary` and `WritingRuleDiagnosticSummary` models with deterministic lexical rule ordering.\n- Explicit Writing insights **Copy diagnostic summary** action that copies only the privacy-safe formatted diagnostic metadata after a user action.\n',
+              sentinel='Explicit Writing insights **Copy diagnostic summary** action',
+          )
+
+          replace_once(
+              'docs/USER_GUIDE.md',
+              '''- **Apply safe fix** on individually fixable findings.
+          - **Apply all safe fixes (N)** when at least one automatic fix is available.''',
+              '''- **Apply safe fix** on individually fixable findings.
+          - **Apply all safe fixes (N)** when at least one automatic fix is available.
+          - **Copy diagnostic summary** beside the Findings heading for a privacy-safe metadata-only support snapshot.''',
+              sentinel='- **Copy diagnostic summary** beside the Findings heading',
+          )
+          replace_once(
+              'docs/USER_GUIDE.md',
+              '## Review search and filters — V2.2',
+              '''## Copy diagnostic summary — V2.9
+
+          Select **Copy diagnostic summary** in Writing insights when you need reproducible analysis metadata for a bug report, performance investigation, or support discussion. The explicit action copies the deterministic `WritingAnalysisDiagnosticSummary.toPlainText()` output to the local clipboard.
+
+          The copied text includes language ID, complete/limited state, capture limit, captured/exact/uncaptured counts when available, and captured/exact per-rule counts. It excludes editor text, source excerpts, finding messages, replacements, and source offsets. The copy occurs only after you select the control; SpellChecker does not automatically place diagnostics on the clipboard or upload them.
+
+          ## Review search and filters — V2.2''',
+              sentinel='## Copy diagnostic summary — V2.9',
+          )
+
+          replace_once(
+              'docs/V2_9_DIAGNOSTIC_SUMMARY.md',
+              'The feature adds no network request, persistence format, clipboard side effect, account behavior, telemetry, runtime dependency, background processing, or document retention by itself. Any user-interface copy action should copy only `toPlainText()` output and should remain an explicit user action.',
+              'The summary model/formatter adds no network request, persistence format, clipboard side effect, account behavior, telemetry, runtime dependency, background processing, or document retention by itself. Writing insights provides an explicit **Copy diagnostic summary** action that copies only `toPlainText()` output after the user selects it; the UI does not copy raw findings or editor text.',
+              sentinel='Writing insights provides an explicit **Copy diagnostic summary** action',
+          )
+
+          replace_once(
+              'docs/PRIVACY.md',
+              'Any persistence, automatic upload, telemetry, or application-owned clipboard/file export of exact finding totals requires explicit privacy review and user-facing documentation. V2.8 keeps raw result diagnostics local and memory-only; V2.9 adds only the separately documented metadata-only formatter and no automatic transport.',
+              'Any new persistence, automatic upload, telemetry, file export, or network transport of exact finding totals requires explicit privacy review and user-facing documentation. V2.8 keeps raw result diagnostics local and memory-only. V2.9 adds the separately documented metadata-only formatter plus an explicit Writing insights clipboard action that copies only that privacy-safe representation after the user selects it; there is no automatic transport.',
+              sentinel='V2.9 adds the separately documented metadata-only formatter plus an explicit Writing insights clipboard action',
+          )
+          replace_once(
+              'docs/PRIVACY.md',
+              '`WritingAnalysisDiagnosticSummary` is designed to make support/performance metadata safer to share than a raw `WritingAnalysisResult`. It includes language ID, complete/limited state, capture limit, captured/exact/uncaptured counts when available, stable analyzed rule IDs/display names, and captured/exact per-rule counts.\n\nIt deliberately does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal dictionary entries, ignored words, review search/filter state, correction history, timestamps, device identifiers, telemetry, or network metadata. `toPlainText()` is a pure in-memory formatter; V2.9 adds no automatic clipboard write, persistence, upload, or background reporting. A future UI transport must remain explicit and must use the privacy-safe representation rather than raw findings unless separately reviewed.',
+              '`WritingAnalysisDiagnosticSummary` is designed to make support/performance metadata safer to share than a raw `WritingAnalysisResult`. It includes language ID, complete/limited state, capture limit, captured/exact/uncaptured counts when available, stable analyzed rule IDs/display names, and captured/exact per-rule counts.\n\nIt deliberately does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal dictionary entries, ignored words, review search/filter state, correction history, timestamps, device identifiers, telemetry, or network metadata. `toPlainText()` is a pure in-memory formatter. Writing insights exposes an explicit **Copy diagnostic summary** control that copies only this formatter output after user action. V2.9 adds no automatic clipboard write, persistence, upload, or background reporting; any future file/network transport requires separate review.',
+              sentinel='Writing insights exposes an explicit **Copy diagnostic summary** control',
+          )
+
+          replace_once(
+              'SECURITY.md',
+              'The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. It does not read or serialize editor text, finding excerpts/messages, replacements, source offsets, personal vocabulary, correction history, timestamps, device identifiers, or network metadata. It adds no automatic clipboard write, persistence, transport, telemetry, or remote logging behavior. Future UI/file/network transport of diagnostics requires separate security/privacy review and must not silently substitute raw `WritingIssue` data for the safe summary.',
+              'The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. It does not read or serialize editor text, finding excerpts/messages, replacements, source offsets, personal vocabulary, correction history, timestamps, device identifiers, or network metadata. It adds no automatic clipboard write, persistence, telemetry, or remote logging behavior. The current Writing insights **Copy diagnostic summary** control is an explicit user action and copies only the safe formatted summary; any future file/network transport requires separate security/privacy review and must not silently substitute raw `WritingIssue` data for the safe summary.',
+              sentinel='The current Writing insights **Copy diagnostic summary** control is an explicit user action',
+          )
+          PY
+
+      - name: Commit corrections separately
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          commit_file() {
+            file="$1"
+            message="$2"
+            if ! git diff --quiet -- "$file"; then
+              git add "$file"
+              git commit -m "$message"
+            fi
+          }
+
+          commit_file README.md "docs: document explicit V2.9 diagnostics copy action"
+          commit_file CHANGELOG.md "docs: add V2.9 diagnostics copy action to changelog"
+          commit_file docs/USER_GUIDE.md "docs: explain V2.9 diagnostic summary copy"
+          commit_file docs/V2_9_DIAGNOSTIC_SUMMARY.md "docs: document shipped diagnostics copy control"
+          commit_file docs/PRIVACY.md "docs: align V2.9 clipboard privacy contract"
+          commit_file SECURITY.md "docs: align V2.9 clipboard security contract"
+
+          git push origin HEAD:fix/v2.9-zero-error-audit-2026-08-14
