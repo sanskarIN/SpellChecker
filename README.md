@@ -78,7 +78,7 @@ final summary = WritingAnalysisDiagnosticSummary.fromResult(
 final reportText = summary.toPlainText();
 ```
 
-The summary includes language ID, complete/limited status, capture limit, captured/exact/uncaptured counts when available, analyzed rule IDs/display names, and captured/exact per-rule counts. It deliberately excludes editor text, source excerpts, finding messages, replacements, source offsets, personal vocabulary, ignored words, review filters, correction history, timestamps, device identifiers, telemetry, and network metadata. The model itself has no clipboard, persistence, or network side effect.
+The summary includes language ID, complete/limited status, capture limit, captured/exact/uncaptured counts when available, analyzed rule IDs/display names, and captured/exact per-rule counts. It deliberately excludes editor text, source excerpts, finding messages, replacements, source offsets, personal vocabulary, ignored words, review filters, correction history, timestamps, device identifiers, telemetry, and network metadata. The model itself has no clipboard, persistence, or network side effect. Writing insights exposes an explicit **Copy diagnostic summary** action that copies only the privacy-safe `toPlainText()` representation after user input; it never copies editor text or finding excerpts as part of that action.
 
 ## Exact Writing insights diagnostics — V2.8
 
