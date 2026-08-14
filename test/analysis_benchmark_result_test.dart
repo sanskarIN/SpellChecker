@@ -341,10 +341,7 @@ void main() {
             spellingMicros: 12,
             writingMicros: 34,
             writingAnalyzedRuleIds: const <String>['rule-b', 'rule-a'],
-            writingTotalsByRule: const <String, int>{
-              'rule-b': 4,
-              'rule-a': 5,
-            },
+            writingTotalsByRule: const <String, int>{'rule-b': 4, 'rule-a': 5},
           ),
         ],
       );
