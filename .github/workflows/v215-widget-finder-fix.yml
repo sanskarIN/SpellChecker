@@ -1,0 +1,45 @@
+name: V2.15 one-time lazy finder fix
+
+on:
+  push:
+    branches: [v2.15-unmatched-curly-brace-2026-08-15]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out V2.15 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.15-unmatched-curly-brace-2026-08-15
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Apply guarded lazy finder fix
+        run: python3 tool/v215_widget_finder_fix.py
+
+      - name: Commit widget finder regression fix
+        run: |
+          git add test/writing_widget_test.dart
+          git commit -m "test(widget): defer first safe-fix finder until lazy item exists"
+
+      - name: Remove guarded patch helper
+        run: |
+          git rm tool/v215_widget_finder_fix.py
+          git commit -m "tool(v215): remove lazy finder fix helper"
+
+      - name: Remove one-time fix workflow
+        run: |
+          git rm .github/workflows/v215-widget-finder-fix.yml
+          git commit -m "ci(v215): remove one-time lazy finder fix"
+
+      - name: Push helper-free branch
+        run: git push origin HEAD:v2.15-unmatched-curly-brace-2026-08-15
