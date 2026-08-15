@@ -136,10 +136,7 @@ class DictionaryPreferences {
   Future<void> saveSuggestionLimit(int value) async {
     final preferences = await _instance;
     await _requireSuccessfulWrite(
-      preferences.setInt(
-        _suggestionLimitKey,
-        normalizeSuggestionLimit(value),
-      ),
+      preferences.setInt(_suggestionLimitKey, normalizeSuggestionLimit(value)),
       'save the suggestion limit',
     );
   }

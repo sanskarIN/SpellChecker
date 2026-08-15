@@ -94,7 +94,9 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
       });
       if (_hasChecked && _controller.text.trim().isNotEmpty) {
         final selectionOffset = _controller.selection.extentOffset;
-        _checkText(preferredOffset: selectionOffset < 0 ? null : selectionOffset);
+        _checkText(
+          preferredOffset: selectionOffset < 0 ? null : selectionOffset,
+        );
       }
     } catch (_) {
       if (!mounted) {

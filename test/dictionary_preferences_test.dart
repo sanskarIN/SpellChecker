@@ -91,17 +91,20 @@ void main() {
     await expectLater(preferences.clearPersonalWords(), throwsStateError);
   });
 
-  test('does not report legacy migration as successful after a failed write', () async {
-    final preferences = DictionaryPreferences(
-      preferences: _FailingSharedPreferences(
-        stringLists: <String, List<String>>{
-          'spellchecker.personal_words.v1': <String>['Flutter'],
-        },
-      ),
-    );
+  test(
+    'does not report legacy migration as successful after a failed write',
+    () async {
+      final preferences = DictionaryPreferences(
+        preferences: _FailingSharedPreferences(
+          stringLists: <String, List<String>>{
+            'spellchecker.personal_words.v1': <String>['Flutter'],
+          },
+        ),
+      );
 
-    await expectLater(preferences.loadPersonalWords(), throwsStateError);
-  });
+      await expectLater(preferences.loadPersonalWords(), throwsStateError);
+    },
+  );
 }
 
 class _FailingSharedPreferences implements SharedPreferences {

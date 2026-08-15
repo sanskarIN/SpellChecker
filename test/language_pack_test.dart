@@ -40,7 +40,11 @@ void main() {
           .map((match) => match.group(0))
           .toList(growable: false);
 
-      expect(words, <String>['Cafe\u0301', 'nai\u0308ve', 're\u0301sume\u0301']);
+      expect(words, <String>[
+        'Cafe\u0301',
+        'nai\u0308ve',
+        're\u0301sume\u0301',
+      ]);
     });
 
     test('normalizes common decomposed Latin accents canonically', () {
@@ -105,7 +109,9 @@ void main() {
       );
 
       expect(
-        engine.check('Cafe\u0301 fac\u0327ade jalapen\u0303o nai\u0308ve re\u0301sume\u0301'),
+        engine.check(
+          'Cafe\u0301 fac\u0327ade jalapen\u0303o nai\u0308ve re\u0301sume\u0301',
+        ),
         isEmpty,
       );
     });

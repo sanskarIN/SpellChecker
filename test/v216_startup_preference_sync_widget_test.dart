@@ -29,24 +29,28 @@ void main() {
     expect(find.text('Issue 1 of 1'), findsNothing);
   });
 
-  testWidgets('Writing insights waits for saved preferences to finish loading', (
-    WidgetTester tester,
-  ) async {
-    final preferences = _DelayedDictionaryPreferences();
-    await tester.pumpWidget(
-      MaterialApp(home: SpellCheckerPage(preferences: preferences)),
-    );
-    await tester.pump();
+  testWidgets(
+    'Writing insights waits for saved preferences to finish loading',
+    (WidgetTester tester) async {
+      final preferences = _DelayedDictionaryPreferences();
+      await tester.pumpWidget(
+        MaterialApp(home: SpellCheckerPage(preferences: preferences)),
+      );
+      await tester.pump();
 
-    await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
-    await tester.pump();
+      await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
+      await tester.pump();
 
-    expect(find.text('Writing insights'), findsNothing);
-    expect(find.text('Dictionary preferences are still loading.'), findsOneWidget);
+      expect(find.text('Writing insights'), findsNothing);
+      expect(
+        find.text('Dictionary preferences are still loading.'),
+        findsOneWidget,
+      );
 
-    preferences.completeLanguage('en-US');
-    await tester.pumpAndSettle();
-  });
+      preferences.completeLanguage('en-US');
+      await tester.pumpAndSettle();
+    },
+  );
 }
 
 class _DelayedDictionaryPreferences extends DictionaryPreferences {

@@ -161,7 +161,9 @@ class SpellCheckerEngine {
     final target = parts?.stem ?? normalized;
     final suffix = parts?.suffix ?? '';
     final targetRuneLength = target.runes.length;
-    final maxDistance = languagePack.maximumSuggestionDistance(targetRuneLength);
+    final maxDistance = languagePack.maximumSuggestionDistance(
+      targetRuneLength,
+    );
     final candidates = <SpellSuggestionCandidate>[];
 
     for (final candidate in _baseDictionary) {
@@ -286,8 +288,7 @@ class SpellCheckerEngine {
       return;
     }
 
-    final lengthDifference =
-        (candidate.runes.length - targetRuneLength).abs();
+    final lengthDifference = (candidate.runes.length - targetRuneLength).abs();
     if (lengthDifference > maxDistance) {
       return;
     }
@@ -299,7 +300,8 @@ class SpellCheckerEngine {
 
     final targetRunes = target.runes;
     final candidateRunes = candidate.runes;
-    final prefixPenalty = targetRunes.isNotEmpty &&
+    final prefixPenalty =
+        targetRunes.isNotEmpty &&
             candidateRunes.isNotEmpty &&
             targetRunes.first == candidateRunes.first
         ? 0

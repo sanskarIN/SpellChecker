@@ -117,7 +117,9 @@ class PersonalDictionaryCodec {
   }) {
     final rawVersion = map['version'];
     if (map.containsKey('version') && rawVersion is! int) {
-      throw const FormatException('Dictionary format version must be an integer.');
+      throw const FormatException(
+        'Dictionary format version must be an integer.',
+      );
     }
     final version = rawVersion is int ? rawVersion : legacyVersion;
     if (version != legacyVersion && version != currentVersion) {

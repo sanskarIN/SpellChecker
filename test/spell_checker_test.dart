@@ -50,13 +50,16 @@ void main() {
       expect(suggestions, isEmpty);
     });
 
-    test('uses Unicode scalar length for candidate length-difference filtering', () {
-      final engine = SpellCheckerEngine(dictionary: <String>{'𐐀abc'});
+    test(
+      'uses Unicode scalar length for candidate length-difference filtering',
+      () {
+        final engine = SpellCheckerEngine(dictionary: <String>{'𐐀abc'});
 
-      final suggestions = engine.suggestionsFor('xabc');
+        final suggestions = engine.suggestionsFor('xabc');
 
-      expect(suggestions, contains('𐐨abc'));
-    });
+        expect(suggestions, contains('𐐨abc'));
+      },
+    );
 
     test('uses frequency rank when candidates are otherwise equivalent', () {
       final engine = SpellCheckerEngine(
