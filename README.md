@@ -20,7 +20,8 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Bounded Writing insights analysis with an explicit first-200 finding policy, exact observed/per-rule totals, captured/total diagnostics, and captured-only limited-review/fix semantics.
 - Deterministic privacy-safe V2.9 writing-analysis diagnostic summaries containing counts and rule metadata only.
 - Developer-run V2.10 deterministic large-document benchmark tooling with synthetic corpus generation, versioned JSON/human reports, and CI smoke coverage.
-- V2.14 advisory unmatched-square-bracket diagnostics with nested literal balancing, single-character UTF-16 ownership, explicit V2.13 preference compatibility, and a nine-rule default registry.
+- V2.15 advisory unmatched-curly-brace diagnostics with nested literal balancing, single-character UTF-16 ownership, explicit V2.14 preference compatibility, and a ten-rule default registry.
+- V2.14 advisory unmatched-square-bracket diagnostics with nested literal balancing, single-character UTF-16 ownership, explicit V2.13 preference compatibility, and its historical nine-rule default registry.
 - V2.13 advisory unmatched-parenthesis diagnostics with nested literal balancing, single-character source ownership, explicit V2.12 preference compatibility, and its historical eight-rule default registry.
 - V2.12 missing-punctuation-space analysis with Unicode combining-mark boundaries, punctuation-only source ownership, safe batch composition, and its historical seven-rule default registry.
 - V2.11 keyboard-first Writing insights review with Ctrl/Command+F search focus, deterministic Escape filter clearing, and live rule/finding count semantics.
@@ -33,7 +34,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - **Apply visible safe fixes (N)** when review filters are active.
 - **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
-- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, missing-punctuation-space, trailing-whitespace, repeated-punctuation, unmatched-parenthesis, and unmatched-square-bracket rules.
+- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, missing-punctuation-space, trailing-whitespace, repeated-punctuation, unmatched-parenthesis, unmatched-square-bracket, and unmatched-curly-brace rules.
 - **Apply all safe fixes** for non-overlapping current writing findings.
 - Stale-range-safe individual and batch writing corrections.
 - One-step undo for a complete writing-fix batch.
@@ -62,9 +63,19 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.14.0+19`
+`2.15.0+20`
 
-Version 2.14 is the **Unmatched Square Bracket Diagnostics** release. It adds the ninth built-in writing rule, `unmatched-square-bracket`, for deterministic local reporting of literal `[` and `]` characters that cannot be paired. The rule is warning-level and advisory-only: it does not guess whether an unmatched bracket should be inserted, deleted, moved, or rewritten. Unset/reset rule preferences adopt the nine-rule registry while explicit V2.13 eight-rule choices remain exact. No persistence-format, runtime-dependency, telemetry, account, or application-network expansion is introduced.
+Version 2.15 is the **Unmatched Curly Brace Diagnostics** release. It adds the tenth built-in writing rule, `unmatched-curly-brace`, for deterministic local reporting of literal `{` and `}` characters that cannot be paired. The rule is warning-level and advisory-only: it does not guess whether an unmatched brace should be inserted, deleted, moved, or rewritten. Unset/reset rule preferences adopt the ten-rule registry while explicit V2.14 nine-rule choices remain exact. No persistence-format, runtime-dependency, telemetry, account, or application-network expansion is introduced.
+
+## Unmatched curly brace diagnostics — V2.15
+
+`UnmatchedCurlyBraceRule` balances literal curly braces iteratively, accepts nesting, and reports each unmatched brace with a one-character UTF-16 source range. A closing brace without an available opening is unmatched immediately; openings left after the scan are also unmatched; final findings are source ordered. Non-BMP offsets and 5,000 levels of nesting are covered by focused regressions.
+
+The rule deliberately has no automatic replacement. **Automatic fixes only** hides these findings, and `WritingCorrection.applyAll` skips them while still applying independent safe fixes. Parentheses and square brackets remain owned by their existing structural rules. Syntax-aware programming/template parsing remains outside V2.15 scope.
+
+Existing explicit nine-rule V2.14 overrides remain authoritative. Languages with no override—or languages reset to defaults—use the current ten-rule registry. Portable settings keep the same format version and preserve both historical explicit sets and explicit V2.15 ten-rule sets.
+
+See [V2.15 unmatched curly brace diagnostics](docs/V2_15_UNMATCHED_CURLY_BRACE.md) and [Writing rules](docs/WRITING_RULES.md).
 
 ## Unmatched square bracket diagnostics — V2.14
 
