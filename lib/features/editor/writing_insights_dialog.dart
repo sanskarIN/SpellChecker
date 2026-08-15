@@ -458,7 +458,8 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                     const _WritingEmptyState(
                       icon: Icons.check_circle_outline,
                       title: 'No enabled-rule findings',
-                      message: 'No local writing rule reported an issue in this text.',
+                      message:
+                          'No local writing rule reported an issue in this text.',
                     )
                   else if (visibleIssues.isEmpty)
                     _WritingEmptyState(
