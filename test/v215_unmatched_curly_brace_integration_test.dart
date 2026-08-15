@@ -47,26 +47,29 @@ void main() {
     expect(result.issues.single.ruleId, 'unmatched-curly-brace');
   });
 
-  test('batch correction skips advisory curly brace and applies safe fixes', () {
-    const text = 'Hello  {world';
-    final analyzer = WritingAnalyzer();
-    final analysis = analyzer.analyze(
-      text,
-      languagePack: pack,
-      enabledRuleIds: const <String>{
-        'repeated-space',
-        'unmatched-curly-brace',
-      },
-    );
+  test(
+    'batch correction skips advisory curly brace and applies safe fixes',
+    () {
+      const text = 'Hello  {world';
+      final analyzer = WritingAnalyzer();
+      final analysis = analyzer.analyze(
+        text,
+        languagePack: pack,
+        enabledRuleIds: const <String>{
+          'repeated-space',
+          'unmatched-curly-brace',
+        },
+      );
 
-    expect(analysis.issues, hasLength(2));
-    final result = WritingCorrection.applyAll(text, analysis.issues);
+      expect(analysis.issues, hasLength(2));
+      final result = WritingCorrection.applyAll(text, analysis.issues);
 
-    expect(result.text, 'Hello {world');
-    expect(result.appliedCount, 1);
-    expect(result.skippedCount, 1);
-    expect(result.applied, isTrue);
-  });
+      expect(result.text, 'Hello {world');
+      expect(result.appliedCount, 1);
+      expect(result.skippedCount, 1);
+      expect(result.applied, isTrue);
+    },
+  );
 
   test('curly-brace-only advisory batch leaves source text unchanged', () {
     const text = 'Hello {world';
