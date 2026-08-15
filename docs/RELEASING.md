@@ -1,5 +1,9 @@
 # Releasing
 
+## V2.13 release gate
+
+The V2.13 candidate identity is package `2.13.0+18` / About `2.13.0`, with eight built-in writing rules including `unmatched-parenthesis`. Release validation must confirm package-aware formatting, static analysis, the complete Flutter suite, deterministic benchmark smoke, `flutter build web --release`, public export/registry identity, manifest JSON, unchanged direct runtime dependency boundary, V2.13 `what_changed.md` coverage, and zero disposable V2.13 helper files.
+
 ## V2.12 release note
 
 The V2.12 candidate identity is package `2.12.0+17` and About `2.12.0`. Release acceptance must verify the seven-rule registry/export, focused Unicode and widget regressions, full formatting/analyzer/tests, deterministic benchmark smoke, release web build, documentation identity, and absence of disposable `v212` helper files. A tag/release must point only at the exact validated merged tree.
