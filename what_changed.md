@@ -82,6 +82,18 @@ Package identity advances to `2.13.0+18`; About identity advances to `2.13.0`. V
 
 Before release metadata was applied, permanent CI run `31869797175` passed package-aware formatting, `flutter analyze`, the full Flutter test suite, and deterministic benchmark smoke on the complete functional eight-rule implementation. The final release candidate must repeat those checks after release synchronization and also pass a release-mode web build plus version/export/manifest/dependency/helper-residue assertions.
 
+### Final V2.13 validation and merged-main evidence
+
+After the release metadata and documentation were synchronized, permanent PR CI run `31870187663` passed formatting, static analysis, the complete Flutter suite, and benchmark smoke on owner commit `009dbb69564b1c500543c1b36563c338c3f31ee1`.
+
+Independent release-gate run `31870277817` then repeated those checks, built the production web application with `flutter build web --release`, verified package/About identity, eight-rule registry/export identity, focused regression files, `what_changed.md`, changelog/README/web-manifest metadata, unchanged direct runtime dependencies, generated web outputs, and zero unexpected V2.13 helper residue. The one-time gate removed itself in cleanup commit `6dcba69ee737597e0007e5e67d591c8deb99ca2c`.
+
+The release-gate evidence update received a final green permanent PR CI run `31870395536` on exact PR head `4e68476af57efdea295e9a3488c2df8b335a7ab7`. PR #77 contained 65 branch commits and was merged with a normal merge commit, preserving that granular history. The V2.13 implementation merge commit is `fa01826aa084d858e784bed3d09fa3fdcbfa0760`.
+
+Post-merge `main` CI run `31870480137` passed dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on the merge commit. The merge tree `7ed318aa9bdaa3f0532366b4311305f846daea1d` is identical to the already-green final PR tree.
+
+A documentation-only post-merge evidence change records these now-known merge/main-CI identifiers. It changes no production source, test logic, dependency, release identity, persistence format, web build input, or runtime behavior; that evidence change is itself required to pass permanent CI before the repository's final V2.13 default-branch head is accepted.
+
 ## V2.12 — Missing Punctuation Spacing & Unicode Boundary Completion
 
 Release version: `2.12.0+17`

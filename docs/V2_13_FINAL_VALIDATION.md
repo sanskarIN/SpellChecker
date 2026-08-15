@@ -2,7 +2,7 @@
 
 Release candidate: `2.13.0+18` / About `2.13.0`.
 
-This document records the final acceptance evidence for the SpellChecker V2.13 unmatched-parenthesis release after implementation, compatibility hardening, release synchronization, package-aware formatting, permanent CI, and release-mode web validation.
+This document records the final acceptance evidence for the SpellChecker V2.13 unmatched-parenthesis release after implementation, compatibility hardening, release synchronization, package-aware formatting, permanent CI, release-mode web validation, normal-history-preserving merge, and merged-main CI.
 
 ## Implemented candidate
 
@@ -91,14 +91,38 @@ Results:
 
 The successful gate removed `.github/workflows/v213-release-gate.yml` and pushed cleanup commit `6dcba69ee737597e0007e5e67d591c8deb99ca2c`. Therefore the permanent candidate does not retain the release-gate helper.
 
-## Final evidence-head CI requirement
+## Final pre-merge evidence-head CI
 
-This documentation-only evidence commit changes the pull-request head after the successful release gate, so the exact new head must receive one final green permanent CI run. It changes no Dart source, test logic, dependency, package/About identity, web build input, persistence behavior, or runtime behavior.
+After release-gate evidence was recorded, permanent CI run `31870395536` validated the exact final PR head `4e68476af57efdea295e9a3488c2df8b335a7ab7` successfully.
 
-The final permanent run must again pass formatting, static analysis, the complete Flutter test suite, and benchmark smoke before merge.
+The run passed dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke. No production source, test logic, dependency, package/About identity, web build input, persistence behavior, or runtime behavior changed after that successful run.
 
-## Merge policy
+## Merge and merged-main evidence
 
-PR #77 must remain mergeable and its permanent diff must remain free of disposable V2.13 helpers. The final merge must use a normal merge commit rather than squash so the deliberately granular implementation, regression, release, documentation, diagnostic, validation, and cleanup history is preserved.
+PR #77 was merged using a normal merge commit so its complete granular development history was preserved rather than squashed.
 
-Only the exact final green candidate may be merged to `main`. After merge, the resulting `main` commit must receive its own successful permanent CI run before V2.13 is considered complete.
+- Final PR head: `4e68476af57efdea295e9a3488c2df8b335a7ab7`.
+- PR #77 branch commit count: 65 commits.
+- Merge commit on `main`: `fa01826aa084d858e784bed3d09fa3fdcbfa0760`.
+- Merge tree: `7ed318aa9bdaa3f0532366b4311305f846daea1d`, identical to the already-green final candidate tree.
+- Post-merge `main` CI run: `31870480137`.
+
+Main CI run `31870480137` passed every permanent stage on merge commit `fa01826aa084d858e784bed3d09fa3fdcbfa0760`:
+
+- dependency resolution: passed;
+- canonical formatting: passed;
+- static analysis: passed;
+- complete Flutter test suite: passed;
+- deterministic benchmark smoke: passed.
+
+This establishes that the repository default branch contains the same validated V2.13 release tree that passed the PR and release-mode gates.
+
+## Post-merge documentation evidence
+
+This post-merge follow-up changes documentation only. It records the actual merge SHA and merged-main CI run after those values existed. It does not alter Dart source, tests, dependencies, package/About identity, web build inputs, persistence formats, runtime behavior, or the V2.13 feature contract.
+
+The post-merge evidence pull request must itself pass the permanent CI gate before merge. After that documentation-only merge, the resulting `main` head must receive one final successful permanent CI run so the repository ends with recorded evidence and a green default branch.
+
+## Release status
+
+V2.13 implementation, compatibility coverage, synchronized documentation, release-mode web validation, granular-history merge, and implementation-merge CI are complete. The only remaining acceptance action for this documentation follow-up is to validate and merge the evidence-only change and confirm the resulting final `main` CI run.
