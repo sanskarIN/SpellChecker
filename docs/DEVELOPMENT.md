@@ -1,5 +1,8 @@
 # Development Guide
 
+## V2.15 development baseline
+When changing the ten-rule catalogue, run canonical formatting after dependency resolution, `flutter analyze`, the complete Flutter suite, and benchmark smoke. Structural-rule changes should also run focused source-ownership, bounded-total, preference/Portable-settings, widget, privacy, and stress regressions.
+
 
 ## V2.14 development notes
 
