@@ -1,0 +1,19 @@
+exit_code=1
+Flutter 3.47.0 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 4cf2416426 (3 days ago) • 2026-08-11 11:53:49 -0700
+Engine • hash 59d54a2b2896a6bbf356c94b7fac7b9e235bdacd (revision 5f77625673) (3 days ago) • 2026-08-11 16:38:36.000Z
+Tools • Dart 3.13.0 • DevTools 2.60.0
+Dart SDK version: 3.13.0 (stable) (Wed Aug 5 00:28:05 2026 -0700) on "linux_x64"
+
+command: dart format --output=none --set-exit-if-changed lib test tool
+
+Changed lib/core/settings_transfer_codec.dart
+Changed lib/features/editor/dictionary_manager_dialog.dart
+Changed lib/features/editor/spell_checker_page.dart
+Changed lib/features/editor/writing_insights_dialog.dart
+Changed test/writing_analysis_diagnostic_summary_test.dart
+Changed test/writing_review_query_test.dart
+Changed tool/benchmark/analysis_benchmark_command.dart
+Formatted 91 files (7 changed) in 0.21 seconds.
+
+post-command git diff:
