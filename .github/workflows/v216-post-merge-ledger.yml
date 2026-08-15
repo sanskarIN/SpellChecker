@@ -1,0 +1,50 @@
+name: V2.16 final post-merge ledger synchronization
+
+on:
+  push:
+    branches:
+      - v2.16-post-merge-validation-2026-08-15
+    paths:
+      - .github/workflows/v216-post-merge-ledger.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out cleanup branch
+        uses: actions/checkout@v4
+        with:
+          ref: v2.16-post-merge-validation-2026-08-15
+          fetch-depth: 0
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Apply guarded final ledger evidence
+        run: python3 tool/v216_post_merge_ledger.py
+      - name: Commit final engineering ledger evidence
+        run: |
+          git add what_changed.md
+          git commit -m "docs(v216): record final implementation and cleanup evidence"
+      - name: Remove ledger patcher
+        run: |
+          git rm tool/v216_post_merge_ledger.py
+          git commit -m "chore(v216): remove post-merge ledger patcher"
+      - name: Remove ledger workflow
+        run: |
+          git rm .github/workflows/v216-post-merge-ledger.yml
+          git commit -m "ci(v216): remove post-merge ledger workflow"
+      - name: Verify permanent diff against implementation merge
+        run: |
+          actual="$(git diff --name-only 262859ac5f2058fc6dc71141e7edb26650e1385a...HEAD | sort)"
+          expected="$(printf '%s\n' '.github/workflows/v216-release-gate.yml' 'docs/V2_16_FINAL_VALIDATION.md' 'what_changed.md' | sort)"
+          printf 'Permanent diff:\n%s\n' "$actual"
+          test "$actual" = "$expected"
+          test ! -e tool/v216_post_merge_ledger.py
+          test ! -e .github/workflows/v216-post-merge-ledger.yml
+          test ! -e .github/workflows/v216-release-gate.yml
+      - name: Push helper-free cleanup branch
+        run: git push origin HEAD:v2.16-post-merge-validation-2026-08-15
