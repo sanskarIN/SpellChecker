@@ -1,5 +1,9 @@
 # Support
 
+## V2.13 support note
+
+For unmatched-parenthesis reports, include whether the text intentionally contains literal unmatched delimiters (for example in code or markup) and whether the rule was enabled explicitly or through defaults. The **Copy diagnostic summary** action can share the stable rule ID and counts without copying document excerpts. Do not include private document text unless you choose to share it separately.
+
 ## V2.12 support note
 
 For `Hello,world`-style cases, confirm the selected language is English (US) or English (UK) and that **Missing punctuation space** is enabled in Writing insights. Users with an older explicit rule selection may need **Reset rules to defaults** to opt into the new seventh default rule. Period and colon boundaries are intentionally outside V2.12's automatic scope.
