@@ -1,5 +1,10 @@
 # Releasing
 
+
+## V2.14 release acceptance
+
+The V2.14 release identity is package `2.14.0+19` and About `2.14.0`. Release validation must verify the public `UnmatchedSquareBracketRule` export, stable ID `unmatched-square-bracket`, exactly nine built-in rules, focused V2.14 regression files, explicit V2.13 preference compatibility, synchronized `what_changed.md`/changelog/README/web metadata, unchanged direct runtime dependencies, a successful release web build, and zero disposable V2.14 helper residue.
+
 ## V2.13 release gate
 
 The V2.13 candidate identity is package `2.13.0+18` / About `2.13.0`, with eight built-in writing rules including `unmatched-parenthesis`. Release validation must confirm package-aware formatting, static analysis, the complete Flutter suite, deterministic benchmark smoke, `flutter build web --release`, public export/registry identity, manifest JSON, unchanged direct runtime dependency boundary, V2.13 `what_changed.md` coverage, and zero disposable V2.13 helper files.

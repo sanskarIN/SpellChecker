@@ -14,6 +14,7 @@ void main() {
     'sentence-capitalization',
     'trailing-whitespace',
     'unmatched-parenthesis',
+    'unmatched-square-bracket',
   ];
 
   group('AnalysisBenchmarkRunner', () {

@@ -2,6 +2,11 @@
 
 The roadmap describes intended direction, not guaranteed delivery dates.
 
+
+## V2.14 — Unmatched Square Bracket Diagnostics — Implemented
+
+V2.14 completes the next deterministic 2.x catalogue increment: a ninth built-in, advisory-only `unmatched-square-bracket` rule with nested literal balancing, exact one-character UTF-16 ownership, V2.13 explicit-override compatibility, Portable-settings preservation, bounded/private diagnostics, benchmark identity, stress coverage, and editor/review integration. It intentionally does not introduce syntax-aware parsing or automatic bracket mutation.
+
 ## 1.0 — Local spelling workflow
 
 Status: implemented.

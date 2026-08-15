@@ -136,7 +136,7 @@ void main() {
 
       expect(result.languageId, 'en-US');
       expect(result.isClean, isFalse);
-      expect(result.analyzedRuleIds, hasLength(8));
+      expect(result.analyzedRuleIds, hasLength(9));
       expect(
         result.issues.map((issue) => issue.start),
         orderedEquals(
@@ -151,6 +151,7 @@ void main() {
       expect(result.issueCountByRule['punctuation-spacing'], isNull);
       expect(result.issueCountByRule['trailing-whitespace'], isNull);
       expect(result.issueCountByRule['unmatched-parenthesis'], isNull);
+      expect(result.issueCountByRule['unmatched-square-bracket'], isNull);
     });
 
     test(
@@ -169,11 +170,13 @@ void main() {
             'missing-punctuation-space',
             'punctuation-spacing',
             'trailing-whitespace',
+            'unmatched-square-bracket',
           }),
         );
         expect(result.issueCountByRule['missing-punctuation-space'], 1);
         expect(result.issueCountByRule['punctuation-spacing'], 1);
         expect(result.issueCountByRule['trailing-whitespace'], 1);
+        expect(result.issueCountByRule['unmatched-square-bracket'], isNull);
       },
     );
 
@@ -197,6 +200,8 @@ void main() {
         PunctuationSpacingRule(),
         MissingPunctuationSpaceRule(),
         TrailingWhitespaceRule(),
+        UnmatchedParenthesisRule(),
+        UnmatchedSquareBracketRule(),
       ];
 
       for (final rule in rules) {
@@ -219,11 +224,16 @@ void main() {
         isA<TrailingWhitespaceRule>(),
       );
       expect(
+        WritingRuleRegistry.byId('unmatched-square-bracket'),
+        isA<UnmatchedSquareBracketRule>(),
+      );
+      expect(
         WritingRuleRegistry.defaultEnabledRuleIds,
         containsAll(<String>{
           'missing-punctuation-space',
           'punctuation-spacing',
           'trailing-whitespace',
+          'unmatched-square-bracket',
         }),
       );
     });

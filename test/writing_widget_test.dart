@@ -18,17 +18,10 @@ void main() {
     );
   }
 
-  Future<void> scrollToFindings(WidgetTester tester) async {
-    final insightsList = writingInsightsList();
-    expect(insightsList, findsOneWidget);
-    await tester.drag(insightsList, const Offset(0, -1400));
-    await tester.pumpAndSettle();
-  }
-
   Future<void> scrollUntilBuilt(WidgetTester tester, Finder target) async {
     final insightsList = writingInsightsList();
     expect(insightsList, findsOneWidget);
-    for (var index = 0; index < 16 && target.evaluate().isEmpty; index++) {
+    for (var index = 0; index < 24 && target.evaluate().isEmpty; index++) {
       await tester.drag(insightsList, const Offset(0, -180));
       await tester.pumpAndSettle();
     }
@@ -88,10 +81,11 @@ void main() {
       expect(find.text(label), findsWidgets);
     }
 
-    await scrollToFindings(tester);
+    final applySafeFix = find.text('Apply safe fix').first;
+    await scrollUntilBuilt(tester, applySafeFix);
 
     expect(find.text('Apply safe fix'), findsWidgets);
-    await tester.tap(find.text('Apply safe fix').first);
+    await tester.tap(applySafeFix);
     await tester.pumpAndSettle();
 
     final textFieldAfterFix = tester.widget<TextField>(editor);
@@ -116,10 +110,10 @@ void main() {
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
 
-    await scrollToFindings(tester);
     final applyAll = find.byKey(
       const ValueKey<String>('apply-all-writing-fixes'),
     );
+    await scrollUntilBuilt(tester, applyAll);
     expect(applyAll, findsOneWidget);
     await tester.tap(applyAll);
     await tester.pumpAndSettle();

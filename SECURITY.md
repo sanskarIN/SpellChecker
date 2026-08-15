@@ -1,5 +1,10 @@
 # Security Policy
 
+
+## V2.14 structural diagnostic security boundary
+
+`UnmatchedSquareBracketRule` scans the in-memory editor string locally and never executes or interprets bracket contents. It adds no parser, network request, telemetry, account, upload, persistence key, runtime dependency, or hidden clipboard action. Copied writing diagnostics continue to expose stable rule metadata/counts rather than document excerpts.
+
 ## V2.13 writing-rule security boundary
 
 `UnmatchedParenthesisRule` treats input as data only: it scans literal UTF-16 delimiters and does not execute, interpret, fetch, or evaluate surrounding code/markup. It is advisory-only and therefore cannot mutate a document through its own finding. Large/untrusted-input policies still belong to the host application; the built-in stress tests are regression coverage, not an execution-time sandbox.

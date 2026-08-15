@@ -1,5 +1,10 @@
 # Language Packs
 
+
+## V2.14 language eligibility
+
+`unmatched-square-bracket` declares support for language code `en`, so both built-in `en-US` and `en-GB` packs receive the ninth default writing rule when no explicit override is stored. The release does not add auto-detection, a new language pack, or language-specific bracket parsing.
+
 ## V2.13 writing-rule eligibility
 
 `UnmatchedParenthesisRule` declares language code `en`, so it is available to both built-in `en-US` and `en-GB` packs without duplicating pack-specific logic. Language eligibility still flows through `WritingRule.supports(pack)`. Explicit per-language rule overrides remain isolated; adding the eighth default does not rewrite an existing explicit V2.12 set.

@@ -1,5 +1,10 @@
 # Development Guide
 
+
+## V2.14 development notes
+
+Structural detection and structural mutation remain separate decisions. `UnmatchedSquareBracketRule` may deterministically prove that a literal bracket is unmatched, but it cannot prove whether insertion, deletion, movement, or a larger rewrite is correct. Development changes to this rule should preserve the stable ID, exact UTF-16 range, English eligibility, advisory-only replacement contract, explicit-override compatibility, and 5,000-level iterative stress coverage.
+
 ## V2.13 development note
 
 Writing-rule changes must preserve exact source ownership and explicitly choose advisory versus automatic correction semantics. V2.13's `unmatched-parenthesis` rule is advisory-only and includes nested/malformed/UTF-16, bounded-analysis, UI, preference-compatibility, Portable-settings, diagnostics, benchmark, and 5,000-level stress regressions. Run package-aware formatting after `flutter pub get`, then `flutter analyze`, the full Flutter suite, and benchmark smoke.

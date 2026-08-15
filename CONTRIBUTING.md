@@ -1,5 +1,10 @@
 # Contributing to SpellChecker
 
+
+## V2.14 structural diagnostics contribution boundary
+
+The current built-in catalogue contains nine rules. `unmatched-square-bracket` demonstrates the expected contract for structural advisory diagnostics: literal deterministic detection, exact source ownership, no guessed mutation, explicit compatibility tests for stored rule sets, bounded/exact diagnostic coverage, and privacy-safe copied summaries. New delimiter/parser behavior must document whether it is literal or syntax-aware and must not silently broaden automatic correction scope.
+
 ## V2.13 writing-rule contribution example
 
 The `unmatched-parenthesis` rule demonstrates the required separation between deterministic detection and safe mutation. New rules should have stable IDs, explicit language eligibility, exact source-range ownership, adversarial/Unicode tests, and a justified `replacement` decision. When a correction is ambiguous, prefer an advisory finding over guessing an edit.

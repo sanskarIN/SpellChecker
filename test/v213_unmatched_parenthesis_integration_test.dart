@@ -5,18 +5,24 @@ import 'package:spellchecker/writing.dart';
 void main() {
   final pack = SpellLanguageRegistry.englishUs;
 
-  test('public registry exposes eight built-in writing rules', () {
-    expect(WritingRuleRegistry.builtIns, hasLength(8));
-    expect(
-      WritingRuleRegistry.byId('unmatched-parenthesis'),
-      isA<UnmatchedParenthesisRule>(),
-    );
-    expect(
-      WritingRuleRegistry.defaultEnabledRuleIds,
-      contains('unmatched-parenthesis'),
-    );
-    expect(WritingRuleRegistry.defaultEnabledRuleIds, hasLength(8));
-  });
+  test(
+    'public registry retains the V2.13 parenthesis rule after expansion',
+    () {
+      expect(WritingRuleRegistry.builtIns.length, greaterThanOrEqualTo(8));
+      expect(
+        WritingRuleRegistry.byId('unmatched-parenthesis'),
+        isA<UnmatchedParenthesisRule>(),
+      );
+      expect(
+        WritingRuleRegistry.defaultEnabledRuleIds,
+        contains('unmatched-parenthesis'),
+      );
+      expect(
+        WritingRuleRegistry.defaultEnabledRuleIds,
+        hasLength(WritingRuleRegistry.builtIns.length),
+      );
+    },
+  );
 
   test('default analyzer includes unmatched parenthesis findings', () {
     final analyzer = WritingAnalyzer();

@@ -1,5 +1,10 @@
 # User Guide
 
+
+## V2.14 unmatched square bracket workflow
+
+Writing insights includes **Unmatched square bracket** under Mechanics. It reports literal `[` or `]` characters that cannot be paired and is enabled by current defaults. The finding is advisory: there is no automatic replacement because the intended correction may be insertion, deletion, movement, or rewriting. **Automatic fixes only** hides it, while other safe fixes can still be applied. Explicit older rule choices remain unchanged until you enable the rule or use **Reset rules to defaults**.
+
 ## V2.13 unmatched parenthesis findings
 
 Writing insights can now report an opening or closing parenthesis that has no matching pair. The finding is advisory: SpellChecker highlights the unmatched character but does not offer **Apply safe fix** because it cannot know whether you intended to insert a partner, delete the character, or rewrite the surrounding text. **Automatic fixes only** hides these findings. You can disable the rule per language like other writing rules.
