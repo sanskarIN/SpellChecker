@@ -636,6 +636,11 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   }
 
   void _ignoreWord(SpellIssue issue) {
+    if (!_preferencesLoaded) {
+      _showMessage('Dictionary preferences are still loading.');
+      return;
+    }
+
     _engine.ignoreWord(issue.word);
     _checkText(preferredOffset: issue.start);
     _showMessage('Ignoring “${issue.word}” for this session.');
