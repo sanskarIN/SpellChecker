@@ -25,6 +25,18 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> scrollUntilBuilt(WidgetTester tester, Finder target) async {
+    final insightsList = writingInsightsList();
+    expect(insightsList, findsOneWidget);
+    for (var index = 0; index < 16 && target.evaluate().isEmpty; index++) {
+      await tester.drag(insightsList, const Offset(0, -180));
+      await tester.pumpAndSettle();
+    }
+    expect(target, findsOneWidget);
+    await tester.ensureVisible(target);
+    await tester.pumpAndSettle();
+  }
+
   Finder writingInsightsScrollable() {
     return find.descendant(
       of: find.byType(AlertDialog),
@@ -140,11 +152,10 @@ void main() {
     await tester.tap(mechanics);
     await tester.pumpAndSettle();
 
-    await scrollToFindings(tester);
     final applyVisible = find.byKey(
       const ValueKey<String>('apply-all-writing-fixes'),
     );
-    expect(applyVisible, findsOneWidget);
+    await scrollUntilBuilt(tester, applyVisible);
     expect(find.textContaining('Apply visible safe fixes'), findsOneWidget);
     await tester.tap(applyVisible);
     await tester.pumpAndSettle();
