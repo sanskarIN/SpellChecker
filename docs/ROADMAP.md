@@ -286,6 +286,21 @@ Status: implemented.
 - [x] Complete V2.11 accessibility, user, developer, testing, privacy/security, support, release, and repository metadata documentation.
 - [x] No persistence-format, telemetry, application-network, or runtime-dependency expansion.
 
+## Version 2.12 — Missing punctuation spacing and Unicode boundaries
+
+Status: **implemented in the V2.12 release branch**.
+
+- Add public `MissingPunctuationSpaceRule` with stable ID `missing-punctuation-space`.
+- Expand the default built-in writing-rule catalogue from six to seven rules.
+- Detect missing following whitespace after `,`, `;`, `!`, and `?` only when Unicode letters bound the punctuation.
+- Accept decomposed Unicode predecessors using a letter plus zero-or-more combining marks.
+- Preserve punctuation-only issue ownership so the new fix remains adjacent to, not overlapping with, `punctuation-spacing` cleanup.
+- Keep periods and colons outside the deterministic automatic scope.
+- Preserve explicit per-language rule selections while allowing unset/reset preferences to adopt the new seven-rule defaults.
+- Extend benchmark workload identity and zero-total metadata to the seventh rule.
+- Add baseline, Unicode, non-BMP-offset, batch-composition, persistence, registry, benchmark, and widget regressions.
+- Advance package/About identity to `2.12.0+17` / `2.12.0` and synchronize the public release documentation.
+
 ## Future 2.x direction
 
 Possible future work includes:
