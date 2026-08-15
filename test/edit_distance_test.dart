@@ -15,5 +15,18 @@ void main() {
     test('counts adjacent transposition as one edit', () {
       expect(damerauLevenshteinDistance('teh', 'the'), 1);
     });
+
+    test('counts one astral Unicode scalar substitution as one edit', () {
+      expect(damerauLevenshteinDistance('a𐐀c', 'a𐐁c'), 1);
+    });
+
+    test('counts astral Unicode scalar insertion and deletion once', () {
+      expect(damerauLevenshteinDistance('ac', 'a𐐀c'), 1);
+      expect(damerauLevenshteinDistance('a𐐀c', 'ac'), 1);
+    });
+
+    test('counts adjacent astral Unicode scalar transposition as one edit', () {
+      expect(damerauLevenshteinDistance('𐐀𐐁', '𐐁𐐀'), 1);
+    });
   });
 }
