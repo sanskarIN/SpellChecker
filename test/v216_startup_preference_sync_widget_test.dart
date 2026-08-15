@@ -68,7 +68,7 @@ void main() {
 
     final ignoreOnce = find.text('Ignore once');
     await tester.ensureVisible(ignoreOnce);
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(ignoreOnce, findsOneWidget);
     await tester.tap(ignoreOnce);
     await tester.pump();
