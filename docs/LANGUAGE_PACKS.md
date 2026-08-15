@@ -1,5 +1,9 @@
 # Language Packs
 
+## V2.16 final stabilization
+Built-in English tokenization now treats each Unicode letter plus following combining marks as one word cluster. The English normalizer deterministically composes the common Latin accent sequences represented by bundled loanwords. Suggestion distance and length thresholds operate on Unicode scalars; editor offsets remain UTF-16.
+
+
 ## V2.15 language-pack behavior
 `UnmatchedCurlyBraceRule` declares supported language code `en`, so both built-in English (US) and English (UK) packs enable it by default when no explicit rule override exists. Explicit per-language historical overrides remain authoritative.
 
