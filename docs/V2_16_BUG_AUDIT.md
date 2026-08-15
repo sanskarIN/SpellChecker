@@ -15,6 +15,7 @@ SpellChecker V2.16 is the repository's final stabilization milestone. This recor
 9. **An early spelling check could remain based on temporary defaults after saved preferences loaded.** Checked results are refreshed after successful preference restoration, and Writing Insights cannot mutate rule state while restoration is pending.
 10. **Case-preserving correction split surrogate pairs and could misclassify uncased text.** Case matching now operates on complete Unicode scalars and only applies uppercase/title behavior when actual cased characters support it.
 11. **The public Damerau-Levenshtein function implemented the restricted optimal-string-alignment recurrence.** Its name promises unrestricted Damerau-Levenshtein distance, where interacting edits may reuse characters. The implementation now uses the unrestricted last-seen-row/column recurrence and locks the canonical `CA` → `ABC` distance of 2, including Unicode-scalar coverage.
+12. **Ignore-once could mutate the temporary startup engine.** An early spelling check could expose an Ignore action before durable preferences finished restoring; the ignored word would then disappear when the real engine replaced the temporary one. Ignore-once now refuses to mutate session state until restoration completes and reports the shared loading status instead.
 
 ## Audited stable behavior intentionally unchanged
 
