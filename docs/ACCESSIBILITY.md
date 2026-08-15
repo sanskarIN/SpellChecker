@@ -1,5 +1,8 @@
 # Accessibility
 
+## V2.12 accessibility note
+
+The seventh rule uses the existing Writing insights switch, finding-card, safe-fix, batch-fix, keyboard, focus, and semantic-count infrastructure. V2.12 adds no pointer-only action and does not remove the Ctrl/Command+Shift+Enter, Ctrl/Command+F, Escape, or existing live-region workflows. The rule's user-visible name is **Missing punctuation space**.
 SpellChecker should remain usable with keyboard navigation, screen readers, text scaling, high-contrast system settings, narrow layouts, and without relying on color alone.
 
 ## Current foundations
