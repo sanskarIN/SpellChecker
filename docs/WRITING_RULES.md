@@ -1,5 +1,22 @@
 # Writing Rules
 
+## V2.15 current catalogue
+The current built-in/default catalogue contains ten stable rule IDs:
+
+- `repeated-word`
+- `sentence-capitalization`
+- `repeated-space`
+- `punctuation-spacing`
+- `missing-punctuation-space`
+- `trailing-whitespace`
+- `repeated-punctuation`
+- `unmatched-parenthesis`
+- `unmatched-square-bracket`
+- `unmatched-curly-brace`
+
+`unmatched-curly-brace` is advisory-only, warning-level, and owns exactly one `{` or `}` UTF-16 source character. Parentheses, square brackets, and curly braces remain independent structural families. Unset/reset preferences follow this ten-rule catalogue; explicit V2.14 nine-rule sets remain exact.
+
+
 
 ## V2.14 ninth built-in rule
 
