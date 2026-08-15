@@ -1,5 +1,9 @@
 # Support
 
+## V2.16 final stabilization
+When reporting a V2.16 problem, include the exact app version, platform, selected language, whether local preferences finished loading, a minimal non-sensitive input, and whether the problem involves decomposed Unicode, imported settings/dictionaries, persistence, or startup actions. Do not include private documents unless the minimal text itself is safe to share.
+
+
 ## V2.15 support note
 `unmatched-curly-brace` is advisory-only. If a `{` or `}` warning appears, SpellChecker intentionally does not guess whether to insert, delete, move, or rewrite text. The rule can be disabled per language in Writing insights.
 
