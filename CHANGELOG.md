@@ -4,6 +4,30 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.14.0] - 2026-08-15
+
+### Added
+
+- Public advisory-only `UnmatchedSquareBracketRule` with stable ID `unmatched-square-bracket`, exported through `package:spellchecker/writing.dart` and enabled by default for both built-in English packs when no explicit rule override exists.
+- Deterministic literal square-bracket balancing with nested-pair support, one-character UTF-16 source ownership, source-ordered unmatched findings, and non-BMP offset coverage.
+- Focused rule, analyzer, correction-skip, bounded-analysis, review-query, widget, preference-compatibility, Portable-settings, privacy-safe diagnostic-summary, benchmark, and 5,000-level stress regressions.
+- Complete V2.14 behavior contract in `docs/V2_14_UNMATCHED_SQUARE_BRACKET.md`.
+
+### Changed
+
+- The built-in writing-rule registry grows from eight to nine rules; unset/reset language preferences now resolve to the nine-rule default set.
+- Benchmark workload identity and exact zero-total metadata now include `unmatched-square-bracket`.
+- Historical registry-size/widget regressions are expansion-safe and no longer depend on fixed catalogue pixel geometry.
+- Package version advances to `2.14.0+19`; About version advances to `2.14.0`.
+
+### Compatibility, security, privacy, and validation
+
+- The rule is advisory-only because insertion versus deletion versus wider rewrite cannot be inferred safely. It has no replacement, is hidden by **Automatic fixes only**, and is skipped by batch correction while independent safe fixes can still apply.
+- Explicit V2.13 eight-rule overrides remain authoritative; reset/unset preferences adopt current nine-rule defaults. Persistence keys and Portable settings format version are unchanged.
+- The rule is a literal square-bracket balancer, not a Markdown, code, URL, citation, quotation, mathematical, or domain-specific parser.
+- V2.14 adds no runtime dependency, application network request, telemetry, account behavior, cloud writing service, background upload, document persistence, or hidden clipboard action.
+- Final release validation requires package-aware canonical formatting, `flutter analyze`, the complete Flutter test suite, deterministic benchmark smoke, release-mode web build, release identity/manifest/dependency assertions, and zero disposable V2.14 helper residue.
+
 ## [2.13.0] - 2026-08-15
 
 ### Added
