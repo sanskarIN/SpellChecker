@@ -733,12 +733,12 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '2.15.0',
+      applicationVersion: '2.16.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
         Text(
-          'A privacy-first open-source writing utility with explicit language packs, Unicode-aware local spelling, deterministic extensible suggestion ranking, bounded large-document spelling and Writing insights results with exact local finding diagnostics, expanded deterministic local writing rules including advisory unmatched-parenthesis, unmatched-square-bracket, and unmatched-curly-brace diagnostics, temporary review presets/search/filters, portable non-document preferences, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows including keyboard-first Writing insights search/filter review, live accessibility semantics, and undo-friendly corrections.',
+          'A privacy-first open-source writing utility finalized in V2.16 with Unicode-scalar unrestricted Damerau-Levenshtein distance, decomposed-Unicode word handling, strict local import validation, truthful preference-write failures, startup-state synchronization, and Unicode-safe correction casing, plus explicit language packs, deterministic extensible suggestion ranking, bounded large-document spelling and Writing insights results with exact local finding diagnostics, expanded deterministic local writing rules including advisory unmatched-parenthesis, unmatched-square-bracket, and unmatched-curly-brace diagnostics, temporary review presets/search/filters, portable non-document preferences, per-language rule choices with reset-to-defaults, batch-safe writing fixes, keyboard workflows including keyboard-first Writing insights search/filter review, live accessibility semantics, and undo-friendly corrections.',
         ),
       ],
     );
