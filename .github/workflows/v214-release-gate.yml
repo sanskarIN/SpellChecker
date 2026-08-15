@@ -1,0 +1,152 @@
+name: V2.14 one-time release gate
+
+on:
+  push:
+    branches:
+      - v2.14-unmatched-square-bracket-2026-08-15
+
+permissions:
+  contents: write
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact V2.14 candidate
+        uses: actions/checkout@v7
+        with:
+          ref: v2.14-unmatched-square-bracket-2026-08-15
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify canonical formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool
+
+      - name: Analyze release candidate
+        run: flutter analyze
+
+      - name: Run complete release tests
+        run: flutter test --reporter expanded
+
+      - name: Run deterministic benchmark smoke
+        run: >-
+          dart run tool/benchmark_large_document.dart
+          --repeats=4
+          --warmup=0
+          --iterations=1
+          --spelling-limit=2
+          --writing-limit=5
+          --suggestions=0
+          --language=en-US
+          --json
+
+      - name: Build release web application
+        run: flutter build web --release
+
+      - name: Verify V2.14 release identity and repository hygiene
+        run: |
+          git diff --check
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          pubspec = Path('pubspec.yaml').read_text()
+          assert re.search(r'^version: 2\.14\.0\+19$', pubspec, re.M), 'package version mismatch'
+
+          page = Path('lib/features/editor/spell_checker_page.dart').read_text()
+          assert "applicationVersion: '2.14.0'" in page, 'About version mismatch'
+          assert 'unmatched-square-bracket' in Path('lib/writing/rules/unmatched_square_bracket_rule.dart').read_text()
+
+          public_api = Path('lib/writing.dart').read_text()
+          assert "export 'writing/rules/unmatched_square_bracket_rule.dart';" in public_api, 'public export missing'
+
+          analyzer = Path('lib/writing/writing_analyzer.dart').read_text()
+          assert "import 'rules/unmatched_square_bracket_rule.dart';" in analyzer, 'registry import missing'
+          start = analyzer.index('static const List<WritingRule> builtIns')
+          block = analyzer[start:analyzer.index('  ];', start)]
+          constructors = re.findall(r'^\s+[A-Z][A-Za-z0-9]+Rule\(\),$', block, re.M)
+          assert len(constructors) == 9, f'expected 9 built-in constructors, found {len(constructors)}'
+          assert 'UnmatchedSquareBracketRule(),' in block, 'new rule not registered'
+
+          focused = [
+              'test/unmatched_square_bracket_rule_test.dart',
+              'test/v214_unmatched_square_bracket_integration_test.dart',
+              'test/v214_unmatched_square_bracket_widget_test.dart',
+              'test/v214_rule_preference_compatibility_widget_test.dart',
+              'test/v214_settings_transfer_rule_compatibility_test.dart',
+              'test/v214_writing_diagnostic_summary_test.dart',
+              'test/v214_bounded_square_bracket_analysis_test.dart',
+              'test/v214_square_bracket_stress_test.dart',
+              'test/v214_review_query_square_bracket_test.dart',
+              'test/v214_benchmark_square_bracket_test.dart',
+              'docs/V2_14_UNMATCHED_SQUARE_BRACKET.md',
+              'docs/V2_14_FINAL_VALIDATION.md',
+          ]
+          missing = [path for path in focused if not Path(path).is_file()]
+          assert not missing, f'missing focused V2.14 files: {missing}'
+
+          ledger = Path('what_changed.md').read_text()
+          assert '## V2.14 — Unmatched Square Bracket Diagnostics' in ledger
+          assert 'Release version: `2.14.0+19`' in ledger
+          assert 'unmatched-square-bracket' in ledger
+          assert '31872367596' in ledger, 'functional CI evidence missing from ledger'
+
+          changelog = Path('CHANGELOG.md').read_text()
+          assert '## [2.14.0] - 2026-08-15' in changelog
+          assert 'unmatched-square-bracket' in changelog
+
+          readme = Path('README.md').read_text()
+          current = readme.index('## Current release')
+          following = readme[current:readme.index('## Unmatched parenthesis diagnostics — V2.13')]
+          assert '`2.14.0+19`' in following
+          assert '## Unmatched square bracket diagnostics — V2.14' in following
+
+          behavior = Path('docs/V2_14_UNMATCHED_SQUARE_BRACKET.md').read_text()
+          assert 'UnmatchedSquareBracketRule' in behavior
+          assert '5,000' in behavior
+          validation = Path('docs/V2_14_FINAL_VALIDATION.md').read_text()
+          assert '31872668004' in validation or 'Permanent synchronized-candidate CI requirement' in validation
+
+          manifest = json.loads(Path('web/manifest.json').read_text())
+          description = manifest.get('description', '')
+          assert 'unmatched-square-bracket' in description, 'V2.14 manifest description missing'
+
+          lines = pubspec.splitlines()
+          dep_start = lines.index('dependencies:') + 1
+          dep_end = lines.index('dev_dependencies:')
+          dependency_names = []
+          for line in lines[dep_start:dep_end]:
+              if not line.startswith('  ') or line.startswith('    '):
+                  continue
+              stripped = line.strip()
+              if ':' in stripped:
+                  dependency_names.append(stripped.split(':', 1)[0])
+          assert dependency_names == ['flutter', 'shared_preferences'], dependency_names
+
+          assert Path('build/web/index.html').is_file(), 'release web index missing'
+          assert Path('build/web/main.dart.js').is_file(), 'release web JS missing'
+
+          assert not Path('docs/V2_14_WORKING_SCOPE.md').exists(), 'working-scope helper remains'
+          tool_helpers = list(Path('tool').glob('v214*'))
+          assert not tool_helpers, f'unexpected V2.14 tool helpers: {tool_helpers}'
+          workflows = [p for p in Path('.github/workflows').glob('v214*') if p.name != 'v214-release-gate.yml']
+          assert not workflows, f'unexpected V2.14 workflow helpers: {workflows}'
+          PY
+
+      - name: Remove one-time release gate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/v214-release-gate.yml
+          git add .github/workflows/v214-release-gate.yml
+          git commit -m "ci(release): remove V2.14 one-time release gate"
+          git push origin HEAD:v2.14-unmatched-square-bracket-2026-08-15
