@@ -1,5 +1,8 @@
 # Development Guide
 
+## V2.12 development note
+
+Changes to writing boundaries must test Unicode source ranges as Dart UTF-16 offsets, explicit language eligibility, interaction with every automatic built-in rule, stale-safe individual correction, deterministic batch overlap behavior, registry defaults, and benchmark workload identity. V2.12's focused suites are the baseline and Unicode missing-punctuation tests plus the V2.12 widget workflow test; permanent CI still runs the complete suite.
 ## Prerequisites
 
 Install:
