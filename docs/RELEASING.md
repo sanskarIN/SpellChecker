@@ -1,5 +1,8 @@
 # Releasing
 
+## V2.15 release acceptance
+The V2.15 candidate is `2.15.0+20` / About `2.15.0`. Acceptance requires clean package-aware formatting, static analysis, complete tests, benchmark smoke, release web build, exact ten-rule/export/version/documentation checks, and zero disposable V2.15 helper residue before normal merge.
+
 
 ## V2.14 release acceptance
 
