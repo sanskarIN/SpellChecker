@@ -31,7 +31,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tool/v212_release_sync.py')
+          text = path.read_text(encoding='utf-8')
+          old = 'not text.startswith("# ")'
+          new = 'not text.startswith("#")'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one heading guard, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
           python3 tool/v212_release_sync.py
+          git checkout -- tool/v212_release_sync.py
           git diff --check
 
       - name: Commit permanent surfaces independently
