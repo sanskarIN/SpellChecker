@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
 
+# Owner-authored retry after the guarded PR-template H2 insertion fix.
 jobs:
   sync:
     runs-on: ubuntu-latest
