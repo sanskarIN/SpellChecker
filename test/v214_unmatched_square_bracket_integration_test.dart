@@ -89,7 +89,7 @@ void main() {
   });
 
   test('parenthesis and square bracket diagnostics remain independent', () {
-    const text = '([text)';
+    const text = '([text';
     final result = WritingAnalyzer().analyze(
       text,
       languagePack: pack,
