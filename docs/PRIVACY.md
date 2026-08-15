@@ -1,5 +1,9 @@
 # Privacy
 
+## V2.13 privacy note
+
+Unmatched-parenthesis analysis is local and in memory. The rule adds no document storage, telemetry, network request, background upload, account behavior, or hidden clipboard operation. Privacy-safe diagnostic summaries may include the stable rule name/ID and counts, but continue to exclude editor text, finding excerpts, messages, replacements, and source offsets.
+
 ## V2.12 privacy note
 
 Missing-punctuation analysis runs in the same local in-memory Writing insights pipeline as the other built-ins. Editor text, source excerpts, findings, and replacements are not added to preferences, Portable settings, telemetry, or network requests. V2.12 adds no account, cloud grammar service, document upload, background upload, or runtime dependency.
