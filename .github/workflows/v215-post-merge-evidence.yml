@@ -1,0 +1,60 @@
+name: V2.15 post-merge evidence synchronization
+
+on:
+  push:
+    branches: [v2.15-post-merge-validation-2026-08-15]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out post-merge evidence branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.15-post-merge-validation-2026-08-15
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Apply guarded post-merge evidence
+        run: |
+          python3 tool/v215_post_merge_evidence.py
+
+      - name: Commit final validation evidence
+        run: |
+          git add docs/V2_15_FINAL_VALIDATION.md
+          git commit -m "docs(validation): record merged-main V2.15 evidence"
+
+      - name: Commit engineering ledger evidence
+        run: |
+          git add what_changed.md
+          git commit -m "docs(ledger): record merged-main V2.15 evidence"
+
+      - name: Remove post-merge patch helper
+        run: |
+          git rm tool/v215_post_merge_evidence.py
+          git commit -m "tool(v215): remove post-merge evidence helper"
+
+      - name: Remove post-merge synchronization workflow
+        run: |
+          git rm .github/workflows/v215-post-merge-evidence.yml
+          git commit -m "ci(v215): remove post-merge evidence workflow"
+
+      - name: Verify permanent diff is documentation-only
+        run: |
+          test ! -e tool/v215_post_merge_evidence.py
+          test ! -e .github/workflows/v215-post-merge-evidence.yml
+          changed=$(git diff --name-only 31450fc9223f3f958c18c887c0a7047cb01a9ac8...HEAD | sort)
+          expected=$(printf '%s\n' docs/V2_15_FINAL_VALIDATION.md what_changed.md | sort)
+          test "$changed" = "$expected"
+
+      - name: Push helper-free evidence branch
+        run: |
+          git push origin HEAD:v2.15-post-merge-validation-2026-08-15
