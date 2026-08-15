@@ -121,9 +121,11 @@ No new modal, correction engine, persistence subsystem, or network workflow is i
 
 ## Catalogue-expansion widget hardening
 
-The tenth rule increases the height of the lazily built Writing insights list. During functional validation, the shared widget regression for applying one safe fix exposed a stale fixed iteration bound in its helper: the requested action could exist below the portion built after 24 drag steps even though the application behavior was correct.
+The tenth rule increases the height of the lazily built Writing insights list. During functional validation, the shared widget regression for applying one safe fix exposed two test-harness assumptions rather than an application failure.
 
-V2.15 hardens the shared lazy-build helper to continue farther before declaring the target absent. The fix is deliberately shared rather than special-casing the curly-brace test, so future deterministic catalogue growth has more headroom. Historical V2.14 preference and Portable-settings test titles were also made expansion-safe while their exact old explicit rule sets remain unchanged.
+First, the helper's lazy-build search bound was increased to give the taller catalogue more headroom. More importantly, the test had eagerly converted `find.text('Apply safe fix')` into a `.first` finder before that lazily built item existed. Evaluating that finder with zero matches throws immediately, so no amount of scrolling can recover. V2.15 now scrolls with the zero-or-more base finder and selects `.first` only after the target has been built.
+
+The fixes are deliberately shared rather than special-casing the curly-brace regression. Historical V2.14 preference and Portable-settings test titles were also made expansion-safe while their exact old explicit rule sets remain unchanged.
 
 ## Benchmark integration
 
