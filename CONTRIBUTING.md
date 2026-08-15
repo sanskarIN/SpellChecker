@@ -1,5 +1,8 @@
 # Contributing to SpellChecker
 
+## V2.12 contributor note
+
+The built-in writing catalogue now contains seven stable IDs, including `missing-punctuation-space`. Writing-rule contributions that touch token or punctuation boundaries must include Unicode/UTF-16 offset cases and interaction tests with existing automatic rules. Do not broaden V2.12's period/colon exclusions or punctuation-only ownership without a separately reviewed behavior contract and regression set.
 Thank you for helping improve SpellChecker. This guide defines the contribution workflow and compatibility/safety boundaries for the current 2.x project.
 
 ## Code of Conduct
