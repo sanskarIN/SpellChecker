@@ -1,5 +1,9 @@
 # Development Guide
 
+## V2.13 development note
+
+Writing-rule changes must preserve exact source ownership and explicitly choose advisory versus automatic correction semantics. V2.13's `unmatched-parenthesis` rule is advisory-only and includes nested/malformed/UTF-16, bounded-analysis, UI, preference-compatibility, Portable-settings, diagnostics, benchmark, and 5,000-level stress regressions. Run package-aware formatting after `flutter pub get`, then `flutter analyze`, the full Flutter suite, and benchmark smoke.
+
 ## V2.12 development note
 
 Changes to writing boundaries must test Unicode source ranges as Dart UTF-16 offsets, explicit language eligibility, interaction with every automatic built-in rule, stale-safe individual correction, deterministic batch overlap behavior, registry defaults, and benchmark workload identity. V2.12's focused suites are the baseline and Unicode missing-punctuation tests plus the V2.12 widget workflow test; permanent CI still runs the complete suite.

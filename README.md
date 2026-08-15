@@ -20,7 +20,8 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Bounded Writing insights analysis with an explicit first-200 finding policy, exact observed/per-rule totals, captured/total diagnostics, and captured-only limited-review/fix semantics.
 - Deterministic privacy-safe V2.9 writing-analysis diagnostic summaries containing counts and rule metadata only.
 - Developer-run V2.10 deterministic large-document benchmark tooling with synthetic corpus generation, versioned JSON/human reports, and CI smoke coverage.
-- V2.12 missing-punctuation-space analysis with Unicode combining-mark boundaries, punctuation-only source ownership, safe batch composition, and a seven-rule default registry.
+- V2.13 advisory unmatched-parenthesis diagnostics with nested literal balancing, single-character source ownership, explicit V2.12 preference compatibility, and an eight-rule default registry.
+- V2.12 missing-punctuation-space analysis with Unicode combining-mark boundaries, punctuation-only source ownership, safe batch composition, and its historical seven-rule default registry.
 - V2.11 keyboard-first Writing insights review with Ctrl/Command+F search focus, deterministic Escape filter clearing, and live rule/finding count semantics.
 - Optional local **Writing insights** with configurable deterministic rules.
 
@@ -31,7 +32,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - **Apply visible safe fixes (N)** when review filters are active.
 - **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
-- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, missing-punctuation-space, trailing-whitespace, and repeated-punctuation rules.
+- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, missing-punctuation-space, trailing-whitespace, repeated-punctuation, and unmatched-parenthesis rules.
 - **Apply all safe fixes** for non-overlapping current writing findings.
 - Stale-range-safe individual and batch writing corrections.
 - One-step undo for a complete writing-fix batch.
@@ -60,9 +61,19 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.12.0+17`
+`2.13.0+18`
 
-Version 2.12 is the **Missing Punctuation Spacing and Unicode Boundaries** release. It adds the seventh built-in writing rule, `missing-punctuation-space`, for deterministic missing-following-space fixes after commas, semicolons, exclamation marks, and question marks between Unicode letter boundaries. Decomposed combining-mark predecessors are supported, punctuation-only source ownership composes safely with the existing pre-punctuation spacing rule, and the benchmark/test/documentation contracts now describe the seven-rule workload. No new persistence format, runtime dependency, telemetry, account behavior, or application network request is introduced.
+Version 2.13 is the **Unmatched Parenthesis Diagnostics** release. It adds the eighth built-in writing rule, `unmatched-parenthesis`, for deterministic local reporting of literal `(` and `)` characters that cannot be paired. The rule is warning-level and advisory-only: it never guesses an insertion or deletion, so existing automatic-fix filters and batch correction retain their safety boundary. Unset/reset rule preferences adopt the eight-rule registry while explicit V2.12 seven-rule choices remain unchanged. No persistence-format, runtime-dependency, telemetry, account, or application-network expansion is introduced.
+
+## Unmatched parenthesis diagnostics — V2.13
+
+`UnmatchedParenthesisRule` balances literal parentheses iteratively, accepts nesting, and reports each unmatched parenthesis with a one-character UTF-16 source range. A closing parenthesis without an available opening is unmatched immediately; openings left after the scan are also unmatched; final findings are source ordered. The implementation is covered around non-BMP text and with 5,000 levels of nesting.
+
+The rule deliberately has no automatic replacement because the intended correction may be insertion, deletion, movement, or a larger rewrite. **Automatic fixes only** hides these findings, and `WritingCorrection.applyAll` skips them while still applying independent safe fixes. Literal parentheses inside code, Markdown, quotes, URLs, or other domain syntax are not parser-suppressed in V2.13.
+
+Existing explicit seven-rule V2.12 overrides remain authoritative. Languages with no override—or languages reset to defaults—use the current eight-rule registry. Portable settings keep the same format version and preserve both older explicit seven-rule sets and new eight-rule sets.
+
+See [V2.13 unmatched parenthesis diagnostics](docs/V2_13_UNMATCHED_PARENTHESIS.md) and [Writing rules](docs/WRITING_RULES.md).
 
 ## Missing punctuation spacing and Unicode boundaries — V2.12
 

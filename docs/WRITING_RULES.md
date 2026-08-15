@@ -1,5 +1,13 @@
 # Writing Rules
 
+## V2.13 advisory structural rule
+
+V2.13 adds `UnmatchedParenthesisRule` (`unmatched-parenthesis`) as the eighth built-in rule. It balances literal parentheses iteratively, owns exactly the unmatched parenthesis character, emits warning-level findings in source order, and deliberately provides no automatic replacement. This is an example of the plugin contract's advisory path: deterministic detection does not imply deterministic mutation.
+
+Unset/reset preferences adopt the eight-rule registry. Explicit stored sets remain authoritative, including V2.12 seven-rule overrides and explicit empty sets. The rule is Mechanics by the source-compatible category default, is searchable by its metadata, and is hidden by **Automatic fixes only** because `hasAutomaticFix` is false.
+
+See `docs/V2_13_UNMATCHED_PARENTHESIS.md` for exact balancing, source-range, compatibility, and parser-limit details.
+
 SpellChecker 2.x includes an optional local writing-rules subsystem. It is designed for deterministic, explainable checks that can run entirely in memory without transmitting editor text to a remote grammar or rewriting service.
 
 This document is the contributor and integration contract for that subsystem.
@@ -73,6 +81,7 @@ punctuation-spacing
 missing-punctuation-space
 trailing-whitespace
 repeated-punctuation
+unmatched-parenthesis
 ```
 
 ## Language eligibility

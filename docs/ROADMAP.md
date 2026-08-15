@@ -288,7 +288,7 @@ Status: implemented.
 
 ## Version 2.12 — Missing punctuation spacing and Unicode boundaries
 
-Status: **implemented in the V2.12 release branch**.
+Status: implemented.
 
 - Add public `MissingPunctuationSpaceRule` with stable ID `missing-punctuation-space`.
 - Expand the default built-in writing-rule catalogue from six to seven rules.
@@ -300,6 +300,23 @@ Status: **implemented in the V2.12 release branch**.
 - Extend benchmark workload identity and zero-total metadata to the seventh rule.
 - Add baseline, Unicode, non-BMP-offset, batch-composition, persistence, registry, benchmark, and widget regressions.
 - Advance package/About identity to `2.12.0+17` / `2.12.0` and synchronize the public release documentation.
+
+## Version 2.13 — Unmatched parenthesis diagnostics
+
+Status: implemented.
+
+- [x] Add public `UnmatchedParenthesisRule` with stable ID `unmatched-parenthesis`.
+- [x] Expand the default built-in writing-rule catalogue from seven to eight rules.
+- [x] Balance literal `(` and `)` deterministically with nested-pair support and source-ordered unmatched findings.
+- [x] Preserve one-character UTF-16 source ownership, including non-BMP predecessor offsets.
+- [x] Keep the rule advisory-only with no guessed replacement and warning severity.
+- [x] Integrate Mechanics search/category review while **Automatic fixes only** excludes the advisory finding.
+- [x] Preserve explicit V2.12 seven-rule overrides and let unset/reset preferences adopt eight-rule defaults.
+- [x] Preserve Portable settings format version while round-tripping old and new explicit rule sets.
+- [x] Extend exact bounded diagnostics, privacy-safe diagnostic summaries, and benchmark workload identity to the eighth rule.
+- [x] Add 5,000-level iterative stress coverage plus rule/analyzer/widget/preference/transfer/diagnostic/benchmark regressions.
+- [x] Advance package/About identity to `2.13.0+18` / `2.13.0` and synchronize public release documentation.
+- [x] Add no runtime dependency, telemetry, account, cloud service, document upload, new preference key, or transfer-format change.
 
 ## Future 2.x direction
 

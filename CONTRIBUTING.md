@@ -1,5 +1,9 @@
 # Contributing to SpellChecker
 
+## V2.13 writing-rule contribution example
+
+The `unmatched-parenthesis` rule demonstrates the required separation between deterministic detection and safe mutation. New rules should have stable IDs, explicit language eligibility, exact source-range ownership, adversarial/Unicode tests, and a justified `replacement` decision. When a correction is ambiguous, prefer an advisory finding over guessing an edit.
+
 ## V2.12 contributor note
 
 The built-in writing catalogue now contains seven stable IDs, including `missing-punctuation-space`. Writing-rule contributions that touch token or punctuation boundaries must include Unicode/UTF-16 offset cases and interaction tests with existing automatic rules. Do not broaden V2.12's period/colon exclusions or punctuation-only ownership without a separately reviewed behavior contract and regression set.

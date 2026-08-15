@@ -1,5 +1,9 @@
 # User Guide
 
+## V2.13 unmatched parenthesis findings
+
+Writing insights can now report an opening or closing parenthesis that has no matching pair. The finding is advisory: SpellChecker highlights the unmatched character but does not offer **Apply safe fix** because it cannot know whether you intended to insert a partner, delete the character, or rewrite the surrounding text. **Automatic fixes only** hides these findings. You can disable the rule per language like other writing rules.
+
 ## V2.12 user note
 
 Writing insights now includes **Missing punctuation space**. For English (US) and English (UK), it can offer a safe fix when a comma, semicolon, exclamation mark, or question mark sits directly before the next word, such as `Hello,world`. The fix inserts one following space. Periods and colons are intentionally not covered. Existing explicit rule choices remain unchanged until the user resets or edits them; an unset/reset language uses the current seven-rule defaults.

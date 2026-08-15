@@ -1,5 +1,9 @@
 # Performance and large-document behavior
 
+## V2.13 parenthesis scanner
+
+`UnmatchedParenthesisRule` scans the supplied UTF-16 string once and uses an iterative stack of opening offsets. The final unmatched indexes are source ordered before findings are emitted. Runtime is dominated by the linear scan plus ordering of unmatched indexes; retained memory grows with unmatched/nesting depth rather than recursion. Stress tests cover 5,000 balanced nesting levels and 5,000 unmatched openings. This remains a correctness regression, not a timing threshold.
+
 ## V2.12 benchmark note
 
 The deterministic benchmark's writing workload now contains seven analyzed built-in rule IDs, including `missing-punctuation-space`. Exact per-rule totals continue to include zero values for analyzed rules with no findings. The new regular expression is local/deterministic; benchmark timings remain machine/toolchain observations and are not correctness thresholds or a CPU-time/document-size security guarantee.

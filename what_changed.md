@@ -2,6 +2,86 @@
 
 This file is the detailed implementation ledger for SpellChecker releases. It complements `CHANGELOG.md`: the changelog is release-oriented, while this document records the engineering behavior, compatibility boundaries, validation evidence, and permanent file-level changes that define the release.
 
+## V2.13 — Unmatched Parenthesis Diagnostics
+
+Release version: `2.13.0+18`
+
+About version: `2.13.0`
+
+V2.13 expands the deterministic local writing catalogue from seven to eight built-in rules with an intentionally advisory structural diagnostic. The production tree now contains the public `UnmatchedParenthesisRule`, registry/export integration, exact source ownership, compatibility-preserving preference behavior, bounded/exact diagnostics, benchmark identity, UI/filter integration, stress coverage, release identity, and synchronized documentation.
+
+### Production rule and public API
+
+- Adds `lib/writing/rules/unmatched_parenthesis_rule.dart`.
+- Stable ID: `unmatched-parenthesis`.
+- Public class: `UnmatchedParenthesisRule` through `package:spellchecker/writing.dart`.
+- Eligibility: language code `en`, covering built-in `en-US` and `en-GB` packs.
+- Category: Mechanics through the source-compatible `WritingRule` default.
+- Severity: warning.
+- Default registry size moves from seven rules to eight.
+- `WritingRuleRegistry.byId('unmatched-parenthesis')` resolves the built-in rule.
+
+### Deterministic balancing and source ownership
+
+The rule performs an iterative left-to-right scan of literal `(` and `)` code units. Openings are retained on a stack. A closing parenthesis consumes the most recent unmatched opening when possible; otherwise the closing character is unmatched. Remaining openings are unmatched after the scan. Findings are emitted in ascending source order.
+
+Every issue owns exactly one parenthesis character. `start` and `end` are UTF-16 offsets with `end == start + 1`, and `originalText` is `(` or `)`. A dedicated non-BMP regression verifies that `😀)` reports the closing parenthesis at offset 2 rather than confusing Unicode scalar and UTF-16 indexing.
+
+Nested balanced text is clean. Malformed ordering such as `)middle(` yields both findings in source order. Square/curly brackets are outside the rule's scope. The scanner is non-recursive; stress regressions cover 5,000 balanced nesting levels and 5,000 unmatched openings.
+
+### Advisory-only correction boundary
+
+V2.13 does not guess an automatic edit. An unmatched parenthesis might require inserting an opposite delimiter, deleting the reported character, moving text, or rewriting a larger phrase. The issue therefore leaves `replacement` null and `hasAutomaticFix` false.
+
+Writing insights keeps the finding reviewable under Mechanics, while **Automatic fixes only** removes it from the visible finding set. A document containing only this advisory finding does not expose an **Apply all safe fixes** button. `WritingCorrection.applyAll` skips the advisory issue, increments the skipped count, and can still apply independent deterministic fixes in the same batch.
+
+### Preference and Portable-settings compatibility
+
+The storage key family remains `spellchecker.writing_rule_ids.v1.<language>`, and Portable settings remains format version 1.
+
+- Unset rule preferences resolve to the current eight-rule default set.
+- **Reset rules to defaults** clears the stored override and therefore adopts all eight defaults.
+- An explicit V2.12 seven-rule set remains exactly seven rules and does not silently gain `unmatched-parenthesis`.
+- Explicit empty/disable-all behavior remains unchanged.
+- Portable settings round-trip an old explicit seven-rule set unchanged and preserve `unmatched-parenthesis` when it is explicitly present in an eight-rule set.
+
+### Bounded analysis, diagnostics, and benchmark integration
+
+The rule uses the existing analyzer result contract without format changes. Exact-at-limit analysis remains complete; overflow retains the globally earliest source-ordered prefix while `totalIssueCount` and `totalIssueCountByRule` report exact totals. Privacy-safe diagnostic summaries add the new stable rule name/ID/count row but continue to exclude editor text, finding excerpts, messages, replacements, and offsets.
+
+The deterministic benchmark workload identity now has eight sorted rule IDs. Zero-finding benchmark samples materialize an explicit zero for `unmatched-parenthesis`; a focused controlled corpus asserts an exact count of one. Benchmark timings remain observational rather than correctness thresholds.
+
+### UI and regression hardening
+
+The eighth rule increased Writing insights list height. Existing and new widget regressions were hardened to scroll by lazy-build state rather than relying on seven-rule pixel geometry. This preserves the real lazy `ListView` interaction model while keeping bulk-fix, automatic-filter, explicit-override, reset, and advisory-only behavior testable.
+
+Permanent focused coverage includes:
+
+- `test/unmatched_parenthesis_rule_test.dart`
+- `test/v213_unmatched_parenthesis_integration_test.dart`
+- `test/v213_unmatched_parenthesis_widget_test.dart`
+- `test/v213_rule_preference_compatibility_widget_test.dart`
+- `test/v213_settings_transfer_rule_compatibility_test.dart`
+- `test/v213_writing_diagnostic_summary_test.dart`
+- `test/v213_bounded_parenthesis_analysis_test.dart`
+- `test/v213_parenthesis_stress_test.dart`
+- `test/v213_review_query_parenthesis_test.dart`
+- `test/v213_benchmark_parenthesis_test.dart`
+- `test/analysis_benchmark_runner_test.dart`
+- `test/writing_rules_test.dart`
+- `test/writing_widget_test.dart`
+- `test/widget_test.dart`
+
+### Deliberate parser limitation
+
+`UnmatchedParenthesisRule` is a literal delimiter balancer, not a Markdown, programming-language, URL, quoting, mathematical, or domain-specific parser. V2.13 does not suppress parentheses based on surrounding syntax. Syntax-aware exclusions require a future explicit parsing contract and corpus rather than heuristic mutation.
+
+### Release, privacy, and dependency boundary
+
+Package identity advances to `2.13.0+18`; About identity advances to `2.13.0`. V2.13 adds no runtime dependency, new preference key, Portable-settings format change, network request, telemetry, account, cloud writing service, background upload, document persistence, hidden clipboard action, or correction-engine fork.
+
+Before release metadata was applied, permanent CI run `31869797175` passed package-aware formatting, `flutter analyze`, the full Flutter test suite, and deterministic benchmark smoke on the complete functional eight-rule implementation. The final release candidate must repeat those checks after release synchronization and also pass a release-mode web build plus version/export/manifest/dependency/helper-residue assertions.
+
 ## V2.12 — Missing Punctuation Spacing & Unicode Boundary Completion
 
 Release version: `2.12.0+17`

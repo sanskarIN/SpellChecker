@@ -1,5 +1,9 @@
 # Language Packs
 
+## V2.13 writing-rule eligibility
+
+`UnmatchedParenthesisRule` declares language code `en`, so it is available to both built-in `en-US` and `en-GB` packs without duplicating pack-specific logic. Language eligibility still flows through `WritingRule.supports(pack)`. Explicit per-language rule overrides remain isolated; adding the eighth default does not rewrite an existing explicit V2.12 set.
+
 ## V2.12 language-pack note
 
 `MissingPunctuationSpaceRule` declares support for language code `en`, so both registered built-in English variants (`en-US` and `en-GB`) are eligible. V2.12 does not add a language pack, language auto-detection, cross-language preference merging, or a new normalization contract.
