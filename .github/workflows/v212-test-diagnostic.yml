@@ -1,0 +1,69 @@
+name: V2.12 failing-test diagnostic
+
+on:
+  push:
+    branches:
+      - v2.12-missing-punctuation-space-2026-08-15
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v212-test-diagnostic
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out current branch head
+        uses: actions/checkout@v7
+        with:
+          ref: v2.12-missing-punctuation-space-2026-08-15
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Capture complete failing test output
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          flutter test --reporter expanded >v212_test_run.log 2>&1
+          status=$?
+          set -e
+
+          if [ "$status" -eq 0 ]; then
+            rm -f v212_test_run.log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git rm .github/workflows/v212-test-diagnostic.yml
+            git commit -m "ci: remove successful V2.12 test diagnostic"
+            git push origin HEAD:v2.12-missing-punctuation-space-2026-08-15
+            exit 0
+          fi
+
+          {
+            echo "exit_code=$status"
+            flutter --version
+            dart --version
+            echo
+            cat v212_test_run.log
+          } > v212_test_failure.txt
+          rm -f v212_test_run.log
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v212_test_failure.txt
+          git commit -m "ci: capture V2.12 failing test output"
+          git push origin HEAD:v2.12-missing-punctuation-space-2026-08-15
+          exit "$status"
