@@ -7,7 +7,7 @@ import '../writing_rule.dart';
 ///
 /// The rule owns only the punctuation source range. Optional horizontal
 /// whitespace before the punctuation is intentionally left to
-/// [PunctuationSpacingRule] so the two automatic fixes remain adjacent and
+/// `punctuation-spacing` so the two automatic fixes remain adjacent and
 /// non-overlapping when they appear together.
 class MissingPunctuationSpaceRule extends WritingRule {
   const MissingPunctuationSpaceRule();
