@@ -1,5 +1,9 @@
 # Architecture
 
+## V2.16 final stabilization
+The final audit keeps three boundaries explicit: algorithmic similarity operates on Unicode scalars; editor source ranges remain UTF-16 offsets; local persistence/import layers fail closed when a platform write or external format is invalid. Startup restores the selected language, vocabulary, rule choices, and suggestion count before durable/session mutations are allowed.
+
+
 ## V2.15 architecture note
 The writing pipeline now has ten built-ins. `UnmatchedCurlyBraceRule` reuses the existing registry, analyzer, bounded-result, diagnostic-summary, review-query, preference, Portable-settings, and correction-skip paths; no parallel engine or storage/network subsystem was introduced.
 
