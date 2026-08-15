@@ -13,6 +13,7 @@ void main() {
     'repeated-word',
     'sentence-capitalization',
     'trailing-whitespace',
+    'unmatched-parenthesis',
   ];
 
   group('AnalysisBenchmarkRunner', () {
