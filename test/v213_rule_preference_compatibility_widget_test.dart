@@ -71,7 +71,7 @@ void main() {
     },
   );
 
-  testWidgets('reset clears V2.12 override and adopts eight-rule defaults', (
+  testWidgets('reset clears V2.12 override and adopts current defaults', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const SpellCheckerApp());
