@@ -1,5 +1,8 @@
 # User Guide
 
+## V2.12 user note
+
+Writing insights now includes **Missing punctuation space**. For English (US) and English (UK), it can offer a safe fix when a comma, semicolon, exclamation mark, or question mark sits directly before the next word, such as `Hello,world`. The fix inserts one following space. Periods and colons are intentionally not covered. Existing explicit rule choices remain unchanged until the user resets or edits them; an unset/reset language uses the current seven-rule defaults.
 ## Opening SpellChecker
 
 Run the Flutter application and open the SpellChecker editor.
