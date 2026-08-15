@@ -26,7 +26,7 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      - name: Run suite and expose failure tail as annotation
+      - name: Run suite and expose first failure context as annotation
         shell: bash
         run: |
           set +e
@@ -34,14 +34,19 @@ jobs:
           status=$?
           set -e
           if [ "$status" -ne 0 ]; then
-            tail -n 160 /tmp/v215-test.log > /tmp/v215-tail.log
             payload=$(python3 - <<'PY'
           from pathlib import Path
-          text = Path('/tmp/v215-tail.log').read_text(errors='replace')
+          lines = Path('/tmp/v215-test.log').read_text(errors='replace').splitlines()
+          first = next((i for i, line in enumerate(lines) if ' -1:' in line), None)
+          if first is None:
+              start, end = max(0, len(lines) - 180), len(lines)
+          else:
+              start, end = max(0, first - 100), min(len(lines), first + 80)
+          text = '\n'.join(lines[start:end])
           text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
           print(text)
           PY
             )
-            echo "::error title=V2.15 full-suite failure::$payload"
+            echo "::error title=V2.15 first test failure::$payload"
             exit "$status"
           fi
