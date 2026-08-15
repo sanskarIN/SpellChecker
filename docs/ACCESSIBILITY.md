@@ -1,5 +1,10 @@
 # Accessibility
 
+
+## V2.14 accessibility coverage
+
+Writing insights now exposes nine built-in rule switches when current English defaults are active. The new **Unmatched square bracket** rule uses the existing accessible switch/list/finding semantics, Mechanics filtering, live visible/total finding counts, and keyboard-scrollable dialog. Advisory-only findings never expose a misleading automatic-fix action.
+
 ## V2.13 accessibility note
 
 The eighth writing rule participates in the existing live rule/finding count semantics and lazy Writing insights list. Its warning remains keyboard-reviewable like other findings, while **Automatic fixes only** removes it from visible finding counts because it has no deterministic replacement. Widget regressions scroll by lazy-build state so accessibility expectations do not depend on the historical seven-rule viewport height.
