@@ -1,5 +1,9 @@
 # Security Policy
 
+## V2.13 writing-rule security boundary
+
+`UnmatchedParenthesisRule` treats input as data only: it scans literal UTF-16 delimiters and does not execute, interpret, fetch, or evaluate surrounding code/markup. It is advisory-only and therefore cannot mutate a document through its own finding. Large/untrusted-input policies still belong to the host application; the built-in stress tests are regression coverage, not an execution-time sandbox.
+
 ## V2.12 security note
 
 The new missing-punctuation rule is deterministic, source-controlled, local code. It deliberately excludes period/colon syntax, does not load remote rules or data, and uses the existing stale-source validation and conservative batch-overlap policy before mutation. V2.12 adds no new dependency, service, credential, network request, file parser, or dynamic plugin-loading path.
