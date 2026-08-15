@@ -1,5 +1,10 @@
 # Testing
 
+
+## V2.14 regression requirements
+
+The ninth-rule release adds direct square-bracket scanner tests plus integration, bounded exact-total, privacy-safe diagnostic-summary, review-query, benchmark, Portable-settings, preference, widget, and 5,000-level stress suites. Historical registry/widget regressions must remain expansion-safe: exact current catalogue size belongs to the current-version integration test, while older-version tests should assert preservation of their rule/override contract instead of freezing future defaults.
+
 ## V2.13 test boundary
 
 The eight-rule release adds focused tests for literal parenthesis balancing, one-character UTF-16 offsets, advisory-only correction skipping, lazy Writing insights interaction, explicit V2.12 seven-rule preference compatibility, Portable settings, exact bounded totals, privacy-safe diagnostic rows, benchmark identity, and 5,000-level iterative stress behavior. Existing widget tests use lazy-build-aware scrolling rather than fixed seven-rule geometry.
