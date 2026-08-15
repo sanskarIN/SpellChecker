@@ -65,5 +65,17 @@ void main() {
       expect(TextCorrection.matchCase('Helo', 'hello'), 'Hello');
       expect(TextCorrection.matchCase('helo', 'hello'), 'hello');
     });
+
+    test('matchCase preserves astral Unicode title capitalization', () {
+      expect(TextCorrection.matchCase('𐐀abc', '𐐨xyz'), '𐐀xyz');
+    });
+
+    test('matchCase does not treat lowercase astral letters as uppercase', () {
+      expect(TextCorrection.matchCase('𐐨abc', 'hello'), 'hello');
+    });
+
+    test('matchCase does not invent case for uncased scripts', () {
+      expect(TextCorrection.matchCase('中文', 'hello'), 'hello');
+    });
   });
 }
