@@ -7,13 +7,15 @@ void main() {
   final pack = SpellLanguageRegistry.englishUs;
 
   test('deep balanced nesting remains iterative and clean', () {
-    final text = '${'(' * 5000}content${')' * 5000}';
+    final openings = List<String>.filled(5000, '(').join();
+    final closings = List<String>.filled(5000, ')').join();
+    final text = '${openings}content$closings';
 
     expect(rule.analyze(text, pack), isEmpty);
   });
 
   test('deep unmatched nesting reports every opening deterministically', () {
-    final text = '(' * 5000;
+    final text = List<String>.filled(5000, '(').join();
     final issues = rule.analyze(text, pack).toList();
 
     expect(issues, hasLength(5000));
