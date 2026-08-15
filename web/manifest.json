@@ -5,6 +5,6 @@
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#4458D8",
-  "description": "A privacy-first open-source writing utility with explicit English language packs, Unicode-aware local spelling, persistent per-language vocabulary and writing-rule choices, Unicode-aware missing-punctuation spacing, advisory unmatched-parenthesis and unmatched-square-bracket diagnostics, bounded large-document spelling and Writing insights, exact local writing-analysis and per-rule finding diagnostics, captured-aware filtered batch-safe fixes, portable non-document preferences, keyboard workflows, and undo-friendly corrections.",
+  "description": "A privacy-first open-source writing utility with explicit English language packs, Unicode-aware local spelling, persistent per-language vocabulary and writing-rule choices, Unicode-aware missing-punctuation spacing, advisory unmatched-parenthesis, unmatched-square-bracket, and unmatched-curly-brace diagnostics, bounded large-document spelling and Writing insights, exact local writing-analysis and per-rule finding diagnostics, captured-aware filtered batch-safe fixes, portable non-document preferences, keyboard workflows, and undo-friendly corrections.",
   "orientation": "any"
 }
