@@ -37,6 +37,13 @@ For editor changes, mention affected language state, highlighting, spelling/writ
 
 Current shortcut contracts include `Ctrl/Command+Enter`, `Ctrl/Command+Shift+Enter`, `F7`, and `Shift+F7`.
 
+## Writing-rule safety (when applicable)
+
+- [ ] New/changed writing-rule IDs are stable and preference compatibility is documented.
+- [ ] Source ranges have exact ownership tests, including Unicode/UTF-16 cases where relevant.
+- [ ] Automatic replacement is provided only when the edit is deterministic; ambiguous findings remain advisory.
+- [ ] Registry/default changes include persistence, Portable-settings, UI, diagnostics, benchmark, and documentation review.
+
 ## Writing rules
 
 - [ ] Rule logic is deterministic, side-effect free, and outside Flutter widgets.
