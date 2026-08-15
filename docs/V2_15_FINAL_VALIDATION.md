@@ -95,33 +95,61 @@ It:
 
 The formatter's apply step, immediate second pass, helper cleanup, and push all passed.
 
-## Permanent synchronized-candidate CI requirement
+## Permanent synchronized-candidate CI evidence
 
-This final-validation file is an owner-authored documentation-only commit so the exact synchronized/helper-free V2.15 release candidate receives the repository's permanent pull-request CI gate.
+Permanent pull-request CI run `31876478606` validated owner-authored synchronized candidate head `759834f3d6680f10e8f03a85410a1fb7ca8d8b53`.
 
-The exact head must pass canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke. A failure remains a release blocker even though this evidence commit itself changes only documentation.
+Results:
 
-## Independent release-mode gate requirement
+- dependency resolution: passed;
+- canonical formatting: passed;
+- `flutter analyze`: passed;
+- complete Flutter test suite: passed;
+- deterministic benchmark smoke: passed.
 
-After synchronized-candidate permanent CI is green, an independent one-time release gate must repeat the permanent checks and additionally verify:
+This run established that the fully synchronized `2.15.0+20` candidate remained code-quality clean after release metadata, About, documentation, and web-surface synchronization.
 
-- `flutter build web --release` succeeds;
-- `git diff --check` succeeds;
-- package version is exactly `2.15.0+20`;
-- About version is exactly `2.15.0`;
-- `UnmatchedCurlyBraceRule` is registered and publicly exported;
-- stable rule ID `unmatched-curly-brace` is present;
-- the built-in/default catalogue has exactly ten rule constructors and ten stable IDs;
-- focused V2.15 regression files exist;
-- explicit V2.14 nine-rule preference and Portable-settings compatibility are covered;
-- `what_changed.md`, `CHANGELOG.md`, README current-release identity, V2.15 behavior documentation, and this validation record are present;
-- `web/manifest.json` parses successfully and describes the curly-brace diagnostic;
-- direct runtime dependencies remain only Flutter and `shared_preferences`;
-- release web `index.html` and `main.dart.js` outputs exist;
-- `docs/V2_15_WORKING_SCOPE.md` is absent;
-- no unexpected tracked V2.15 synchronizer, formatter, diagnostic, patch, release-gate, or other disposable helper remains.
+## Independent release-mode evidence
 
-The one-time gate must delete itself after successful validation. Its cleanup commit must be followed by an owner-authored evidence update and another green permanent CI run before merge.
+One-time release-gate run `31876609678` independently validated the V2.15 candidate successfully on August 15, 2026.
+
+The gate repeated the permanent checks and then executed the release-only build and repository assertions.
+
+Results:
+
+- dependency resolution: passed;
+- canonical formatting: passed;
+- `flutter analyze`: passed;
+- complete Flutter test suite: passed;
+- deterministic benchmark smoke: passed;
+- `flutter build web --release`: passed;
+- `git diff --check`: passed;
+- package version `2.15.0+20`: verified;
+- About version `2.15.0`: verified;
+- public `UnmatchedCurlyBraceRule` export: verified;
+- `UnmatchedCurlyBraceRule` built-in registration: verified;
+- stable rule ID `unmatched-curly-brace`: verified;
+- exactly ten built-in writing-rule constructors: verified;
+- focused V2.15 regression files: verified;
+- explicit V2.14 nine-rule preference compatibility: verified;
+- explicit V2.14/V2.15 Portable-settings compatibility: verified;
+- `what_changed.md` V2.15 engineering ledger and release identity: verified;
+- `CHANGELOG.md` V2.15 release entry: verified;
+- README V2.15 current-release identity: verified;
+- dedicated V2.15 behavior and validation documentation: verified;
+- `web/manifest.json`: parsed successfully and contains the V2.15 advisory diagnostic description;
+- direct runtime dependency boundary: verified as only Flutter and `shared_preferences`;
+- release web `index.html` and `main.dart.js` outputs: verified;
+- superseded V2.15 working-scope document: absent;
+- unexpected V2.15 synchronizer, formatter, diagnostic, patch, or workflow helper residue: none found.
+
+The successful gate removed `.github/workflows/v215-release-gate.yml` and pushed cleanup commit `3f00e356685762874cda279e4a24f9deeee3c2d8`. Therefore the permanent candidate does not retain the release-gate helper.
+
+## Final evidence-head CI requirement
+
+This owner-authored evidence update changes the pull-request head after the successful release gate but changes no Dart source, test logic, dependency, package/About identity, persistence format, web build input, or runtime behavior.
+
+The exact new head must receive one final green permanent CI run. Formatting, static analysis, the complete Flutter suite, and benchmark smoke must all pass before merge.
 
 ## Merge policy
 
