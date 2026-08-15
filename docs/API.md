@@ -1,5 +1,8 @@
 # Public API
 
+## V2.12 API note
+
+The public writing API now exports `MissingPunctuationSpaceRule` with stable ID `missing-punctuation-space`. It is part of `WritingRuleRegistry.builtIns` and the default enabled set for supported English packs. Findings own the punctuation-only UTF-16 source range and propose punctuation plus one following space. The analyzer/result/correction method signatures and persistence contracts are unchanged.
 SpellChecker 2.10 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, writing-analysis diagnostic-summary, and portable-settings APIs through three public barrels.
 
 ## Imports
