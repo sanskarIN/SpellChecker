@@ -1,5 +1,10 @@
 # Support
 
+
+## V2.14 unmatched-square-bracket reports
+
+For an unexpected V2.14 structural finding, include the app version `2.14.0`, language pack, stable rule ID `unmatched-square-bracket`, whether the rule preference is default or explicit, and a minimal non-sensitive delimiter pattern when possible. Privacy-safe Writing analysis diagnostics can provide rule/count metadata without copying the editor document.
+
 ## V2.13 support note
 
 For unmatched-parenthesis reports, include whether the text intentionally contains literal unmatched delimiters (for example in code or markup) and whether the rule was enabled explicitly or through defaults. The **Copy diagnostic summary** action can share the stable rule ID and counts without copying document excerpts. Do not include private document text unless you choose to share it separately.
