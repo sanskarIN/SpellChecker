@@ -1,0 +1,54 @@
+name: V2.16 repeated suite flake diagnostic
+
+on:
+  push:
+    branches:
+      - v2.16-final-stabilization-2026-08-15
+    paths:
+      - .github/workflows/v216-flake-diagnostic.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: v2.16-final-stabilization-2026-08-15
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Run repeated complete suites
+        run: |
+          set +e
+          for attempt in 1 2 3; do
+            echo "=== complete-suite attempt $attempt ==="
+            flutter test --reporter expanded > "/tmp/full-$attempt.log" 2>&1
+            status=$?
+            if [ $status -ne 0 ]; then
+              ATTEMPT="$attempt" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          attempt = os.environ['ATTEMPT']
+          lines = Path(f'/tmp/full-{attempt}.log').read_text(errors='replace').splitlines()
+          needles = ('Expected:', 'Actual:', 'Which:', 'TestFailure', 'Test failed', 'EXCEPTION CAUGHT', '══╡')
+          indexes = [i for i, line in enumerate(lines) if any(n in line for n in needles)]
+          if indexes:
+              start = max(0, indexes[0] - 18)
+              end = min(len(lines), indexes[0] + 55)
+          else:
+              start = max(0, len(lines) - 120)
+              end = len(lines)
+          context = '\n'.join(lines[start:end])[-7000:]
+          context = context.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          print(f'::error title=V2.16 flaky full-suite failure attempt {attempt}::{context}')
+          PY
+              exit $status
+            fi
+          done
