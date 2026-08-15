@@ -32,11 +32,14 @@ void main() {
   Future<void> scrollTo(WidgetTester tester, Finder target) async {
     expect(insightsList(), findsOneWidget);
     expect(insightsScrollable(), findsOneWidget);
-    await tester.scrollUntilVisible(
-      target,
-      200,
-      scrollable: insightsScrollable(),
-    );
+
+    for (var index = 0; index < 16 && target.evaluate().isEmpty; index++) {
+      await tester.drag(insightsList(), const Offset(0, -180));
+      await tester.pumpAndSettle();
+    }
+
+    expect(target, findsOneWidget);
+    await tester.ensureVisible(target);
     await tester.pumpAndSettle();
   }
 
@@ -81,7 +84,7 @@ void main() {
     final automaticOnly = find.byKey(
       const ValueKey<String>('automatic-fixes-only'),
     );
-    expect(automaticOnly, findsOneWidget);
+    await scrollTo(tester, automaticOnly);
     await tester.tap(automaticOnly);
     await tester.pumpAndSettle();
 
