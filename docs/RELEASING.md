@@ -1,5 +1,9 @@
 # Releasing
 
+## V2.16 final stabilization
+The final release candidate is `2.16.0+21` / About `2.16.0`. Acceptance requires canonical formatting, static analysis, the complete Flutter suite, deterministic benchmark smoke, `flutter build web --release`, exact version/bug-audit/privacy/dependency assertions, absence of disposable V2.16 helpers, and green merged-main CI. The repository still does not invent a first tag/release convention unless maintainers explicitly choose one.
+
+
 ## V2.15 release acceptance
 The V2.15 candidate is `2.15.0+20` / About `2.15.0`. Acceptance requires clean package-aware formatting, static analysis, complete tests, benchmark smoke, release web build, exact ten-rule/export/version/documentation checks, and zero disposable V2.15 helper residue before normal merge.
 
