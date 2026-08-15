@@ -1,5 +1,8 @@
 # Security Policy
 
+## V2.15 local-analysis boundary
+Unmatched curly-brace diagnostics are computed locally from in-memory editor text. V2.15 adds no network request, telemetry, account behavior, background upload, cloud grammar service, or document persistence.
+
 
 ## V2.14 structural diagnostic security boundary
 
