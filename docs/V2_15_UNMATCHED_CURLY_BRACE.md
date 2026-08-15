@@ -119,6 +119,12 @@ The new rule participates in the existing Writing insights workflow:
 
 No new modal, correction engine, persistence subsystem, or network workflow is introduced.
 
+## Catalogue-expansion widget hardening
+
+The tenth rule increases the height of the lazily built Writing insights list. During functional validation, the shared widget regression for applying one safe fix exposed a stale fixed iteration bound in its helper: the requested action could exist below the portion built after 24 drag steps even though the application behavior was correct.
+
+V2.15 hardens the shared lazy-build helper to continue farther before declaring the target absent. The fix is deliberately shared rather than special-casing the curly-brace test, so future deterministic catalogue growth has more headroom. Historical V2.14 preference and Portable-settings test titles were also made expansion-safe while their exact old explicit rule sets remain unchanged.
+
 ## Benchmark integration
 
 The deterministic benchmark writing-rule identity expands to ten stable IDs. Clean benchmark samples materialize a zero count for `unmatched-curly-brace`, and a focused controlled corpus asserts an exact count of one.
