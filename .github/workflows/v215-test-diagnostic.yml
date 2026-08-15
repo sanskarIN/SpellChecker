@@ -26,7 +26,7 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      - name: Run suite and expose first failure context as annotation
+      - name: Run suite and expose concise first failure context
         shell: bash
         run: |
           set +e
@@ -39,14 +39,14 @@ jobs:
           lines = Path('/tmp/v215-test.log').read_text(errors='replace').splitlines()
           first = next((i for i, line in enumerate(lines) if ' -1:' in line), None)
           if first is None:
-              start, end = max(0, len(lines) - 180), len(lines)
+              start, end = max(0, len(lines) - 45), len(lines)
           else:
-              start, end = max(0, first - 100), min(len(lines), first + 80)
+              start, end = max(0, first - 12), min(len(lines), first + 35)
           text = '\n'.join(lines[start:end])
           text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
           print(text)
           PY
             )
-            echo "::error title=V2.15 first test failure::$payload"
+            echo "::error title=V2.15 concise first failure::$payload"
             exit "$status"
           fi
