@@ -14,6 +14,6 @@ Changed lib/features/editor/writing_insights_dialog.dart
 Changed test/writing_analysis_diagnostic_summary_test.dart
 Changed test/writing_review_query_test.dart
 Changed tool/benchmark/analysis_benchmark_command.dart
-Formatted 91 files (7 changed) in 0.21 seconds.
+Formatted 91 files (7 changed) in 0.19 seconds.
 
 post-command git diff:
