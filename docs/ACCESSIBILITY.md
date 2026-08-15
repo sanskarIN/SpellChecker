@@ -1,5 +1,8 @@
 # Accessibility
 
+## V2.15 Writing insights accessibility
+The tenth rule participates in the existing keyboard-search, Mechanics filter, rule-switch, visible/captured/total semantics, and advisory-finding presentation. Catalogue growth also hardened lazy widget-test discovery so controls are located after they are built rather than by fixed geometry.
+
 
 ## V2.14 accessibility coverage
 
