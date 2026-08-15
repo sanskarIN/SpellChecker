@@ -1,0 +1,57 @@
+name: V2.15 one-time test diagnostic
+
+on:
+  push:
+    branches: [v2.15-unmatched-curly-brace-2026-08-15]
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out V2.15 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.15-unmatched-curly-brace-2026-08-15
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Capture complete Flutter test result
+        shell: bash
+        run: |
+          set +e
+          flutter test --reporter expanded > v215_test_failure.log 2>&1
+          status=$?
+          set -e
+          echo "flutter_test_exit_code=$status" >> v215_test_failure.log
+          tail -n 300 v215_test_failure.log
+          if [ "$status" -eq 0 ]; then
+            rm v215_test_failure.log
+          fi
+
+      - name: Remove diagnostic workflow and persist failure evidence when needed
+        run: |
+          git rm .github/workflows/v215-test-diagnostic.yml
+          if [ -f v215_test_failure.log ]; then
+            git add v215_test_failure.log
+            git commit -m "test(v215): capture failing full-suite diagnostic"
+          else
+            git commit -m "ci(v215): remove passing test diagnostic"
+          fi
+          git push origin HEAD:v2.15-unmatched-curly-brace-2026-08-15
