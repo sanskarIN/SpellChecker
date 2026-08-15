@@ -136,7 +136,7 @@ void main() {
 
       expect(result.languageId, 'en-US');
       expect(result.isClean, isFalse);
-      expect(result.analyzedRuleIds, hasLength(7));
+      expect(result.analyzedRuleIds, hasLength(8));
       expect(
         result.issues.map((issue) => issue.start),
         orderedEquals(
@@ -150,6 +150,7 @@ void main() {
       expect(result.issueCountByRule['missing-punctuation-space'], isNull);
       expect(result.issueCountByRule['punctuation-spacing'], isNull);
       expect(result.issueCountByRule['trailing-whitespace'], isNull);
+      expect(result.issueCountByRule['unmatched-parenthesis'], isNull);
     });
 
     test(
