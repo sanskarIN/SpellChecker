@@ -51,6 +51,35 @@ void main() {
       await tester.pumpAndSettle();
     },
   );
+
+  testWidgets('Ignore once cannot mutate the temporary startup engine', (
+    WidgetTester tester,
+  ) async {
+    final preferences = _DelayedDictionaryPreferences();
+    await tester.pumpWidget(
+      MaterialApp(home: SpellCheckerPage(preferences: preferences)),
+    );
+    await tester.pump();
+
+    await tester.enterText(find.byType(TextField), 'zorbax');
+    await tester.tap(find.text('Check spelling'));
+    await tester.pump();
+    expect(find.text('Issue 1 of 1'), findsOneWidget);
+
+    await tester.tap(find.text('Ignore once'));
+    await tester.pump();
+
+    expect(find.text('Issue 1 of 1'), findsOneWidget);
+    expect(
+      find.text('Dictionary preferences are still loading.'),
+      findsOneWidget,
+    );
+
+    preferences.completeLanguage('en-US');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Issue 1 of 1'), findsOneWidget);
+  });
 }
 
 class _DelayedDictionaryPreferences extends DictionaryPreferences {
