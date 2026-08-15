@@ -1,7 +1,0 @@
-V2.12 release synchronizer failed with exit code 1
-
-Traceback (most recent call last):
-  File "/home/runner/work/SpellChecker/SpellChecker/tool/v212_release_sync.py", line 306, in <module>
-    assert "missing-punctuation-space" in read("lib/writing/writing_analyzer.dart")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError
