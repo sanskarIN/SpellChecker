@@ -34,21 +34,23 @@ void main() {
     expect(issue.hasAutomaticFix, isFalse);
   });
 
-  test('explicit enabled rules can isolate unmatched square bracket analysis', () {
-    final analyzer = WritingAnalyzer();
-    final result = analyzer.analyze(
-      'hello  [world',
-      languagePack: pack,
-      enabledRuleIds: const <String>{'unmatched-square-bracket'},
-    );
+  test(
+    'explicit enabled rules can isolate unmatched square bracket analysis',
+    () {
+      final analyzer = WritingAnalyzer();
+      final result = analyzer.analyze(
+        'hello  [world',
+        languagePack: pack,
+        enabledRuleIds: const <String>{'unmatched-square-bracket'},
+      );
 
-    expect(
-      result.analyzedRuleIds,
-      const <String>{'unmatched-square-bracket'},
-    );
-    expect(result.issues, hasLength(1));
-    expect(result.issues.single.ruleId, 'unmatched-square-bracket');
-  });
+      expect(result.analyzedRuleIds, const <String>{
+        'unmatched-square-bracket',
+      });
+      expect(result.issues, hasLength(1));
+      expect(result.issues.single.ruleId, 'unmatched-square-bracket');
+    },
+  );
 
   test(
     'batch correction skips advisory square bracket and applies safe fixes',
@@ -76,9 +78,7 @@ void main() {
 
   test('square-bracket-only advisory batch leaves source text unchanged', () {
     const text = 'Hello [world';
-    final issue = const UnmatchedSquareBracketRule()
-        .analyze(text, pack)
-        .single;
+    final issue = const UnmatchedSquareBracketRule().analyze(text, pack).single;
 
     final result = WritingCorrection.applyAll(text, <WritingIssue>[issue]);
 

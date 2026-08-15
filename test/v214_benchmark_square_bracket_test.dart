@@ -24,14 +24,8 @@ void main() {
     expect(sample.writingTruncated, isFalse);
     expect(sample.writingTotalIssueCount, 1);
     expect(sample.writingCapturedIssueCount, 1);
-    expect(
-      sample.writingAnalyzedRuleIds,
-      contains('unmatched-square-bracket'),
-    );
-    expect(
-      sample.writingTotalIssueCountByRule['unmatched-square-bracket'],
-      1,
-    );
+    expect(sample.writingAnalyzedRuleIds, contains('unmatched-square-bracket'));
+    expect(sample.writingTotalIssueCountByRule['unmatched-square-bracket'], 1);
     expect(
       sample.writingTotalIssueCountByRule.values.fold<int>(
         0,
