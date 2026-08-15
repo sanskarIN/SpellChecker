@@ -1,5 +1,8 @@
 # Releasing
 
+## V2.12 release note
+
+The V2.12 candidate identity is package `2.12.0+17` and About `2.12.0`. Release acceptance must verify the seven-rule registry/export, focused Unicode and widget regressions, full formatting/analyzer/tests, deterministic benchmark smoke, release web build, documentation identity, and absence of disposable `v212` helper files. A tag/release must point only at the exact validated merged tree.
 This document describes the SpellChecker release procedure.
 
 ## Preconditions
