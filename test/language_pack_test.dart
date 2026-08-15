@@ -31,6 +31,28 @@ void main() {
       expect(pack.normalizeWord('open‑source'), 'open-source');
     });
 
+    test('keeps decomposed combining-mark words as whole tokens', () {
+      final pack = SpellLanguageRegistry.englishUs;
+      const decomposed = 'Cafe\u0301 nai\u0308ve re\u0301sume\u0301';
+
+      final words = pack
+          .tokenize(decomposed)
+          .map((match) => match.group(0))
+          .toList(growable: false);
+
+      expect(words, <String>['Cafe\u0301', 'nai\u0308ve', 're\u0301sume\u0301']);
+    });
+
+    test('normalizes common decomposed Latin accents canonically', () {
+      final pack = SpellLanguageRegistry.englishUs;
+
+      expect(pack.normalizeWord('Cafe\u0301'), 'café');
+      expect(pack.normalizeWord('fac\u0327ade'), 'façade');
+      expect(pack.normalizeWord('jalapen\u0303o'), 'jalapeño');
+      expect(pack.normalizeWord('nai\u0308ve'), 'naïve');
+      expect(pack.normalizeWord('re\u0301sume\u0301'), 'résumé');
+    });
+
     test('defensively copies recognized suffix configuration', () {
       final mutableSuffixes = <String>["'s"];
       final base = SpellLanguageRegistry.englishUs;
@@ -75,6 +97,17 @@ void main() {
       );
 
       expect(engine.check('café naïve résumé'), isEmpty);
+    });
+
+    test('decomposed Unicode loanwords match bundled precomposed words', () {
+      final engine = SpellCheckerEngine(
+        languagePack: SpellLanguageRegistry.englishUs,
+      );
+
+      expect(
+        engine.check('Cafe\u0301 fac\u0327ade jalapen\u0303o nai\u0308ve re\u0301sume\u0301'),
+        isEmpty,
+      );
     });
 
     test('issues carry the producing language id', () {
