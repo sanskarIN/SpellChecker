@@ -1,5 +1,8 @@
 # Architecture
 
+## V2.15 architecture note
+The writing pipeline now has ten built-ins. `UnmatchedCurlyBraceRule` reuses the existing registry, analyzer, bounded-result, diagnostic-summary, review-query, preference, Portable-settings, and correction-skip paths; no parallel engine or storage/network subsystem was introduced.
+
 
 ## V2.14 structural-rule architecture
 
