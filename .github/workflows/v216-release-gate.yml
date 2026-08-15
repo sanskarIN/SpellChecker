@@ -59,6 +59,7 @@ jobs:
 
           def require(condition, message):
               if not condition:
+                  print(f'::error title=V2.16 release contract failure::{message}')
                   raise SystemExit(message)
 
           pubspec = Path('pubspec.yaml').read_text()
@@ -133,19 +134,19 @@ jobs:
           require(not Path('docs/V2_16_FINAL_STABILIZATION_SCOPE.md').exists(), 'superseded V2.16 working scope still tracked')
 
           unexpected = []
-          for path in Path('.').rglob('*'):
-              if not path.is_file() or '.git' in path.parts or 'build' in path.parts or '.dart_tool' in path.parts:
+          for root in (Path('tool'), Path('.github/workflows')):
+              if not root.exists():
                   continue
-              name = path.as_posix().lower()
-              if 'v216' not in name:
-                  continue
-              if name == '.github/workflows/v216-release-gate.yml':
-                  continue
-              if name in {'docs/v2_16_bug_audit.md', 'docs/v2_16_final_validation.md'}:
-                  continue
-              if any(token in name for token in ('diagnostic', 'patch', 'sync', 'format', 'gate', 'working_scope')):
+              for path in root.rglob('*'):
+                  if not path.is_file():
+                      continue
+                  name = path.as_posix().lower()
+                  if 'v216' not in name:
+                      continue
+                  if name == '.github/workflows/v216-release-gate.yml':
+                      continue
                   unexpected.append(name)
-          require(not unexpected, f'unexpected V2.16 helper residue: {unexpected}')
+          require(not unexpected, f'unexpected disposable V2.16 helper residue: {unexpected}')
 
           print('V2.16 exact release/audit contracts verified.')
           PY
