@@ -1,5 +1,8 @@
 ## What changed
 
+## V2.12 writing-boundary reminder
+
+For writing-rule changes, confirm stable IDs, language eligibility, Unicode/UTF-16 source ranges, adjacent/overlapping automatic-fix ownership, default-vs-explicit preference behavior, benchmark workload metadata, and focused plus full-suite regressions. V2.12's `missing-punctuation-space` rule is the reference case for decomposed combining-mark boundaries and punctuation-only ownership.
 Describe the change and why it is needed.
 
 ## User-visible behavior
