@@ -1,0 +1,49 @@
+name: V2.16 final full-suite diagnostic
+
+on:
+  push:
+    branches:
+      - v2.16-final-stabilization-2026-08-15
+    paths:
+      - .github/workflows/v216-final-flake-diagnostic.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: v2.16-final-stabilization-2026-08-15
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Run complete suite and annotate first failure
+        run: |
+          set +e
+          flutter test --reporter expanded > /tmp/full.log 2>&1
+          status=$?
+          if [ $status -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          lines = Path('/tmp/full.log').read_text(errors='replace').splitlines()
+          needles = ('Expected:', 'Actual:', 'Which:', 'TestFailure', 'Test failed', 'EXCEPTION CAUGHT', '══╡')
+          indexes = [i for i, line in enumerate(lines) if any(n in line for n in needles)]
+          if indexes:
+              start = max(0, indexes[0] - 22)
+              end = min(len(lines), indexes[0] + 70)
+          else:
+              start = max(0, len(lines) - 150)
+              end = len(lines)
+          context = '\n'.join(lines[start:end])[-9000:]
+          context = context.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          print(f'::error title=V2.16 current full-suite failure::{context}')
+          PY
+          fi
+          exit $status
