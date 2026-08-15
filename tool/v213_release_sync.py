@@ -282,7 +282,10 @@ The `unmatched-parenthesis` rule demonstrates the required separation between de
 - [ ] Registry/default changes include persistence, Portable-settings, UI, diagnostics, benchmark, and documentation review.''',
 }
 for path, block in notes.items():
-    updates[path] = after_heading(read(path), block, path=path)
+    if path == '.github/pull_request_template.md':
+        updates[path] = insert_before(read(path), '## Writing rules', block, path=path)
+    else:
+        updates[path] = after_heading(read(path), block, path=path)
 
 # Web metadata
 path = 'web/index.html'
