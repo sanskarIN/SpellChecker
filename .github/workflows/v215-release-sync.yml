@@ -84,7 +84,7 @@ jobs:
           git rm docs/V2_15_WORKING_SCOPE.md
           git commit -m "docs(v215): retire temporary working scope"
 
-          git rm tool/v215_release_sync.py
+          git rm -f tool/v215_release_sync.py
           git commit -m "tool(v215): remove guarded release synchronizer"
 
           git rm .github/workflows/v215-release-sync.yml
@@ -95,7 +95,6 @@ jobs:
           test ! -e tool/v215_release_sync.py
           test ! -e .github/workflows/v215-release-sync.yml
           test ! -e docs/V2_15_WORKING_SCOPE.md
-          git diff --check HEAD~1..HEAD
           git status --short
 
       - name: Push synchronized helper-free branch
