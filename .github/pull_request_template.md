@@ -1,5 +1,9 @@
 # Pull Request Checklist
 
+## V2.16 final stabilization review note
+For final-stabilization changes, verify Unicode-scalar source/algorithm semantics, strict external-data validation, truthful persistence failures, startup-state synchronization, deterministic widget hit testing, unchanged ten-rule compatibility, privacy/dependency boundaries, and regression coverage before merge.
+
+
 ## V2.15 review note
 For writing-rule catalogue changes, reviewers should verify deterministic source ownership, advisory-vs-automatic correction safety, explicit historical rule-set compatibility, bounded exact totals, privacy-safe diagnostics, and expansion-safe lazy Writing insights widget coverage.
 
