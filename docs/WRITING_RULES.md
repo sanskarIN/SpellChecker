@@ -1,5 +1,10 @@
 # Writing Rules
 
+
+## V2.14 ninth built-in rule
+
+The current built-in catalogue contains nine rules. `UnmatchedSquareBracketRule` (`unmatched-square-bracket`) is an English Mechanics warning that iteratively balances literal `[` and `]`, owns exactly one unmatched bracket in UTF-16 source coordinates, and never supplies an automatic replacement. It is independent from `unmatched-parenthesis`; both structural rules reuse the existing analyzer, bounded totals, review filters, diagnostics, preference model, and correction-skip behavior.
+
 ## V2.13 advisory structural rule
 
 V2.13 adds `UnmatchedParenthesisRule` (`unmatched-parenthesis`) as the eighth built-in rule. It balances literal parentheses iteratively, owns exactly the unmatched parenthesis character, emits warning-level findings in source order, and deliberately provides no automatic replacement. This is an example of the plugin contract's advisory path: deterministic detection does not imply deterministic mutation.
