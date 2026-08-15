@@ -1,5 +1,9 @@
 # Public API
 
+## V2.16 final stabilization
+`damerauLevenshteinDistance` now means unrestricted Damerau-Levenshtein distance over Unicode scalar values. Suggestion eligibility uses the same scalar-length model. Public spelling issue/source ranges remain UTF-16 offsets because they index Dart strings and Flutter text editing. Portable Settings remains version 1 and the writing-rule public catalogue remains ten built-ins.
+
+
 ## V2.15 API addition
 `package:spellchecker/writing.dart` now exports `UnmatchedCurlyBraceRule`. Its stable ID is `unmatched-curly-brace`; it is warning-level, supports English language code `en`, owns one brace source character, and exposes no automatic replacement.
 
