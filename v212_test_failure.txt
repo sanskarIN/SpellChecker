@@ -1,0 +1,353 @@
+exit_code=1
+Flutter 3.47.0 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 4cf2416426 (3 days ago) • 2026-08-11 11:53:49 -0700
+Engine • hash 59d54a2b2896a6bbf356c94b7fac7b9e235bdacd (revision 5f77625673) (3 days ago) • 2026-08-11 16:38:36.000Z
+Tools • Dart 3.13.0 • DevTools 2.60.0
+Dart SDK version: 3.13.0 (stable) (Wed Aug 5 00:28:05 2026 -0700) on "linux_x64"
+
+Resolving dependencies...
+Downloading packages...
+  material_color_utilities 0.13.0 (0.13.1 available)
+  test_api 0.7.12 (0.7.13 available)
+Got dependencies!
+2 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart
+00:00 +0: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules repeated word rule finds adjacent duplicates only
+00:00 +1: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules sentence capitalization finds first words after boundaries
+00:00 +2: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules sentence capitalization ignores dot-connected word segments
+00:00 +3: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules repeated space rule keeps newlines outside its scope
+00:00 +4: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules punctuation spacing removes horizontal whitespace before punctuation
+00:00 +5: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules punctuation spacing ignores punctuation without preceding whitespace
+00:00 +6: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules trailing whitespace handles LF, CRLF, and document end
+00:00 +7: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules trailing whitespace ignores indentation and interior spacing
+00:00 +8: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: built-in writing rules repeated punctuation rule collapses identical punctuation runs
+00:00 +9: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: WritingAnalyzer rejects duplicate rule identifiers
+00:00 +10: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: WritingAnalyzer runs enabled rules and returns sorted issues
+00:00 +11: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: WritingAnalyzer expanded rules are enabled by default and address mixed mechanics
+00:00 +11 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: Writing insights rejects a non-positive issue limit at runtime
+00:00 +11 -1: /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: WritingAnalyzer expanded rules are enabled by default and address mixed mechanics [E]
+  Expected: <1>
+    Actual: <null>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/writing_rules_test.dart 175:9                  main.<fn>.<fn>
+  
+00:00 +12 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: Writing insights rejects a non-positive issue limit at runtime
+00:00 +13 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: Writing insights rejects a non-positive issue limit at runtime
+00:00 +14 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: Writing insights rejects a non-positive issue limit at runtime
+00:00 +15 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: limited Writing insights exposes live exact count semantics
+00:00 +16 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: limited Writing insights exposes live exact count semantics
+00:00 +17 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: limited Writing insights exposes live exact count semantics
+00:00 +18 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: limited Writing insights exposes live exact count semantics
+00:00 +19 -1: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: limited Writing insights exposes live exact count semantics
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: '6 visible rules of 6'
+  Actual: '7 visible rules of 7'
+   Which: is different.
+          Expected: 6 visible  ...
+            Actual: 7 visible  ...
+                    ^
+           Differ at offset 0
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart:72:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart line 72
+The test description was:
+  limited Writing insights exposes live exact count semantics
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +19 -2: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing insights apply a safe fix through editor undo history
+00:01 +19 -2: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: limited Writing insights exposes live exact count semantics [E]
+  Test failed. See exception logs above.
+  The test description was: limited Writing insights exposes live exact count semantics
+  
+00:02 +19 -2: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: filtering updates live rule and finding count semantics
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: '1 visible rules of 6'
+  Actual: '1 visible rules of 7'
+   Which: is different.
+          Expected: ...  rules of 6
+            Actual: ...  rules of 7
+                                  ^
+           Differ at offset 19
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart:112:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart line 112
+The test description was:
+  filtering updates live rule and finding count semantics
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +19 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing insights apply a safe fix through editor undo history
+00:02 +19 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: filtering updates live rule and finding count semantics [E]
+  Test failed. See exception logs above.
+  The test description was: filtering updates live rule and finding count semantics
+  
+00:04 +20 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_widget_test.dart: language selector rechecks text with the selected pack
+00:05 +21 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_widget_test.dart: language selector rechecks text with the selected pack
+00:05 +22 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: mechanics filter applies only visible safe fixes as one undo
+00:05 +23 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: mechanics filter applies only visible safe fixes as one undo
+00:05 +24 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: search filters rule management by category metadata
+00:06 +25 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing rule switches persist after the dialog closes
+00:06 +26 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing rule switches persist after the dialog closes
+00:06 +27 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing rule switches persist after the dialog closes
+00:06 +28 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing rule switches persist after the dialog closes
+00:06 +29 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing rule switches persist after the dialog closes
+00:07 +30 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: writing rule switches persist after the dialog closes
+00:07 +31 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_review_preset_test.dart: WritingReviewPreset mechanics and clarity presets select their categories
+00:07 +32 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +33 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +34 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +35 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +36 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +37 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +38 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +39 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +40 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +41 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +42 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +43 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +44 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +45 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +46 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +47 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +48 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +49 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +50 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +51 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +52 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: reset rules clears override and restores registry defaults
+00:07 +53 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: restores persisted writing rules on startup
+00:08 +54 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: restores persisted writing rules on startup
+00:08 +55 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: restores persisted writing rules on startup
+00:08 +56 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: restores persisted writing rules on startup
+00:08 +57 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: restores persisted writing rules on startup
+00:08 +58 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_widget_test.dart: Ctrl+Shift+Enter opens writing insights
+00:08 +59 -3: /home/runner/work/SpellChecker/SpellChecker/test/edit_distance_test.dart: damerauLevenshteinDistance returns zero for equal strings
+00:08 +60 -3: /home/runner/work/SpellChecker/SpellChecker/test/edit_distance_test.dart: damerauLevenshteinDistance counts insertion and deletion
+00:08 +61 -3: /home/runner/work/SpellChecker/SpellChecker/test/edit_distance_test.dart: damerauLevenshteinDistance counts adjacent transposition as one edit
+00:08 +62 -3: /home/runner/work/SpellChecker/SpellChecker/test/text_statistics_test.dart: TextStatistics counts words, characters, and sentences
+00:08 +63 -3: /home/runner/work/SpellChecker/SpellChecker/test/text_statistics_test.dart: TextStatistics counts Unicode words and normalized punctuation
+00:08 +64 -3: /home/runner/work/SpellChecker/SpellChecker/test/text_statistics_test.dart: TextStatistics returns zero sentences for blank text
+00:09 +65 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:09 +66 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:09 +67 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:09 +68 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:09 +69 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:09 +70 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:09 +71 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:09 +72 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: review presets project onto temporary review filters
+00:11 +73 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Ctrl+F focuses Writing insights search
+00:11 +74 -3: /home/runner/work/SpellChecker/SpellChecker/test/v23_widget_test.dart: portable settings import preserves editor text and personal vocabulary
+00:11 +75 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Escape clears active review filters before closing dialog
+00:12 +76 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Escape clears active review filters before closing dialog
+00:12 +77 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Escape clears category and automatic-fix filters together
+00:12 +78 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Escape clears category and automatic-fix filters together
+00:12 +79 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Escape clears category and automatic-fix filters together
+00:12 +80 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Escape clears category and automatic-fix filters together
+00:12 +81 -3: /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_keyboard_test.dart: Escape clears category and automatic-fix filters together
+00:13 +82 -3: /home/runner/work/SpellChecker/SpellChecker/test/missing_punctuation_space_unicode_test.dart: MissingPunctuationSpaceRule decomposed Unicode finds punctuation after a decomposed accented letter cluster
+00:13 +83 -3: /home/runner/work/SpellChecker/SpellChecker/test/missing_punctuation_space_unicode_test.dart: MissingPunctuationSpaceRule decomposed Unicode supports multiple combining marks before punctuation
+00:13 +84 -3: /home/runner/work/SpellChecker/SpellChecker/test/missing_punctuation_space_unicode_test.dart: MissingPunctuationSpaceRule decomposed Unicode keeps punctuation ownership when pre-punctuation space exists
+00:13 +85 -3: /home/runner/work/SpellChecker/SpellChecker/test/missing_punctuation_space_unicode_test.dart: MissingPunctuationSpaceRule decomposed Unicode does not treat a combining mark alone as a word boundary
+00:13 +86 -3: /home/runner/work/SpellChecker/SpellChecker/test/missing_punctuation_space_unicode_test.dart: MissingPunctuationSpaceRule decomposed Unicode still ignores periods and colons with combining marks
+00:13 +87 -3: /home/runner/work/SpellChecker/SpellChecker/test/missing_punctuation_space_unicode_test.dart: MissingPunctuationSpaceRule decomposed Unicode preserves non-BMP following-letter offsets
+00:13 +88 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec round-trips selected language, limit, and explicit overrides
+00:13 +89 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec absent language override remains unset after round-trip
+00:13 +90 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec encoding is deterministic across map and set insertion order
+00:13 +91 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec encoded format contains no document or vocabulary fields
+00:13 +92 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec preserves valid unknown future rule IDs
+00:13 +93 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec rejects malformed JSON and non-object documents
+00:13 +94 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec rejects unsupported format and version
+00:13 +95 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec rejects unsupported selected and override languages
+00:13 +96 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec rejects suggestion limits outside the public 1-10 contract
+00:13 +97 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_codec_test.dart: SpellCheckerSettingsCodec rejects malformed writing-rule IDs and override values
+00:13 +98 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: SpellLanguageRegistry provides explicit US and UK English packs
+00:13 +99 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: SpellLanguageRegistry tokenizes Unicode letters with normalized punctuation
+00:13 +100 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: SpellLanguageRegistry defensively copies recognized suffix configuration
+00:13 +101 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: language-aware SpellCheckerEngine US and UK packs distinguish common spelling variants
+00:13 +102 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: language-aware SpellCheckerEngine Unicode loanwords are checked as whole tokens
+00:13 +103 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: language-aware SpellCheckerEngine issues carry the producing language id
+00:13 +104 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: language-aware SpellCheckerEngine detailed suggestions carry language and source metadata
+00:13 +105 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_pack_test.dart: language-aware SpellCheckerEngine personal words do not leak between language engines
+00:14 +106 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_correction_test.dart: WritingCorrection applies a current automatic fix
+00:14 +107 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_correction_test.dart: WritingCorrection refuses a stale source range
+00:14 +108 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_correction_test.dart: WritingCorrection does not mutate an issue without an automatic replacement
+00:14 +109 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_correction_test.dart: WritingCorrection applies multiple current fixes as one deterministic batch
+00:14 +110 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_correction_test.dart: WritingCorrection skips stale and advisory issues while applying current fixes
+00:14 +111 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_correction_test.dart: WritingCorrection keeps the earliest deterministic issue when fixes overlap
+00:14 +112 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_correction_test.dart: WritingCorrection reports no batch mutation when every issue is unsafe
+00:14 +113 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 writing-rule interactions specialized punctuation spacing owns terminal space ranges
+00:14 +114 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 writing-rule interactions new mechanics compose with repeated punctuation in one batch
+00:14 +115 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 writing-rule interactions individual new-rule fixes validate their exact source ranges
+00:14 +116 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:14 +117 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:14 +118 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:14 +119 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:14 +120 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:14 +121 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:14 +122 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:15 +123 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:15 +124 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:15 +125 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:15 +126 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +127 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +128 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +129 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +130 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +131 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +132 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +133 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +134 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +135 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +136 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI Writing insights exposes both new rule switches
+00:16 +137 -3: /home/runner/work/SpellChecker/SpellChecker/test/v26_writing_rules_test.dart: V2.6 Writing insights UI apply all fixes new mechanics and undo restores exact text
+00:17 +138 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +139 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +140 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +141 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +142 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +143 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +144 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +145 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +146 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: portable settings dialog describes privacy boundary and export
+00:18 +147 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: copy action writes the deterministic export to clipboard
+00:18 +148 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +149 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +150 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +151 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +152 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +153 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +154 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +155 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: valid import returns a decoded settings document
+00:18 +156 -3: /home/runner/work/SpellChecker/SpellChecker/test/settings_transfer_dialog_test.dart: invalid import stays open and reports a format error
+00:19 +157 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSample rejects impossible counts and negative durations
+00:19 +158 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSample requires writing truncation to match exact uncaptured findings
+00:19 +159 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSample sorts and validates exact writing-rule workload metadata
+00:19 +160 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSummary computes stable aggregate timings and immutable samples
+00:19 +161 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSummary uses midpoint average for an even sample count
+00:19 +162 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSummary rejects non-contiguous indexes and changing analysis outcomes
+00:19 +163 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSummary rejects samples that contradict scenario capture limits
+00:19 +164 -3: /home/runner/work/SpellChecker/SpellChecker/test/analysis_benchmark_result_test.dart: AnalysisBenchmarkSummary JSON report contains metadata and timings but no corpus text
+00:19 +165 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +166 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +167 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +168 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +169 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +170 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +171 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +172 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +173 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:19 +174 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan highlights checked and active issues
+00:20 +175 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: buildTextSpan preserves active IME composing decoration
+00:20 +176 -3: /home/runner/work/SpellChecker/SpellChecker/test/spell_check_editing_controller_test.dart: clearIssues resets highlighting state
+00:20 +177 -3: /home/runner/work/SpellChecker/SpellChecker/test/bounded_analysis_widget_test.dart: limits large spelling result sets and disables replace all
+00:22 +178 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_widget_test.dart: Writing insights exposes exact multi-rule totals when limited
+00:22 +179 -3: /home/runner/work/SpellChecker/SpellChecker/test/bounded_analysis_widget_test.dart: small complete result sets retain replace all
+00:22 +180 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_widget_test.dart: Copy diagnostic summary excludes document finding details
+00:23 +181 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics unbounded analyzer reports exact overall and per-rule totals
+00:23 +182 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics bounded analyzer counts uncaptured findings exactly
+00:23 +183 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics disabled rules do not contribute to exact totals
+00:23 +184 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics zero findings still have exact analyzer diagnostics
+00:23 +185 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics per-rule total diagnostics are immutable
+00:23 +186 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics direct V2.7-style construction may omit exact diagnostics
+00:23 +187 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics captured issues must belong to analyzed rules
+00:23 +188 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics captured issues must match the result language
+00:23 +189 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics exact totals reject fewer findings than captured
+00:23 +190 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics complete exact totals must equal captured findings
+00:23 +191 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics truncated exact totals must prove an uncaptured finding
+00:23 +192 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics per-rule totals must sum to the exact overall total
+00:23 +193 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics per-rule totals must belong to analyzed rules
+00:23 +194 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostics_test.dart: WritingAnalysisResult diagnostics per-rule totals cannot under-report captured rule counts
+00:23 +195 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_preferences_test.dart: persists and restores explicit language selection
+00:23 +196 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_preferences_test.dart: falls back to en-US for unsupported stored language
+00:23 +197 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_preferences_test.dart: isolates saved personal words by language
+00:23 +198 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_preferences_test.dart: migrates legacy V1 words into the default US namespace
+00:23 +199 -3: /home/runner/work/SpellChecker/SpellChecker/test/language_preferences_test.dart: clearing one language does not clear another language
+00:24 +200 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostic_summary_test.dart: summary is deterministic and excludes document content
+00:24 +201 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostic_summary_test.dart: summary handles compatibility results without exact totals
+00:24 +202 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_diagnostic_summary_test.dart: empty analysis exports an explicit empty rule section
+00:24 +203 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_limit_widget_test.dart: Writing insights default capture limit is 200
+00:24 +204 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_limit_widget_test.dart: limited analysis shows exact totals and returns captured fixes
+00:24 +205 -3: /home/runner/work/SpellChecker/SpellChecker/test/writing_analysis_limit_widget_test.dart: limited analysis shows exact totals and returns captured fixes
+00:25 +206 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:26 +207 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:26 +208 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:26 +209 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:26 +210 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +211 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +212 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +213 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +214 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +215 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +216 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +217 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +218 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +219 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +220 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +221 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: missing punctuation space is enabled and batch-fixable
+00:27 +222 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: explicit rule disable persists without disabling other defaults
+00:27 +223 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: explicit rule disable persists without disabling other defaults
+00:27 +224 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: explicit rule disable persists without disabling other defaults
+00:27 +225 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: explicit rule disable persists without disabling other defaults
+00:27 +226 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: explicit rule disable persists without disabling other defaults
+00:27 +227 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: explicit rule disable persists without disabling other defaults
+00:27 +228 -3: /home/runner/work/SpellChecker/SpellChecker/test/v212_missing_punctuation_space_widget_test.dart: explicit rule disable persists without disabling other defaults
+00:28 +229 -3: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: checks text and displays a spelling issue
+00:29 +230 -3: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: shows a dedicated blank-input result state
+00:30 +231 -3: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: F7 moves to the next spelling issue
+00:30 +232 -3: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: replace all can be undone as one correction
+00:31 +233 -3: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: saves a personal word through the editor workflow
+00:31 +234 -3: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: opens dictionary manager after preferences load
+00:31 +235 -3: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: About dialog reports the current V2.11 release
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextContainingWidgetFinder:<Found 0 widgets with text containing 2.11.0: []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart:152:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart line 152
+The test description was:
+  About dialog reports the current V2.11 release
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:32 +235 -4: /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: About dialog reports the current V2.11 release [E]
+  Test failed. See exception logs above.
+  The test description was: About dialog reports the current V2.11 release
+  
+00:32 +235 -4: Some tests failed.
+
+Failing tests:
+  /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: filtering updates live rule and finding count semantics
+  /home/runner/work/SpellChecker/SpellChecker/test/v211_writing_semantics_test.dart: limited Writing insights exposes live exact count semantics
+  /home/runner/work/SpellChecker/SpellChecker/test/widget_test.dart: About dialog reports the current V2.11 release
+  /home/runner/work/SpellChecker/SpellChecker/test/writing_rules_test.dart: WritingAnalyzer expanded rules are enabled by default and address mixed mechanics
