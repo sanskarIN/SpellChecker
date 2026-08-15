@@ -1,0 +1,41 @@
+name: V2.16 startup preference sync patch
+
+on:
+  push:
+    branches:
+      - v2.16-final-stabilization-2026-08-15
+    paths:
+      - .github/workflows/v216-startup-sync-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: v2.16-final-stabilization-2026-08-15
+          fetch-depth: 0
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Apply guarded startup synchronization patch
+        run: python3 tool/v216_startup_sync_patch.py
+      - name: Commit production fix
+        run: |
+          git add lib/features/editor/spell_checker_page.dart
+          git commit -m "fix(v216): refresh checked results after preference restore"
+      - name: Remove patch helper
+        run: |
+          git rm tool/v216_startup_sync_patch.py
+          git commit -m "chore(v216): remove startup sync patcher"
+      - name: Remove patch workflow
+        run: |
+          git rm .github/workflows/v216-startup-sync-patch.yml
+          git commit -m "ci(v216): remove startup sync patch workflow"
+      - name: Push helper-free branch
+        run: git push origin HEAD:v2.16-final-stabilization-2026-08-15
