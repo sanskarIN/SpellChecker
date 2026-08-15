@@ -54,7 +54,7 @@ void main() {
     );
   });
 
-  test('unset portable override remains unset for nine-rule defaults', () {
+  test('unset portable override remains unset as defaults evolve', () {
     final document = SpellCheckerSettingsDocument(
       languageId: 'en-US',
       suggestionLimit: 5,
