@@ -1,5 +1,9 @@
 # Troubleshooting
 
+## V2.13 unmatched-parenthesis troubleshooting
+
+The new rule balances literal `(` and `)` characters and is not a Markdown, programming-language, URL, quoting, or mathematical parser. If syntax intentionally contains an unmatched literal parenthesis, disable `unmatched-parenthesis` for that language or review the finding manually; V2.13 will not auto-edit it. Privacy-safe diagnostic summaries can report the rule ID/count without including the source text.
+
 ## V2.12 troubleshooting note
 
 If **Missing punctuation space** is absent or disabled after upgrading, check whether that language already has an explicit saved writing-rule selection. V2.12 respects explicit lists instead of silently adding the new rule. Use **Reset rules to defaults** to clear the override and adopt the current seven-rule default catalogue. Period/colon cases and punctuation not bounded by letters are deliberate non-matches, not failed analysis.
