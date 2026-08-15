@@ -2,15 +2,18 @@ int damerauLevenshteinDistance(String source, String target) {
   if (source == target) {
     return 0;
   }
-  if (source.isEmpty) {
-    return target.length;
+
+  final sourceRunes = source.runes.toList(growable: false);
+  final targetRunes = target.runes.toList(growable: false);
+  if (sourceRunes.isEmpty) {
+    return targetRunes.length;
   }
-  if (target.isEmpty) {
-    return source.length;
+  if (targetRunes.isEmpty) {
+    return sourceRunes.length;
   }
 
-  final rows = source.length + 1;
-  final columns = target.length + 1;
+  final rows = sourceRunes.length + 1;
+  final columns = targetRunes.length + 1;
   final matrix = List<List<int>>.generate(
     rows,
     (row) => List<int>.filled(columns, 0),
@@ -25,7 +28,7 @@ int damerauLevenshteinDistance(String source, String target) {
 
   for (var row = 1; row < rows; row++) {
     for (var column = 1; column < columns; column++) {
-      final cost = source[row - 1] == target[column - 1] ? 0 : 1;
+      final cost = sourceRunes[row - 1] == targetRunes[column - 1] ? 0 : 1;
       final deletion = matrix[row - 1][column] + 1;
       final insertion = matrix[row][column - 1] + 1;
       final substitution = matrix[row - 1][column - 1] + cost;
@@ -34,8 +37,8 @@ int damerauLevenshteinDistance(String source, String target) {
 
       if (row > 1 &&
           column > 1 &&
-          source[row - 1] == target[column - 2] &&
-          source[row - 2] == target[column - 1]) {
+          sourceRunes[row - 1] == targetRunes[column - 2] &&
+          sourceRunes[row - 2] == targetRunes[column - 1]) {
         final transposition = matrix[row - 2][column - 2] + 1;
         if (transposition < best) {
           best = transposition;
@@ -46,7 +49,7 @@ int damerauLevenshteinDistance(String source, String target) {
     }
   }
 
-  return matrix[source.length][target.length];
+  return matrix[sourceRunes.length][targetRunes.length];
 }
 
 int _min3(int a, int b, int c) {
