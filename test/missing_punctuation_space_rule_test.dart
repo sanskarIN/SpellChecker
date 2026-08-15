@@ -35,10 +35,7 @@ void main() {
     });
 
     test('ignores punctuation that already has following whitespace', () {
-      expect(
-        rule.analyze('Hello, world; again! yes? okay', us),
-        isEmpty,
-      );
+      expect(rule.analyze('Hello, world; again! yes? okay', us), isEmpty);
     });
 
     test('ignores period and colon boundaries', () {

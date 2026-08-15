@@ -68,40 +68,44 @@ void main() {
     await tester.tap(applyAll);
     await tester.pumpAndSettle();
 
-    expect(tester.widget<TextField>(editor).controller!.text, 'Hello, world! Again');
+    expect(
+      tester.widget<TextField>(editor).controller!.text,
+      'Hello, world! Again',
+    );
 
     await tester.tap(find.text('Undo correction'));
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(editor).controller!.text, original);
   });
 
-  testWidgets('explicit rule disable persists without disabling other defaults', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const SpellCheckerApp());
-    await tester.pumpAndSettle();
+  testWidgets(
+    'explicit rule disable persists without disabling other defaults',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const SpellCheckerApp());
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField).first, 'Hello,world');
-    await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'Hello,world');
+      await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
+      await tester.pumpAndSettle();
 
-    final ruleSwitch = find.widgetWithText(
-      SwitchListTile,
-      'Missing punctuation space',
-    );
-    await scrollTo(tester, ruleSwitch);
-    await tester.tap(ruleSwitch);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Close'));
-    await tester.pumpAndSettle();
+      final ruleSwitch = find.widgetWithText(
+        SwitchListTile,
+        'Missing punctuation space',
+      );
+      await scrollTo(tester, ruleSwitch);
+      await tester.tap(ruleSwitch);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
 
-    final preferences = await SharedPreferences.getInstance();
-    final stored = preferences.getStringList(
-      'spellchecker.writing_rule_ids.v1.en-US',
-    );
-    expect(stored, isNotNull);
-    expect(stored, isNot(contains('missing-punctuation-space')));
-    expect(stored, contains('punctuation-spacing'));
-    expect(stored, contains('repeated-word'));
-  });
+      final preferences = await SharedPreferences.getInstance();
+      final stored = preferences.getStringList(
+        'spellchecker.writing_rule_ids.v1.en-US',
+      );
+      expect(stored, isNotNull);
+      expect(stored, isNot(contains('missing-punctuation-space')));
+      expect(stored, contains('punctuation-spacing'));
+      expect(stored, contains('repeated-word'));
+    },
+  );
 }

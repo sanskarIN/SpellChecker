@@ -176,8 +176,7 @@ class _DictionaryManagerDialogState extends State<DictionaryManagerDialog> {
             minLines: 8,
             maxLines: 14,
             decoration: const InputDecoration(
-              hintText:
-                  'Paste a SpellChecker JSON export, JSON array, or one word per line.',
+              hintText: 'Paste a SpellChecker JSON export, JSON array, or one word per line.',
             ),
           ),
         ),

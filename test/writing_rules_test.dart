@@ -152,26 +152,29 @@ void main() {
       expect(result.issueCountByRule['trailing-whitespace'], isNull);
     });
 
-    test('expanded rules are enabled by default and address mixed mechanics', () {
-      final analyzer = WritingAnalyzer();
+    test(
+      'expanded rules are enabled by default and address mixed mechanics',
+      () {
+        final analyzer = WritingAnalyzer();
 
-      final result = analyzer.analyze(
-        'Hello  !\nWorld  Next,word',
-        languagePack: pack,
-      );
+        final result = analyzer.analyze(
+          'Hello  !\nWorld  Next,word',
+          languagePack: pack,
+        );
 
-      expect(
-        result.analyzedRuleIds,
-        containsAll(<String>{
-          'missing-punctuation-space',
-          'punctuation-spacing',
-          'trailing-whitespace',
-        }),
-      );
-      expect(result.issueCountByRule['missing-punctuation-space'], 1);
-      expect(result.issueCountByRule['punctuation-spacing'], 1);
-      expect(result.issueCountByRule['trailing-whitespace'], 1);
-    });
+        expect(
+          result.analyzedRuleIds,
+          containsAll(<String>{
+            'missing-punctuation-space',
+            'punctuation-spacing',
+            'trailing-whitespace',
+          }),
+        );
+        expect(result.issueCountByRule['missing-punctuation-space'], 1);
+        expect(result.issueCountByRule['punctuation-spacing'], 1);
+        expect(result.issueCountByRule['trailing-whitespace'], 1);
+      },
+    );
 
     test('can disable all but one rule', () {
       final analyzer = WritingAnalyzer();

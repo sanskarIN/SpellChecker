@@ -976,8 +976,7 @@ class _EditorPanel extends StatelessWidget {
             Expanded(
               child: Semantics(
                 textField: true,
-                label:
-                    'SpellChecker editor. Checked spelling issues are underlined after a spelling check.',
+                label: 'SpellChecker editor. Checked spelling issues are underlined after a spelling check.',
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
@@ -1037,8 +1036,7 @@ class _StorageWarning extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Semantics(
       liveRegion: true,
-      label:
-          'Warning: local dictionary storage is unavailable. Spelling still works in session mode.',
+      label: 'Warning: local dictionary storage is unavailable. Spelling still works in session mode.',
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(

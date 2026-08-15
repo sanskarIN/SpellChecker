@@ -61,10 +61,7 @@ void main() {
     });
 
     test('still ignores periods and colons with combining marks', () {
-      expect(
-        rule.analyze('cafe\u0301.example cafe\u0301:word', us),
-        isEmpty,
-      );
+      expect(rule.analyze('cafe\u0301.example cafe\u0301:word', us), isEmpty);
     });
 
     test('preserves non-BMP following-letter offsets', () {

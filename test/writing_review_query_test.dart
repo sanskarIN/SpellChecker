@@ -38,21 +38,21 @@ void main() {
 
     test('search filters rules by id, label, description, or category', () {
       expect(
-        WritingReviewQuery(
-          search: 'repeated-space',
-        ).filterRules(rules).map((WritingRule rule) => rule.id),
+        WritingReviewQuery(search: 'repeated-space')
+            .filterRules(rules)
+            .map((WritingRule rule) => rule.id),
         contains('repeated-space'),
       );
       expect(
-        WritingReviewQuery(
-          search: 'capital',
-        ).filterRules(rules).map((WritingRule rule) => rule.id),
+        WritingReviewQuery(search: 'capital')
+            .filterRules(rules)
+            .map((WritingRule rule) => rule.id),
         contains('sentence-capitalization'),
       );
       expect(
-        WritingReviewQuery(
-          search: 'clarity',
-        ).filterRules(rules).map((WritingRule rule) => rule.id),
+        WritingReviewQuery(search: 'clarity')
+            .filterRules(rules)
+            .map((WritingRule rule) => rule.id),
         <String>['repeated-word'],
       );
     });
@@ -98,23 +98,20 @@ void main() {
         ),
       ];
 
-      final filtered = WritingReviewQuery(
-        automaticFixesOnly: true,
-      ).filterIssues(issues, rules: rules);
+      final filtered = WritingReviewQuery(automaticFixesOnly: true)
+          .filterIssues(issues, rules: rules);
 
       expect(filtered, hasLength(1));
       expect(filtered.single.ruleId, 'repeated-space');
     });
 
     test('search matches finding message and original text', () {
-      final messageMatches = WritingReviewQuery(
-        search: 'repeated',
-      ).filterIssues(analysis.issues, rules: rules);
+      final messageMatches = WritingReviewQuery(search: 'repeated')
+          .filterIssues(analysis.issues, rules: rules);
       expect(messageMatches, isNotEmpty);
 
-      final sourceMatches = WritingReviewQuery(
-        search: 'world',
-      ).filterIssues(analysis.issues, rules: rules);
+      final sourceMatches = WritingReviewQuery(search: 'world')
+          .filterIssues(analysis.issues, rules: rules);
       expect(sourceMatches, isNotEmpty);
       expect(
         sourceMatches.map((WritingIssue issue) => issue.originalText).join(),
