@@ -1,5 +1,10 @@
 # Performance and large-document behavior
 
+
+## V2.14 square-bracket analysis cost
+
+The structural scan is iterative and makes one pass over UTF-16 code units while retaining unmatched opening offsets. Final unmatched indexes are source-ordered before issue emission. Stress tests cover 5,000 nested pairs and 5,000 unmatched openings to guard against recursion/stack-overflow regressions. Benchmark correctness continues to use deterministic counts; timing remains observational.
+
 ## V2.13 parenthesis scanner
 
 `UnmatchedParenthesisRule` scans the supplied UTF-16 string once and uses an iterative stack of opening offsets. The final unmatched indexes are source ordered before findings are emitted. Runtime is dominated by the linear scan plus ordering of unmatched indexes; retained memory grows with unmatched/nesting depth rather than recursion. Stress tests cover 5,000 balanced nesting levels and 5,000 unmatched openings. This remains a correctness regression, not a timing threshold.
