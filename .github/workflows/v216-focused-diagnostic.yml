@@ -1,0 +1,77 @@
+name: V2.16 focused failure diagnostic
+
+on:
+  push:
+    branches:
+      - v2.16-final-stabilization-2026-08-15
+    paths:
+      - .github/workflows/v216-focused-diagnostic.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: v2.16-final-stabilization-2026-08-15
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Run edit-distance regressions
+        id: edit
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter test test/edit_distance_test.dart --reporter expanded 2>&1 | tee /tmp/edit.log
+      - name: Annotate edit-distance failure
+        if: steps.edit.outcome == 'failure'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('/tmp/edit.log').read_text(errors='replace')
+          tail = text[-3500:].replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          print(f'::error title=V2.16 edit-distance regression::{tail}')
+          PY
+      - name: Run startup preference regressions
+        id: startup
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter test test/v216_startup_preference_sync_widget_test.dart --reporter expanded 2>&1 | tee /tmp/startup.log
+      - name: Annotate startup failure
+        if: steps.startup.outcome == 'failure'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('/tmp/startup.log').read_text(errors='replace')
+          tail = text[-3500:].replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          print(f'::error title=V2.16 startup regression::{tail}')
+          PY
+      - name: Fail if focused regression failed
+        if: steps.edit.outcome == 'failure' || steps.startup.outcome == 'failure'
+        run: exit 1
+      - name: Run complete suite when focused regressions pass
+        id: full
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter test --reporter expanded 2>&1 | tee /tmp/full.log
+      - name: Annotate complete-suite failure
+        if: steps.full.outcome == 'failure'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('/tmp/full.log').read_text(errors='replace')
+          tail = text[-5000:].replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          print(f'::error title=V2.16 complete-suite regression::{tail}')
+          PY
+      - name: Fail on complete-suite regression
+        if: steps.full.outcome == 'failure'
+        run: exit 1
