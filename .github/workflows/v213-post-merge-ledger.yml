@@ -18,35 +18,22 @@ jobs:
           ref: v2.13-post-merge-validation-2026-08-15
           fetch-depth: 0
 
-      - name: Record final V2.13 merge evidence in what_changed.md
+      - name: Configure Git
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('what_changed.md')
-          text = path.read_text()
-          marker = '## V2.12 — Missing Punctuation Spacing & Unicode Boundary Completion'
-          if text.count(marker) != 1:
-              raise SystemExit(f'expected one V2.12 marker, found {text.count(marker)}')
-          if '### Final V2.13 validation and merged-main evidence' in text:
-              raise SystemExit('final V2.13 merge-evidence section already exists')
-          block = '''### Final V2.13 validation and merged-main evidence
-
-After the release metadata and documentation were synchronized, permanent PR CI run `31870187663` passed formatting, static analysis, the complete Flutter suite, and benchmark smoke on owner commit `009dbb69564b1c500543c1b36563c338c3f31ee1`.
-
-Independent release-gate run `31870277817` then repeated those checks, built the production web application with `flutter build web --release`, verified package/About identity, eight-rule registry/export identity, focused regression files, `what_changed.md`, changelog/README/web-manifest metadata, unchanged direct runtime dependencies, generated web outputs, and zero unexpected V2.13 helper residue. The one-time gate removed itself in cleanup commit `6dcba69ee737597e0007e5e67d591c8deb99ca2c`.
-
-The release-gate evidence update received a final green permanent PR CI run `31870395536` on exact PR head `4e68476af57efdea295e9a3488c2df8b335a7ab7`. PR #77 contained 65 branch commits and was merged with a normal merge commit, preserving that granular history. The V2.13 implementation merge commit is `fa01826aa084d858e784bed3d09fa3fdcbfa0760`.
-
-Post-merge `main` CI run `31870480137` passed dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on the merge commit. The merge tree `7ed318aa9bdaa3f0532366b4311305f846daea1d` is identical to the already-green final PR tree.
-
-A documentation-only post-merge evidence change records these now-known merge/main-CI identifiers. It changes no production source, test logic, dependency, release identity, persistence format, web build input, or runtime behavior; that evidence change is itself required to pass permanent CI before the repository's final V2.13 default-branch head is accepted.
-'''
-          path.write_text(text.replace(marker, block + '\n\n' + marker, 1))
-          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Record final V2.13 merge evidence in what_changed.md
+        run: |
+          python3 tool/v213_post_merge_ledger.py
           git add what_changed.md
           git commit -m "docs(ledger): record final V2.13 merge validation evidence"
+
+      - name: Remove post-merge ledger helper
+        run: |
+          rm tool/v213_post_merge_ledger.py
+          git add tool/v213_post_merge_ledger.py
+          git commit -m "chore(v213): remove post-merge ledger helper"
 
       - name: Remove post-merge synchronizer
         run: |
