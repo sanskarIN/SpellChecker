@@ -1,5 +1,10 @@
 # Architecture
 
+
+## V2.14 structural-rule architecture
+
+The ninth built-in rule is a small iterative delimiter scanner layered on the existing writing subsystem. It scans `[`/`]`, keeps opening UTF-16 offsets in a stack, emits one-character advisory findings, and reuses the shared registry, analyzer ordering/bounds, diagnostic-summary, review/filter, persistence, Portable-settings, correction-skip, and editor pathways. No parallel parser or correction engine is introduced.
+
 ## V2.13 architecture note
 
 The built-in writing registry now contains eight rules. `UnmatchedParenthesisRule` is an iterative local scanner that stores unmatched opening offsets and emits source-ordered one-character advisory findings. It reuses the existing analyzer, review, preference, diagnostic, benchmark, and correction-skip layers; there is no parallel parser, correction engine, persistence subsystem, service, or network path.
