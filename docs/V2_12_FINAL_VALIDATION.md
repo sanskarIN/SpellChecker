@@ -15,6 +15,9 @@ This file records the final acceptance boundary for V2.12 after implementation, 
 - A package-aware formatter verification reproduced the permanent CI order by running `flutter pub get` before `dart format`.
 - That verification committed the real Dart 3.13 formatting changes required after package resolution and then removed all V2.12 formatting diagnostic/helper files.
 - A normal package-aware `dart format lib test tool` pass followed by `git diff --check` completed successfully before the helper removed itself.
+- The first full-suite attempt reached `flutter test` after formatting and analysis passed, exposing four assertion-only regressions: one mixed-mechanics fixture without actual trailing whitespace, two V2.11 accessibility expectations frozen to six rules, and the V2.11 About-version expectation.
+- Those four assertions were repaired in separate commits. The accessibility tests now derive their supported-rule total from the analyzer registry, the mixed-mechanics fixture now contains real document-end trailing whitespace, and the About test expects V2.12.
+- The repaired test files were formatted after `flutter pub get` with Dart 3.13, and the disposable failing-test diagnostic plus test-repair formatter were removed before this owner-authored validation commit.
 - No Dart source is changed by this validation-record commit.
 
 ## Permanent CI acceptance gate
