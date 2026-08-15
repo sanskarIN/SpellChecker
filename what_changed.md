@@ -99,6 +99,16 @@ Release identity: package `2.15.0+20`; About `2.15.0`.
 - Earlier red runs were retained as engineering evidence: the first stopped at canonical formatting; later runs exposed and isolated the lazy `.first` widget-test bug described above. No release identity was stamped until the corrected ten-rule implementation passed the complete functional gate.
 
 
+### Final V2.15 validation and merged-main evidence
+- Permanent synchronized-candidate CI run `31876478606` passed formatting, static analysis, the complete Flutter suite, and benchmark smoke on owner head `759834f3d6680f10e8f03a85410a1fb7ca8d8b53`.
+- Independent release-gate run `31876609678` repeated those checks, passed `flutter build web --release` and `git diff --check`, verified package/About identity, public export/registration/stable ID, exactly ten built-in rule constructors, focused regressions, explicit V2.14 preference and Portable-settings compatibility, `what_changed.md`/README/changelog/docs/manifest identity, unchanged direct runtime dependencies, generated web outputs, and zero unexpected V2.15 helper residue. The gate removed itself in cleanup commit `3f00e356685762874cda279e4a24f9deeee3c2d8`.
+- The release-gate evidence update received final green permanent PR CI run `31876743735` on exact final PR #81 head `7a5f851f719f740267c092b5705be8c6b4bba2f6`.
+- PR #81 contained 81 branch commits and 46 permanent changed files, with 1,387 additions and 22 deletions at the implementation merge boundary.
+- PR #81 merged normally as `31450fc9223f3f958c18c887c0a7047cb01a9ac8`, preserving the complete 81-commit granular history rather than squashing it.
+- The final PR tree and implementation merge tree are both `4554f793c446ae22bcddd6d76776f313bc30950d`, proving the already-green candidate was merged without tree changes.
+- Post-merge `main` CI run `31876830663` passed dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on the implementation merge.
+- The documentation-only post-merge evidence follow-up changes only `docs/V2_15_FINAL_VALIDATION.md` and `what_changed.md`; it changes no production source, test logic, dependency, package/About identity, persistence format, web build input, preference behavior, Portable-settings format, or runtime behavior. The follow-up itself must pass permanent CI and merge normally before the final default-branch acceptance run.
+
 This file is the detailed implementation ledger for SpellChecker releases. It complements `CHANGELOG.md`: the changelog is release-oriented, while this document records the engineering behavior, compatibility boundaries, validation evidence, and permanent file-level changes that define the release.
 
 ## V2.14 — Unmatched Square Bracket Diagnostics
