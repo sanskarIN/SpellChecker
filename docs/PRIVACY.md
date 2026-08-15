@@ -1,5 +1,8 @@
 # Privacy
 
+## V2.15 privacy boundary
+Curly-brace analysis is local and deterministic. Diagnostic summaries may include stable rule metadata and counts but not private editor excerpts. V2.15 adds no telemetry, application-network request, cloud writing service, account flow, or background document upload.
+
 
 ## V2.14 privacy boundary
 
