@@ -1,0 +1,42 @@
+name: V2.13 release documentation sync
+
+on:
+  push:
+    branches:
+      - v2.13-unmatched-parenthesis-2026-08-15
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out V2.13 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.13-unmatched-parenthesis-2026-08-15
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Apply guarded release synchronization
+        run: python3 tool/v213_release_sync.py
+
+      - name: Remove release synchronizer script
+        run: |
+          rm tool/v213_release_sync.py
+          git add tool/v213_release_sync.py
+          git commit -m "chore(v213): remove release documentation synchronizer"
+
+      - name: Remove release synchronization workflow
+        run: |
+          rm .github/workflows/v213-release-sync.yml
+          git add .github/workflows/v213-release-sync.yml
+          git commit -m "ci(v213): remove release documentation sync"
+
+      - name: Push synchronized release commits
+        run: git push origin HEAD:v2.13-unmatched-parenthesis-2026-08-15
