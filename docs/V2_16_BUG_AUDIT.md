@@ -1,6 +1,6 @@
 # V2.16 Final Bug Audit
 
-SpellChecker V2.16 is the repository's final stabilization milestone. This record is regression-led: release identity remains at V2.15 until the corrected functional candidate passes permanent CI.
+SpellChecker V2.16 is the repository's final stabilization milestone. Release identity: package `2.16.0+21`; About `2.16.0`. The audit was regression-led: release identity was not advanced until the corrected functional candidate passed permanent CI.
 
 ## Reproducible defects fixed in the functional candidate
 
@@ -16,7 +16,7 @@ SpellChecker V2.16 is the repository's final stabilization milestone. This recor
 10. **Case-preserving correction split surrogate pairs and could misclassify uncased text.** Case matching now operates on complete Unicode scalars and only applies uppercase/title behavior when actual cased characters support it.
 11. **The public Damerau-Levenshtein function implemented the restricted optimal-string-alignment recurrence.** Its name promises unrestricted Damerau-Levenshtein distance, where interacting edits may reuse characters. The implementation now uses the unrestricted last-seen-row/column recurrence and locks the canonical `CA` → `ABC` distance of 2, including Unicode-scalar coverage.
 12. **Ignore-once could mutate the temporary startup engine.** An early spelling check could expose an Ignore action before durable preferences finished restoring; the ignored word would then disappear when the real engine replaced the temporary one. Ignore-once now refuses to mutate session state until restoration completes and reports the shared loading status instead.
-13. **The new startup Ignore regression itself was nondeterministic under the full concurrent suite.** It tapped an off-screen lazy control; Flutter correctly reported a missed hit test, so the loading Snackbar assertion intermittently observed nothing. The regression now explicitly brings **Ignore once** into view, settles layout, verifies one target, and only then taps it. Repeated-suite diagnostics identified the exact failing assertion before this hardening was accepted.
+13. **The new startup Ignore regression itself was nondeterministic under the full concurrent suite.** It tapped an off-screen lazy control; Flutter correctly reported a missed hit test, so the loading Snackbar assertion intermittently observed nothing. The regression now explicitly brings **Ignore once** into view, pumps one bounded frame, verifies one target, and only then taps it; it deliberately avoids `pumpAndSettle()` while preference restoration remains unresolved. Repeated-suite diagnostics identified the exact failing assertion before this hardening was accepted.
 
 ## Audited stable behavior intentionally unchanged
 
@@ -25,6 +25,12 @@ SpellChecker V2.16 is the repository's final stabilization milestone. This recor
 - Personal dictionary V1 missing-version compatibility remains accepted deliberately.
 - Direct runtime dependencies remain Flutter and `shared_preferences`; V2.16 has not added a Unicode normalization package or network service.
 
-## Release blockers still required
+## Functional validation evidence
 
-The candidate must pass canonical formatting, `flutter analyze`, the complete Flutter test suite, benchmark smoke, continued repository-wide defect review, synchronized release/documentation metadata including `what_changed.md`, removal of the temporary working scope and all disposable helpers, an independent release-mode web build/audit, normal history-preserving merge, and final default-branch CI.
+Permanent CI run `31879869993` passed canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on the final helper-free functional stabilization head `33f3ee4577f69d260ddea9cc88fa3895e567a7a4`.
+
+Earlier red full-suite runs were investigated rather than rerun until green. Diagnostic annotations isolated the startup Ignore regression first to an off-screen missed hit test and then to an inappropriate `pumpAndSettle()` while preference restoration was intentionally pending. Both test-harness defects were corrected before the accepted functional gate above.
+
+## Remaining release gates
+
+The synchronized `2.16.0+21` candidate must still pass package-aware canonical formatting, permanent CI, an independent release-mode web build/audit, helper-residue checks, a normal history-preserving merge, merged-main CI, and final documentation-only merge evidence before V2.16 is complete.
