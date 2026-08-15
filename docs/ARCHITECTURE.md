@@ -1,5 +1,9 @@
 # Architecture
 
+## V2.13 architecture note
+
+The built-in writing registry now contains eight rules. `UnmatchedParenthesisRule` is an iterative local scanner that stores unmatched opening offsets and emits source-ordered one-character advisory findings. It reuses the existing analyzer, review, preference, diagnostic, benchmark, and correction-skip layers; there is no parallel parser, correction engine, persistence subsystem, service, or network path.
+
 ## V2.12 architecture note
 
 The deterministic local writing pipeline now has seven built-in rules. `missing-punctuation-space` runs through the existing `WritingRule` → `WritingAnalyzer` → `WritingIssue` → `WritingCorrection` path; it does not introduce a second parser, mutation engine, persistence layer, service, isolate, network path, or dependency. Its punctuation-only ownership is intentionally adjacent to the existing pre-punctuation spacing rule.
