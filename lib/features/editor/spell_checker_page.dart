@@ -92,6 +92,10 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
         _preferencesLoaded = true;
         _storageAvailable = true;
       });
+      if (_hasChecked && _controller.text.trim().isNotEmpty) {
+        final selectionOffset = _controller.selection.extentOffset;
+        _checkText(preferredOffset: selectionOffset < 0 ? null : selectionOffset);
+      }
     } catch (_) {
       if (!mounted) {
         return;
@@ -214,6 +218,11 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
   }
 
   Future<void> _showWritingInsights() async {
+    if (!_preferencesLoaded) {
+      _showMessage('Dictionary preferences are still loading.');
+      return;
+    }
+
     final result = await showDialog<WritingInsightsDialogResult>(
       context: context,
       builder: (BuildContext context) => WritingInsightsDialog(
