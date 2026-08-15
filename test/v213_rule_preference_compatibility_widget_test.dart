@@ -48,29 +48,30 @@ void main() {
     });
   });
 
-  testWidgets('explicit V2.12 seven-rule override does not auto-add V2.13 rule', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const SpellCheckerApp());
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'explicit V2.12 seven-rule override does not auto-add V2.13 rule',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const SpellCheckerApp());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
+      await tester.pumpAndSettle();
 
-    await scrollToRule(tester, 'Unmatched parenthesis');
-    final newRule = find.widgetWithText(
-      SwitchListTile,
-      'Unmatched parenthesis',
-    );
-    expect(newRule, findsOneWidget);
-    expect(tester.widget<SwitchListTile>(newRule).value, isFalse);
+      await scrollToRule(tester, 'Unmatched parenthesis');
+      final newRule = find.widgetWithText(
+        SwitchListTile,
+        'Unmatched parenthesis',
+      );
+      expect(newRule, findsOneWidget);
+      expect(tester.widget<SwitchListTile>(newRule).value, isFalse);
 
-    await scrollToRule(tester, 'Missing punctuation space');
-    final previousRule = find.widgetWithText(
-      SwitchListTile,
-      'Missing punctuation space',
-    );
-    expect(tester.widget<SwitchListTile>(previousRule).value, isTrue);
-  });
+      await scrollToRule(tester, 'Missing punctuation space');
+      final previousRule = find.widgetWithText(
+        SwitchListTile,
+        'Missing punctuation space',
+      );
+      expect(tester.widget<SwitchListTile>(previousRule).value, isTrue);
+    },
+  );
 
   testWidgets('reset clears V2.12 override and adopts eight-rule defaults', (
     WidgetTester tester,

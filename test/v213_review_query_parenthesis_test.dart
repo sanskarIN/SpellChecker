@@ -12,7 +12,10 @@ void main() {
 
     expect(query.filterRules(const <WritingRule>[rule]), <WritingRule>[rule]);
     expect(
-      query.filterIssues(<WritingIssue>[issue], rules: const <WritingRule>[rule]),
+      query.filterIssues(
+        <WritingIssue>[issue],
+        rules: const <WritingRule>[rule],
+      ),
       <WritingIssue>[issue],
     );
   });
@@ -24,7 +27,10 @@ void main() {
 
     expect(query.filterRules(const <WritingRule>[rule]), <WritingRule>[rule]);
     expect(
-      query.filterIssues(<WritingIssue>[issue], rules: const <WritingRule>[rule]),
+      query.filterIssues(
+        <WritingIssue>[issue],
+        rules: const <WritingRule>[rule],
+      ),
       <WritingIssue>[issue],
     );
   });
@@ -33,7 +39,10 @@ void main() {
     final query = WritingReviewQuery(automaticFixesOnly: true);
 
     expect(
-      query.filterIssues(<WritingIssue>[issue], rules: const <WritingRule>[rule]),
+      query.filterIssues(
+        <WritingIssue>[issue],
+        rules: const <WritingRule>[rule],
+      ),
       isEmpty,
     );
   });

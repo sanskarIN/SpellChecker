@@ -34,21 +34,18 @@ void main() {
     expect(issue.hasAutomaticFix, isFalse);
   });
 
-  test(
-    'explicit enabled rules can isolate unmatched parenthesis analysis',
-    () {
-      final analyzer = WritingAnalyzer();
-      final result = analyzer.analyze(
-        'hello  (world',
-        languagePack: pack,
-        enabledRuleIds: const <String>{'unmatched-parenthesis'},
-      );
+  test('explicit enabled rules can isolate unmatched parenthesis analysis', () {
+    final analyzer = WritingAnalyzer();
+    final result = analyzer.analyze(
+      'hello  (world',
+      languagePack: pack,
+      enabledRuleIds: const <String>{'unmatched-parenthesis'},
+    );
 
-      expect(result.analyzedRuleIds, const <String>{'unmatched-parenthesis'});
-      expect(result.issues, hasLength(1));
-      expect(result.issues.single.ruleId, 'unmatched-parenthesis');
-    },
-  );
+    expect(result.analyzedRuleIds, const <String>{'unmatched-parenthesis'});
+    expect(result.issues, hasLength(1));
+    expect(result.issues.single.ruleId, 'unmatched-parenthesis');
+  });
 
   test(
     'batch correction skips advisory parenthesis and applies safe fixes',
