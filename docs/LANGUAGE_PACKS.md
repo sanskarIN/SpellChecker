@@ -1,5 +1,8 @@
 # Language Packs
 
+## V2.12 language-pack note
+
+`MissingPunctuationSpaceRule` declares support for language code `en`, so both registered built-in English variants (`en-US` and `en-GB`) are eligible. V2.12 does not add a language pack, language auto-detection, cross-language preference merging, or a new normalization contract.
 SpellChecker uses an explicit language-pack architecture. A language pack owns the language-specific data and rules needed to tokenize, normalize, validate, check, and rank words without moving those concerns into editor widgets.
 
 V2.1 extends language isolation beyond spelling vocabulary: enabled writing-rule preferences are also stored per language.
