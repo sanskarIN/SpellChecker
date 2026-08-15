@@ -1,0 +1,41 @@
+name: V2.16 release evidence ledger patch
+
+on:
+  push:
+    branches:
+      - v2.16-final-stabilization-2026-08-15
+    paths:
+      - .github/workflows/v216-evidence-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: v2.16-final-stabilization-2026-08-15
+          fetch-depth: 0
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Apply guarded evidence ledger patch
+        run: python3 tool/v216_evidence_patch.py
+      - name: Commit permanent ledger evidence
+        run: |
+          git add what_changed.md
+          git commit -m "docs(v216): record release synchronization evidence"
+      - name: Remove evidence patcher
+        run: |
+          git rm tool/v216_evidence_patch.py
+          git commit -m "chore(v216): remove release evidence patcher"
+      - name: Remove evidence workflow
+        run: |
+          git rm .github/workflows/v216-evidence-patch.yml
+          git commit -m "ci(v216): remove release evidence workflow"
+      - name: Push helper-free branch
+        run: git push origin HEAD:v2.16-final-stabilization-2026-08-15
