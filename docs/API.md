@@ -1,5 +1,10 @@
 # Public API
 
+
+## V2.14 public writing API
+
+`package:spellchecker/writing.dart` now exports `UnmatchedSquareBracketRule` with stable ID `unmatched-square-bracket`. The existing `WritingRule`, `WritingIssue`, `WritingAnalyzer`, bounded-result, diagnostic-summary, review-query, correction, preference, and Portable-settings contracts are unchanged. Analyzer-produced default English results can now include nine built-in rule IDs.
+
 ## V2.13 API note
 
 `package:spellchecker/writing.dart` now exports `UnmatchedParenthesisRule`, stable ID `unmatched-parenthesis`. The existing `WritingRule`, `WritingIssue`, `WritingAnalyzer`, `WritingAnalysisResult`, `WritingCorrection`, review-query, persistence, diagnostic-summary, and benchmark result formats are unchanged. The new rule returns warning findings with `replacement == null`, so callers must continue to treat automatic correction as optional.
