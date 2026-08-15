@@ -2,6 +2,90 @@
 
 This file is the detailed implementation ledger for SpellChecker releases. It complements `CHANGELOG.md`: the changelog is release-oriented, while this document records the engineering behavior, compatibility boundaries, validation evidence, and permanent file-level changes that define the release.
 
+## V2.14 — Unmatched Square Bracket Diagnostics
+
+Release version: `2.14.0+19`
+
+About version: `2.14.0`
+
+V2.14 expands the deterministic local writing catalogue from eight to nine built-in rules with a second deliberately advisory structural diagnostic. The production tree adds the public `UnmatchedSquareBracketRule`, registry/export integration, one-character UTF-16 source ownership, compatibility-preserving preference behavior, bounded/exact diagnostics, privacy-safe diagnostic-summary coverage, benchmark identity, review/editor integration, deep stress coverage, release identity, and synchronized documentation.
+
+### Production rule and public API
+
+- Adds `lib/writing/rules/unmatched_square_bracket_rule.dart`.
+- Stable ID: `unmatched-square-bracket`.
+- Public class: `UnmatchedSquareBracketRule` through `package:spellchecker/writing.dart`.
+- Eligibility: language code `en`, covering built-in `en-US` and `en-GB` packs.
+- Category: Mechanics through the source-compatible `WritingRule` default.
+- Severity: warning.
+- Default registry size moves from eight rules to nine.
+- `WritingRuleRegistry.byId('unmatched-square-bracket')` resolves the built-in rule.
+
+### Deterministic balancing and source ownership
+
+The rule performs an iterative left-to-right scan of literal `[` and `]` code units. Openings are retained on a stack. A closing bracket consumes the most recent unmatched opening when possible; otherwise the closing character is unmatched. Remaining openings are unmatched after the scan, and final findings are emitted in ascending source order.
+
+Every issue owns exactly one bracket character. `start` and `end` are UTF-16 offsets with `end == start + 1`, and `originalText` is `[` or `]`. A non-BMP regression verifies that `😀]` reports the closing bracket at UTF-16 offset 2. Nested square brackets are accepted; malformed ordering such as `]middle[` yields both findings in source order. Parentheses remain independent under the V2.13 rule, and curly braces are outside V2.14 ownership.
+
+The scanner is non-recursive. Stress regressions cover 5,000 balanced nesting levels and 5,000 unmatched openings.
+
+### Advisory-only correction boundary
+
+V2.14 does not guess an automatic edit. An unmatched square bracket may require inserting an opposite bracket, deleting the reported character, moving text, or rewriting a larger expression. The issue therefore leaves `replacement` null and `hasAutomaticFix` false.
+
+Writing insights keeps the finding reviewable under Mechanics, while **Automatic fixes only** removes it from the visible finding set. A document containing only this advisory finding does not expose **Apply all safe fixes**. `WritingCorrection.applyAll` skips the advisory issue, increments the skipped count, and can still apply independent deterministic fixes in the same batch.
+
+### Preference and Portable-settings compatibility
+
+The storage key family remains `spellchecker.writing_rule_ids.v1.<language>`, and Portable settings remains format version 1.
+
+- Unset rule preferences resolve to the current nine-rule default set.
+- **Reset rules to defaults** clears the stored override and therefore adopts all nine current defaults.
+- An explicit V2.13 eight-rule set remains exactly eight rules and does not silently gain `unmatched-square-bracket`.
+- Older explicit sets and explicit empty/disable-all behavior remain authoritative.
+- Portable settings round-trip an old explicit V2.13 eight-rule set unchanged and preserve `unmatched-square-bracket` when explicitly present in a V2.14 nine-rule set.
+
+### Bounded analysis, diagnostics, and benchmark integration
+
+The rule reuses the existing analyzer/result contracts without format changes. Exact-at-limit analysis remains complete; overflow retains the globally earliest source-ordered prefix while `totalIssueCount` and `totalIssueCountByRule` report exact totals. Privacy-safe diagnostic summaries add the new stable rule name/ID/count row but continue to exclude editor text, finding excerpts, messages, replacements, and offsets.
+
+The deterministic benchmark workload identity now has nine sorted rule IDs. Zero-finding benchmark samples materialize an explicit zero for `unmatched-square-bracket`; a focused controlled corpus asserts an exact count of one. Benchmark timings remain observational rather than correctness thresholds.
+
+### UI and regression hardening
+
+The ninth rule participates in the existing lazy Writing insights list, search, Mechanics category, automatic-fix filter, per-language rule switches, reset workflow, and preference persistence. The V2.14 widget suite verifies default-enabled behavior, advisory-only presentation, automatic-fix filtering, and explicit-disable persistence.
+
+Catalogue growth also removed the remaining fixed `-1400` findings-list drag from the core widget suite. Tests now build the exact safe-fix action they intend to use, avoiding historical pixel assumptions as the registry evolves.
+
+Permanent focused coverage includes:
+
+- `test/unmatched_square_bracket_rule_test.dart`
+- `test/v214_unmatched_square_bracket_integration_test.dart`
+- `test/v214_unmatched_square_bracket_widget_test.dart`
+- `test/v214_rule_preference_compatibility_widget_test.dart`
+- `test/v214_settings_transfer_rule_compatibility_test.dart`
+- `test/v214_writing_diagnostic_summary_test.dart`
+- `test/v214_bounded_square_bracket_analysis_test.dart`
+- `test/v214_square_bracket_stress_test.dart`
+- `test/v214_review_query_square_bracket_test.dart`
+- `test/v214_benchmark_square_bracket_test.dart`
+- `test/analysis_benchmark_runner_test.dart`
+- `test/writing_rules_test.dart`
+- `test/writing_widget_test.dart`
+- `test/v213_unmatched_parenthesis_integration_test.dart`
+- `test/v213_rule_preference_compatibility_widget_test.dart`
+- `test/widget_test.dart`
+
+### Deliberate parser limitation
+
+`UnmatchedSquareBracketRule` is a literal delimiter balancer, not a Markdown, programming-language, URL, citation, quotation, mathematical, or domain-specific parser. V2.14 does not suppress square brackets based on surrounding syntax. Syntax-aware exclusions require a future explicit parsing contract and corpus rather than heuristic mutation.
+
+### Release, privacy, dependency, and validation boundary
+
+Package identity advances to `2.14.0+19`; About identity advances to `2.14.0`. V2.14 adds no runtime dependency, new preference key, Portable-settings format change, network request, telemetry, account, cloud writing service, background upload, document persistence, hidden clipboard action, or correction-engine fork.
+
+Before release metadata synchronization, permanent CI run `31872367596` passed package-aware formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on the functional nine-rule implementation. The final release candidate must repeat those checks after release synchronization and also pass a release-mode web build plus version/export/registry/manifest/dependency/helper-residue assertions.
+
 ## V2.13 — Unmatched Parenthesis Diagnostics
 
 Release version: `2.13.0+18`
