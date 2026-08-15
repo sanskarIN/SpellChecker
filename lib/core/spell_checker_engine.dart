@@ -160,13 +160,15 @@ class SpellCheckerEngine {
     final parts = _splitRecognizedSuffix(normalized);
     final target = parts?.stem ?? normalized;
     final suffix = parts?.suffix ?? '';
-    final maxDistance = languagePack.maximumSuggestionDistance(target.length);
+    final targetRuneLength = target.runes.length;
+    final maxDistance = languagePack.maximumSuggestionDistance(targetRuneLength);
     final candidates = <SpellSuggestionCandidate>[];
 
     for (final candidate in _baseDictionary) {
       _addCandidate(
         candidates: candidates,
         target: target,
+        targetRuneLength: targetRuneLength,
         candidate: candidate,
         maxDistance: maxDistance,
         source: languagePack.suggestionSource,
@@ -180,6 +182,7 @@ class SpellCheckerEngine {
       _addCandidate(
         candidates: candidates,
         target: target,
+        targetRuneLength: targetRuneLength,
         candidate: candidate,
         maxDistance: maxDistance,
         source: 'personal dictionary (${languagePack.displayName})',
@@ -274,6 +277,7 @@ class SpellCheckerEngine {
   void _addCandidate({
     required List<SpellSuggestionCandidate> candidates,
     required String target,
+    required int targetRuneLength,
     required String candidate,
     required int maxDistance,
     required String source,
@@ -282,7 +286,8 @@ class SpellCheckerEngine {
       return;
     }
 
-    final lengthDifference = (candidate.length - target.length).abs();
+    final lengthDifference =
+        (candidate.runes.length - targetRuneLength).abs();
     if (lengthDifference > maxDistance) {
       return;
     }
@@ -292,7 +297,11 @@ class SpellCheckerEngine {
       return;
     }
 
-    final prefixPenalty = target.isNotEmpty && candidate.startsWith(target[0])
+    final targetRunes = target.runes;
+    final candidateRunes = candidate.runes;
+    final prefixPenalty = targetRunes.isNotEmpty &&
+            candidateRunes.isNotEmpty &&
+            targetRunes.first == candidateRunes.first
         ? 0
         : 1;
     candidates.add(
