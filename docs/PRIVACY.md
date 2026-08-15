@@ -1,5 +1,10 @@
 # Privacy
 
+
+## V2.14 privacy boundary
+
+Square-bracket analysis remains local and in memory. V2.14 adds no remote grammar request, telemetry, account, upload, cloud storage, background transfer, document persistence, or new preference payload. Privacy-safe diagnostic summaries may include `unmatched-square-bracket` and exact counts but exclude the editor text and finding excerpts that produced them.
+
 ## V2.13 privacy note
 
 Unmatched-parenthesis analysis is local and in memory. The rule adds no document storage, telemetry, network request, background upload, account behavior, or hidden clipboard operation. Privacy-safe diagnostic summaries may include the stable rule name/ID and counts, but continue to exclude editor text, finding excerpts, messages, replacements, and source offsets.
