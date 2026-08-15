@@ -1,0 +1,62 @@
+name: V2.12 package-aware formatter repair
+
+on:
+  push:
+    branches:
+      - v2.12-missing-punctuation-space-2026-08-15
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v212-package-aware-formatter-repair
+  cancel-in-progress: true
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out current branch head
+        uses: actions/checkout@v7
+        with:
+          ref: v2.12-missing-punctuation-space-2026-08-15
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve package language configuration
+        run: flutter pub get
+
+      - name: Apply canonical package-aware formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format lib test tool
+          dart format --output=none --set-exit-if-changed lib test tool
+          git diff --check
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git diff --quiet -- lib test tool; then
+            echo "Package-aware formatter changed:"
+            git diff --name-only -- lib test tool
+            git add lib test tool
+            git commit -m "style: apply package-aware Dart 3.13 formatting"
+          fi
+
+          git rm .github/workflows/v212-package-aware-format.yml
+          if git ls-files --error-unmatch .github/workflows/v212-format-command-diagnostic.yml >/dev/null 2>&1; then
+            git rm .github/workflows/v212-format-command-diagnostic.yml
+          fi
+          if git ls-files --error-unmatch v212_format_check_error.txt >/dev/null 2>&1; then
+            git rm v212_format_check_error.txt
+          fi
+          git commit -m "ci: remove V2.12 formatting diagnostics"
+          git push origin HEAD:v2.12-missing-punctuation-space-2026-08-15
