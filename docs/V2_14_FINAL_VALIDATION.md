@@ -2,7 +2,7 @@
 
 Release candidate: `2.14.0+19` / About `2.14.0`.
 
-This document records the final acceptance evidence for the SpellChecker V2.14 unmatched-square-bracket release after implementation, compatibility hardening, release synchronization, package-aware formatting, permanent CI, and independent release-mode web validation.
+This document records the final acceptance evidence for the SpellChecker V2.14 unmatched-square-bracket release after implementation, compatibility hardening, release synchronization, package-aware formatting, permanent CI, independent release-mode web validation, normal merge, and merged-main validation.
 
 ## Implemented candidate
 
@@ -38,38 +38,11 @@ Final formatter workflow run `31872582067` then validated the synchronized relea
 
 ## Permanent synchronized-candidate CI
 
-Permanent pull-request CI run `31872668004` validated the fully synchronized owner-authored V2.14 release candidate.
-
-Every permanent `.github/workflows/ci.yml` stage passed:
-
-```text
-dart format --output=none --set-exit-if-changed lib test tool
-flutter analyze
-flutter test --reporter expanded
-dart run tool/benchmark_large_document.dart \
-  --repeats=4 \
-  --warmup=0 \
-  --iterations=1 \
-  --spelling-limit=2 \
-  --writing-limit=5 \
-  --suggestions=0 \
-  --language=en-US \
-  --json
-```
-
-Results:
-
-- dependency resolution: passed;
-- canonical formatting: passed;
-- static analysis: passed;
-- complete Flutter test suite: passed;
-- deterministic benchmark smoke: passed.
+Permanent pull-request CI run `31872668004` validated the fully synchronized owner-authored V2.14 release candidate. Dependency resolution, canonical formatting, static analysis, the complete Flutter test suite, and deterministic benchmark smoke all passed.
 
 ## Independent release-mode evidence
 
 One-time release-gate run `31872872493` independently validated the V2.14 candidate successfully on August 15, 2026.
-
-The gate repeated the permanent checks and then executed the release-only build and repository assertions.
 
 Results:
 
@@ -98,16 +71,36 @@ Results:
 - superseded V2.14 working-scope document: absent;
 - unexpected V2.14 synchronizer, formatter, tool, or workflow helper residue: none found.
 
-The successful gate removed `.github/workflows/v214-release-gate.yml` and pushed cleanup commit `d408e0d923ee5f45ac625098d0cc75de6e60bbd5`. Therefore the permanent candidate does not retain the release-gate helper.
+The successful gate removed `.github/workflows/v214-release-gate.yml` and pushed cleanup commit `d408e0d923ee5f45ac625098d0cc75de6e60bbd5`.
 
-## Final evidence-head CI requirement
+## Final PR head and implementation merge evidence
 
-This documentation-only evidence commit changes the pull-request head after the successful release gate, so the exact new head must receive one final green permanent CI run. It changes no Dart source, test logic, dependency, package/About identity, web build input, persistence behavior, or runtime behavior.
+The release-gate evidence update produced exact final PR head `199e8f6c17a659c2eb5d7fd54a3fde9187f333df`. Permanent PR CI run `31873000788` passed canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on that exact head.
 
-The final permanent run must again pass formatting, static analysis, the complete Flutter test suite, and benchmark smoke before merge.
+PR #79 contained 60 branch commits and 45 permanent changed files at the merge boundary. The permanent diff was helper-free and contained only source, tests, release identity, documentation, web metadata, and `what_changed.md` changes.
 
-## Merge policy
+PR #79 was merged with a normal merge commit rather than squash or rebase so the full 60-commit granular implementation/release history remains reachable. The implementation merge commit is:
 
-PR #79 must remain mergeable and its permanent diff must remain free of disposable V2.14 helpers. The final implementation merge must use a normal merge commit rather than squash so the deliberately granular implementation, regression, release, documentation, validation, and cleanup history is preserved.
+`ae2e66669747b44b408297f663d500f86c254369`
 
-Only the exact final green candidate may be merged to `main`. After merge, the resulting `main` commit must receive its own successful permanent CI run. A documentation-only post-merge evidence follow-up must then record the actual PR head/commit count, implementation merge SHA, release-gate run, and merged-main CI in this document and `what_changed.md`; that follow-up must itself pass CI, merge normally, and leave a final green `main` before V2.14 is considered complete.
+The merge tree is `c859fdb14f1867b84773300fa6db1c8c8d205845`, identical to the already-green final PR tree.
+
+## Merged-main CI evidence
+
+Post-merge `main` CI run `31873077140` validated implementation merge `ae2e66669747b44b408297f663d500f86c254369`.
+
+Results:
+
+- dependency resolution: passed;
+- canonical formatting: passed;
+- `flutter analyze`: passed;
+- complete Flutter test suite: passed;
+- deterministic benchmark smoke: passed.
+
+The implementation merge therefore has independent release-mode evidence and a successful permanent default-branch CI run.
+
+## Final evidence follow-up boundary
+
+This post-merge evidence branch changes only `docs/V2_14_FINAL_VALIDATION.md` and `what_changed.md` in its permanent diff. It changes no Dart source, test logic, dependency, package/About identity, persistence format, web build input, or runtime behavior.
+
+The evidence pull request must pass permanent CI, merge normally, and leave its resulting `main` merge commit green before V2.14 is considered fully complete.

@@ -86,6 +86,19 @@ Package identity advances to `2.14.0+19`; About identity advances to `2.14.0`. V
 
 Before release metadata synchronization, permanent CI run `31872367596` passed package-aware formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on the functional nine-rule implementation. The final release candidate must repeat those checks after release synchronization and also pass a release-mode web build plus version/export/registry/manifest/dependency/helper-residue assertions.
 
+### Final V2.14 validation and merged-main evidence
+
+After release metadata and documentation synchronization, permanent synchronized-candidate CI run `31872668004` passed formatting, static analysis, the complete Flutter suite, and benchmark smoke on the V2.14 release tree.
+
+Independent release-gate run `31872872493` repeated those checks, built the production web application with `flutter build web --release`, passed `git diff --check`, and verified package/About identity, the public `UnmatchedSquareBracketRule` export, built-in registration, stable rule ID, exactly nine built-in constructors, focused V2.14 regression files, explicit V2.13 preference compatibility, `what_changed.md`, changelog/README/web-manifest metadata, unchanged direct runtime dependencies, generated web outputs, absence of the superseded working-scope document, and zero unexpected V2.14 helper residue. The one-time gate removed itself in cleanup commit `d408e0d923ee5f45ac625098d0cc75de6e60bbd5`.
+
+The release-gate evidence update received final green permanent PR CI run `31873000788` on exact PR head `199e8f6c17a659c2eb5d7fd54a3fde9187f333df`. PR #79 contained 60 branch commits and 45 permanent changed files and was merged with a normal merge commit, preserving that granular history. The V2.14 implementation merge commit is `ae2e66669747b44b408297f663d500f86c254369`.
+
+Post-merge `main` CI run `31873077140` passed dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on the implementation merge. The merge tree `c859fdb14f1867b84773300fa6db1c8c8d205845` is identical to the already-green final PR tree.
+
+A documentation-only post-merge evidence change records these now-known merge/main-CI identifiers in both the validation record and this engineering ledger. It changes no production source, test logic, dependency, release identity, persistence format, web build input, or runtime behavior; the evidence change is itself required to pass permanent CI before the repository's final V2.14 default-branch head is accepted.
+
+
 ## V2.13 — Unmatched Parenthesis Diagnostics
 
 Release version: `2.13.0+18`
