@@ -41,8 +41,29 @@ jobs:
               raise SystemExit(f'expected one heading guard, found {text.count(old)}')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
           PY
-          python3 tool/v212_release_sync.py
+
+          set +e
+          python3 tool/v212_release_sync.py >v212_sync_run.log 2>&1
+          status=$?
+          set -e
           git checkout -- tool/v212_release_sync.py
+
+          if [ "$status" -ne 0 ]; then
+            {
+              echo "V2.12 release synchronizer failed with exit code $status"
+              echo
+              cat v212_sync_run.log
+            } > v212_sync_error.txt
+            rm -f v212_sync_run.log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add v212_sync_error.txt
+            git commit -m "ci(release): capture V2.12 sync diagnostic"
+            git push origin HEAD:v2.12-missing-punctuation-space-2026-08-15
+            exit "$status"
+          fi
+
+          rm -f v212_sync_run.log v212_sync_error.txt
           git diff --check
 
       - name: Commit permanent surfaces independently
@@ -96,5 +117,8 @@ jobs:
         run: |
           set -euo pipefail
           git rm tool/v212_release_sync.py .github/workflows/v212-release-sync.yml
+          if git ls-files --error-unmatch v212_sync_error.txt >/dev/null 2>&1; then
+            git rm v212_sync_error.txt
+          fi
           git commit -m "ci(release): remove disposable V2.12 synchronizer"
           git push origin HEAD:v2.12-missing-punctuation-space-2026-08-15
