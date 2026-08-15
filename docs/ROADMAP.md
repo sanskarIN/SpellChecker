@@ -1,5 +1,8 @@
 # Roadmap
 
+## V2.15 — Unmatched Curly Brace Diagnostics — implemented
+V2.15 completes the next deterministic structural-rule increment: public advisory `unmatched-curly-brace`, a ten-rule default catalogue, exact one-character UTF-16 ownership, explicit V2.14 nine-rule preference compatibility, Portable-settings compatibility, bounded/private diagnostics, benchmark/stress coverage, and expansion-safe Writing insights widget regressions.
+
 The roadmap describes intended direction, not guaranteed delivery dates.
 
 
