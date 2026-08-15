@@ -717,7 +717,7 @@ class _SpellCheckerPageState extends State<SpellCheckerPage> {
     showAboutDialog(
       context: context,
       applicationName: 'SpellChecker',
-      applicationVersion: '2.11.0',
+      applicationVersion: '2.12.0',
       applicationLegalese: 'MIT License • Made by Sanskar',
       children: const <Widget>[
         SizedBox(height: 12),
