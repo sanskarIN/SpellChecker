@@ -6,6 +6,7 @@ import '../tool/benchmark/analysis_benchmark_scenario.dart';
 
 void main() {
   const expectedWritingRuleIds = <String>[
+    'missing-punctuation-space',
     'punctuation-spacing',
     'repeated-punctuation',
     'repeated-space',

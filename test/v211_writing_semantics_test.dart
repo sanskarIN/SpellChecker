@@ -7,6 +7,9 @@ import 'package:spellchecker/writing.dart';
 void main() {
   final analyzer = WritingAnalyzer();
   final enabledRuleIds = analyzer.rules.map((rule) => rule.id).toSet();
+  final supportedRuleCount = analyzer.rules
+      .where((rule) => rule.supports(SpellLanguageRegistry.englishUs))
+      .length;
 
   Future<void> scrollUntilBuilt(WidgetTester tester, Finder finder) async {
     final insightsList = find.descendant(
@@ -69,7 +72,10 @@ void main() {
     await scrollUntilBuilt(tester, ruleCountFinder);
     final ruleCount = tester.widget<Semantics>(ruleCountFinder);
     expect(ruleCount.properties.liveRegion, isTrue);
-    expect(ruleCount.properties.label, '6 visible rules of 6');
+    expect(
+      ruleCount.properties.label,
+      '$supportedRuleCount visible rules of $supportedRuleCount',
+    );
 
     final findingCountFinder = find.byKey(
       const ValueKey<String>('writing-findings-visible-count'),
@@ -109,7 +115,10 @@ void main() {
     );
     await scrollUntilBuilt(tester, ruleCountFinder);
     final ruleCount = tester.widget<Semantics>(ruleCountFinder);
-    expect(ruleCount.properties.label, '1 visible rules of 6');
+    expect(
+      ruleCount.properties.label,
+      '1 visible rules of $supportedRuleCount',
+    );
 
     final findingCountFinder = find.byKey(
       const ValueKey<String>('writing-findings-visible-count'),

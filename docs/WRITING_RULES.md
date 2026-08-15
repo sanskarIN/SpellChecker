@@ -70,6 +70,7 @@ repeated-word
 sentence-capitalization
 repeated-space
 punctuation-spacing
+missing-punctuation-space
 trailing-whitespace
 repeated-punctuation
 ```
@@ -370,6 +371,18 @@ Finds supported repeated identical punctuation runs and proposes one punctuation
 
 It does not attempt stylistic interpretation of every punctuation sequence.
 
+## V2.12 missing punctuation spacing
+
+`MissingPunctuationSpaceRule` is the seventh built-in rule and uses stable ID `missing-punctuation-space`. It supports language code `en`, so both built-in English packs are eligible.
+
+The rule detects selected punctuation (``,``, `;`, `!`, `?`) between Unicode letter boundaries when no following space exists. Its predecessor accepts a Unicode letter plus zero or more combining marks, which keeps decomposed accented text eligible. A lookahead checks the following Unicode letter without consuming it.
+
+The issue owns only the punctuation mark and proposes that punctuation plus one trailing space. Optional horizontal whitespace before the mark belongs to `punctuation-spacing`; this makes the two edits adjacent and lets the existing batch-correction algorithm apply both safely. Repeated punctuation, periods, colons, numeric-only boundaries, and symbol-only boundaries remain outside this rule's deterministic scope.
+
+Unset/reset rule preferences include this rule through the current registry defaults. Explicit saved rule sets remain explicit and are not automatically expanded during upgrade.
+
+Focused coverage lives in `test/missing_punctuation_space_rule_test.dart`, `test/missing_punctuation_space_unicode_test.dart`, and `test/v212_missing_punctuation_space_widget_test.dart`. See `docs/V2_12_MISSING_PUNCTUATION_SPACING.md` for the full release contract.
+
 ## Adding a new rule
 
 A new built-in rule should include all of the following:
@@ -503,6 +516,9 @@ Relevant test files include:
 test/writing_review_preset_test.dart
 test/writing_review_query_test.dart
 test/writing_rules_test.dart
+test/missing_punctuation_space_rule_test.dart
+test/missing_punctuation_space_unicode_test.dart
+test/v212_missing_punctuation_space_widget_test.dart
 test/writing_correction_test.dart
 test/writing_preferences_test.dart
 test/writing_widget_test.dart

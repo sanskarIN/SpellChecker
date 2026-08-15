@@ -1,5 +1,8 @@
 # Performance and large-document behavior
 
+## V2.12 benchmark note
+
+The deterministic benchmark's writing workload now contains seven analyzed built-in rule IDs, including `missing-punctuation-space`. Exact per-rule totals continue to include zero values for analyzed rules with no findings. The new regular expression is local/deterministic; benchmark timings remain machine/toolchain observations and are not correctness thresholds or a CPU-time/document-size security guarantee.
 SpellChecker is designed to keep spelling and deterministic writing analysis local. Performance work must preserve correctness, privacy, deterministic ordering, source-range safety, and the existing public compatibility contracts.
 
 ## V2.5 bounded spelling analysis

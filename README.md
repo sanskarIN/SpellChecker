@@ -20,6 +20,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Bounded Writing insights analysis with an explicit first-200 finding policy, exact observed/per-rule totals, captured/total diagnostics, and captured-only limited-review/fix semantics.
 - Deterministic privacy-safe V2.9 writing-analysis diagnostic summaries containing counts and rule metadata only.
 - Developer-run V2.10 deterministic large-document benchmark tooling with synthetic corpus generation, versioned JSON/human reports, and CI smoke coverage.
+- V2.12 missing-punctuation-space analysis with Unicode combining-mark boundaries, punctuation-only source ownership, safe batch composition, and a seven-rule default registry.
 - V2.11 keyboard-first Writing insights review with Ctrl/Command+F search focus, deterministic Escape filter clearing, and live rule/finding count semantics.
 - Optional local **Writing insights** with configurable deterministic rules.
 
@@ -30,7 +31,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - **Apply visible safe fixes (N)** when review filters are active.
 - **Reset rules to defaults** clears the selected language's stored override so future registry defaults can evolve.
 - Public `WritingRule` plugin contract and deterministic `WritingAnalyzer`.
-- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, trailing-whitespace, and repeated-punctuation rules.
+- Built-in repeated-word, sentence-capitalization, repeated-space, punctuation-spacing, missing-punctuation-space, trailing-whitespace, and repeated-punctuation rules.
 - **Apply all safe fixes** for non-overlapping current writing findings.
 - Stale-range-safe individual and batch writing corrections.
 - One-step undo for a complete writing-fix batch.
@@ -59,9 +60,19 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.11.0+16`
+`2.12.0+17`
 
-Version 2.11 is the **Keyboard-First Writing Insights Accessibility** release. It gives the existing local Writing insights dialog direct Ctrl/Command+F search focus, deterministic two-stage Escape behavior, live semantic rule/finding counts, release-mode validation of the dialog capture bound, and focused keyboard/semantics regressions. It also strengthens the V2.10 benchmark so exact per-rule totals explicitly contain every analyzed rule, including zero-count rules. No new persistence format, runtime dependency, telemetry, account behavior, or application network request is introduced.
+Version 2.12 is the **Missing Punctuation Spacing and Unicode Boundaries** release. It adds the seventh built-in writing rule, `missing-punctuation-space`, for deterministic missing-following-space fixes after commas, semicolons, exclamation marks, and question marks between Unicode letter boundaries. Decomposed combining-mark predecessors are supported, punctuation-only source ownership composes safely with the existing pre-punctuation spacing rule, and the benchmark/test/documentation contracts now describe the seven-rule workload. No new persistence format, runtime dependency, telemetry, account behavior, or application network request is introduced.
+
+## Missing punctuation spacing and Unicode boundaries — V2.12
+
+V2.12 adds `MissingPunctuationSpaceRule` (`missing-punctuation-space`) to the public writing-rule API and default registry. For both built-in English packs it detects `,`, `;`, `!`, and `?` between Unicode letter boundaries when the following horizontal whitespace is missing, and proposes a deterministic punctuation-plus-space replacement. Periods and colons stay outside this automatic scope.
+
+The predecessor boundary accepts a Unicode letter followed by zero or more combining marks, so decomposed text such as `cafe\u0301,naive` is handled without consuming the following word. The issue range owns only the punctuation mark. When whitespace also exists before the punctuation, `punctuation-spacing` owns that whitespace and `missing-punctuation-space` owns the adjacent punctuation mark, allowing `WritingCorrection.applyAll` to produce `Hello, world` from `Hello ,world` without overlapping edits.
+
+Users with an unset writing-rule preference receive the seven-rule default catalogue. Existing explicit per-language sets—including an explicit empty set—remain authoritative and are not silently expanded. **Reset rules to defaults** clears the override and therefore opts the language into the current seven-rule defaults.
+
+See [V2.12 missing punctuation spacing and Unicode boundaries](docs/V2_12_MISSING_PUNCTUATION_SPACING.md) and [Writing rules](docs/WRITING_RULES.md).
 
 ## Keyboard-first Writing insights accessibility — V2.11
 
@@ -166,6 +177,7 @@ The built-in rules cover:
 - Sentence-start capitalization.
 - Repeated interior horizontal spaces.
 - Horizontal whitespace before common punctuation.
+- Missing following whitespace after commas, semicolons, exclamation marks, and question marks between Unicode letter boundaries.
 - Trailing horizontal whitespace at line/document ends.
 - Repeated identical punctuation.
 
@@ -177,7 +189,7 @@ Writing insights now includes **Punctuation spacing** (`punctuation-spacing`) an
 
 `Repeated spaces` remains responsible for repeated interior spaces, but deliberately does not emit for a run immediately before common punctuation or at a line/document ending. Those ranges belong to the V2.6 specialized rules. This prevents two automatic rules from proposing incompatible fixes for the same characters while leaving the global V2.1 overlap policy unchanged.
 
-Users whose per-language rule preference is **unset/default** receive the expanded registry defaults. An explicit saved rule list—including an explicit empty list—remains authoritative and is not silently expanded. **Reset rules to defaults** clears the stored override and therefore opts that language back into the current six-rule defaults.
+Users whose per-language rule preference is **unset/default** receive the expanded registry defaults. An explicit saved rule list—including an explicit empty list—remains authoritative and is not silently expanded. **Reset rules to defaults** clears the stored override and therefore opted that language back into the then-current six-rule defaults in V2.6; V2.12 now resolves an unset/reset language to the seven-rule default catalogue.
 
 ### Review filters — V2.2
 

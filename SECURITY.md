@@ -1,5 +1,8 @@
 # Security Policy
 
+## V2.12 security note
+
+The new missing-punctuation rule is deterministic, source-controlled, local code. It deliberately excludes period/colon syntax, does not load remote rules or data, and uses the existing stale-source validation and conservative batch-overlap policy before mutation. V2.12 adds no new dependency, service, credential, network request, file parser, or dynamic plugin-loading path.
 ## Supported versions
 
 Security fixes are applied to the latest code on `main` and, when applicable, the newest tagged release.

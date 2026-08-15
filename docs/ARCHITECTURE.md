@@ -1,5 +1,8 @@
 # Architecture
 
+## V2.12 architecture note
+
+The deterministic local writing pipeline now has seven built-in rules. `missing-punctuation-space` runs through the existing `WritingRule` → `WritingAnalyzer` → `WritingIssue` → `WritingCorrection` path; it does not introduce a second parser, mutation engine, persistence layer, service, isolate, network path, or dependency. Its punctuation-only ownership is intentionally adjacent to the existing pre-punctuation spacing rule.
 ## Goals
 
 SpellChecker is designed around these goals:

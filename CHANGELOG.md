@@ -4,6 +4,34 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.12.0] - 2026-08-15
+
+### Added
+
+- New public `MissingPunctuationSpaceRule` with stable rule ID `missing-punctuation-space`, exported through `package:spellchecker/writing.dart` and enabled by default for both built-in English packs.
+- Deterministic automatic fixes for missing following whitespace after commas, semicolons, exclamation marks, and question marks when those punctuation marks sit between Unicode letter boundaries.
+- Dedicated baseline, decomposed-Unicode, non-BMP-offset, analyzer/registry, benchmark-workload, persistence, widget, batch-fix, and one-step-undo regressions for the seventh built-in writing rule.
+- A complete V2.12 behavior contract in `docs/V2_12_MISSING_PUNCTUATION_SPACING.md`.
+
+### Changed
+
+- The built-in writing-rule registry grows from six to seven rules, and unset/reset per-language preferences now resolve to the seven-rule default set.
+- Unicode predecessor matching accepts a letter followed by zero or more combining marks, preserving decomposed accented-letter boundaries without consuming the following word.
+- Deterministic benchmark workload metadata now includes `missing-punctuation-space`, including explicit zero totals when the rule has no findings.
+- Package version advances to `2.12.0+17`; About version advances to `2.12.0`.
+
+### Fixed
+
+- Missing-space analysis now works after decomposed Unicode letter clusters such as `cafe\u0301,naive` instead of treating the combining mark as a boundary failure.
+- Pre-punctuation cleanup and missing-following-space fixes remain adjacent and non-overlapping, allowing safe batch composition for inputs such as `Hello ,world`.
+
+### Compatibility, security, privacy, and validation
+
+- Existing writing-rule IDs, persistence keys, Portable settings format, language IDs, correction APIs, diagnostic-summary format, and benchmark JSON format remain compatible.
+- Period and colon boundaries are intentionally excluded from the new automatic rule to avoid claiming domains, versions, schemes, labels, times, and other syntax without a richer parser.
+- Findings remain local and in memory; V2.12 adds no runtime dependency, telemetry, account behavior, cloud writing service, document persistence, background upload, or application network request.
+- Final release validation requires canonical formatting, `flutter analyze`, the complete Flutter test suite, deterministic benchmark smoke, web release build, release-identity checks, and zero disposable V2.12 helper files in the permanent tree.
+
 ## [2.11.0] - 2026-08-14
 
 ### Added

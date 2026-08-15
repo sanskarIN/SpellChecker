@@ -2,6 +2,55 @@
 
 This file is the detailed implementation ledger for SpellChecker releases. It complements `CHANGELOG.md`: the changelog is release-oriented, while this document records the engineering behavior, compatibility boundaries, validation evidence, and permanent file-level changes that define the release.
 
+## V2.12 — Missing Punctuation Spacing & Unicode Boundary Completion
+
+Release version: `2.12.0+17`
+
+About version: `2.12.0`
+
+V2.12 completes the production work that an earlier experimental branch could not safely ship: the repository now contains the actual `MissingPunctuationSpaceRule`, public export, built-in registration, deterministic corrections, Unicode regressions, benchmark integration, user workflow coverage, release identity, and synchronized documentation in the same mergeable tree.
+
+### Production rule and public API
+
+- Adds `lib/writing/rules/missing_punctuation_space_rule.dart`.
+- Stable ID: `missing-punctuation-space`.
+- Public class: `MissingPunctuationSpaceRule` through `package:spellchecker/writing.dart`.
+- Eligibility: language code `en`, covering both built-in `en-US` and `en-GB` packs.
+- Default registry size moves from six rules to seven.
+- `WritingRuleRegistry.byId('missing-punctuation-space')` resolves the built-in rule.
+
+### Deterministic matching scope
+
+The rule owns a deliberately narrow automatic transformation: selected punctuation between Unicode letters when the following space is missing. Supported punctuation is `,`, `;`, `!`, and `?`. Periods and colons are excluded to avoid claiming common domains, versions, schemes, labels, times, and syntax that require richer parsing.
+
+The predecessor recognizes `Unicode letter + zero or more combining marks`. The following Unicode letter is checked with a lookahead and is not consumed. A combining mark without a preceding letter does not establish a boundary. Repeated punctuation does not create a competing missing-space finding.
+
+### Source ownership and correction composition
+
+Each new finding owns only its punctuation character and replaces it with the same punctuation plus one space. Horizontal whitespace before punctuation remains owned by `punctuation-spacing`.
+
+For `Hello ,world`, the existing rule owns the space and the V2.12 rule owns the comma. Their ranges are adjacent, not overlapping, so `WritingCorrection.applyAll` can safely produce `Hello, world` while retaining stale-range validation, deterministic overlap handling, end-to-start application, applied/skipped counts, and one-step editor undo.
+
+### Preference compatibility
+
+No storage key or transfer-format version changes. An unset/reset language now resolves to the current seven-rule default set. An explicit stored set—including an explicit empty set—remains authoritative and is not silently expanded.
+
+### Regression coverage
+
+- `test/missing_punctuation_space_rule_test.dart`: supported punctuation, exclusions, language eligibility, letter boundaries, repeated-punctuation ownership, and punctuation-only offsets.
+- `test/missing_punctuation_space_unicode_test.dart`: decomposed and multiple combining marks, adjacent pre-space composition, mark-alone rejection, period/colon exclusions, and non-BMP following-letter UTF-16 offsets.
+- `test/writing_rules_test.dart`: seven-rule registry/default/analyzer integration.
+- `test/analysis_benchmark_runner_test.dart`: seven-rule workload identity and exact zero totals.
+- `test/v212_missing_punctuation_space_widget_test.dart`: default-enabled rule switch, mixed batch correction, one-step undo, and explicit-disable persistence.
+
+### Release and compatibility boundary
+
+Package identity advances to `2.12.0+17`; About identity advances to `2.12.0`. V2.12 adds no runtime dependency, network call, telemetry, account, background upload, document persistence, new preference key, Portable settings format change, language auto-detection, or correction-engine fork.
+
+### Required final validation
+
+The exact permanent head must pass canonical Dart formatting, `flutter analyze`, the full Flutter test suite, deterministic benchmark smoke, release web build, version/documentation identity assertions, `git diff --check`, and a disposable-helper residue check before merge. The permanent tree must contain neither the formatter helper nor the guarded release-sync helper used during development.
+
 ## V2.7 — Bounded Writing Analysis & Large-Document Review Safety
 
 Release version: `2.7.0+12`
