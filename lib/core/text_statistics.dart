@@ -11,7 +11,7 @@ class TextStatistics {
 
   factory TextStatistics.fromText(String text) {
     final wordMatches = RegExp(
-      r"\p{L}+(?:['’\-‐‑]\p{L}+)*",
+      r"(?:\p{L}\p{M}*)+(?:['’\-‐‑](?:\p{L}\p{M}*)+)*",
       unicode: true,
     ).allMatches(text);
     final sentenceMatches = RegExp(r'[.!?]+(?:\s|$)').allMatches(text.trim());
