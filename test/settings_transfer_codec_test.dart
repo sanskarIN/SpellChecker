@@ -107,6 +107,25 @@ void main() {
       expect(decoded.writingRuleIdsFor('en-US'), <String>{'future.rule-2'});
     });
 
+    test('rejects duplicate rule IDs instead of silently deduplicating them', () {
+      const source = '''
+{
+  "format": "spellchecker-settings",
+  "version": 1,
+  "languageId": "en-US",
+  "suggestionLimit": 5,
+  "writingRuleOverrides": {
+    "en-US": ["repeated-space", "repeated-space"]
+  }
+}
+''';
+
+      expect(
+        () => SpellCheckerSettingsCodec.decode(source),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
     test('rejects malformed JSON and non-object documents', () {
       expect(
         () => SpellCheckerSettingsCodec.decode('{not-json'),
