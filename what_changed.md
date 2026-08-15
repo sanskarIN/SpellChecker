@@ -1,5 +1,104 @@
 # What Changed
 
+## V2.15 — Unmatched Curly Brace Diagnostics
+
+Release identity: package `2.15.0+20`; About `2.15.0`.
+
+### Production rule and public API
+- Added `lib/writing/rules/unmatched_curly_brace_rule.dart` with public `UnmatchedCurlyBraceRule`.
+- Stable rule ID is `unmatched-curly-brace`; display name is `Unmatched curly brace`.
+- Exported the rule through `package:spellchecker/writing.dart`.
+- Registered it as the tenth built-in/default rule in `WritingRuleRegistry` after the V2.14 square-bracket rule.
+- The rule supports language code `en`, so both built-in `en-US` and `en-GB` packs are eligible.
+
+### Deterministic scanner and source ownership
+- The implementation scans literal UTF-16 code-unit indexes iteratively from left to right.
+- `{` pushes its source index; `}` consumes the most recent available opening; a closing brace with an empty opening stack is unmatched immediately; openings remaining after the scan are unmatched.
+- Unmatched indexes are source-sorted before issue emission.
+- Every issue owns exactly one ASCII brace: `start` is the brace UTF-16 offset, `end == start + 1`, and `originalText` is `{` or `}`.
+- Non-BMP regression coverage verifies that the `}` in `😀}` begins at UTF-16 offset 2.
+- Parenthesis, square-bracket, and curly-brace rules are independent delimiter families and do not claim each other's characters.
+
+### Advisory-only correction boundary
+- Findings are warning-level with no replacement and `hasAutomaticFix == false`.
+- SpellChecker does not guess whether the correct edit is insertion, deletion, movement, or a larger rewrite.
+- **Automatic fixes only** excludes curly-brace findings.
+- A curly-brace-only document exposes no apply-all safe-fix action.
+- `WritingCorrection.applyAll` skips the advisory finding while applying independent deterministic fixes such as repeated-space corrections.
+
+### Catalogue and preference compatibility
+- The built-in/default writing catalogue expands from nine rules to ten.
+- Unset preferences continue to mean “follow current registry defaults,” now all ten supported rules.
+- **Reset rules to defaults** clears the explicit per-language override and therefore adopts the current ten-rule registry.
+- Explicit V2.14 nine-rule overrides remain exactly nine rules and do not silently gain `unmatched-curly-brace`.
+- Older explicit sets and explicit empty/disable-all sets remain authoritative.
+- Preference key family `spellchecker.writing_rule_ids.v1.<language>` is unchanged.
+
+### Portable settings compatibility
+- Portable settings format/version is unchanged.
+- A V2.14 explicit nine-rule override round-trips unchanged and excludes the V2.15 ID.
+- An explicit ten-rule V2.15 set round-trips with `unmatched-curly-brace` intact.
+- An unset override remains unset rather than being serialized as a frozen ten-rule list.
+
+### Bounded exact analysis
+- Curly-brace findings use the existing bounded `WritingAnalysisResult` model.
+- Exactly-at-limit results remain complete; truncation is true only when at least one additional finding exists.
+- `totalIssueCount` and `totalIssueCountByRule['unmatched-curly-brace']` remain exact even when retained findings are bounded.
+- Global bounded ordering still retains the earliest source-ordered findings across all enabled writing rules.
+
+### Privacy-safe diagnostics
+- `WritingAnalysisDiagnosticSummary` includes the stable curly-brace rule metadata and captured/total counts.
+- Focused regressions verify private surrounding editor phrases are not copied into diagnostic summaries.
+- No finding excerpt, replacement text, source document, telemetry payload, or network request was added.
+
+### Benchmark and stress coverage
+- Benchmark writing-rule identity now contains ten stable sorted IDs including `unmatched-curly-brace`.
+- Clean benchmark workloads materialize an explicit zero for the new rule.
+- A controlled benchmark corpus verifies captured count 1, exact total 1, per-rule total 1, and no truncation.
+- Iterative stress tests cover 5,000 balanced nesting levels and 5,000 unmatched opening braces without recursive scanning.
+
+### Writing insights and review integration
+- The rule participates in the existing Mechanics category, rule search, finding search, exact visible/captured/total semantics, rule switch, per-language persistence, reset-to-defaults, Portable settings, and advisory presentation.
+- Searching `curly brace` matches the rule/finding metadata.
+- **Automatic fixes only** truthfully hides the advisory finding.
+- Explicit disable of `unmatched-curly-brace` persists while other current defaults remain enabled.
+
+### Catalogue-expansion widget regression hardening
+- Adding the tenth rule exposed a historical widget-test assumption in `test/writing_widget_test.dart`, not a production editor failure.
+- The shared lazy-build helper received a larger bounded search budget for the taller Writing insights catalogue.
+- The actual blocker was an eager `find.text('Apply safe fix').first`: `.first` was evaluated while the lazy item had zero matches, so the test threw before scrolling could build it.
+- The regression now scrolls using the zero-or-more base finder and selects `.first` only after the target exists.
+- Historical V2.14 test titles were made expansion-safe while their exact saved nine-rule compatibility fixtures remain unchanged.
+
+### Focused permanent regression files
+- `test/unmatched_curly_brace_rule_test.dart`
+- `test/v215_unmatched_curly_brace_integration_test.dart`
+- `test/v215_bounded_curly_brace_analysis_test.dart`
+- `test/v215_writing_diagnostic_summary_test.dart`
+- `test/v215_curly_brace_stress_test.dart`
+- `test/v215_review_query_curly_brace_test.dart`
+- `test/v215_benchmark_curly_brace_test.dart`
+- `test/v215_settings_transfer_rule_compatibility_test.dart`
+- `test/v215_rule_preference_compatibility_widget_test.dart`
+- `test/v215_unmatched_curly_brace_widget_test.dart`
+- current catalogue coverage in `test/writing_rules_test.dart` and `test/analysis_benchmark_runner_test.dart`
+- expansion-safe historical V2.14 registry/preferences/settings regressions
+- shared lazy Writing insights finder regression in `test/writing_widget_test.dart`.
+
+### Deliberate parser limitation
+- `UnmatchedCurlyBraceRule` is a literal delimiter balancer, not a programming-language, template-language, Markdown, mathematics, URL, citation, quotation, or domain-specific parser.
+- V2.15 does not heuristically suppress braces inside code-like/template-like text. A future syntax-aware exclusion requires an explicit parser/ownership contract and corpus rather than guessed mutation.
+
+### Runtime, privacy, and format boundary
+- No runtime dependency was added; direct application dependencies remain Flutter and `shared_preferences`.
+- No new application-network behavior, cloud grammar service, telemetry, account flow, background upload, hidden clipboard action, or document persistence was added.
+- No preference-key family, Portable-settings format version, diagnostic-summary format version, or correction-engine fork was added.
+
+### Functional validation evidence
+- Permanent CI run `31876071657` passed package resolution, canonical Dart formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke on owner-authored V2.15 head `d82a8e68a0fce15601f8dfe3ae56a17580e41363`.
+- Earlier red runs were retained as engineering evidence: the first stopped at canonical formatting; later runs exposed and isolated the lazy `.first` widget-test bug described above. No release identity was stamped until the corrected ten-rule implementation passed the complete functional gate.
+
+
 This file is the detailed implementation ledger for SpellChecker releases. It complements `CHANGELOG.md`: the changelog is release-oriented, while this document records the engineering behavior, compatibility boundaries, validation evidence, and permanent file-level changes that define the release.
 
 ## V2.14 — Unmatched Square Bracket Diagnostics

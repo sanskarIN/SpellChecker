@@ -1,5 +1,8 @@
 # Public API
 
+## V2.15 API addition
+`package:spellchecker/writing.dart` now exports `UnmatchedCurlyBraceRule`. Its stable ID is `unmatched-curly-brace`; it is warning-level, supports English language code `en`, owns one brace source character, and exposes no automatic replacement.
+
 
 ## V2.14 public writing API
 

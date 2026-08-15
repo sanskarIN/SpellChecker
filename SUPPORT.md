@@ -1,5 +1,8 @@
 # Support
 
+## V2.15 support note
+`unmatched-curly-brace` is advisory-only. If a `{` or `}` warning appears, SpellChecker intentionally does not guess whether to insert, delete, move, or rewrite text. The rule can be disabled per language in Writing insights.
+
 
 ## V2.14 unmatched-square-bracket reports
 

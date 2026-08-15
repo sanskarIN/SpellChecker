@@ -5,8 +5,7 @@ import 'package:spellchecker/writing.dart';
 void main() {
   final pack = SpellLanguageRegistry.englishUs;
 
-  test('public registry exposes nine built-in writing rules', () {
-    expect(WritingRuleRegistry.builtIns, hasLength(9));
+  test('public registry retains the V2.14 square bracket rule', () {
     expect(
       WritingRuleRegistry.byId('unmatched-square-bracket'),
       isA<UnmatchedSquareBracketRule>(),
@@ -15,7 +14,10 @@ void main() {
       WritingRuleRegistry.defaultEnabledRuleIds,
       contains('unmatched-square-bracket'),
     );
-    expect(WritingRuleRegistry.defaultEnabledRuleIds, hasLength(9));
+    expect(
+      WritingRuleRegistry.builtIns.whereType<UnmatchedSquareBracketRule>(),
+      hasLength(1),
+    );
   });
 
   test('default analyzer includes unmatched square bracket findings', () {

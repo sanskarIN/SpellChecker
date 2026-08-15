@@ -4,6 +4,24 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.15.0] - 2026-08-15
+
+### Added
+- Added public advisory-only `UnmatchedCurlyBraceRule` with stable ID `unmatched-curly-brace` for deterministic literal `{` / `}` balancing in both built-in English packs.
+- Expanded the built-in/default writing-rule catalogue from nine rules to ten while preserving explicit V2.14 nine-rule overrides exactly.
+- Added focused source-ownership, non-BMP UTF-16 offset, malformed-order, bounded-total, diagnostic-privacy, review-filter, benchmark, Portable-settings, editor, and 5,000-level stress regressions.
+
+### Changed
+- Writing insights reset/unset preferences now resolve to the ten-rule registry; explicit historical overrides remain authoritative.
+- Benchmark workload identity and exact per-rule totals now include `unmatched-curly-brace`.
+- Hardened the shared Writing insights lazy-item test helper and deferred `.first` selection until the safe-fix action is actually built.
+- Advanced package identity to `2.15.0+20` and About identity to `2.15.0`.
+
+### Safety and compatibility
+- Unmatched curly braces are warning-level and advisory-only. They have no guessed replacement, are hidden by **Automatic fixes only**, and are skipped by batch correction while independent deterministic fixes still apply.
+- Parenthesis, square-bracket, and curly-brace diagnostics retain independent one-character source ownership.
+- Portable settings format/version, preference-key family, runtime dependencies, network behavior, telemetry, account behavior, and document persistence are unchanged.
+
 ## [2.14.0] - 2026-08-15
 
 ### Added

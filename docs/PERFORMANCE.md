@@ -1,5 +1,8 @@
 # Performance and large-document behavior
 
+## V2.15 benchmark catalogue
+Deterministic benchmark identity now includes ten stable writing-rule IDs, including `unmatched-curly-brace`. The new scanner is iterative and focused tests exercise 5,000 balanced and 5,000 unmatched braces; benchmark timings remain observational, not correctness thresholds.
+
 
 ## V2.14 square-bracket analysis cost
 

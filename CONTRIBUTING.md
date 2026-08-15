@@ -1,5 +1,8 @@
 # Contributing to SpellChecker
 
+## V2.15 writing-rule contribution baseline
+The current built-in catalogue has ten rules. New structural rules must define exact source ownership, demonstrate non-BMP offset behavior where relevant, preserve explicit historical overrides, and avoid guessed automatic replacements unless the edit is deterministic.
+
 
 ## V2.14 structural diagnostics contribution boundary
 

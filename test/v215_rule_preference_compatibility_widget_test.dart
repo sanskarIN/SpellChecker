@@ -6,7 +6,7 @@ import 'package:spellchecker/app.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const v213RuleIds = <String>[
+  const v214RuleIds = <String>[
     'missing-punctuation-space',
     'punctuation-spacing',
     'repeated-punctuation',
@@ -15,6 +15,7 @@ void main() {
     'sentence-capitalization',
     'trailing-whitespace',
     'unmatched-parenthesis',
+    'unmatched-square-bracket',
   ];
 
   Finder insightsList() => find.descendant(
@@ -30,7 +31,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final target = find.text(label);
-    for (var index = 0; index < 24 && target.evaluate().isEmpty; index++) {
+    for (var index = 0; index < 28 && target.evaluate().isEmpty; index++) {
       await tester.drag(list, const Offset(0, -180));
       await tester.pumpAndSettle();
     }
@@ -42,37 +43,37 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{
-      'spellchecker.writing_rule_ids.v1.en-US': v213RuleIds,
+      'spellchecker.writing_rule_ids.v1.en-US': v214RuleIds,
     });
   });
 
   testWidgets(
-    'explicit V2.13 eight-rule override does not auto-add V2.14 rule',
+    'explicit V2.14 nine-rule override does not auto-add V2.15 rule',
     (WidgetTester tester) async {
       await tester.pumpWidget(const SpellCheckerApp());
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
       await tester.pumpAndSettle();
 
-      await scrollToRule(tester, 'Unmatched parenthesis');
+      await scrollToRule(tester, 'Unmatched square bracket');
       final previousRule = find.widgetWithText(
         SwitchListTile,
-        'Unmatched parenthesis',
+        'Unmatched square bracket',
       );
       expect(previousRule, findsOneWidget);
       expect(tester.widget<SwitchListTile>(previousRule).value, isTrue);
 
-      await scrollToRule(tester, 'Unmatched square bracket');
+      await scrollToRule(tester, 'Unmatched curly brace');
       final newRule = find.widgetWithText(
         SwitchListTile,
-        'Unmatched square bracket',
+        'Unmatched curly brace',
       );
       expect(newRule, findsOneWidget);
       expect(tester.widget<SwitchListTile>(newRule).value, isFalse);
     },
   );
 
-  testWidgets('reset clears V2.13 override and adopts current defaults', (
+  testWidgets('reset clears V2.14 override and adopts ten-rule defaults', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const SpellCheckerApp());
@@ -80,10 +81,10 @@ void main() {
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
 
-    await scrollToRule(tester, 'Unmatched square bracket');
+    await scrollToRule(tester, 'Unmatched curly brace');
     final newRule = find.widgetWithText(
       SwitchListTile,
-      'Unmatched square bracket',
+      'Unmatched curly brace',
     );
     expect(tester.widget<SwitchListTile>(newRule).value, isFalse);
 
@@ -100,11 +101,11 @@ void main() {
 
     await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
     await tester.pumpAndSettle();
-    await scrollToRule(tester, 'Unmatched square bracket');
+    await scrollToRule(tester, 'Unmatched curly brace');
 
     final restored = find.widgetWithText(
       SwitchListTile,
-      'Unmatched square bracket',
+      'Unmatched curly brace',
     );
     expect(restored, findsOneWidget);
     expect(tester.widget<SwitchListTile>(restored).value, isTrue);

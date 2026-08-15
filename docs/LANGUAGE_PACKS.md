@@ -1,5 +1,8 @@
 # Language Packs
 
+## V2.15 language-pack behavior
+`UnmatchedCurlyBraceRule` declares supported language code `en`, so both built-in English (US) and English (UK) packs enable it by default when no explicit rule override exists. Explicit per-language historical overrides remain authoritative.
+
 
 ## V2.14 language eligibility
 

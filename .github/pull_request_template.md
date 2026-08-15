@@ -1,3 +1,8 @@
+# Pull Request Checklist
+
+## V2.15 review note
+For writing-rule catalogue changes, reviewers should verify deterministic source ownership, advisory-vs-automatic correction safety, explicit historical rule-set compatibility, bounded exact totals, privacy-safe diagnostics, and expansion-safe lazy Writing insights widget coverage.
+
 ## V2.14 structural-rule release checks
 
 When a change touches the current unmatched-square-bracket milestone, confirm that `unmatched-square-bracket` keeps one-character UTF-16 ownership, remains advisory-only, preserves explicit older rule overrides, participates in bounded/private diagnostics and benchmark identity, and does not add parser claims or automatic mutations without dedicated evidence.
