@@ -1,0 +1,41 @@
+name: V2.12 test-repair formatter
+
+on:
+  push:
+    branches:
+      - v2.12-missing-punctuation-space-2026-08-15
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v2.12-missing-punctuation-space-2026-08-15
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format repaired tests and clean helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format test/writing_rules_test.dart test/v211_writing_semantics_test.dart test/widget_test.dart
+          dart format --output=none --set-exit-if-changed test/writing_rules_test.dart test/v211_writing_semantics_test.dart test/widget_test.dart
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- test/writing_rules_test.dart test/v211_writing_semantics_test.dart test/widget_test.dart; then
+            git add test/writing_rules_test.dart test/v211_writing_semantics_test.dart test/widget_test.dart
+            git commit -m "style(test): format V2.12 regression repairs"
+          fi
+          git rm .github/workflows/v212-test-fix-format.yml
+          git commit -m "ci: remove V2.12 test-repair formatter"
+          git push origin HEAD:v2.12-missing-punctuation-space-2026-08-15
