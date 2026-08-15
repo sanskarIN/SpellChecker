@@ -1,5 +1,8 @@
 # User Guide
 
+## V2.15 unmatched curly braces
+Writing insights now includes **Unmatched curly brace** by default for the built-in English packs. It reports literal unpaired `{` or `}` characters but never edits them automatically. **Automatic fixes only** hides these advisory findings, while Reset rules to defaults adopts all ten current built-ins.
+
 
 ## V2.14 unmatched square bracket workflow
 
