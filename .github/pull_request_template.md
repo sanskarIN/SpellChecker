@@ -1,3 +1,12 @@
+## V2.14 structural-rule release checks
+
+When a change touches the current unmatched-square-bracket milestone, confirm that `unmatched-square-bracket` keeps one-character UTF-16 ownership, remains advisory-only, preserves explicit older rule overrides, participates in bounded/private diagnostics and benchmark identity, and does not add parser claims or automatic mutations without dedicated evidence.
+
+- [ ] The nine-rule registry/export identity is covered when the catalogue changes.
+- [ ] Advisory findings remain excluded by **Automatic fixes only** and skipped by batch correction.
+- [ ] Explicit V2.13 eight-rule preferences and Portable settings remain exact unless the user resets or explicitly opts in.
+- [ ] Release metadata, `what_changed.md`, web metadata, behavior docs, and final validation evidence are synchronized for `2.14.0+19`.
+
 ## What changed
 
 ## V2.12 writing-boundary reminder
