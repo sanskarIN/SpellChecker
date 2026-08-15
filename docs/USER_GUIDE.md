@@ -1,5 +1,9 @@
 # User Guide
 
+## V2.16 final stabilization
+Version 2.16 improves correctness without changing the core workflow. Unicode spelling handles decomposed accents more consistently, suggestions use Unicode-scalar distance, imported dictionaries/settings reject malformed metadata, storage failures are surfaced, and already-checked results refresh after saved preferences load. The ten Writing insights rules remain unchanged.
+
+
 ## V2.15 unmatched curly braces
 Writing insights now includes **Unmatched curly brace** by default for the built-in English packs. It reports literal unpaired `{` or `}` characters but never edits them automatically. **Automatic fixes only** hides these advisory findings, while Reset rules to defaults adopts all ten current built-ins.
 
