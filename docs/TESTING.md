@@ -1,5 +1,8 @@
 # Testing
 
+## V2.15 regression matrix
+V2.15 adds direct curly-brace scanner tests plus analyzer/batch, bounded totals, privacy diagnostics, benchmark, 5,000-level stress, review filters, explicit V2.14 preference compatibility, Portable settings, and editor widget coverage. The shared Writing insights safe-fix test now defers `.first` until the lazy action exists.
+
 
 ## V2.14 regression requirements
 
