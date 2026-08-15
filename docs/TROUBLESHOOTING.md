@@ -1,5 +1,8 @@
 # Troubleshooting
 
+## V2.12 troubleshooting note
+
+If **Missing punctuation space** is absent or disabled after upgrading, check whether that language already has an explicit saved writing-rule selection. V2.12 respects explicit lists instead of silently adding the new rule. Use **Reset rules to defaults** to clear the override and adopt the current seven-rule default catalogue. Period/colon cases and punctuation not bounded by letters are deliberate non-matches, not failed analysis.
 ## `flutter` command not found
 
 Install Flutter and ensure its `bin` directory is on `PATH`.
