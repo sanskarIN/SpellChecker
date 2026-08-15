@@ -26,6 +26,30 @@ void main() {
       expect(words, unorderedEquals(<String>['flutter', 'open-source']));
     });
 
+    test('keeps missing object version backward-compatible with legacy V1', () {
+      final document = PersonalDictionaryCodec.decodeDocument(
+        '{"words":["Flutter"]}',
+      );
+
+      expect(document.version, PersonalDictionaryCodec.legacyVersion);
+      expect(document.words, <String>{'flutter'});
+    });
+
+    test('rejects a present non-integer object version', () {
+      expect(
+        () => PersonalDictionaryCodec.decode(
+          '{"version":"1","words":["flutter"]}',
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => PersonalDictionaryCodec.decode(
+          '{"version":null,"words":["flutter"]}',
+        ),
+        throwsFormatException,
+      );
+    });
+
     test('imports a JSON array', () {
       final words = PersonalDictionaryCodec.decode('["Alpha", "Beta"]');
 
@@ -40,6 +64,10 @@ void main() {
 
     test('normalizes curly apostrophes', () {
       expect(PersonalDictionaryCodec.normalizeWord('Writer’s'), "writer's");
+    });
+
+    test('normalizes decomposed common Latin accents', () {
+      expect(PersonalDictionaryCodec.normalizeWord('Cafe\u0301'), 'café');
     });
 
     test('rejects malformed word entries', () {

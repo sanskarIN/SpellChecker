@@ -38,7 +38,10 @@ class DictionaryPreferences {
   Future<void> saveLanguageId(String languageId) async {
     final preferences = await _instance;
     final pack = SpellLanguageRegistry.byId(languageId);
-    await preferences.setString(_languageIdKey, pack.id);
+    await _requireSuccessfulWrite(
+      preferences.setString(_languageIdKey, pack.id),
+      'save the selected language',
+    );
   }
 
   Future<Set<String>> loadPersonalWords({String? languageId}) async {
@@ -51,8 +54,14 @@ class DictionaryPreferences {
       final legacy = preferences.getStringList(_legacyPersonalWordsKey);
       if (legacy != null) {
         final migrated = _normalizeWords(legacy, pack);
-        await preferences.setStringList(key, migrated);
-        await preferences.setStringList(_legacyPersonalWordsKey, migrated);
+        await _requireSuccessfulWrite(
+          preferences.setStringList(key, migrated),
+          'migrate personal dictionary words',
+        );
+        await _requireSuccessfulWrite(
+          preferences.setStringList(_legacyPersonalWordsKey, migrated),
+          'synchronize legacy personal dictionary words',
+        );
         stored = migrated;
       }
     }
@@ -68,9 +77,15 @@ class DictionaryPreferences {
     final pack = _packFor(languageId);
     final normalized = _normalizeWords(words, pack);
 
-    await preferences.setStringList(_personalWordsKey(pack.id), normalized);
+    await _requireSuccessfulWrite(
+      preferences.setStringList(_personalWordsKey(pack.id), normalized),
+      'save personal dictionary words for ${pack.id}',
+    );
     if (pack.id == SpellLanguageRegistry.defaultPack.id) {
-      await preferences.setStringList(_legacyPersonalWordsKey, normalized);
+      await _requireSuccessfulWrite(
+        preferences.setStringList(_legacyPersonalWordsKey, normalized),
+        'synchronize legacy personal dictionary words',
+      );
     }
   }
 
@@ -95,16 +110,22 @@ class DictionaryPreferences {
   }) async {
     final preferences = await _instance;
     final pack = _packFor(languageId);
-    await preferences.setStringList(
-      _writingRuleIdsKey(pack.id),
-      _normalizeRuleIds(ruleIds),
+    await _requireSuccessfulWrite(
+      preferences.setStringList(
+        _writingRuleIdsKey(pack.id),
+        _normalizeRuleIds(ruleIds),
+      ),
+      'save writing-rule choices for ${pack.id}',
     );
   }
 
   Future<void> clearWritingRuleIds({String? languageId}) async {
     final preferences = await _instance;
     final pack = _packFor(languageId);
-    await preferences.remove(_writingRuleIdsKey(pack.id));
+    await _requireSuccessfulWrite(
+      preferences.remove(_writingRuleIdsKey(pack.id)),
+      'clear writing-rule choices for ${pack.id}',
+    );
   }
 
   Future<int> loadSuggestionLimit() async {
@@ -114,18 +135,24 @@ class DictionaryPreferences {
 
   Future<void> saveSuggestionLimit(int value) async {
     final preferences = await _instance;
-    await preferences.setInt(
-      _suggestionLimitKey,
-      normalizeSuggestionLimit(value),
+    await _requireSuccessfulWrite(
+      preferences.setInt(_suggestionLimitKey, normalizeSuggestionLimit(value)),
+      'save the suggestion limit',
     );
   }
 
   Future<void> clearPersonalWords({String? languageId}) async {
     final preferences = await _instance;
     final pack = _packFor(languageId);
-    await preferences.remove(_personalWordsKey(pack.id));
+    await _requireSuccessfulWrite(
+      preferences.remove(_personalWordsKey(pack.id)),
+      'clear personal dictionary words for ${pack.id}',
+    );
     if (pack.id == SpellLanguageRegistry.defaultPack.id) {
-      await preferences.remove(_legacyPersonalWordsKey);
+      await _requireSuccessfulWrite(
+        preferences.remove(_legacyPersonalWordsKey),
+        'clear legacy personal dictionary words',
+      );
     }
   }
 
@@ -185,5 +212,14 @@ class DictionaryPreferences {
 
   static String _writingRuleIdsKey(String languageId) {
     return '$_writingRuleIdsKeyPrefix$languageId';
+  }
+
+  static Future<void> _requireSuccessfulWrite(
+    Future<bool> operation,
+    String action,
+  ) async {
+    if (!await operation) {
+      throw StateError('Local preference storage failed to $action.');
+    }
   }
 }

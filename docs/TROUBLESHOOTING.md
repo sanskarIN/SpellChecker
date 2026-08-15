@@ -1,5 +1,9 @@
 # Troubleshooting
 
+## V2.16 final stabilization
+If saved preferences fail, V2.16 now reports storage unavailability instead of assuming success. If Unicode spelling differs, compare precomposed and decomposed input and record the selected language. During startup, Writing Insights and Ignore-once may report that preferences are still loading; retry after restoration finishes rather than treating temporary defaults as durable state.
+
+
 ## V2.15 unmatched curly-brace findings
 An unmatched `{` or `}` warning is advisory. SpellChecker does not know whether your intended correction is to add the opposite brace, remove the current brace, move text, or rewrite a larger expression. Disable `Unmatched curly brace` in Writing insights when literal brace balancing is not useful for the selected language/workflow.
 

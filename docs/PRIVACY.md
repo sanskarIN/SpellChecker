@@ -1,5 +1,9 @@
 # Privacy
 
+## V2.16 final stabilization
+All V2.16 fixes remain local. Decomposed-Unicode normalization, edit distance, import validation, preference restoration, diagnostics, and corrections execute on-device/in-process. No editor text, personal vocabulary, settings document, or diagnostic excerpt is transmitted to a spelling or grammar service.
+
+
 ## V2.15 privacy boundary
 Curly-brace analysis is local and deterministic. Diagnostic summaries may include stable rule metadata and counts but not private editor excerpts. V2.15 adds no telemetry, application-network request, cloud writing service, account flow, or background document upload.
 

@@ -22,6 +22,16 @@ void main() {
     expect(statistics.sentences, 1);
   });
 
+  test('TextStatistics keeps decomposed combining-mark words intact', () {
+    const text = 'Cafe\u0301 nai\u0308ve re\u0301sume\u0301.';
+
+    final statistics = TextStatistics.fromText(text);
+
+    expect(statistics.characters, text.length);
+    expect(statistics.words, 3);
+    expect(statistics.sentences, 1);
+  });
+
   test('TextStatistics returns zero sentences for blank text', () {
     final statistics = TextStatistics.fromText('   ');
 

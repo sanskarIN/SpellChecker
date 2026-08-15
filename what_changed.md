@@ -1,5 +1,79 @@
 # What Changed
 
+## V2.16 — Final Stabilization and Bug Audit
+
+Release identity: package `2.16.0+21`; About `2.16.0`.
+
+V2.16 is the final planned implementation milestone. It keeps the ten-rule Writing insights catalogue unchanged and focuses on repository-wide correctness, durability, Unicode, startup-state, import-validation, and test-determinism defects. The release fixes every reproducible defect found during this final audit; it does not claim that no future defect can ever exist.
+
+### Unicode scalar and edit-distance correctness
+- `damerauLevenshteinDistance` now operates on Unicode scalar values instead of UTF-16 code units.
+- The implementation now uses unrestricted Damerau-Levenshtein distance rather than the restricted optimal-string-alignment recurrence; `CA` → `ABC` is locked at distance 2.
+- Astral insertion, deletion, substitution, transposition, and interacting-edit regressions protect scalar behavior.
+- Suggestion maximum-distance selection, candidate length filtering, and prefix comparison now use the same scalar model.
+
+### Decomposed Unicode word handling
+- English tokenization treats a Unicode letter plus following combining marks as one word cluster.
+- Common decomposed Latin accent sequences represented by bundled English loanwords are deterministically composed without a new dependency.
+- Precomposed/decomposed forms such as café, façade, jalapeño, naïve, and résumé resolve consistently.
+- Text statistics uses the same combining-mark word boundary while preserving the historical UTF-16 character-count contract.
+
+### Strict local data validation
+- A present non-integer personal-dictionary `version` is rejected instead of being silently treated as legacy V1; a genuinely omitted version remains backward-compatible.
+- Portable Settings rejects duplicate writing-rule IDs instead of silently collapsing them into a set.
+- Portable Settings remains format version 1 and remains document/vocabulary-free.
+
+### Truthful local persistence
+- Every language, personal-word, writing-rule, suggestion-limit, removal, and legacy-migration preference write checks the `SharedPreferences` boolean result.
+- A platform-reported failed write/remove now throws, allowing existing UI/service error paths to report storage unavailability rather than claiming success.
+
+### Startup-state synchronization
+- If spelling was checked before preferences finished restoring, successful restoration now reruns that check under the saved language, personal dictionary, rule choices, and suggestion limit.
+- Writing Insights refuses to mutate rule state while restoration is pending and reports the shared loading status.
+- Ignore-once likewise refuses to mutate the temporary startup engine, preventing ignored session words from disappearing when the restored engine replaces it.
+
+### Unicode-safe correction casing
+- `TextCorrection.matchCase` no longer indexes surrogate halves.
+- Upper/title-case preservation operates on complete scalars and requires actual cased characters, preventing astral lowercase or uncased scripts from being misclassified as uppercase.
+
+### Final test nondeterminism removed
+- Full-suite diagnostics found that the new startup Ignore regression sometimes tapped an off-screen lazy control; it now uses `ensureVisible` before activation.
+- A second diagnostic found `pumpAndSettle()` could time out because the test intentionally left preference restoration pending; the regression now pumps one bounded frame instead.
+- The accepted helper-free functional CI therefore validates the deterministic version of the regression, not a lucky rerun.
+
+### Audited stable contracts intentionally unchanged
+- The built-in Writing insights catalogue remains ten rules; explicit historical rule overrides remain authoritative.
+- Writing-analysis zero-count maps remain sparse while diagnostic summaries reconstruct analyzed zero rows.
+- Personal-dictionary missing-version legacy V1 compatibility remains supported.
+- Editor source ranges remain UTF-16 offsets even though similarity algorithms use Unicode scalars.
+- Direct runtime dependencies remain Flutter and `shared_preferences`.
+
+### Permanent regression coverage
+- `test/edit_distance_test.dart`
+- `test/spell_checker_test.dart`
+- `test/language_pack_test.dart`
+- `test/text_statistics_test.dart`
+- `test/personal_dictionary_codec_test.dart`
+- `test/settings_transfer_codec_test.dart`
+- `test/dictionary_preferences_test.dart`
+- `test/text_correction_test.dart`
+- `test/v216_startup_preference_sync_widget_test.dart`
+- `test/widget_test.dart` release-identity coverage.
+
+### Privacy, runtime, and release boundary
+- No telemetry, account system, cloud grammar/spelling service, document upload, hidden clipboard behavior, new application-network request, preference-key family, Portable Settings version, or runtime dependency was added.
+- Package identity advances to `2.16.0+21`; About identity advances to `2.16.0` only after the functional bug-fix candidate passed permanent CI.
+- Permanent functional CI run `31879869993` passed formatting, static analysis, the complete Flutter suite, and benchmark smoke on helper-free head `33f3ee4577f69d260ddea9cc88fa3895e567a7a4`.
+- Final release-mode build, synchronized-candidate CI, implementation merge/main CI, and documentation-only post-merge evidence are recorded in `docs/V2_16_FINAL_VALIDATION.md` as they become concrete.
+
+
+### Release synchronization, formatting, and repository hygiene
+- Guarded release synchronization run `31880102715` updated About source, changelog/README, maintained contributor/security/support/docs surfaces, web metadata, `docs/V2_16_BUG_AUDIT.md`, `what_changed.md`, and `docs/V2_16_FINAL_VALIDATION.md` as separate permanent commits, then removed the temporary working scope, synchronizer, and workflow before pushing.
+- Final package-aware formatter run `31880158636` resolved Flutter dependencies, applied canonical formatting, committed only genuine formatter drift, verified an immediate clean second pass and no tracked Dart drift, removed itself, and pushed helper-free formatted head `99f493bf98f6c8fed18c757154b72c1454b0561f`.
+- Obsolete historical PR #38 (V2.3 execution-only gate) and superseded PR #71 (older missing-punctuation-space feature branch) were explicitly documented as completed/superseded and closed without merge. The final active implementation path remains PR #83.
+- No V2.16 diagnostic, patch, synchronizer, formatter, or working-scope helper is intended to remain in the permanent candidate.
+
+
 ## V2.15 — Unmatched Curly Brace Diagnostics
 
 Release identity: package `2.15.0+20`; About `2.15.0`.

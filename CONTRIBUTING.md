@@ -1,5 +1,9 @@
 # Contributing to SpellChecker
 
+## V2.16 final stabilization
+The final stabilization baseline requires regression-first fixes. Unicode-sensitive code must define whether offsets are UTF-16 or Unicode scalars, imported formats must fail closed on malformed metadata, persistence operations must surface platform failures, and widget tests must not depend on off-screen hit tests or settling intentionally pending futures.
+
+
 ## V2.15 writing-rule contribution baseline
 The current built-in catalogue has ten rules. New structural rules must define exact source ownership, demonstrate non-BMP offset behavior where relevant, preserve explicit historical overrides, and avoid guessed automatic replacements unless the edit is deterministic.
 

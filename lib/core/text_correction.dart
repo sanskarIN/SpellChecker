@@ -92,15 +92,36 @@ class TextCorrection {
       return suggestion;
     }
 
-    if (original == original.toUpperCase()) {
+    if (_containsCasedScalar(original) && original == original.toUpperCase()) {
       return suggestion.toUpperCase();
     }
 
-    if (original[0] == original[0].toUpperCase()) {
-      return '${suggestion[0].toUpperCase()}${suggestion.substring(1)}';
+    final originalFirst = _firstScalar(original);
+    if (_isCasedScalar(originalFirst) &&
+        originalFirst == originalFirst.toUpperCase()) {
+      final suggestionFirst = _firstScalar(suggestion);
+      return '${suggestionFirst.toUpperCase()}'
+          '${suggestion.substring(suggestionFirst.length)}';
     }
 
     return suggestion;
+  }
+
+  static String _firstScalar(String value) {
+    return String.fromCharCode(value.runes.first);
+  }
+
+  static bool _containsCasedScalar(String value) {
+    for (final rune in value.runes) {
+      if (_isCasedScalar(String.fromCharCode(rune))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static bool _isCasedScalar(String scalar) {
+    return scalar.toUpperCase() != scalar.toLowerCase();
   }
 
   static bool _isCurrentIssue(String text, SpellIssue issue) {

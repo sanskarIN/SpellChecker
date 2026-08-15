@@ -1,5 +1,9 @@
 # Writing Rules
 
+## V2.16 final stabilization
+The built-in/default writing catalogue remains exactly ten rules. V2.16 is a stabilization release, not a catalogue migration: existing explicit rule sets remain authoritative, unset/reset preferences continue to resolve to the current ten-rule registry, and Portable Settings remains format version 1.
+
+
 ## V2.15 current catalogue
 The current built-in/default catalogue contains ten stable rule IDs:
 

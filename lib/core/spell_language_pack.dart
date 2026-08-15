@@ -67,12 +67,12 @@ class SpellLanguageRegistry {
   const SpellLanguageRegistry._();
 
   static final RegExp _unicodeTokenPattern = RegExp(
-    r"\p{L}+(?:['’\-‐‑]\p{L}+)*",
+    r"(?:\p{L}\p{M}*)+(?:['’\-‐‑](?:\p{L}\p{M}*)+)*",
     unicode: true,
   );
 
   static final RegExp _unicodeValidWordPattern = RegExp(
-    r"^\p{L}+(?:['\-]\p{L}+)*$",
+    r"^(?:\p{L}\p{M}*)+(?:['\-](?:\p{L}\p{M}*)+)*$",
     unicode: true,
   );
 
@@ -185,13 +185,47 @@ class SpellLanguageRegistry {
   }
 
   static String _normalizeEnglishWord(String word) {
-    return word
+    var normalized = word
         .trim()
         .toLowerCase()
         .replaceAll('’', "'")
         .replaceAll('‐', '-')
         .replaceAll('‑', '-');
+    for (final entry in _commonLatinCompositions.entries) {
+      normalized = normalized.replaceAll(entry.key, entry.value);
+    }
+    return normalized;
   }
+
+  static const Map<String, String> _commonLatinCompositions = <String, String>{
+    'a\u0300': 'à',
+    'a\u0301': 'á',
+    'a\u0302': 'â',
+    'a\u0303': 'ã',
+    'a\u0308': 'ä',
+    'a\u030a': 'å',
+    'c\u0327': 'ç',
+    'e\u0300': 'è',
+    'e\u0301': 'é',
+    'e\u0302': 'ê',
+    'e\u0308': 'ë',
+    'i\u0300': 'ì',
+    'i\u0301': 'í',
+    'i\u0302': 'î',
+    'i\u0308': 'ï',
+    'n\u0303': 'ñ',
+    'o\u0300': 'ò',
+    'o\u0301': 'ó',
+    'o\u0302': 'ô',
+    'o\u0303': 'õ',
+    'o\u0308': 'ö',
+    'u\u0300': 'ù',
+    'u\u0301': 'ú',
+    'u\u0302': 'û',
+    'u\u0308': 'ü',
+    'y\u0301': 'ý',
+    'y\u0308': 'ÿ',
+  };
 
   static const List<String> _englishSuffixes = <String>[
     "n't",

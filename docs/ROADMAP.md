@@ -1,5 +1,9 @@
 # Roadmap
 
+## V2.16 final stabilization
+V2.16 closes the planned project implementation sequence with a repository-wide bug/error audit rather than another catalogue expansion. The milestone fixes all reproducible defects found in that audit and leaves future ideas—additional language packs, rule/plugin work, or publication automation—as optional follow-up directions rather than unfinished V2.16 requirements.
+
+
 ## V2.15 — Unmatched Curly Brace Diagnostics — implemented
 V2.15 completes the next deterministic structural-rule increment: public advisory `unmatched-curly-brace`, a ten-rule default catalogue, exact one-character UTF-16 ownership, explicit V2.14 nine-rule preference compatibility, Portable-settings compatibility, bounded/private diagnostics, benchmark/stress coverage, and expansion-safe Writing insights widget regressions.
 

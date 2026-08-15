@@ -20,6 +20,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 - Bounded Writing insights analysis with an explicit first-200 finding policy, exact observed/per-rule totals, captured/total diagnostics, and captured-only limited-review/fix semantics.
 - Deterministic privacy-safe V2.9 writing-analysis diagnostic summaries containing counts and rule metadata only.
 - Developer-run V2.10 deterministic large-document benchmark tooling with synthetic corpus generation, versioned JSON/human reports, and CI smoke coverage.
+- V2.16 final stabilization fixes Unicode-scalar distance/casing, decomposed-word handling, strict imports, storage-failure reporting, and startup-state races while retaining the ten-rule registry.
 - V2.15 advisory unmatched-curly-brace diagnostics with nested literal balancing, single-character UTF-16 ownership, explicit V2.14 preference compatibility, and a ten-rule default registry.
 - V2.14 advisory unmatched-square-bracket diagnostics with nested literal balancing, single-character UTF-16 ownership, explicit V2.13 preference compatibility, and its historical nine-rule default registry.
 - V2.13 advisory unmatched-parenthesis diagnostics with nested literal balancing, single-character source ownership, explicit V2.12 preference compatibility, and its historical eight-rule default registry.
@@ -63,9 +64,11 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and writin
 
 ## Current release
 
-`2.15.0+20`
+`2.16.0+21`
 
-Version 2.15 is the **Unmatched Curly Brace Diagnostics** release. It adds the tenth built-in writing rule, `unmatched-curly-brace`, for deterministic local reporting of literal `{` and `}` characters that cannot be paired. The rule is warning-level and advisory-only: it does not guess whether an unmatched brace should be inserted, deleted, moved, or rewritten. Unset/reset rule preferences adopt the ten-rule registry while explicit V2.14 nine-rule choices remain exact. No persistence-format, runtime-dependency, telemetry, account, or application-network expansion is introduced.
+Version 2.16 is the **Final Stabilization and Bug Audit** release. It fixes every reproducible defect found during the final repository-wide audit: Unicode-scalar and unrestricted Damerau-Levenshtein correctness, scalar-consistent suggestion eligibility, decomposed combining-mark tokenization/normalization/statistics, strict import metadata, truthful local persistence failure reporting, startup preference/result/session synchronization, Unicode-safe case-preserving correction, and deterministic startup widget regressions. The built-in writing-rule catalogue remains ten rules. Portable Settings remains format version 1, direct runtime dependencies remain Flutter and `shared_preferences`, and no telemetry, account, cloud-writing, document-upload, or new application-network behavior is introduced.
+
+See [V2.16 final bug audit](docs/V2_16_BUG_AUDIT.md) and [V2.16 final validation](docs/V2_16_FINAL_VALIDATION.md).
 
 ## Unmatched curly brace diagnostics — V2.15
 

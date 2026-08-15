@@ -1,5 +1,9 @@
 # Security Policy
 
+## V2.16 final stabilization
+V2.16 strengthens fail-closed local import parsing and persistence error reporting. It adds no network service, telemetry, account system, document upload, or new runtime dependency. Security reports should continue to distinguish malformed local data handling from remote attack surfaces the application does not expose.
+
+
 ## V2.15 local-analysis boundary
 Unmatched curly-brace diagnostics are computed locally from in-memory editor text. V2.15 adds no network request, telemetry, account behavior, background upload, cloud grammar service, or document persistence.
 

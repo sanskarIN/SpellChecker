@@ -1,5 +1,9 @@
 # Testing
 
+## V2.16 final stabilization
+Permanent regressions cover unrestricted/scalar edit distance, scalar suggestion eligibility, decomposed Unicode tokenization/statistics, strict dictionary/settings parsing, failed preference writes, startup result/session synchronization, Unicode-safe case correction, and deterministic lazy widget activation. The complete suite—not focused tests alone—is a release gate.
+
+
 ## V2.15 regression matrix
 V2.15 adds direct curly-brace scanner tests plus analyzer/batch, bounded totals, privacy diagnostics, benchmark, 5,000-level stress, review filters, explicit V2.14 preference compatibility, Portable settings, and editor widget coverage. The shared Writing insights safe-fix test now defers `.first` until the lazy action exists.
 

@@ -1,5 +1,9 @@
 # Development Guide
 
+## V2.16 final stabilization
+Before proposing a bug fix, reproduce it with the narrowest regression first. Run `flutter pub get`, canonical `dart format`, `flutter analyze`, the complete Flutter suite, and benchmark smoke. Unicode work must include non-BMP or decomposed-sequence coverage when relevant; asynchronous widget tests must not use `pumpAndSettle()` while deliberately leaving a future unresolved.
+
+
 ## V2.15 development baseline
 When changing the ten-rule catalogue, run canonical formatting after dependency resolution, `flutter analyze`, the complete Flutter suite, and benchmark smoke. Structural-rule changes should also run focused source-ownership, bounded-total, preference/Portable-settings, widget, privacy, and stress regressions.
 

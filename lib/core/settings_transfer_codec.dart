@@ -137,7 +137,12 @@ class SpellCheckerSettingsCodec {
           );
         }
         _validateRuleId(value);
-        ruleIds.add(value);
+        if (!ruleIds.add(value)) {
+          throw FormatException(
+            'writingRuleOverrides.${entry.key} contains duplicate rule ID: '
+            '$value.',
+          );
+        }
       }
       overrides[entry.key] = ruleIds;
     }

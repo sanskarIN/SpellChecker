@@ -4,6 +4,27 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [2.16.0] - 2026-08-15
+
+### Fixed
+- Corrected public Damerau-Levenshtein distance to operate on Unicode scalars and to implement the unrestricted algorithm rather than the restricted optimal-string-alignment recurrence.
+- Aligned suggestion-distance thresholds, candidate length filtering, and prefix comparison with Unicode-scalar semantics.
+- Kept decomposed combining-mark word clusters intact in spelling tokenization and text statistics, and canonically composed common Latin accent sequences used by bundled English vocabulary.
+- Rejected malformed personal-dictionary version types and duplicate Portable Settings writing-rule IDs instead of silently interpreting or deduplicating them.
+- Propagated failed local preference writes/removals so persistence errors cannot be reported as successful.
+- Refreshed already-checked spelling results after saved preferences restore, and guarded Writing Insights and Ignore-once session mutations until restoration completes.
+- Made case-preserving spelling corrections Unicode-scalar-safe and avoided treating uncased scripts as uppercase text.
+- Removed nondeterminism from the final startup regression by bringing the lazy Ignore action into view and avoiding `pumpAndSettle()` while startup is intentionally unresolved.
+
+### Changed
+- Advanced package identity to `2.16.0+21` and About identity to `2.16.0`.
+- Added final repository-wide bug-audit and release-validation documentation without expanding the ten-rule writing catalogue.
+
+### Compatibility, privacy, and dependency boundary
+- Portable Settings remains format version 1; personal-dictionary legacy V1 missing-version compatibility remains supported.
+- The built-in writing-rule catalogue remains ten rules and existing explicit rule preferences remain authoritative.
+- Direct runtime dependencies remain Flutter and `shared_preferences`; no telemetry, account system, cloud writing service, document upload, or new application-network behavior was added.
+
 ## [2.15.0] - 2026-08-15
 
 ### Added
