@@ -1,4 +1,5 @@
 import '../core/spell_language_pack.dart';
+import 'rules/missing_punctuation_space_rule.dart';
 import 'rules/punctuation_spacing_rule.dart';
 import 'rules/repeated_punctuation_rule.dart';
 import 'rules/repeated_space_rule.dart';
@@ -294,6 +295,7 @@ class WritingRuleRegistry {
     SentenceCapitalizationRule(),
     RepeatedSpaceRule(),
     PunctuationSpacingRule(),
+    MissingPunctuationSpaceRule(),
     TrailingWhitespaceRule(),
     RepeatedPunctuationRule(),
   ];
