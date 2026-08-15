@@ -1,5 +1,8 @@
 # Testing
 
+## V2.12 testing note
+
+V2.12 adds `missing_punctuation_space_rule_test.dart`, `missing_punctuation_space_unicode_test.dart`, and `v212_missing_punctuation_space_widget_test.dart`, and updates registry/benchmark regressions for the seven-rule workload. Coverage includes decomposed combining marks, multiple marks, a non-BMP following letter, adjacent batch composition, default enablement, explicit-disable persistence, and one-step undo. Release acceptance still requires the entire `flutter test` suite.
 ## Test strategy
 
 SpellChecker uses layered deterministic tests so core algorithms, local persistence, rendering state, and full editor workflows can be validated independently.
