@@ -1,0 +1,103 @@
+name: V2.15 guarded release synchronization
+
+on:
+  push:
+    branches: [v2.15-unmatched-curly-brace-2026-08-15]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out V2.15 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.15-unmatched-curly-brace-2026-08-15
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Normalize guarded sync assumptions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          template = Path('.github/pull_request_template.md')
+          text = template.read_text()
+          if text.startswith('# '):
+              raise SystemExit('pull request template already has a top-level heading; review sync assumptions')
+          template.write_text('# Pull Request Checklist\n\n' + text)
+
+          sync = Path('tool/v215_release_sync.py')
+          source = sync.read_text()
+          anchor = "require_once('docs/WRITING_RULES.md', 'unmatched-square-bracket')\n"
+          if source.count(anchor) != 1:
+              raise SystemExit('expected one WRITING_RULES preflight line')
+          sync.write_text(source.replace(anchor, '', 1))
+          PY
+
+      - name: Run guarded V2.15 release synchronizer
+        run: |
+          python3 tool/v215_release_sync.py
+
+      - name: Commit permanent release surfaces separately
+        run: |
+          commit_file() {
+            path="$1"
+            message="$2"
+            git add "$path"
+            git commit -m "$message"
+          }
+
+          commit_file lib/features/editor/spell_checker_page.dart "feat(about): report V2.15 curly brace release"
+          commit_file test/widget_test.dart "test(about): expect V2.15 release identity"
+          commit_file .github/pull_request_template.md "docs(pr): add V2.15 structural rule review checks"
+          commit_file CHANGELOG.md "docs(changelog): add V2.15 release entry"
+          commit_file CONTRIBUTING.md "docs(contributing): define V2.15 rule contribution baseline"
+          commit_file README.md "docs(readme): publish V2.15 current release"
+          commit_file SECURITY.md "docs(security): record V2.15 local analysis boundary"
+          commit_file SUPPORT.md "docs(support): explain advisory curly brace findings"
+          commit_file docs/ACCESSIBILITY.md "docs(accessibility): cover tenth Writing insights rule"
+          commit_file docs/API.md "docs(api): document UnmatchedCurlyBraceRule"
+          commit_file docs/ARCHITECTURE.md "docs(architecture): record ten-rule pipeline integration"
+          commit_file docs/DEVELOPMENT.md "docs(development): update V2.15 validation baseline"
+          commit_file docs/LANGUAGE_PACKS.md "docs(languages): document curly brace language eligibility"
+          commit_file docs/PERFORMANCE.md "docs(performance): record ten-rule benchmark identity"
+          commit_file docs/PRIVACY.md "docs(privacy): record V2.15 diagnostic boundary"
+          commit_file docs/RELEASING.md "docs(releasing): define V2.15 acceptance gates"
+          commit_file docs/ROADMAP.md "docs(roadmap): mark V2.15 structural milestone implemented"
+          commit_file docs/TESTING.md "docs(testing): add V2.15 regression matrix"
+          commit_file docs/TROUBLESHOOTING.md "docs(troubleshooting): explain unmatched curly braces"
+          commit_file docs/USER_GUIDE.md "docs(user): document V2.15 curly brace workflow"
+          commit_file docs/WRITING_RULES.md "docs(writing): publish ten-rule V2.15 catalogue"
+          commit_file what_changed.md "docs(ledger): record complete V2.15 engineering changes"
+          commit_file web/index.html "docs(web): advertise V2.15 curly brace diagnostics"
+          commit_file web/manifest.json "docs(web): update V2.15 manifest description"
+
+      - name: Remove temporary release artifacts
+        run: |
+          git rm docs/V2_15_WORKING_SCOPE.md
+          git commit -m "docs(v215): retire temporary working scope"
+
+          git rm tool/v215_release_sync.py
+          git commit -m "tool(v215): remove guarded release synchronizer"
+
+          git rm .github/workflows/v215-release-sync.yml
+          git commit -m "ci(v215): remove guarded release synchronization"
+
+      - name: Verify synchronized helper-free tree
+        run: |
+          test ! -e tool/v215_release_sync.py
+          test ! -e .github/workflows/v215-release-sync.yml
+          test ! -e docs/V2_15_WORKING_SCOPE.md
+          git diff --check HEAD~1..HEAD
+          git status --short
+
+      - name: Push synchronized helper-free branch
+        run: |
+          git push origin HEAD:v2.15-unmatched-curly-brace-2026-08-15
