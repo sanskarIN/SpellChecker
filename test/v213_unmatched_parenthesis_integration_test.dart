@@ -34,39 +34,45 @@ void main() {
     expect(issue.hasAutomaticFix, isFalse);
   });
 
-  test('explicit enabled rules can isolate unmatched parenthesis analysis', () {
-    final analyzer = WritingAnalyzer();
-    final result = analyzer.analyze(
-      'hello  (world',
-      languagePack: pack,
-      enabledRuleIds: const <String>{'unmatched-parenthesis'},
-    );
+  test(
+    'explicit enabled rules can isolate unmatched parenthesis analysis',
+    () {
+      final analyzer = WritingAnalyzer();
+      final result = analyzer.analyze(
+        'hello  (world',
+        languagePack: pack,
+        enabledRuleIds: const <String>{'unmatched-parenthesis'},
+      );
 
-    expect(result.analyzedRuleIds, const <String>{'unmatched-parenthesis'});
-    expect(result.issues, hasLength(1));
-    expect(result.issues.single.ruleId, 'unmatched-parenthesis');
-  });
+      expect(result.analyzedRuleIds, const <String>{'unmatched-parenthesis'});
+      expect(result.issues, hasLength(1));
+      expect(result.issues.single.ruleId, 'unmatched-parenthesis');
+    },
+  );
 
-  test('batch correction skips advisory parenthesis and applies safe fixes', () {
-    const text = 'Hello  (world';
-    final analyzer = WritingAnalyzer();
-    final analysis = analyzer.analyze(
-      text,
-      languagePack: pack,
-      enabledRuleIds: const <String>{
-        'repeated-space',
-        'unmatched-parenthesis',
-      },
-    );
+  test(
+    'batch correction skips advisory parenthesis and applies safe fixes',
+    () {
+      const text = 'Hello  (world';
+      final analyzer = WritingAnalyzer();
+      final analysis = analyzer.analyze(
+        text,
+        languagePack: pack,
+        enabledRuleIds: const <String>{
+          'repeated-space',
+          'unmatched-parenthesis',
+        },
+      );
 
-    expect(analysis.issues, hasLength(2));
-    final result = WritingCorrection.applyAll(text, analysis.issues);
+      expect(analysis.issues, hasLength(2));
+      final result = WritingCorrection.applyAll(text, analysis.issues);
 
-    expect(result.text, 'Hello (world');
-    expect(result.appliedCount, 1);
-    expect(result.skippedCount, 1);
-    expect(result.applied, isTrue);
-  });
+      expect(result.text, 'Hello (world');
+      expect(result.appliedCount, 1);
+      expect(result.skippedCount, 1);
+      expect(result.applied, isTrue);
+    },
+  );
 
   test('parenthesis-only advisory batch leaves source text unchanged', () {
     const text = 'Hello (world';
