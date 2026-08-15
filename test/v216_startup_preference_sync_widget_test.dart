@@ -66,7 +66,11 @@ void main() {
     await tester.pump();
     expect(find.text('Issue 1 of 1'), findsOneWidget);
 
-    await tester.tap(find.text('Ignore once'));
+    final ignoreOnce = find.text('Ignore once');
+    await tester.ensureVisible(ignoreOnce);
+    await tester.pumpAndSettle();
+    expect(ignoreOnce, findsOneWidget);
+    await tester.tap(ignoreOnce);
     await tester.pump();
 
     expect(find.text('Issue 1 of 1'), findsOneWidget);
