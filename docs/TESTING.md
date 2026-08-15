@@ -1,5 +1,9 @@
 # Testing
 
+## V2.13 test boundary
+
+The eight-rule release adds focused tests for literal parenthesis balancing, one-character UTF-16 offsets, advisory-only correction skipping, lazy Writing insights interaction, explicit V2.12 seven-rule preference compatibility, Portable settings, exact bounded totals, privacy-safe diagnostic rows, benchmark identity, and 5,000-level iterative stress behavior. Existing widget tests use lazy-build-aware scrolling rather than fixed seven-rule geometry.
+
 ## V2.12 testing note
 
 V2.12 adds `missing_punctuation_space_rule_test.dart`, `missing_punctuation_space_unicode_test.dart`, and `v212_missing_punctuation_space_widget_test.dart`, and updates registry/benchmark regressions for the seven-rule workload. Coverage includes decomposed combining marks, multiple marks, a non-BMP following letter, adjacent batch composition, default enablement, explicit-disable persistence, and one-step undo. Release acceptance still requires the entire `flutter test` suite.
