@@ -2,7 +2,7 @@
 
 Release candidate: `2.12.0+17` / About `2.12.0`.
 
-This file records the final acceptance boundary for V2.12 after implementation, release synchronization, and canonical formatting. It is intentionally documentation-only so this owner-authored commit can trigger the permanent pull-request CI gate after the self-removing formatter has deleted itself.
+This file records the final acceptance boundary for V2.12 after implementation, release synchronization, and canonical formatting. It is intentionally documentation-only so owner-authored validation-record commits can trigger the permanent pull-request CI gate after self-removing development helpers have deleted themselves.
 
 ## Already established before the final CI head
 
@@ -12,7 +12,10 @@ This file records the final acceptance boundary for V2.12 after implementation, 
 - Package identity is `2.12.0+17` and the About dialog identity is `2.12.0`.
 - `CHANGELOG.md`, `README.md`, `what_changed.md`, roadmap, writing/API/testing/performance/user/privacy/security/support/contributor/release documentation, PR-template guidance, and web metadata are synchronized with V2.12.
 - Guarded release synchronization completed and removed its script, workflow, and temporary diagnostic file.
-- The V2.12 final formatter completed successfully on the synchronized tree and removed its workflow. No Dart file is changed by this validation-record commit.
+- A package-aware formatter verification reproduced the permanent CI order by running `flutter pub get` before `dart format`.
+- That verification committed the real Dart 3.13 formatting changes required after package resolution and then removed all V2.12 formatting diagnostic/helper files.
+- A normal package-aware `dart format lib test tool` pass followed by `git diff --check` completed successfully before the helper removed itself.
+- No Dart source is changed by this validation-record commit.
 
 ## Permanent CI acceptance gate
 
@@ -33,7 +36,7 @@ dart run tool/benchmark_large_document.dart \
   --json
 ```
 
-A failure at any stage is a release blocker and must be repaired in a dedicated commit before merge.
+A failure at any stage is a release blocker and must be repaired in a dedicated commit before merge. Formatting acceptance is evaluated only after dependency resolution, matching the permanent CI workflow.
 
 ## Final release gate after permanent CI
 
