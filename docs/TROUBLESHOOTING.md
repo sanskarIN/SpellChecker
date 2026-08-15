@@ -1,5 +1,8 @@
 # Troubleshooting
 
+## V2.15 unmatched curly-brace findings
+An unmatched `{` or `}` warning is advisory. SpellChecker does not know whether your intended correction is to add the opposite brace, remove the current brace, move text, or rewrite a larger expression. Disable `Unmatched curly brace` in Writing insights when literal brace balancing is not useful for the selected language/workflow.
+
 
 ## V2.14 unmatched square bracket troubleshooting
 
