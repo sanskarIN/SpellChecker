@@ -21,24 +21,21 @@ void main() {
     matching: find.byType(ListView),
   );
 
-  Finder insightsScrollable() => find.descendant(
-    of: find.byType(AlertDialog),
-    matching: find.byWidgetPredicate(
-      (Widget widget) =>
-          widget is Scrollable &&
-          widget.axisDirection == AxisDirection.down &&
-          widget.physics is AlwaysScrollableScrollPhysics,
-    ),
-  );
-
   Future<void> scrollToRule(WidgetTester tester, String label) async {
-    expect(insightsList(), findsOneWidget);
-    expect(insightsScrollable(), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text(label),
-      180,
-      scrollable: insightsScrollable(),
-    );
+    final list = insightsList();
+    expect(list, findsOneWidget);
+
+    await tester.drag(list, const Offset(0, 1600));
+    await tester.pumpAndSettle();
+
+    final target = find.text(label);
+    for (var index = 0; index < 20 && target.evaluate().isEmpty; index++) {
+      await tester.drag(list, const Offset(0, -180));
+      await tester.pumpAndSettle();
+    }
+
+    expect(target, findsWidgets);
+    await tester.ensureVisible(target.first);
     await tester.pumpAndSettle();
   }
 
@@ -56,6 +53,14 @@ void main() {
       await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
       await tester.pumpAndSettle();
 
+      await scrollToRule(tester, 'Missing punctuation space');
+      final previousRule = find.widgetWithText(
+        SwitchListTile,
+        'Missing punctuation space',
+      );
+      expect(previousRule, findsOneWidget);
+      expect(tester.widget<SwitchListTile>(previousRule).value, isTrue);
+
       await scrollToRule(tester, 'Unmatched parenthesis');
       final newRule = find.widgetWithText(
         SwitchListTile,
@@ -63,13 +68,6 @@ void main() {
       );
       expect(newRule, findsOneWidget);
       expect(tester.widget<SwitchListTile>(newRule).value, isFalse);
-
-      await scrollToRule(tester, 'Missing punctuation space');
-      final previousRule = find.widgetWithText(
-        SwitchListTile,
-        'Missing punctuation space',
-      );
-      expect(tester.widget<SwitchListTile>(previousRule).value, isTrue);
     },
   );
 
