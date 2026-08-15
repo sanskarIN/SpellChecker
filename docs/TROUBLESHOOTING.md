@@ -1,5 +1,10 @@
 # Troubleshooting
 
+
+## V2.14 unmatched square bracket troubleshooting
+
+The V2.14 rule is a literal `[`/`]` balancer. It can therefore report brackets that are intentionally unpaired inside code, Markdown, URLs, citations, quotations, mathematics, or another domain syntax. Disable the rule for the current language when that literal policy does not fit the document; do not treat the warning as an automatic deletion recommendation. **Automatic fixes only** hides these advisory findings.
+
 ## V2.13 unmatched-parenthesis troubleshooting
 
 The new rule balances literal `(` and `)` characters and is not a Markdown, programming-language, URL, quoting, or mathematical parser. If syntax intentionally contains an unmatched literal parenthesis, disable `unmatched-parenthesis` for that language or review the finding manually; V2.13 will not auto-edit it. Privacy-safe diagnostic summaries can report the rule ID/count without including the source text.
