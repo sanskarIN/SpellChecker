@@ -35,11 +35,15 @@ jobs:
           from pathlib import Path
           path = Path('tool/v212_release_sync.py')
           text = path.read_text(encoding='utf-8')
-          old = 'not text.startswith("# ")'
-          new = 'not text.startswith("#")'
-          if text.count(old) != 1:
-              raise SystemExit(f'expected one heading guard, found {text.count(old)}')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          replacements = {
+              'not text.startswith("# ")': 'not text.startswith("#")',
+              'assert "missing-punctuation-space" in read("lib/writing/writing_analyzer.dart")': 'assert "MissingPunctuationSpaceRule()" in read("lib/writing/writing_analyzer.dart")',
+          }
+          for old, new in replacements.items():
+              if text.count(old) != 1:
+                  raise SystemExit(f'expected one guarded anchor, found {text.count(old)}: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
           PY
 
           set +e
@@ -63,7 +67,7 @@ jobs:
             exit "$status"
           fi
 
-          rm -f v212_sync_run.log v212_sync_error.txt
+          rm -f v212_sync_run.log
           git diff --check
 
       - name: Commit permanent surfaces independently
@@ -106,7 +110,9 @@ jobs:
           commit_file web/manifest.json "docs(web): synchronize manifest writing coverage"
           commit_file what_changed.md "docs(ledger): record complete V2.12 implementation"
 
-          if ! git diff --quiet; then
+          # Keep the tracked diagnostic until the helper-cleanup commit. It is
+          # development-only evidence and must not remain in the final tree.
+          if ! git diff --quiet -- . ':(exclude)v212_sync_error.txt'; then
             echo "Uncommitted release-sync changes remain:" >&2
             git status --short >&2
             exit 1
