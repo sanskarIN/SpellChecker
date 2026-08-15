@@ -1,5 +1,9 @@
 # Public API
 
+## V2.13 API note
+
+`package:spellchecker/writing.dart` now exports `UnmatchedParenthesisRule`, stable ID `unmatched-parenthesis`. The existing `WritingRule`, `WritingIssue`, `WritingAnalyzer`, `WritingAnalysisResult`, `WritingCorrection`, review-query, persistence, diagnostic-summary, and benchmark result formats are unchanged. The new rule returns warning findings with `replacement == null`, so callers must continue to treat automatic correction as optional.
+
 ## V2.12 API note
 
 The public writing API now exports `MissingPunctuationSpaceRule` with stable ID `missing-punctuation-space`. It is part of `WritingRuleRegistry.builtIns` and the default enabled set for supported English packs. Findings own the punctuation-only UTF-16 source range and propose punctuation plus one following space. The analyzer/result/correction method signatures and persistence contracts are unchanged.
