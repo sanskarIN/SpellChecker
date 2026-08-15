@@ -1,0 +1,174 @@
+name: V2.13 one-time release gate
+
+on:
+  push:
+    branches:
+      - v2.13-unmatched-parenthesis-2026-08-15
+
+permissions:
+  contents: write
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact V2.13 candidate
+        uses: actions/checkout@v7
+        with:
+          ref: v2.13-unmatched-parenthesis-2026-08-15
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify canonical formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool
+
+      - name: Analyze release candidate
+        run: flutter analyze
+
+      - name: Run complete release tests
+        run: flutter test --reporter expanded
+
+      - name: Run deterministic benchmark smoke
+        run: |
+          dart run tool/benchmark_large_document.dart \
+            --repeats=4 \
+            --warmup=0 \
+            --iterations=1 \
+            --spelling-limit=2 \
+            --writing-limit=5 \
+            --suggestions=0 \
+            --language=en-US \
+            --json
+
+      - name: Build release web application
+        run: flutter build web --release
+
+      - name: Verify V2.13 release identity and repository hygiene
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          import re
+
+          def require(condition: bool, message: str) -> None:
+              if not condition:
+                  raise SystemExit(message)
+
+          pubspec = Path('pubspec.yaml').read_text()
+          require(re.search(r'^version: 2\.13\.0\+18$', pubspec, re.M) is not None,
+                  'package version must be 2.13.0+18')
+
+          editor = Path('lib/features/editor/spell_checker_page.dart').read_text()
+          require("applicationVersion: '2.13.0'" in editor,
+                  'About version must be 2.13.0')
+
+          barrel = Path('lib/writing.dart').read_text()
+          require("export 'writing/rules/unmatched_parenthesis_rule.dart';" in barrel,
+                  'public UnmatchedParenthesisRule export missing')
+
+          rule = Path('lib/writing/rules/unmatched_parenthesis_rule.dart').read_text()
+          require("String get id => 'unmatched-parenthesis';" in rule,
+                  'stable unmatched-parenthesis ID missing')
+          require('class UnmatchedParenthesisRule extends WritingRule' in rule,
+                  'public unmatched parenthesis class missing')
+
+          analyzer = Path('lib/writing/writing_analyzer.dart').read_text()
+          require('UnmatchedParenthesisRule(),' in analyzer,
+                  'unmatched parenthesis registry registration missing')
+          builtins_match = re.search(
+              r'static const List<WritingRule> builtIns = <WritingRule>\[(.*?)\n  \];',
+              analyzer,
+              re.S,
+          )
+          require(builtins_match is not None, 'built-in registry declaration not found')
+          constructors = re.findall(r'^    ([A-Za-z0-9_]+Rule)\(\),$', builtins_match.group(1), re.M)
+          require(len(constructors) == 8, f'expected 8 built-in rule constructors, got {constructors}')
+          require('UnmatchedParenthesisRule' in constructors,
+                  'eighth built-in rule not present')
+
+          required_tests = [
+              'test/unmatched_parenthesis_rule_test.dart',
+              'test/v213_unmatched_parenthesis_integration_test.dart',
+              'test/v213_unmatched_parenthesis_widget_test.dart',
+              'test/v213_rule_preference_compatibility_widget_test.dart',
+              'test/v213_settings_transfer_rule_compatibility_test.dart',
+              'test/v213_writing_diagnostic_summary_test.dart',
+              'test/v213_bounded_parenthesis_analysis_test.dart',
+              'test/v213_parenthesis_stress_test.dart',
+              'test/v213_review_query_parenthesis_test.dart',
+              'test/v213_benchmark_parenthesis_test.dart',
+          ]
+          for test_path in required_tests:
+              require(Path(test_path).is_file(), f'missing focused regression: {test_path}')
+
+          ledger = Path('what_changed.md').read_text()
+          require('## V2.13 — Unmatched Parenthesis Diagnostics' in ledger,
+                  'what_changed.md V2.13 ledger missing')
+          require('Release version: `2.13.0+18`' in ledger,
+                  'what_changed.md release identity missing')
+
+          changelog = Path('CHANGELOG.md').read_text()
+          require('## [2.13.0] - 2026-08-15' in changelog,
+                  'CHANGELOG V2.13 entry missing')
+
+          readme = Path('README.md').read_text()
+          require('`2.13.0+18`' in readme,
+                  'README current V2.13 identity missing')
+          require('## Unmatched parenthesis diagnostics — V2.13' in readme,
+                  'README V2.13 section missing')
+
+          require(Path('docs/V2_13_UNMATCHED_PARENTHESIS.md').is_file(),
+                  'V2.13 behavior contract missing')
+          require(Path('docs/V2_13_FINAL_VALIDATION.md').is_file(),
+                  'V2.13 final validation document missing')
+
+          manifest = json.loads(Path('web/manifest.json').read_text())
+          require(manifest.get('name') == 'SpellChecker', 'web manifest name mismatch')
+          require('unmatched-parenthesis' in manifest.get('description', ''),
+                  'web manifest V2.13 description missing')
+
+          # Parse only the direct runtime dependency block. No new package is allowed.
+          lines = pubspec.splitlines()
+          start = lines.index('dependencies:') + 1
+          end = lines.index('dev_dependencies:')
+          direct = []
+          for line in lines[start:end]:
+              if line.startswith('  ') and not line.startswith('    ') and line.strip().endswith(':'):
+                  direct.append(line.strip()[:-1])
+              elif re.match(r'^  [A-Za-z0-9_]+:', line):
+                  direct.append(line.strip().split(':', 1)[0])
+          require(sorted(set(direct)) == ['flutter', 'shared_preferences'],
+                  f'unexpected direct runtime dependencies: {direct}')
+
+          require(Path('build/web/index.html').is_file(), 'release web index output missing')
+          require(Path('build/web/main.dart.js').is_file(), 'release web JavaScript output missing')
+
+          # The gate itself is allowed until its cleanup step. No other disposable
+          # V2.13 workflow/tool helper may be tracked in the candidate.
+          import subprocess
+          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          helpers = [
+              p for p in tracked
+              if (p.startswith('.github/workflows/v213-') and p != '.github/workflows/v213-release-gate.yml')
+              or p.startswith('tool/v213')
+              or re.match(r'^v213.*\.(txt|log|json|py|sh)$', p)
+          ]
+          require(not helpers, f'unexpected disposable V2.13 helpers: {helpers}')
+          PY
+
+      - name: Remove one-time release gate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/v213-release-gate.yml
+          git add .github/workflows/v213-release-gate.yml
+          git commit -m "ci(release): remove one-time V2.13 release gate"
+          git push origin HEAD:v2.13-unmatched-parenthesis-2026-08-15
