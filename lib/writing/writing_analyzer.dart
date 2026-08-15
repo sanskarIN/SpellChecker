@@ -7,6 +7,7 @@ import 'rules/repeated_word_rule.dart';
 import 'rules/sentence_capitalization_rule.dart';
 import 'rules/trailing_whitespace_rule.dart';
 import 'rules/unmatched_parenthesis_rule.dart';
+import 'rules/unmatched_square_bracket_rule.dart';
 import 'writing_issue.dart';
 import 'writing_rule.dart';
 
@@ -300,6 +301,7 @@ class WritingRuleRegistry {
     TrailingWhitespaceRule(),
     RepeatedPunctuationRule(),
     UnmatchedParenthesisRule(),
+    UnmatchedSquareBracketRule(),
   ];
 
   static WritingRule? byId(String id) {
