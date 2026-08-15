@@ -1,0 +1,89 @@
+name: V2.12 guarded release synchronizer
+
+on:
+  push:
+    branches:
+      - v2.12-missing-punctuation-space-2026-08-15
+    paths:
+      - tool/v212_release_sync.py
+      - .github/workflows/v212-release-sync.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v212-release-sync
+  cancel-in-progress: true
+
+jobs:
+  synchronize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out V2.12 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v2.12-missing-punctuation-space-2026-08-15
+          fetch-depth: 0
+
+      - name: Synchronize release surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tool/v212_release_sync.py
+          git diff --check
+
+      - name: Commit permanent surfaces independently
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          commit_file() {
+            local path="$1"
+            local message="$2"
+            if ! git diff --quiet -- "$path"; then
+              git add "$path"
+              git commit -m "$message"
+            fi
+          }
+
+          commit_file lib/features/editor/spell_checker_page.dart "chore(release): advance About identity to 2.12.0"
+          commit_file CHANGELOG.md "docs(changelog): record V2.12 release contract"
+          commit_file README.md "docs(readme): publish V2.12 current release"
+          commit_file docs/ROADMAP.md "docs(roadmap): mark V2.12 milestone implemented"
+          commit_file docs/WRITING_RULES.md "docs(writing): document seventh built-in rule"
+          commit_file docs/API.md "docs(api): document V2.12 writing rule API"
+          commit_file docs/ARCHITECTURE.md "docs(architecture): record V2.12 rule pipeline"
+          commit_file docs/DEVELOPMENT.md "docs(development): add V2.12 boundary guidance"
+          commit_file docs/PERFORMANCE.md "docs(performance): update seven-rule benchmark contract"
+          commit_file docs/TESTING.md "docs(testing): add V2.12 regression suites"
+          commit_file docs/USER_GUIDE.md "docs(user): document missing punctuation spacing"
+          commit_file docs/ACCESSIBILITY.md "docs(accessibility): cover seventh writing rule"
+          commit_file docs/TROUBLESHOOTING.md "docs(troubleshooting): add V2.12 rule preference guidance"
+          commit_file docs/LANGUAGE_PACKS.md "docs(language): record V2.12 English eligibility"
+          commit_file docs/PRIVACY.md "docs(privacy): record V2.12 local-only boundary"
+          commit_file docs/RELEASING.md "docs(releasing): define V2.12 release gate"
+          commit_file SECURITY.md "docs(security): document V2.12 deterministic rule boundary"
+          commit_file SUPPORT.md "docs(support): add V2.12 support guidance"
+          commit_file CONTRIBUTING.md "docs(contributing): add Unicode writing-boundary expectations"
+          commit_file .github/pull_request_template.md "docs(pr): add V2.12 writing-boundary review checklist"
+          commit_file web/index.html "docs(web): mention Unicode punctuation spacing"
+          commit_file web/manifest.json "docs(web): synchronize manifest writing coverage"
+          commit_file what_changed.md "docs(ledger): record complete V2.12 implementation"
+
+          if ! git diff --quiet; then
+            echo "Uncommitted release-sync changes remain:" >&2
+            git status --short >&2
+            exit 1
+          fi
+
+      - name: Remove disposable release helpers and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm tool/v212_release_sync.py .github/workflows/v212-release-sync.yml
+          git commit -m "ci(release): remove disposable V2.12 synchronizer"
+          git push origin HEAD:v2.12-missing-punctuation-space-2026-08-15
