@@ -2,7 +2,7 @@
 
 Release candidate: `2.12.0+17` / About `2.12.0`.
 
-This file records the final acceptance evidence for V2.12 after implementation, release synchronization, canonical formatting, full CI, and release-mode web validation.
+This file records the completed acceptance evidence for V2.12 after implementation, release synchronization, canonical formatting, full CI, release-mode web validation, merge, and post-merge main-branch validation.
 
 ## Implemented candidate
 
@@ -17,7 +17,7 @@ This file records the final acceptance evidence for V2.12 after implementation, 
 - Those four assertions were repaired in separate commits. Accessibility tests now derive their supported-rule total from the analyzer registry, the mixed-mechanics fixture contains real document-end trailing whitespace, and the About test expects V2.12.
 - The repaired Dart tests were package-aware formatted and all disposable test/format diagnostics were removed.
 
-## Permanent CI evidence
+## Pull-request CI evidence
 
 GitHub Actions CI run `31868043307` validated owner commit `61092ff4ae72ca6b329366a8d6b6d1623fddf3bc` successfully on August 15, 2026.
 
@@ -45,6 +45,8 @@ Results:
 - static analysis: passed;
 - complete Flutter test suite: passed;
 - deterministic benchmark smoke: passed.
+
+After release-gate evidence was recorded, final pull-request CI run `31868255146` also passed formatting, analysis, the complete test suite, and benchmark smoke on final PR head `e74713c23ce010658e0e67e5d2c5593d3b794dd4`.
 
 ## Release-mode evidence
 
@@ -74,13 +76,36 @@ Results:
 
 The successful gate removed `.github/workflows/v212-release-gate.yml` itself and pushed cleanup commit `6c6094cedc3e658be43905992d64d0e1395fba0f`. Therefore the permanent candidate does not retain the one-time release gate.
 
-## Final merge condition
+## Merge evidence
 
-This documentation-only evidence commit must itself receive a green permanent CI run because it changes the pull-request head after the successful release gate. No Dart source, release identity, dependency, runtime behavior, or build input is changed by this evidence update.
+PR #75, **V2.12 missing punctuation spacing and Unicode boundaries**, was merged with the normal GitHub merge method on August 15, 2026.
 
-After that final CI run:
+- final PR head: `e74713c23ce010658e0e67e5d2c5593d3b794dd4`;
+- merge commit on `main`: `eecf286c3722ac681e2117f38163326100a0564f`;
+- branch commits preserved: 70;
+- permanent files changed by the PR: 36;
+- merge strategy: merge commit, not squash;
+- `what_changed.md`: included in the merged permanent diff;
+- disposable V2.12 workflow/tool/root diagnostic files: none in the permanent diff.
 
-- PR #75 must remain mergeable;
-- the permanent diff must contain no disposable V2.12 helper workflow, tool, or root diagnostic;
-- the merge must preserve the granular implementation history rather than squash it;
-- only the exact green candidate may be merged to `main`.
+## Post-merge main validation
+
+GitHub Actions main-branch CI run `31868368430` validated merge commit `eecf286c3722ac681e2117f38163326100a0564f` successfully on August 15, 2026.
+
+Results on the actual merged `main` tree:
+
+- dependency resolution: passed;
+- canonical formatting: passed;
+- static analysis: passed;
+- complete Flutter test suite: passed;
+- deterministic benchmark smoke: passed.
+
+This confirms the merge itself did not change or invalidate the green pull-request candidate.
+
+## Publishing boundary
+
+At the time V2.12 was merged, the repository had no existing Git tags and no GitHub Releases. V2.12 therefore does not introduce a new tagging/release-publication convention as an incidental side effect of this implementation. The package/About release identity and release workflow remain ready for a future explicit publishing decision.
+
+## Completed acceptance state
+
+V2.12 is complete when this documentation-only post-merge evidence update is merged after receiving its own green pull-request CI. That update changes no Dart source, runtime dependency, application behavior, release identity, test logic, or build input beyond this Markdown record.
