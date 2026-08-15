@@ -16,6 +16,11 @@ void main() {
       expect(damerauLevenshteinDistance('teh', 'the'), 1);
     });
 
+    test('supports unrestricted interacting transposition edits', () {
+      expect(damerauLevenshteinDistance('CA', 'ABC'), 2);
+      expect(damerauLevenshteinDistance('ABC', 'CA'), 2);
+    });
+
     test('counts one astral Unicode scalar substitution as one edit', () {
       expect(damerauLevenshteinDistance('a𐐀c', 'a𐐁c'), 1);
     });
@@ -27,6 +32,10 @@ void main() {
 
     test('counts adjacent astral Unicode scalar transposition as one edit', () {
       expect(damerauLevenshteinDistance('𐐀𐐁', '𐐁𐐀'), 1);
+    });
+
+    test('supports unrestricted edits with astral Unicode scalars', () {
+      expect(damerauLevenshteinDistance('𐐀A', 'B𐐀C'), 2);
     });
   });
 }
