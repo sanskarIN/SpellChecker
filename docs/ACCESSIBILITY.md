@@ -1,5 +1,9 @@
 # Accessibility
 
+## V2.13 accessibility note
+
+The eighth writing rule participates in the existing live rule/finding count semantics and lazy Writing insights list. Its warning remains keyboard-reviewable like other findings, while **Automatic fixes only** removes it from visible finding counts because it has no deterministic replacement. Widget regressions scroll by lazy-build state so accessibility expectations do not depend on the historical seven-rule viewport height.
+
 ## V2.12 accessibility note
 
 The seventh rule uses the existing Writing insights switch, finding-card, safe-fix, batch-fix, keyboard, focus, and semantic-count infrastructure. V2.12 adds no pointer-only action and does not remove the Ctrl/Command+Shift+Enter, Ctrl/Command+F, Escape, or existing live-region workflows. The rule's user-visible name is **Missing punctuation space**.
