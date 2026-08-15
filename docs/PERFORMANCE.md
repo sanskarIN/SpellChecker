@@ -1,5 +1,9 @@
 # Performance and large-document behavior
 
+## V2.16 final stabilization
+Unrestricted Damerau-Levenshtein now uses a last-seen-row/column matrix over Unicode scalars. This is correctness-first and remains bounded in practice by the existing suggestion-distance and candidate-length filters. The deterministic benchmark smoke remains a release gate; no timing threshold was added.
+
+
 ## V2.15 benchmark catalogue
 Deterministic benchmark identity now includes ten stable writing-rule IDs, including `unmatched-curly-brace`. The new scanner is iterative and focused tests exercise 5,000 balanced and 5,000 unmatched braces; benchmark timings remain observational, not correctness thresholds.
 
