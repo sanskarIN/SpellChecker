@@ -2,6 +2,8 @@
 
 This guide takes a new user or contributor from a clean checkout to a running SpellChecker instance and a verified development environment.
 
+For complete executable/release-artifact creation—including native runner generation, Android/iOS/Windows/macOS/Linux packaging prerequisites, signing boundaries, verification, and troubleshooting—use [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
 ## What SpellChecker is
 
 SpellChecker is a Flutter application and reusable Dart codebase for local spelling and deterministic writing analysis. The bundled application does not send editor text to a remote spelling or grammar service. It supports English (US) and English (UK), per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic built-in writing rules.
@@ -26,6 +28,8 @@ flutter --version
 dart --version
 ```
 
+Use `flutter doctor -v` when preparing a target-specific native build so the complete toolchain state is visible.
+
 ## Clone and install dependencies
 
 ```bash
@@ -49,7 +53,7 @@ The repository commits a Flutter web host, so the most direct development target
 flutter run -d chrome
 ```
 
-If Flutter reports that Chrome is unavailable, use `flutter devices` to see available local targets. Additional native runners are not committed in the repository; see [Platform support](PLATFORM_SUPPORT.md).
+If Flutter reports that Chrome is unavailable, use `flutter devices` to see available local targets. Additional native runners are not committed in the repository; see [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Perform your first spelling check
 
@@ -148,13 +152,21 @@ dart run tool/benchmark_large_document.dart \
 
 For broader benchmark guidance, see [Performance](PERFORMANCE.md).
 
-## Build the web release target
+## Build the current web release target
 
 ```bash
 flutter build web --release
 ```
 
 The generated output is written to `build/web`. The repository's release workflow performs formatting, analysis, the complete Flutter test suite, benchmark smoke, and a release web build before uploading the web artifact.
+
+Treat the complete `build/web/` directory as the web deliverable. For deployment validation, native runner generation, native executable/package commands, Windows/Linux bundle handling, mobile signing, and release verification, continue with [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
+## Native executable builds
+
+The repository does **not** currently commit `android/`, `ios/`, `windows/`, `macos/`, or `linux/` runner directories. Do not run native release commands and assume an official SpellChecker artifact exists until the target runner has been intentionally generated, reviewed, committed, tested, and added to release validation.
+
+The complete step-by-step process is in [Executable builds and packaging](EXECUTABLE_BUILDS.md). [Platform support](PLATFORM_SUPPORT.md) remains the source of truth for which targets are currently repository-supported and release-supported.
 
 ## Use the library APIs
 
@@ -196,5 +208,7 @@ See [Library examples](EXAMPLES.md) and [Public API](API.md) for complete exampl
 - Public APIs: [API](API.md).
 - Writing rule catalogue: [Writing rules](WRITING_RULES.md).
 - Architecture: [Architecture](ARCHITECTURE.md).
+- Complete executable builds/packaging: [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+- Current platform support: [Platform support](PLATFORM_SUPPORT.md).
 - Development and tests: [Development](DEVELOPMENT.md) and [Testing](TESTING.md).
 - Problems: [Troubleshooting](TROUBLESHOOTING.md) and [Support](../SUPPORT.md).
