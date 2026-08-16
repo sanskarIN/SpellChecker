@@ -20,9 +20,10 @@ Start with:
 4. [Configuration and local data](CONFIGURATION.md) — languages, suggestion limits, personal dictionaries, ignored words, writing-rule preferences, Portable settings, and persistence behavior.
 5. [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md) — compact keyboard reference.
 6. [FAQ](FAQ.md) — common usage, privacy, platform, language, import/export, and troubleshooting questions.
-7. [Troubleshooting](TROUBLESHOOTING.md) — recovery guidance for startup, storage, imports, analysis, and build problems.
-8. [Accessibility](ACCESSIBILITY.md) — keyboard, focus, semantics, contrast, responsive layout, and assistive-technology contract.
-9. [Privacy](PRIVACY.md) — data-flow and local-storage boundaries.
+7. [Glossary](GLOSSARY.md) — project terms such as bounded analysis, captured findings, UTF-16 offsets, Unicode scalars, rule overrides, and advisory fixes.
+8. [Troubleshooting](TROUBLESHOOTING.md) — recovery guidance for startup, storage, imports, analysis, and build problems.
+9. [Accessibility](ACCESSIBILITY.md) — keyboard, focus, semantics, contrast, responsive layout, and assistive-technology contract.
+10. [Privacy](PRIVACY.md) — data-flow and local-storage boundaries.
 
 ### I want to use SpellChecker as Dart/Flutter code
 
@@ -34,6 +35,7 @@ Start with:
 4. [Writing rules](WRITING_RULES.md) — rule catalogue, IDs, categories, severities, automatic/advisory behavior, and plugin contract.
 5. [Architecture](ARCHITECTURE.md) — package boundaries and application data flow.
 6. [Performance](PERFORMANCE.md) — bounded-analysis behavior and deterministic benchmark tooling.
+7. [Glossary](GLOSSARY.md) — shared terminology for API, Unicode, analysis, persistence, and review concepts.
 
 Public import barrels:
 
