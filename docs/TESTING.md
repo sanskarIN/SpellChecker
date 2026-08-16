@@ -2,6 +2,8 @@
 
 This page describes the current SpellChecker `2.16.0+21` test strategy, quality gates, and regression expectations. Historical release-validation records are indexed in [Release history](RELEASE_HISTORY.md).
 
+For complete build/package validation and target artifact checks, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
 ## Required repository gate
 
 After dependency resolution:
@@ -98,6 +100,10 @@ Cover benchmark option parsing, deterministic scenario generation/identity, resu
 
 Repository tests protect non-code project contracts such as Buy Me a Coffee surfaces and the complete documentation hub/current capability references.
 
+`test/documentation_repository_test.dart` additionally protects executable-build documentation completeness. It reads the marked inventory in `docs/EXECUTABLE_BUILDS.md`, runs `git ls-files`, and requires the documented path set to match the Git-tracked path set exactly. A newly added, deleted, renamed, or stale tracked path therefore fails the test until the executable-build inventory is updated.
+
+This check is intentionally repository-wide: files can affect release readiness even when they are not compiled into the runtime artifact.
+
 ## Useful focused commands
 
 Core spelling/correction:
@@ -143,6 +149,8 @@ Repository/documentation metadata:
 flutter test test/bmc_repository_metadata_test.dart
 flutter test test/documentation_repository_test.dart
 ```
+
+The second command also validates the complete tracked-file inventory used by the executable-build documentation.
 
 Some focused filenames are added as features evolve. Use the `test/` directory and full suite as the final source of truth.
 
@@ -400,7 +408,7 @@ See [Performance](PERFORMANCE.md).
 3. `flutter pub get`;
 4. canonical format check across `lib test tool`;
 5. `flutter analyze`;
-6. complete Flutter test suite;
+6. complete Flutter test suite, including executable-build tracked-file inventory validation;
 7. benchmark CLI smoke.
 
 ## Release validation
@@ -413,7 +421,7 @@ flutter build web --release
 
 and uploads `build/web` as the release artifact.
 
-The repository does not currently run native Android/iOS/Windows/macOS/Linux build jobs. See [Platform support](PLATFORM_SUPPORT.md).
+The repository does not currently run native Android/iOS/Windows/macOS/Linux build jobs. See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Before opening a PR
 
@@ -426,6 +434,8 @@ Run the complete gate. Also review:
 - bounded-result semantics;
 - privacy/security changes;
 - current documentation updates;
+- executable-build tracked-file inventory updated for every tracked path addition/deletion/rename;
+- platform/build claims consistent with committed runners and actual CI/release jobs;
 - historical release docs left historically accurate.
 
 ## Related documentation
@@ -435,4 +445,7 @@ Run the complete gate. Also review:
 - [API](API.md)
 - [Writing rules](WRITING_RULES.md)
 - [Performance](PERFORMANCE.md)
+- [Executable builds and packaging](EXECUTABLE_BUILDS.md)
+- [Platform support](PLATFORM_SUPPORT.md)
+- [Releasing](RELEASING.md)
 - [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md)
