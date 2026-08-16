@@ -55,10 +55,11 @@ Use:
 2. [Testing guide](TESTING.md) — test structure, focused suites, CI gates, Unicode/UTF-16 coverage, and benchmark smoke.
 3. [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md) — documentation source-of-truth rules, link policy, versioning, and review checklist.
 4. [Release guide](RELEASING.md) — tagged web-release workflow and release validation.
-5. [Platform support](PLATFORM_SUPPORT.md) — what is committed, built, validated, and still optional for native runners.
-6. [Roadmap](ROADMAP.md) — completed release scope and optional future directions.
-7. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x design/audit/validation records.
-8. [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md), [support policy](../SUPPORT.md), [governance](../GOVERNANCE.md), and [code of conduct](../CODE_OF_CONDUCT.md).
+5. [Executable builds and packaging](EXECUTABLE_BUILDS.md) — complete build, packaging, signing-boundary, platform-generation, verification, troubleshooting, and tracked-file inventory for release artifacts.
+6. [Platform support](PLATFORM_SUPPORT.md) — what is committed, built, validated, and still optional for native runners.
+7. [Roadmap](ROADMAP.md) — completed release scope and optional future directions.
+8. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x design/audit/validation records.
+9. [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md), [support policy](../SUPPORT.md), [governance](../GOVERNANCE.md), and [code of conduct](../CODE_OF_CONDUCT.md).
 
 ## Current product contract
 
@@ -102,6 +103,8 @@ Every current-state document should distinguish between:
 - optional future work that is not currently shipped.
 
 Examples must use synthetic/non-sensitive text. Privacy documentation must never imply that editor text, personal vocabulary, ignored session words, correction history, or finding excerpts are uploaded by the application.
+
+Executable/build documentation additionally must distinguish between a portable Flutter source target, a committed runner, a validated build, and a published release artifact. The tracked-file inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md) is machine-checked so new committed files cannot be silently omitted from build/release documentation.
 
 ## Support and funding
 
