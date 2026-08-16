@@ -1,405 +1,239 @@
 # Accessibility
 
-## V2.16 final stabilization
-Startup actions now keep their state truthful while saved preferences are restoring. The final widget regressions explicitly bring lazy controls into view before activation and avoid waiting for intentionally unresolved startup work, preserving deterministic keyboard/screen-reader review semantics.
+SpellChecker aims to make the bundled editor and review workflow usable with keyboard navigation, assistive technologies, responsive layouts, and system light/dark appearance. This page documents the current `2.16.0+21` accessibility contract and known boundaries; it does not claim formal certification against every accessibility standard/platform combination.
 
+## Principles
 
-## V2.15 Writing insights accessibility
-The tenth rule participates in the existing keyboard-search, Mechanics filter, rule-switch, visible/captured/total semantics, and advisory-finding presentation. Catalogue growth also hardened lazy widget-test discovery so controls are located after they are built rather than by fixed geometry.
+The UI should preserve:
 
+- visible, labeled controls for actions that also have shortcuts;
+- keyboard traversal and shortcut access;
+- meaningful semantics for interactive/status elements;
+- live announcements for important dynamic result states where implemented;
+- readable system light/dark themes;
+- responsive layout without removing core functionality;
+- deterministic focus behavior around review search/navigation;
+- no correction action that depends solely on color.
 
-## V2.14 accessibility coverage
+## Keyboard access
 
-Writing insights now exposes nine built-in rule switches when current English defaults are active. The new **Unmatched square bracket** rule uses the existing accessible switch/list/finding semantics, Mechanics filtering, live visible/total finding counts, and keyboard-scrollable dialog. Advisory-only findings never expose a misleading automatic-fix action.
+Primary editor shortcuts:
 
-## V2.13 accessibility note
+| Action | Windows/Linux-style | macOS-style |
+| --- | --- | --- |
+| Check spelling | `Ctrl+Enter` | `Command+Enter` |
+| Open Writing insights | `Ctrl+Shift+Enter` | `Command+Shift+Enter` |
+| Next spelling issue | `F7` | `F7` |
+| Previous spelling issue | `Shift+F7` | `Shift+F7` |
 
-The eighth writing rule participates in the existing live rule/finding count semantics and lazy Writing insights list. Its warning remains keyboard-reviewable like other findings, while **Automatic fixes only** removes it from visible finding counts because it has no deterministic replacement. Widget regressions scroll by lazy-build state so accessibility expectations do not depend on the historical seven-rule viewport height.
+Writing insights:
 
-## V2.12 accessibility note
+| Action | Windows/Linux-style | macOS-style |
+| --- | --- | --- |
+| Focus review search | `Ctrl+F` | `Command+F` |
+| Clear active transient query | `Escape` | `Escape` |
+| Close when query already empty | `Escape` | `Escape` |
 
-The seventh rule uses the existing Writing insights switch, finding-card, safe-fix, batch-fix, keyboard, focus, and semantic-count infrastructure. V2.12 adds no pointer-only action and does not remove the Ctrl/Command+Shift+Enter, Ctrl/Command+F, Escape, or existing live-region workflows. The rule's user-visible name is **Missing punctuation space**.
-SpellChecker should remain usable with keyboard navigation, screen readers, text scaling, high-contrast system settings, narrow layouts, and without relying on color alone.
+Visible buttons/fields remain available for users who cannot or do not use shortcuts.
 
-## Current foundations
+See [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
 
-The application primarily uses standard Flutter Material controls plus explicit semantic wrappers for state that is not obvious from a standard control alone.
+## Escape behavior in Writing insights
 
-Current surfaces include:
+Escape intentionally avoids discarding an active filtered review without first clearing it.
 
-- `TextField` for editor and dictionary input.
-- `FilledButton`, `OutlinedButton`, and `TextButton` for labeled actions.
-- `ActionChip` for spelling replacement suggestions.
-- `PopupMenuButton` for spelling replace-all choices.
-- `DropdownButton` / `DropdownButtonFormField` for language and suggestion settings.
-- `SwitchListTile` for Writing insights rule choices.
-- `IconButton` with tooltips for app-bar/navigation controls.
-- `Badge` for supplementary counts.
-- `AlertDialog` for dictionary, import, confirmation, About, and Writing insights.
-- Material light/dark color schemes.
-- Progress indicators during preference restoration/writes.
-- Semantic containers/live regions for important editor/result/finding/warning states.
+When the review query contains search text, selected categories, or Automatic fixes only:
 
-## Keyboard shortcuts
+1. Escape clears the transient query;
+2. search focus returns/remains available;
+3. the dialog stays open.
 
-| Shortcut | Action |
-| --- | --- |
-| `Ctrl+Enter` | Run spelling check |
-| `Command+Enter` | Run spelling check on macOS-style keyboards |
-| `Ctrl+Shift+Enter` | Open Writing insights |
-| `Command+Shift+Enter` | Open Writing insights on macOS-style keyboards |
-| `F7` | Move to next spelling issue |
-| `Shift+F7` | Move to previous spelling issue |
+When the query is already empty, Escape closes Writing insights through its normal result path so current rule-switch choices can still be returned/persisted by the page.
 
-Visible pointer/touch controls remain available for these workflows. A shortcut must not become the only way to reach an essential action.
+## Focus management
 
-## Keyboard checklist
+The editor and Writing insights use Flutter focus/shortcut scopes so keyboard commands can remain available while focus moves among controls.
 
-Preserve keyboard access for:
+Writing insights owns a dedicated search `FocusNode`. Ctrl/Command+F requests focus on that search field rather than relying on browser page search.
 
-- Editor focus and multiline text entry.
-- Language selection.
-- Check spelling.
-- Clear editor text.
-- Undo correction.
-- Previous/next spelling issue.
-- Issue-card activation.
-- Suggestion selection.
-- Spelling replace-all menu.
-- Save word / Ignore once.
-- Personal dictionary manager.
-- Personal-word add/remove/clear.
-- Suggestion-count dropdown.
-- Dictionary import/export.
-- Clear ignored session words.
-- Writing insights launch.
-- Writing-rule switches.
-- Individual **Apply safe fix**.
-- **Apply all safe fixes (N)**.
-- About dialog.
+When a spelling issue becomes active, the application attempts to synchronize the editor selection with its source range so keyboard navigation has a concrete text location.
 
-Do not introduce pointer-only, hover-only, or color-only essential actions.
+Dialog/list content can be lazy/off-screen. Users may need to scroll to reach later findings/rules; automated tests should likewise scroll/ensure visibility rather than assuming all controls are mounted simultaneously.
 
-## Language selector
+## Semantics and announcements
 
-The language selector is a standard dropdown in the Editor header and is wrapped with a semantic label identifying it as the spelling language control.
+SpellChecker uses Flutter semantics for important application states/controls. Dynamic status/error messages in dialogs use live-region semantics where appropriate so assistive technology can announce changes without requiring manual focus movement.
 
-Requirements:
+Writing insights count/result summaries distinguish captured/total/limited state instead of relying on visual badge styling alone.
 
-- Current language remains visibly named.
-- Control is keyboard reachable.
-- Changing language remains explicit user action.
-- Focus should not jump unexpectedly because a language changes.
-- Language-specific vocabulary/rule choices must not be communicated only indirectly through changed findings.
+Spelling result state also has textual labels such as ready/nothing-to-check/no-issues/issue-position rather than communicating state only through underline color.
 
-## V2.2 review-management controls
+## Inline spelling visualization
 
-Writing insights adds standard accessible controls for review organization:
+Unknown checked words use wavy underlines and an active issue receives stronger visual emphasis. This presentation supplements, rather than replaces, the Results panel's text/action controls.
 
-- Labeled search `TextField`.
-- Mechanics/Clarity `FilterChip` controls with selected state.
-- Labeled **Automatic fixes only** switch.
-- Labeled **Clear review filters** action.
-- Visible/total rule and finding counts.
-- Category text in rule/finding content and finding semantics.
-- Labeled **Reset rules to defaults** action.
+The editor preserves current input-method composing-range styling with priority so IME composition remains understandable/usable while issue decoration is active.
 
-Filters must remain keyboard reachable and must not make hidden findings indistinguishable from “no findings at all”; the dialog exposes a dedicated **No matching findings** state when enabled rules have findings that the current review filters hide.
+## Color and theme
 
-When filters are active, **Apply visible safe fixes (N)** includes the visible automatic-fix count in its label. Resetting rules closes the dialog and reports persistence failure textually if the override could not be cleared.
+`SpellCheckerApp` uses Material 3 `ColorScheme.fromSeed` for light and dark themes and follows `ThemeMode.system`.
 
-## Writing insights
+Do not hard-code a visual state using only a color that may become low-contrast across themes. New status/error/finding presentation should combine text, iconography, semantics, or structure as appropriate.
 
-Writing insights uses:
+This documentation does not claim that every third-party browser/device/theme override has been manually WCAG-certified. Contributors should test actual target combinations when making contrast-sensitive changes.
 
-- Labeled rule switches.
-- Textual findings.
-- Exact source ranges.
-- Suggested replacement text.
-- Labeled individual fix buttons.
-- A labeled batch action containing the number of available automatic fixes.
-- Semantic finding containers.
-- Semantic empty states.
+## Responsive layout
 
-A rule's meaning, enabled state, severity, or fix availability must not depend only on color/icon styling.
+The editor/result presentation adapts between wide and narrow arrangements. Core actions should remain available in both layouts.
 
-### Persisted rule choices
+Responsive changes must not:
 
-V2.1 rule switches are persisted per language. The visible switch state remains the user-facing authority.
+- hide a required correction/review action with no alternative;
+- create keyboard-inaccessible overflow controls;
+- reorder content so semantics/focus order becomes misleading;
+- require horizontal scrolling for ordinary text/actions when avoidable.
 
-If storage fails, the session choice remains active and the app reports a storage warning. The warning must not imply that editor text was uploaded.
+## Touch/pointer alternatives
 
-### Batch fixes
+Keyboard shortcuts are enhancements, not the only interaction path. App-bar buttons, dialog controls, chips, suggestion actions, and editor/results controls remain available for pointer/touch/assistive workflows.
 
-**Apply all safe fixes (N)** must remain a normal labeled control.
+## Writing insights filters
 
-After a successful batch:
+Search, category chips, presets, and Automatic fixes only change the visible review set. The UI communicates visible/captured/total counts textually so users can understand that a filtered or limited list is not necessarily the complete document finding set.
 
-- The complete batch is one undo entry.
-- Feedback reports applied/skipped counts in readable text.
-- **Undo correction** remains available.
+When filtering a truncated analysis, correction actions remain scoped to captured/visible findings. The UI should not imply that “apply visible” means “fix entire document.”
 
-Do not rely on a transient color change to communicate that a batch was applied.
+## Advisory findings
 
-## Inline spelling highlights
+The three unmatched-delimiter rules provide findings without automatic replacements. They are not represented as disabled/broken fix buttons; their absence of automatic correction is a semantic property of the finding.
 
-Checked spelling issues receive wavy underlines; the active issue receives stronger styling.
+Review text should explain the condition rather than requiring a user to infer meaning from button availability/color.
 
-Inline styling is supplementary. The same issue is also represented through:
+## Loading and storage state
 
-- Results text.
-- Issue count.
-- Character range.
-- Active issue position.
-- Semantic labels.
-- Editor selection when activated.
+Preference loading/storage failures are communicated using readable text/status states. Controls that require loaded durable preferences can be disabled while loading instead of accepting an action whose persistence behavior is not ready.
 
-Manual edits clear stale highlighting.
+A storage error should not be conveyed solely with a color/icon.
 
-## Spelling issue semantics
+## Clipboard actions
 
-Each issue card is a semantic container describing:
+Copy actions have explicit labeled controls, such as dictionary/settings/diagnostic copying. The application should announce/report success/failure through visible status messaging when implemented.
 
-- Issue index/total.
-- Source word.
-- Character range.
-- Selected state when active.
+Host browser/OS clipboard permissions can still block behavior outside Flutter's control.
 
-Changing active issue also selects the corresponding editor range and requests editor focus. Avoid focus loops between Results and editor.
+## Platform/browser shortcut conflicts
 
-## Writing finding semantics
-
-Each writing finding is a semantic container identifying:
-
-- Finding position/total.
-- Rule name.
-- Human-readable message.
-
-The visible source range/original text remains available to sighted users; semantic labels should remain concise enough to avoid overwhelming screen-reader output.
-
-## Live regions
-
-Use live regions for important status transitions rather than every visual update.
-
-Appropriate examples:
-
-- Result count.
-- Ready/blank/clean states.
-- Storage-unavailable warning.
-- Writing empty state.
-
-Avoid making each suggestion, switch change, or highlight repaint a live region.
-
-## Storage warnings
-
-A storage warning should:
-
-- Explain that local settings may not persist.
-- Remain readable in light/dark themes.
-- Not imply document upload.
-- Avoid color-only communication.
-- Leave session spelling/writing controls usable when possible.
-
-## Correction and undo
-
-After a correction:
-
-- Snackbar feedback can expose **Undo**.
-- **Undo correction** remains available while history exists.
-
-One undo entry represents one user-visible automatic operation:
-
-- Single spelling replacement.
-- Spelling replace-all.
-- Individual writing safe fix.
-- V2.1 writing batch safe fix.
-
-This grouping makes bulk actions predictable for keyboard/screen-reader users.
-
-## Screen readers
-
-When adding/changing widgets:
-
-- Prefer controls with native semantic roles.
-- Give icon-only controls meaningful tooltips/labels.
-- Use action-oriented visible labels.
-- Avoid duplicate semantic labels that create repeated announcements.
-- Keep errors/results textual, not color-only.
-- Preserve **Save word** vs **Ignore once** wording.
-- Keep selected issue state discoverable without visual background inspection.
-- Do not announce sensitive editor text more broadly than necessary.
-
-## Badges/counts
-
-Badges are supplementary only.
+Browsers, operating systems, hardware function-key modes, extensions, and assistive technologies can intercept shortcuts before Flutter receives them.
 
 Examples:
 
-- Saved-word badge supplements the personal dictionary list.
-- Ignored-word badge supplements the clear-ignored action.
-- Result-count badge supplements visible/semantic result text.
+- `Ctrl+F` / `Command+F` is commonly browser search;
+- F-keys can be mapped to media/system functions;
+- screen readers can reserve navigation combinations.
 
-## Loading and disabled states
+Because visible controls remain available, host interception should not make a core workflow shortcut-only.
 
-Preference-dependent controls can be disabled while initial restoration runs.
+## Text zoom and browser scaling
 
-Async flows must:
+Flutter web rendering participates in host/browser window sizing and platform accessibility settings, but exact zoom/text-scaling behavior can vary with Flutter/browser versions.
 
-- Avoid permanent disabled focus targets.
-- Restore actionable state after success/failure.
-- Surface failures as readable text.
-- Avoid claiming persistence success before a write succeeds.
-- Preserve session functionality on storage failure where safe.
+When changing layouts, test increased text scale and constrained viewport sizes. Avoid fixed-height content that clips essential labels/actions when text grows.
 
-## Dialog accessibility
+## Screen reader test expectations
 
-Dialogs should retain:
+For accessibility-sensitive changes, use Flutter semantics/widget tests where possible and manually inspect target behavior for important flows.
 
-- Descriptive titles.
-- Clear close/cancel/confirm actions.
-- Keyboard-focusable controls.
-- Scrollable/flexible content for narrow viewports and larger text.
-- No essential information encoded solely in icons.
+Recommended scenarios:
 
-Writing insights intentionally uses a scrollable/lazy findings list; every action must remain reachable through normal scrolling/focus traversal.
+- startup/loading status;
+- editor language selector and text field;
+- Check spelling state changes;
+- F7 active issue navigation;
+- suggestion/correction controls;
+- personal dictionary dialog success/error states;
+- Writing insights search/filter counts;
+- Ctrl/Command+F focus;
+- first Escape clearing filters;
+- second Escape closing;
+- limited-result announcement;
+- storage warning;
+- copied diagnostic/settings status.
 
-## Color and contrast
+## Keyboard regression expectations
 
-Contributors should:
+Changes to shortcut/focus code should keep automated coverage for:
 
-- Check light and dark themes.
-- Avoid low-contrast custom colors.
-- Preserve visible focus indicators.
-- Keep textual issue/finding descriptions alongside visual emphasis.
-- Never make underline/background color the sole error/finding signal.
+```text
+Ctrl+Enter / Command+Enter
+Ctrl+Shift+Enter / Command+Shift+Enter
+F7
+Shift+F7
+Ctrl+F / Command+F inside Writing insights
+Escape transient-query clear/close behavior
+```
 
-## Text scaling
+Update [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md), [User guide](USER_GUIDE.md), and tooltips/semantics in the same change.
 
-Layouts should tolerate increased text scale.
+## Motion
 
-- Avoid fixed-height wrapping text containers.
-- Keep results/dialogs scrollable.
-- Let action labels wrap/reflow where practical.
-- Test language names, storage warnings, batch-fix labels/counts, and rule descriptions at increased scales.
+SpellChecker does not rely on decorative animation for understanding spelling/writing results. New animation should not become the sole way to communicate state and should respect Flutter/platform reduced-motion behavior where relevant.
 
-## Narrow layouts
+## Language/readability
 
-Below the wide-layout breakpoint editor/results stack vertically. Controls must remain reachable by scrolling without horizontal clipping.
+Labels/messages should be concise, specific, and avoid requiring knowledge of internal class names or rule IDs for ordinary use. Technical IDs belong in diagnostics/developer contexts; user-facing rule names/messages should remain readable.
 
-The language selector was intentionally placed in the existing Editor header as a dense control so it does not add unnecessary fixed vertical height to common 800×600 layouts.
+## Error messaging
 
-## Automated accessibility testing
+Error text should state what failed and whether the current session can continue. Avoid exposing stack traces, raw storage internals, or private source text in user-facing errors.
 
-Add targeted semantics tests where stable for the supported Flutter version.
+## Known boundaries
 
-Important contracts include:
+Current repository validation is primarily Flutter widget/semantics testing on the CI environment plus project-specific accessibility regressions. It does not claim exhaustive manual testing across every browser, screen reader, mobile accessibility service, keyboard layout, or native platform.
 
-- Selected spelling issue state.
-- Result-count/empty-state announcements.
-- Storage-warning live region.
-- Editor semantic label.
-- Language selector semantic label.
-- Writing finding semantic label.
-- Tooltips for icon-only controls.
-- Reachability of Writing insights batch and individual actions.
+Only the web host is committed/release-built. Official native runner accessibility validation is future work if native targets become repository-supported.
 
-Automated tests complement rather than replace manual screen-reader/keyboard testing.
+See [Platform support](PLATFORM_SUPPORT.md).
 
-## Manual checklist
+## Reporting accessibility problems
 
-For significant UI changes verify when practical:
+A useful report includes:
 
-1. Keyboard-only editor/spelling workflow.
-2. `F7` / `Shift+F7` wrapping navigation.
-3. `Ctrl/Command+Enter` spelling check.
-4. `Ctrl/Command+Shift+Enter` Writing insights.
-5. Language selector keyboard use/current label.
-6. Writing-rule switch keyboard use.
-7. Individual and batch writing fixes.
-8. One-step undo after a writing batch.
-9. Screen-reader labels for icon-only controls.
-10. Understandable issue/finding status without color alone.
-11. Light/dark themes.
-12. Increased text size.
-13. Narrow viewport/scrolling.
-14. Dialog scrolling/focus behavior.
-15. Loading/disabled states during preference reads/writes.
-16. Storage failure messaging.
+- SpellChecker version/commit;
+- browser/platform/Flutter version if known;
+- assistive technology and version when relevant;
+- exact control/workflow;
+- keyboard focus position;
+- expected versus observed behavior;
+- a synthetic/non-sensitive text sample when analysis results matter;
+- whether the issue is wide/narrow layout or text-scale dependent.
 
-## Future work
+Do not include private documents when synthetic text is sufficient.
 
-Potential improvements include:
+Use [Support](../SUPPORT.md) for normal reports. Security-sensitive accessibility issues involving data disclosure should follow [Security](../SECURITY.md).
 
-- High-contrast platform review.
-- Optional shortcut customization.
-- Refined non-duplicative announcements after bulk fixes/undo.
-- Additional accessible rule categories/filtering if the writing-rule catalogue grows.
+## Contributor checklist
 
-## V2.3 review presets and portable settings
+Before merging an accessibility-sensitive UI change, review:
 
-Review presets use standard Material `ChoiceChip` controls with visible text labels; category filters and the automatic-fixes switch remain independently available. Portable settings uses labeled copy/import controls, a labeled multiline import field, selectable export text, and semantic live-region status/error messages. The visible Portable settings app-bar action has a tooltip, so the workflow is not shortcut-only. Tests scroll lazy dialogs to real controls instead of depending on a fixed viewport.
+- visible labels/tooltips;
+- semantics labels/roles/value where relevant;
+- live announcements for dynamic critical state;
+- keyboard traversal;
+- shortcut alternatives;
+- focus after dialogs/filter clear/correction;
+- light/dark contrast;
+- non-color state communication;
+- wide/narrow layouts;
+- increased text scale;
+- lazy scroll visibility;
+- storage/error messaging;
+- widget/semantics regression tests;
+- docs updates.
 
-## V2.5 limited-result accessibility
+## Related documentation
 
-The limited spelling-result state must not rely on the `+` badge alone.
-
-When results are truncated, the Results panel provides a live-region semantic message and visible explanatory text stating that only the first 200 spelling issues were captured and that Replace all is unavailable. Repeated-word chips use “captured occurrences” wording so screen-reader and visual users receive the same incompleteness signal.
-
-Keyboard issue navigation remains available across captured issues. Do not expose a keyboard-only bulk action that bypasses the limited-result Replace all restriction.
-
-## V2.6 Writing insights accessibility
-
-The two new rules appear as the same labeled `SwitchListTile` controls used by existing writing rules, so they remain keyboard/focus/assistive-technology reachable. Their findings use the existing semantic finding-card and safe-fix controls. Expanded catalogue tests intentionally scroll the real lazy dialog so narrow/small viewports remain part of the supported interaction model.
-
-## V2.7 limited Writing insights accessibility
-
-When Writing insights proves that more findings exist beyond its capture limit, the limited-result explanation is exposed in a semantic container and live region. The message states the captured count, the configured limit, and that review filters and batch actions use captured findings only.
-
-Limited results avoid an unqualified complete count. Batch labels switch to **captured** wording, and a filtered empty state says **No matching captured findings** when uncaptured findings may still exist.
-
-The existing rule switches, preset/filter controls, finding semantics, keyboard shortcut, safe-fix controls, and dialog scrolling remain available. Tests exercise the limited state with a small synthetic cap rather than relying on display color or a particular viewport size.
-
-## V2.8 exact limited-result diagnostics
-
-V2.8 strengthens the accessible meaning of limited Writing insights results.
-
-When exact totals are available, the limited-analysis explanation communicates both the retained count and total observed count instead of only an ambiguous `N+` state. The wording also states the exact number of findings not retained by the capture limit.
-
-The findings badge is wrapped in descriptive semantics/tooltip behavior and has a stable widget key for regression testing. The visual `captured/total` value is not the only source of meaning: the nearby explanatory text provides the same relationship in full language.
-
-Per-rule rows can expose exact `Total findings: N` metadata. Users should not need color alone to determine whether a rule produced findings or whether the overall result is limited.
-
-### Lazy dialog behavior
-
-Writing insights remains a scrollable lazy list. Keyboard and assistive-technology users may need to navigate through rule management before reaching the findings header/limited-result notice, just as sighted touch/mouse users scroll the dialog.
-
-Testing must preserve this real interaction model rather than making every off-screen control permanently mounted. Changes should continue to avoid focus traps and maintain visible alternatives for keyboard shortcuts.
-
-### Live changes
-
-Review search/filter changes operate on retained findings. When a filtered limited result becomes empty, the empty-state explanation includes the exact uncaptured count when available so assistive-technology users are not told that the whole document has no matching findings.
-
-## V2.9 IME composition hardening
-
-When Flutter reports a valid active IME composing range, the editor delegates text-span construction to Flutter's native composing renderer instead of replacing it with spelling-highlight spans. This keeps composition feedback visible for keyboard/input-method users. After composition is committed, normal checked spelling underlines and active-issue styling resume from current issue state.
-
-## V2.10 developer benchmark accessibility scope
-
-V2.10 adds no new in-app control, focus target, gesture, color-only indicator, or keyboard shortcut. The benchmark is a developer CLI and its human-readable mode uses plain text labels for scenario shape, analysis outcomes, and timing aggregates. `--help` exposes the supported command options without requiring the graphical application.
-
-The existing app accessibility contract remains unchanged; release-version metadata is the only app-visible V2.10 change. Any future in-app performance/diagnostic UI would require a separate accessibility review rather than inheriting the CLI contract automatically.
-
-## V2.11 keyboard-first Writing insights accessibility
-
-V2.11 makes the existing lazy Writing insights dialog more predictable for keyboard-only and assistive-technology users without changing its analysis or persistence model.
-
-- `Ctrl+F` / `Command+F` focuses the existing review-search field while the dialog is open.
-- A focus anchor lives inside the shortcut scope so the bindings remain active while focus traverses modal controls.
-- Escape clears the complete transient review query (search, categories, and Automatic fixes only) before it closes the dialog. A second Escape closes once the query is empty.
-- Clearing filters by Escape returns focus to review search.
-- Visible rule and finding counts are live semantic regions with descriptive labels rather than relying on compact `N/M` visual text.
-- Limited finding semantics preserve captured-only truthfulness and announce exact captured/total relationships when exact diagnostics are available.
-- `WritingInsightsDialog.maxIssues` is release-mode validated and rejects non-positive values.
-
-Focused tests keep the production `ListView` lazy: they scroll controls/semantics into the widget tree rather than changing production layout to make assertions easier. Manual review should include keyboard traversal, Ctrl/Command+F from multiple focused controls, first/second Escape behavior, screen-reader count announcements, increased text size, and narrow viewports.
-
+- [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md)
+- [User guide](USER_GUIDE.md)
+- [Testing](TESTING.md)
+- [Platform support](PLATFORM_SUPPORT.md)
+- [V2.11 historical accessibility record](V2_11_ACCESSIBILITY.md)
