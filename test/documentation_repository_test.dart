@@ -32,6 +32,7 @@ void main() {
     'WRITING_RULES.md',
     'ARCHITECTURE.md',
     'PLATFORM_SUPPORT.md',
+    'EXECUTABLE_BUILDS.md',
     'PERFORMANCE.md',
     'PRIVACY.md',
     'ACCESSIBILITY.md',
@@ -98,5 +99,53 @@ void main() {
     ]) {
       expect(Directory(directory).existsSync(), isFalse);
     }
+  });
+
+  test('executable build guide accounts for every tracked repository file', () {
+    const startMarker = '<!-- tracked-file-inventory:start -->';
+    const endMarker = '<!-- tracked-file-inventory:end -->';
+
+    final guide = File('docs/EXECUTABLE_BUILDS.md').readAsStringSync();
+    final start = guide.indexOf(startMarker);
+    final end = guide.indexOf(endMarker);
+
+    expect(start, greaterThanOrEqualTo(0));
+    expect(end, greaterThan(start));
+
+    final inventory = guide.substring(start + startMarker.length, end);
+    final documentedPaths = RegExp(
+      r'^- `([^`]+)`$',
+      multiLine: true,
+    ).allMatches(inventory).map((match) => match.group(1)!).toSet();
+
+    final gitResult = Process.runSync(
+      'git',
+      const ['ls-files'],
+      runInShell: Platform.isWindows,
+    );
+    expect(
+      gitResult.exitCode,
+      0,
+      reason: 'git ls-files must succeed for repository documentation checks.',
+    );
+
+    final trackedPaths = (gitResult.stdout as String)
+        .split(RegExp(r'\r?\n'))
+        .where((path) => path.isNotEmpty)
+        .toSet();
+
+    final missing = trackedPaths.difference(documentedPaths).toList()..sort();
+    final stale = documentedPaths.difference(trackedPaths).toList()..sort();
+
+    expect(
+      missing,
+      isEmpty,
+      reason: 'EXECUTABLE_BUILDS.md is missing tracked files: $missing',
+    );
+    expect(
+      stale,
+      isEmpty,
+      reason: 'EXECUTABLE_BUILDS.md lists files not tracked by Git: $stale',
+    );
   });
 }
