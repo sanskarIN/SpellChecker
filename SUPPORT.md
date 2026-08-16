@@ -225,3 +225,90 @@ Do not use normal public issues for vulnerabilities. Follow [SECURITY.md](SECURI
 SpellChecker is free and open source. If the project is useful to you and you would like to support continued development, you can [buy Sanskar a coffee](https://buymeacoffee.com/sanskarIN).
 
 Financial support is optional. It does not provide privileged access to security reports, issue triage, roadmap decisions, releases, or contribution review.
+
+# Privacy-sensitive examples
+
+Never post:
+
+- Private documents.
+- Account information.
+- Secrets/credentials.
+- Personal messages.
+- Sensitive personal vocabulary.
+- Real correction-history snapshots.
+- Private writing findings/source excerpts.
+
+Replace sensitive data with a minimal synthetic reproducer.
+
+# Local data recovery
+
+Personal vocabulary is local and not cloud-synchronized. Before clearing browser/application data, use **Copy export** if you need a portable personal-dictionary backup.
+
+Writing-rule preferences, selected language, and suggestion count are local settings that can be copied/imported through **Portable settings** in V2.3. Personal vocabulary remains a separate language-aware dictionary export. Clearing host application/profile storage can remove all of these local values.
+
+If saved data disappears unexpectedly, follow [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) before filing an issue.
+
+## V2.3 portable settings reports
+
+For review-preset issues, include the preset name/ID, selected language, synthetic review text, and whether a search/category/automatic-fix filter was also active. For portable-settings issues, include a minimized synthetic JSON document with any private vocabulary/text removed, whether the failure happened during validation or persistence, the selected platform, and whether existing language/rule/suggestion preferences were restored. Do not post real documents, personal dictionaries, credentials, or sensitive clipboard content.
+
+## V2.4 custom ranker reports
+
+For custom-ranker issues, include the ranker policy in pseudocode, a small synthetic dictionary/input, active language ID, expected/actual ordered candidate words, and whether the behavior reproduces with `DefaultSpellSuggestionRanker`. Do not include private document text or sensitive personal dictionaries.
+
+# V2.5 large-document reports
+
+For a `200+` or bounded-analysis bug, use synthetic text and include:
+
+- Whether the report/UI showed `200+`.
+- The configured/API `maxIssues` when using the library directly.
+- Captured issue count.
+- `truncated`, `complete`, and `scannedTokenCount` for API reports when relevant.
+- Whether Replace all was incorrectly visible/hidden.
+- Selected language and suggestion count.
+
+Do not attach a private large document. A repeated synthetic token sequence is sufficient for limit-state bugs.
+
+## V2.6 spacing-rule reports
+
+For punctuation-spacing/trailing-whitespace bugs, provide a minimal synthetic sample and say whether it involves interior repeated spaces, whitespace immediately before punctuation, LF/CRLF line endings, or document-end whitespace. Include the selected English pack and whether rule choices were unset/default or explicitly saved. Do not attach a private document when a short synthetic string can reproduce the issue.
+
+## V2.7 limited Writing insights reports
+
+When reporting a V2.7 Writing insights problem, include whether the dialog displayed a limited-result notice, the selected language, active review preset/filter state, and whether the issue reproduced after editing/reopening Writing insights. Do not include private document text unless it is necessary and safe to share; a small synthetic reproduction is preferred.
+
+A `200+`-style state means the built-in dialog captured its first 200 findings in review order and observed at least one more. Filters and batch actions then operate on the captured prefix only.
+
+## V2.8 exact diagnostics reports
+
+For a Writing insights count/diagnostics bug, use a minimal synthetic sample and include:
+
+- selected language ID;
+- enabled writing-rule IDs;
+- configured `maxIssues` when using the public analyzer API;
+- retained/captured finding count;
+- exact overall total when present;
+- exact per-rule totals when present;
+- complete/truncated state;
+- active review preset/search/category/fix-only filters;
+- whether editor text, language, or rule settings changed after the analysis.
+
+For analyzer-produced results, exact per-rule totals should sum to the exact overall total, and an exact truncated result should report at least one uncaptured finding.
+
+Do not attach a private large document simply to prove a count mismatch. Repeated synthetic text or a small custom synthetic rule is preferred.
+
+The `captured/total` badge describes one current local analysis snapshot. Reopen Writing insights after editing or switching languages before comparing totals.
+
+## V2.9 diagnostic-summary support reports
+
+For writing-analysis count/ordering problems, maintainers can ask for the deterministic `WritingAnalysisDiagnosticSummary.toPlainText()` output plus the SpellChecker version and a synthetic reproduction. The summary is designed to contain counts and stable rule/language metadata without editor text or finding excerpts. If exact totals show `unavailable`, record whether the result was directly constructed for compatibility rather than returned by `WritingAnalyzer.analyze()`. Do not ask users to post private documents, personal dictionaries, raw correction history, or sensitive finding excerpts in public issues.
+
+## V2.10 benchmark support
+
+For V2.10 benchmark questions, include the exact benchmark command, selected built-in language, Flutter/Dart versions, scenario repetition/limit values, and the metadata-only report output when safe. Use the built-in synthetic corpus; do not attach private documents to reproduce performance observations. Timing differences are meaningful only when the compared environment/toolchain and command are controlled. Malformed options, unsupported language IDs, changing analysis outcomes across measured iterations, or benchmark command crashes are correctness/support issues; a slower number on unrelated hardware by itself is not.
+
+## V2.11 keyboard/accessibility support
+
+For V2.11 Writing insights keyboard or semantics problems, report the exact synthetic text, platform/Flutter version, which control had focus, whether Ctrl/Command+F moved to review search, whether the first Escape cleared an active transient query, and whether the second Escape closed. For count announcements, include captured/total metadata and active synthetic filters rather than private document excerpts.
+
+If a widget regression involves an apparently missing off-screen control, remember that Writing insights is intentionally lazy; reproduce by scrolling the real dialog rather than assuming every item is mounted simultaneously.
