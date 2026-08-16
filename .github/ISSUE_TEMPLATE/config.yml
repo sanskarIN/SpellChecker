@@ -6,3 +6,6 @@ contact_links:
   - name: Support documentation
     url: https://github.com/sanskarIN/SpellChecker/blob/main/SUPPORT.md
     about: Read support and troubleshooting guidance before opening an issue.
+  - name: Buy Me a Coffee — support SpellChecker
+    url: https://buymeacoffee.com/sanskarIN
+    about: Optional financial support for continued open-source development.
