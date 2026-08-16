@@ -1,29 +1,12 @@
 # Public API
 
-## V2.16 final stabilization
-`damerauLevenshteinDistance` now means unrestricted Damerau-Levenshtein distance over Unicode scalar values. Suggestion eligibility uses the same scalar-length model. Public spelling issue/source ranges remain UTF-16 offsets because they index Dart strings and Flutter text editing. Portable Settings remains version 1 and the writing-rule public catalogue remains ten built-ins.
+This is the evergreen public Dart API reference for SpellChecker `2.16.0+21`. Historical API additions are indexed in [Release history](RELEASE_HISTORY.md).
 
+## Public libraries
 
-## V2.15 API addition
-`package:spellchecker/writing.dart` now exports `UnmatchedCurlyBraceRule`. Its stable ID is `unmatched-curly-brace`; it is warning-level, supports English language code `en`, owns one brace source character, and exposes no automatic replacement.
+SpellChecker exposes three supported public barrels.
 
-
-## V2.14 public writing API
-
-`package:spellchecker/writing.dart` now exports `UnmatchedSquareBracketRule` with stable ID `unmatched-square-bracket`. The existing `WritingRule`, `WritingIssue`, `WritingAnalyzer`, bounded-result, diagnostic-summary, review-query, correction, preference, and Portable-settings contracts are unchanged. Analyzer-produced default English results can now include nine built-in rule IDs.
-
-## V2.13 API note
-
-`package:spellchecker/writing.dart` now exports `UnmatchedParenthesisRule`, stable ID `unmatched-parenthesis`. The existing `WritingRule`, `WritingIssue`, `WritingAnalyzer`, `WritingAnalysisResult`, `WritingCorrection`, review-query, persistence, diagnostic-summary, and benchmark result formats are unchanged. The new rule returns warning findings with `replacement == null`, so callers must continue to treat automatic correction as optional.
-
-## V2.12 API note
-
-The public writing API now exports `MissingPunctuationSpaceRule` with stable ID `missing-punctuation-space`. It is part of `WritingRuleRegistry.builtIns` and the default enabled set for supported English packs. Findings own the punctuation-only UTF-16 source range and propose punctuation plus one following space. The analyzer/result/correction method signatures and persistence contracts are unchanged.
-SpellChecker 2.10 exposes reusable spelling, language, correction, suggestion-ranking, local writing-review, writing-analysis diagnostic-summary, and portable-settings APIs through three public barrels.
-
-## Imports
-
-Core spelling and correction APIs:
+Core spelling, correction, codecs, and statistics:
 
 ```dart
 import 'package:spellchecker/spell_checker.dart';
@@ -35,58 +18,46 @@ Language-pack APIs:
 import 'package:spellchecker/language.dart';
 ```
 
-Writing-rule APIs:
+Writing-analysis APIs:
 
 ```dart
 import 'package:spellchecker/writing.dart';
 ```
 
-Application UI and storage adapters remain internal integration details unless explicitly exported.
+Flutter application widgets, `DictionaryPreferences`, and other storage/UI adapters are internal integration details unless explicitly exported by one of these barrels.
 
-# Language APIs
+## Coordinate model
 
-## `SpellLanguageRegistry`
+Public spelling and writing issue ranges are **UTF-16 code-unit offsets** because they are designed for Dart `String.substring`/`replaceRange` and Flutter text-editing APIs.
 
-`SpellLanguageRegistry.builtIns` contains the built-in packs. `defaultPack` remains English (US), `en-US`.
+Unicode-scalar operations are used where appropriate for edit distance, suggestion eligibility, and selected casing logic. Do not interpret `start`/`end` issue values as rune/scalar indexes or grapheme-cluster indexes.
 
-Current built-ins:
+# Core spelling API
 
-```text
-en-US  English (US)
-en-GB  English (UK)
+## `damerauLevenshteinDistance`
+
+```dart
+int damerauLevenshteinDistance(String source, String target)
 ```
 
-Use `SpellLanguageRegistry.byId(id)` to resolve an explicit pack and `contains(id)` to validate persisted IDs.
+Computes unrestricted Damerau-Levenshtein distance over Unicode scalar values. Insertions, deletions, substitutions, and transpositions participate in the distance model.
 
-## `SpellLanguagePack`
+Examples:
 
-A pack contains:
+```dart
+print(damerauLevenshteinDistance('form', 'from'));
+print(damerauLevenshteinDistance('café', 'cafe'));
+```
 
-- Stable language/region ID.
-- Language and region codes.
-- Display name.
-- Dictionary data.
-- Approximate frequency ranks.
-- Unicode token pattern.
-- Valid personal-word pattern.
-- Word normalizer.
-- Recognized suffixes.
-- Suggestion-source metadata.
-- Suggestion edit-distance policy.
+## `SpellCheckerEngine`
 
-The spelling engine delegates tokenization, normalization, dictionary lookup behavior, and suggestion metadata to the selected pack. Pack dictionary, frequency, and recognized-suffix collections are defensive immutable snapshots after construction.
-
-See [LANGUAGE_PACKS.md](LANGUAGE_PACKS.md).
-
-# `SpellCheckerEngine`
-
-Create an engine using the default US pack:
+Construct with the default English (US) pack:
 
 ```dart
 final engine = SpellCheckerEngine();
 ```
 
-Select a language explicitly:
+Select a pack:
 
 ```dart
 final engine = SpellCheckerEngine(
@@ -94,9 +65,52 @@ final engine = SpellCheckerEngine(
 );
 ```
 
-A custom dictionary/frequency set can still be supplied where supported by the constructor. Both custom dictionary words and custom frequency keys are normalized through the selected language pack; when multiple frequency keys normalize to the same word, the lowest rank value is retained. Existing `SpellCheckerEngine()` callers remain source-compatible and default to `en-US`.
+The factory also accepts optional custom dictionary/frequency data and an injectable `SpellSuggestionRanker`:
 
-## `check`
+```dart
+final engine = SpellCheckerEngine(
+  dictionary: customDictionary,
+  wordFrequencies: customRanks,
+  languagePack: pack,
+  suggestionRanker: const DefaultSpellSuggestionRanker(),
+);
+```
+
+Custom dictionary words and frequency keys are normalized through the selected language pack. When multiple frequency entries normalize to the same word, the lowest rank value is retained.
+
+### `languagePack`
+
+```dart
+final SpellLanguagePack languagePack;
+```
+
+The pack controlling tokenization, normalization, dictionary behavior, suffix recognition, suggestion metadata, and suggestion-distance policy.
+
+### `suggestionRanker`
+
+```dart
+final SpellSuggestionRanker suggestionRanker;
+```
+
+The strategy used to order already-eligible suggestion candidates. It should remain deterministic for the engine lifetime because suggestion results are cached.
+
+### `personalDictionary`
+
+```dart
+Set<String> get personalDictionary
+```
+
+Returns an immutable snapshot of normalized personal words currently active in the engine.
+
+### `ignoredWords`
+
+```dart
+Set<String> get ignoredWords
+```
+
+Returns an immutable snapshot of normalized session ignored words.
+
+### `check`
 
 ```dart
 List<SpellIssue> check(
@@ -105,24 +119,31 @@ List<SpellIssue> check(
 })
 ```
 
-Tokenizes text with the selected language pack and returns unknown occurrences in source order.
+Runs an unbounded spelling analysis and returns occurrence-specific issues in source order. This is the compatibility list-returning API.
 
-Each issue is occurrence-specific and belongs to the exact source snapshot that was checked.
+### `analyze`
 
-## `isCorrect`
+```dart
+SpellCheckReport analyze(
+  String text, {
+  int suggestionLimit = 5,
+  int? maxIssues,
+})
+```
+
+Runs spelling analysis with optional bounded issue capture. `maxIssues`, when supplied, must be greater than zero.
+
+After the issue limit is reached, the engine scans only until the source ends or it sees one additional unknown word. It does not generate suggestions for the overflow issue. This lets the report distinguish “exactly at the cap but complete” from “more issues exist.”
+
+### `isCorrect`
 
 ```dart
 bool isCorrect(String word)
 ```
 
-Returns `true` when the normalized word is accepted by:
+Returns true when the normalized word is accepted by the base dictionary, personal dictionary, ignored-word set, or a recognized regular suffix whose stem is known.
 
-- The selected base dictionary.
-- The current engine's personal dictionary.
-- The current engine's ignored-word set.
-- A recognized regular suffix whose stem is known.
-
-Current English suffix handling includes:
+Current built-in English suffixes are:
 
 ```text
 n't
@@ -134,7 +155,7 @@ n't
 's
 ```
 
-## `suggestionsFor`
+### `suggestionsFor`
 
 ```dart
 List<String> suggestionsFor(
@@ -143,93 +164,170 @@ List<String> suggestionsFor(
 })
 ```
 
-Returns backward-compatible string candidates.
+Returns only suggestion words. A non-positive limit returns an empty list.
 
-Candidate ordering is deterministic and considers:
-
-1. Damerau-Levenshtein distance.
-2. First-character/prefix agreement.
-3. Approximate word-frequency rank.
-4. Candidate length.
-5. Alphabetical order.
-
-## `suggestionDetailsFor`
-
-Detailed suggestions expose language/source metadata:
+### `suggestionDetailsFor`
 
 ```dart
-final suggestions = engine.suggestionDetailsFor('helo');
+List<SpellSuggestion> suggestionDetailsFor(
+  String word, {
+  int limit = 5,
+})
 ```
 
-`SpellSuggestion` includes:
+Returns detailed language/source/ranking metadata. Recognized suffixes are ranked on the stem and reattached to returned suggestions.
 
-```text
-word
-distance
-frequencyRank
-languageId
-languageDisplayName
-source
-```
-
-## Personal and ignored words
+### Personal dictionary mutation
 
 ```dart
 void addToPersonalDictionary(String word)
 bool removeFromPersonalDictionary(String word)
 void replacePersonalDictionary(Iterable<String> words)
 void clearPersonalDictionary()
+```
+
+Words are normalized and validated by the engine's language pack. Personal-dictionary changes clear the suggestion cache where required.
+
+These methods are in-memory engine operations. The public engine does not persist them by itself.
+
+### Ignored/session mutation
+
+```dart
 void ignoreWord(String word)
 void clearIgnoredWords()
 void resetSession()
-Set<String> get personalDictionary
-Set<String> get ignoredWords
 ```
 
-The engine itself remains storage-agnostic. The Flutter application persists personal words in language-specific namespaces and keeps ignored words session-only.
+`resetSession()` clears personal words, ignored words, and suggestion cache for that engine. Application persistence/restoration is a separate layer.
 
-# `SpellIssue`
-
-A spelling issue contains:
+## `SpellIssue`
 
 ```dart
-const SpellIssue({
-  required String word,
-  required int start,
-  required int end,
-  List<String> suggestions = const <String>[],
-  String? languageId,
-})
+class SpellIssue {
+  final String word;
+  final int start;
+  final int end;
+  final List<String> suggestions;
+  final String? languageId;
+}
 ```
 
-A fresh issue satisfies:
+An issue represents one unknown occurrence from one checked source snapshot.
+
+`start` is inclusive and `end` is exclusive in UTF-16 code units. `languageId` remains optional for source compatibility with manually constructed/test issues from earlier APIs; engine-produced issues include the selected pack ID.
+
+`SpellIssue` implements value equality/hash code including suggestions and language metadata.
+
+## `SpellCheckReport`
 
 ```dart
-text.substring(issue.start, issue.end) == issue.word
+class SpellCheckReport {
+  final List<SpellIssue> issues;
+  final int scannedTokenCount;
+  final bool truncated;
+  final int? issueLimit;
+
+  bool get complete;
+  int get capturedIssueCount;
+}
 ```
 
-`languageId` identifies the producing pack when available.
+The constructor validates:
 
-# `TextCorrection`
+- non-negative token count;
+- positive `issueLimit` when present;
+- a truncated report must declare a limit;
+- captured issue count cannot exceed the limit;
+- scanned token count cannot be smaller than captured issue count.
 
-`TextCorrection` provides validated spelling-text mutation independent from Flutter widgets.
+`issues` is immutable.
 
-## `replaceOne`
+## `SpellSuggestion`
 
 ```dart
-TextCorrectionResult TextCorrection.replaceOne(
+class SpellSuggestion {
+  final String word;
+  final int distance;
+  final int frequencyRank;
+  final String languageId;
+  final String languageDisplayName;
+  final String source;
+}
+```
+
+Detailed suggestion metadata produced by `suggestionDetailsFor`. It implements value equality/hash code.
+
+## Suggestion ranking API
+
+### `SpellSuggestionCandidate`
+
+```dart
+class SpellSuggestionCandidate {
+  final String word;
+  final int distance;
+  final int prefixPenalty;
+  final int frequencyRank;
+  final String source;
+}
+```
+
+Metadata supplied to a ranker after eligibility/edit-distance filtering.
+
+### `SpellSuggestionRankingContext`
+
+```dart
+class SpellSuggestionRankingContext {
+  final String target;
+  final SpellLanguagePack languagePack;
+}
+```
+
+`target` is the normalized stem being corrected. A recognized suffix is removed for ranking and reattached later.
+
+### `SpellSuggestionRanker`
+
+```dart
+abstract interface class SpellSuggestionRanker {
+  int compare(
+    SpellSuggestionRankingContext context,
+    SpellSuggestionCandidate a,
+    SpellSuggestionCandidate b,
+  );
+}
+```
+
+Implementations should be deterministic and side-effect-free. When a custom ranker returns zero, the engine applies a final lexical word tie-break so equal custom scores remain stable.
+
+### `DefaultSpellSuggestionRanker`
+
+The default comparator orders by:
+
+1. edit distance;
+2. prefix/first-character penalty;
+3. frequency rank;
+4. candidate string length;
+5. engine lexical tie-break.
+
+## `TextCorrection`
+
+Correction helpers operate only on supplied issue ranges and validate stale source ownership before mutation.
+
+### `replaceOne`
+
+```dart
+static TextCorrectionResult replaceOne(
   String text,
   SpellIssue issue,
   String suggestion,
 )
 ```
 
-A replacement is performed only while the checked source range is still current. Stale/invalid issues return the unchanged text with zero replacements.
+Applies one suggestion when the issue range is valid, still equals `issue.word`, and the suggestion is non-empty. The replacement is adjusted through `matchCase`.
 
-## `replaceAll`
+### `replaceAll`
 
 ```dart
-TextCorrectionResult TextCorrection.replaceAll(
+static TextCorrectionResult replaceAll(
   String text,
   Iterable<SpellIssue> issues,
   String sourceWord,
@@ -237,113 +335,287 @@ TextCorrectionResult TextCorrection.replaceAll(
 )
 ```
 
-Replaces every still-current checked matching occurrence, applying replacements from the end toward the beginning so source offsets remain valid.
+Applies the suggestion only to supplied current issues whose word matches `sourceWord` case-insensitively. Matching ranges are applied from the end toward the beginning. This is not an unrestricted global string replacement.
 
-Only occurrences represented by the supplied issue list are eligible.
-
-## `matchCase`
+### `matchCase`
 
 ```dart
-String TextCorrection.matchCase(
-  String original,
-  String suggestion,
-)
+static String matchCase(String original, String suggestion)
 ```
 
-Preserves common casing patterns such as lowercase, title case, and uppercase.
+Preserves common all-uppercase and initial-uppercase casing patterns. First-scalar handling is Unicode-scalar-safe.
 
 ## `TextCorrectionResult`
 
 ```dart
-const TextCorrectionResult({
-  required String text,
-  required int caretOffset,
-  required int replacements,
-})
-```
+class TextCorrectionResult {
+  final String text;
+  final int caretOffset;
+  final int replacements;
 
-`changed` is true when one or more replacements were applied.
-
-# Personal dictionary codec
-
-## Version-2 language-aware documents
-
-Use:
-
-```dart
-final encoded = PersonalDictionaryCodec.encodeForLanguage(
-  words,
-  languagePack: pack,
-);
-```
-
-Current format:
-
-```json
-{
-  "version": 2,
-  "language": "en-US",
-  "words": ["example", "flutter"]
+  bool get changed;
 }
 ```
 
-`decodeDocument()` returns a `PersonalDictionaryDocument` containing:
+`changed` is true when at least one replacement was applied.
 
-```text
-version
-languageId
-words
-```
-
-Version-2 documents carry explicit language identity so the application can reject accidental cross-language imports.
-
-## Legacy compatibility
-
-`PersonalDictionaryCodec.encode(words)` remains version-1-compatible.
-
-Accepted legacy import forms include:
-
-- Version-1 SpellChecker objects.
-- JSON arrays.
-- Plain newline/comma-separated word lists.
-
-Legacy forms inherit the caller/selected language because they contain no language metadata.
-
-## Normalization
-
-Personal-word normalization is language-pack aware when a pack is supplied. Curly apostrophes and supported Unicode hyphen variants are normalized according to the selected pack.
-
-Malformed entries and unsupported document versions throw `FormatException` rather than being guessed.
-
-# Edit distance
+## `TextStatistics`
 
 ```dart
-int damerauLevenshteinDistance(String source, String target)
+class TextStatistics {
+  final int characters;
+  final int words;
+  final int sentences;
+
+  factory TextStatistics.fromText(String text);
+}
 ```
 
-Supports insertion, deletion, substitution, and adjacent transposition under the implementation's distance model.
+`characters` uses Dart string length (UTF-16 code units). Word counting uses the current Unicode letter/combining-mark/apostrophe/hyphen token pattern. Sentence counting recognizes `. ! ?` runs with common closing quotes/brackets and counts a remaining non-empty trailing sentence fragment.
 
-# Text statistics
+# Language API
+
+## `SpellWordNormalizer`
 
 ```dart
-final stats = TextStatistics.fromText('Hello world.');
+typedef SpellWordNormalizer = String Function(String word);
 ```
 
-Fields:
+Normalizer callback used by a language pack.
+
+## `SpellLanguagePack`
+
+Constructor fields define the language-specific spelling contract:
 
 ```text
-characters
-words
-sentences
+id
+languageCode
+regionCode
+displayName
+dictionary
+wordFrequencies
+tokenPattern
+validWordPattern
+normalizer
+recognizedSuffixes
+suggestionSource
 ```
 
-Word counting is Unicode-letter aware and keeps supported internal straight/curly apostrophes and ASCII/Unicode hyphen forms inside the same word token.
+Dictionary, frequency, and suffix collections are captured as immutable snapshots by the constructor.
 
-# Writing-rule API
+### Methods
+
+```dart
+String normalizeWord(String word)
+Iterable<RegExpMatch> tokenize(String text)
+bool isValidWord(String word)
+int maximumSuggestionDistance(int wordLength)
+```
+
+The default suggestion-distance policy is:
+
+```text
+length <= 4  -> 1
+length <= 8  -> 2
+otherwise    -> 3
+```
+
+Callers can create custom `SpellLanguagePack` instances with a different token/validation/normalization/dictionary contract, but `maximumSuggestionDistance` is currently concrete rather than injectable/overridable through constructor data.
+
+Pack equality/hash code are based on stable `id`.
+
+## `SpellLanguageRegistry`
+
+Current built-ins:
+
+```text
+en-US  English (US)
+en-GB  English (UK)
+```
+
+Public members:
+
+```dart
+static final SpellLanguagePack englishUs
+static final SpellLanguagePack englishGb
+static List<SpellLanguagePack> get builtIns
+static SpellLanguagePack get defaultPack
+static SpellLanguagePack byId(String? id)
+static bool contains(String id)
+```
+
+`defaultPack` is `englishUs`.
+
+`byId` is deliberately fallback-oriented: null, empty, or unsupported IDs resolve to the default pack. Use `contains(id)` when strict validation is required before resolution.
+
+The built-in English normalizer trims, lowercases, normalizes supported apostrophe/hyphen variants, and composes a defined set of common decomposed Latin sequences used by bundled vocabulary.
+
+See [Language packs](LANGUAGE_PACKS.md) for extension guidance.
+
+# Personal dictionary transfer API
+
+## `PersonalDictionaryDocument`
+
+```dart
+class PersonalDictionaryDocument {
+  final int version;
+  final String languageId;
+  final Set<String> words;
+}
+```
+
+`words` is immutable.
+
+## `PersonalDictionaryCodec`
+
+Constants:
+
+```dart
+static const int legacyVersion = 1;
+static const int currentVersion = 2;
+```
+
+### `encode`
+
+```dart
+static String encode(Iterable<String> words)
+```
+
+Produces the legacy version-1 object for the default language context. Retained for compatibility.
+
+### `encodeForLanguage`
+
+```dart
+static String encodeForLanguage(
+  Iterable<String> words, {
+  required SpellLanguagePack languagePack,
+})
+```
+
+Produces current version-2 JSON with explicit language metadata.
+
+### `decode`
+
+```dart
+static Set<String> decode(
+  String source, {
+  SpellLanguagePack? languagePack,
+})
+```
+
+Returns only decoded words.
+
+### `decodeDocument`
+
+```dart
+static PersonalDictionaryDocument decodeDocument(
+  String source, {
+  SpellLanguagePack? languagePack,
+})
+```
+
+Accepts supported versioned JSON objects, JSON arrays, and compatible plain line/comma lists. Empty input produces an empty current document using the supplied/default pack.
+
+Version-2 objects must include a supported registered language ID. Invalid format/version/entries raise `FormatException`.
+
+### `normalizeWord`
+
+```dart
+static String normalizeWord(
+  Object? value, {
+  SpellLanguagePack? languagePack,
+})
+```
+
+Returns a valid normalized word or the empty string when the supplied value is not a valid word for the pack.
+
+See [Configuration](CONFIGURATION.md) for application import/merge behavior.
+
+# Portable settings API
+
+## `SpellCheckerSettingsDocument`
+
+```dart
+class SpellCheckerSettingsDocument {
+  final String languageId;
+  final int suggestionLimit;
+  final Map<String, Set<String>> writingRuleOverrides;
+
+  bool hasWritingRuleOverride(String languageId);
+  Set<String>? writingRuleIdsFor(String languageId);
+}
+```
+
+`writingRuleOverrides` is an immutable map of immutable sets.
+
+An absent language key means “unset; use registry defaults.” A present empty set means “explicitly disable all writing rules.”
+
+## `SpellCheckerSettingsCodec`
+
+Constants:
+
+```dart
+static const String format = 'spellchecker-settings';
+static const int version = 1;
+static const int minSuggestionLimit = 1;
+static const int maxSuggestionLimit = 10;
+```
+
+### `encode`
+
+```dart
+static String encode(SpellCheckerSettingsDocument document)
+```
+
+Validates the document and produces deterministic indented JSON with sorted language keys and rule IDs.
+
+### `decode`
+
+```dart
+static SpellCheckerSettingsDocument decode(String source)
+```
+
+Strictly validates the format identifier/version, registered language IDs, suggestion bound, override object shape, rule-ID syntax, and duplicate rule IDs. Invalid documents raise `FormatException`.
+
+The codec intentionally carries preferences only; it does not serialize editor text, personal vocabulary, ignored words, findings, or correction history.
+
+# Writing API
+
+## `WritingIssueSeverity`
+
+```dart
+enum WritingIssueSeverity {
+  info,
+  suggestion,
+  warning,
+}
+```
+
+## `WritingIssue`
+
+```dart
+class WritingIssue {
+  final String ruleId;
+  final String ruleName;
+  final String message;
+  final int start;
+  final int end;
+  final String originalText;
+  final String? replacement;
+  final String languageId;
+  final WritingIssueSeverity severity;
+
+  bool get hasAutomaticFix;
+}
+```
+
+`replacement == null` means advisory. An empty replacement is still an automatic fix. The class implements value equality/hash code.
+
+## `WritingRuleCategory`
+
+Current public review categories are Mechanics and Clarity. Category is independent from issue severity.
 
 ## `WritingRule`
-
-A writing rule defines:
 
 ```dart
 abstract class WritingRule {
@@ -351,6 +623,9 @@ abstract class WritingRule {
   String get displayName;
   String get description;
   Set<String> get supportedLanguageIds;
+  WritingRuleCategory get category;
+
+  bool supports(SpellLanguagePack languagePack);
 
   Iterable<WritingIssue> analyze(
     String text,
@@ -359,531 +634,258 @@ abstract class WritingRule {
 }
 ```
 
-Rule IDs are stable persisted identifiers in V2.1. They must not be renamed casually.
+`category` defaults to Mechanics for source compatibility with earlier external rules.
+
+## Built-in rule classes
+
+`package:spellchecker/writing.dart` exports:
+
+```text
+RepeatedWordRule
+SentenceCapitalizationRule
+RepeatedSpaceRule
+PunctuationSpacingRule
+MissingPunctuationSpaceRule
+TrailingWhitespaceRule
+RepeatedPunctuationRule
+UnmatchedParenthesisRule
+UnmatchedSquareBracketRule
+UnmatchedCurlyBraceRule
+```
+
+See [Writing rules](WRITING_RULES.md) for exact rule IDs/source scopes/correction behavior.
 
 ## `WritingRuleRegistry`
 
-`WritingRuleRegistry.builtIns` contains the built-in rules.
-
-Current IDs:
-
-```text
-repeated-word
-sentence-capitalization
-repeated-space
-punctuation-spacing
-trailing-whitespace
-repeated-punctuation
+```dart
+static const List<WritingRule> builtIns
+static WritingRule? byId(String id)
+static Set<String> get defaultEnabledRuleIds
 ```
 
-`WritingRuleRegistry.defaultEnabledRuleIds` is used when no writing-rule preference exists for the active language.
+The current built-in/default registry contains ten stable rule IDs. `byId` returns null for an unknown ID.
 
 ## `WritingAnalyzer`
 
 ```dart
-final result = WritingAnalyzer().analyze(
-  text,
-  languagePack: pack,
-  enabledRuleIds: enabledIds,
-);
+WritingAnalyzer({Iterable<WritingRule>? rules})
+
+List<WritingRule> get rules
+
+WritingAnalysisResult analyze(
+  String text, {
+  required SpellLanguagePack languagePack,
+  Set<String>? enabledRuleIds,
+  int? maxIssues,
+})
 ```
 
-The analyzer:
+The configured rule list is validated for duplicate IDs and exposed as an immutable snapshot.
 
-- Runs only rules supporting the selected pack.
-- Applies optional rule-ID filtering.
-- Returns immutable findings sorted deterministically.
-- Reports which rule IDs actually ran.
-- Exposes per-rule issue counts.
+`enabledRuleIds == null` runs every configured rule that supports the pack. An explicit set runs only matching supported IDs. `maxIssues`, when supplied, must be positive.
 
-`enabledRuleIds == null` means run all supported rules configured in that analyzer. The Flutter application normally passes its resolved persisted/default set explicitly.
+Analyzer-produced results always include exact overall/per-rule totals even when retained findings are bounded.
 
-## `WritingIssue`
+## `WritingAnalysisResult`
 
-A finding contains:
+Core fields/getters:
 
 ```text
-ruleId
-ruleName
-message
-start
-end
-originalText
-replacement
+issues
+analyzedRuleIds
 languageId
-severity
+issueLimit
+isTruncated
+totalIssueCount
+totalIssueCountByRule
+isClean
+isComplete
+capturedIssueCount
+hasExactIssueTotals
+uncapturedIssueCount
+issueCountByRule
 ```
 
-`replacement == null` means advisory-only. An empty replacement string is still a valid automatic fix and can represent deletion.
+`issues`, analyzed IDs, and exact-per-rule totals are immutable snapshots.
 
-For a current issue:
+The constructor enforces consistency between issue ranges' rule/language metadata, capture limits, complete/truncated state, exact totals, and per-rule totals.
+
+`totalIssueCount`/`totalIssueCountByRule` remain nullable so callers that directly construct compatibility-style results can omit exact diagnostics. Results returned by `WritingAnalyzer.analyze()` provide them.
+
+## `WritingCorrection`
+
+### `apply`
 
 ```dart
-text.substring(issue.start, issue.end) == issue.originalText
-```
-
-## `WritingCorrection.apply`
-
-```dart
-WritingCorrectionResult WritingCorrection.apply(
+static WritingCorrectionResult apply(
   String text,
   WritingIssue issue,
 )
 ```
 
-Applies one automatic fix only when the current source range still equals `originalText`.
+Applies one current automatic replacement. Advisory/stale/invalid findings return unchanged text with `applied == false`.
 
-Result fields:
-
-```text
-text
-caretOffset
-applied
-```
-
-## `WritingCorrection.applyAll` — V2.1
+### `applyAll`
 
 ```dart
-WritingBatchCorrectionResult WritingCorrection.applyAll(
+static WritingBatchCorrectionResult applyAll(
   String text,
   Iterable<WritingIssue> issues,
 )
 ```
 
-Batch safety contract:
+Sorts candidates by start/end/rule ID, skips advisory/stale/overlapping candidates, accepts deterministic non-overlapping fixes, and mutates from end to start.
 
-1. Sort candidates by `start`, then `end`, then `ruleId`.
-2. Skip advisory findings without replacements.
-3. Skip invalid/stale findings.
-4. When findings overlap, keep the earliest deterministic candidate and skip later overlaps.
-5. Apply accepted replacements from the document end toward the beginning.
-6. Return the single final document text and counts.
-
-### `WritingBatchCorrectionResult`
+## `WritingCorrectionResult`
 
 ```dart
-const WritingBatchCorrectionResult({
-  required String text,
-  required int caretOffset,
-  required int appliedCount,
-  required int skippedCount,
-})
+class WritingCorrectionResult {
+  final String text;
+  final int caretOffset;
+  final bool applied;
+}
 ```
 
-Convenience getter:
+## `WritingBatchCorrectionResult`
 
 ```dart
-bool get applied
+class WritingBatchCorrectionResult {
+  final String text;
+  final int caretOffset;
+  final int appliedCount;
+  final int skippedCount;
+
+  bool get applied;
+}
 ```
-
-`applied` is true when `appliedCount > 0`.
-
-The Flutter editor records one successful `applyAll` result as one correction-history entry, making a complete writing batch one-step undoable.
-
-See [WRITING_RULES.md](WRITING_RULES.md) for the full rule and batch-correction specification.
-
-# V2.2 writing review APIs
-
-## `WritingRuleCategory`
-
-Public review categories currently include:
-
-```dart
-WritingRuleCategory.mechanics
-WritingRuleCategory.clarity
-```
-
-Each category exposes `displayName`.
-
-`WritingRule.category` is a concrete getter defaulting to Mechanics so rules written against the original V2.0 contract remain source-compatible. Rules can override the getter.
 
 ## `WritingReviewQuery`
 
 ```dart
-final query = WritingReviewQuery(
-  search: 'space',
-  categories: <WritingRuleCategory>{WritingRuleCategory.mechanics},
-  automaticFixesOnly: true,
-);
+WritingReviewQuery({
+  String search = '',
+  Iterable<WritingRuleCategory> categories = const [],
+  bool automaticFixesOnly = false,
+})
 ```
 
-Public fields:
+Public state/helpers:
 
 ```text
 search
 categories
 automaticFixesOnly
 isEmpty
+filterRules(...)
+filterIssues(...)
+matchesRule(...)
 ```
 
-Methods:
-
-```dart
-List<WritingRule> filterRules(Iterable<WritingRule> rules)
-
-List<WritingIssue> filterIssues(
-  Iterable<WritingIssue> issues, {
-  required Iterable<WritingRule> rules,
-})
-```
-
-Search is case-insensitive after trimming/lowercasing and covers rule/finding metadata. Category filtering requires a matching supplied rule. `automaticFixesOnly` affects findings and leaves the rule list available for management.
-
-Review queries have no persistence/network behavior. The Flutter dialog stores search/categories/automatic-only state in memory only.
-
-## Reset-to-default application contract
-
-`WritingInsightsDialog` is internal UI, but its V2.2 user-visible contract is documented: **Reset rules to defaults** clears the selected language's stored rule-ID override through `DictionaryPreferences.clearWritingRuleIds` and resolves current registry defaults instead of storing a concrete default list.
-
-This preserves the application persistence distinction between missing/unset and explicit stored values.
-
-# V2.4 suggestion ranking APIs
-
-## `SpellSuggestionCandidate`
-
-Public immutable metadata for a candidate that already passed engine eligibility and maximum-edit-distance filtering:
-
-```text
-word
-edit distance
-prefixPenalty
-frequencyRank
-source
-```
-
-Rankers cannot use this API to reintroduce a candidate that the engine rejected before ranking.
-
-## `SpellSuggestionRankingContext`
-
-Provides the normalized target stem and active `SpellLanguagePack`. Recognized suffixes are removed before candidate ranking and reattached afterward, matching pre-V2.4 behavior.
-
-## `SpellSuggestionRanker`
-
-Implement `compare(context, a, b)` to order eligible candidates. Implementations should be deterministic and side-effect free. `SpellCheckerEngine` caches ranked results per normalized input word and assumes its ranker remains semantically stable for the engine lifetime.
-
-If a ranker returns zero, the engine compares candidate words lexically. That final tie-break is engine-owned and guarantees deterministic ordering for equal custom scores.
-
-## `DefaultSpellSuggestionRanker`
-
-The default preserves the historical policy:
-
-1. Lower Damerau-Levenshtein edit distance.
-2. Lower first-character/prefix penalty.
-3. Better (lower) frequency rank.
-4. Shorter candidate word.
-5. Engine lexical fallback.
-
-## Engine injection
-
-```dart
-final engine = SpellCheckerEngine(
-  suggestionRanker: const MySuggestionRanker(),
-);
-```
-
-The new parameter is optional; callers that do not provide a ranker retain pre-V2.4 ordering.
-
-
-# V2.3 review preset and portable-settings APIs
+Search is normalized to trimmed lowercase. Categories are stored as an immutable set.
 
 ## `WritingReviewPreset`
 
-`package:spellchecker/writing.dart` exports immutable reusable review presets. Current stable IDs are:
+Fields:
+
+```text
+id
+displayName
+description
+categories
+automaticFixesOnly
+isAllFindings
+```
+
+Helpers:
+
+```dart
+WritingReviewQuery toQuery({String search = ''})
+static WritingReviewPreset byId(String? id)
+```
+
+Stable built-ins:
 
 ```text
 all-findings
-automatic-fixes
-clarity
 mechanics
+clarity
+automatic-fixes
 ```
 
-`WritingReviewPreset.values` exposes the built-ins; `WritingReviewPreset.byId(id)` falls back to `allFindings` for an unknown/null ID. `preset.toQuery(search: ...)` returns the corresponding `WritingReviewQuery`. Search is caller-supplied/transient and is not stored in the preset.
+`values` exposes all built-in presets. Unknown/null IDs resolve to `allFindings`.
 
-Preset IDs are compatibility-sensitive metadata. Do not silently reuse an existing ID for different semantics.
+## Diagnostic summary API
 
-## `SpellCheckerSettingsDocument`
+### `WritingRuleDiagnosticSummary`
 
-`package:spellchecker/spell_checker.dart` exports the versioned portable preference document:
-
-```dart
-final document = SpellCheckerSettingsDocument(
-  languageId: 'en-US',
-  suggestionLimit: 5,
-  writingRuleOverrides: <String, Iterable<String>>{
-    'en-US': <String>{'sentence-capitalization'},
-    'en-GB': const <String>[],
-  },
-);
-```
-
-`writingRuleOverrides` contains **explicit overrides only**. `hasWritingRuleOverride(languageId) == false` means unset/use current registry defaults. A present empty set means explicit disable-all.
-
-## `SpellCheckerSettingsCodec`
-
-Current constants:
+Contains stable per-rule metadata:
 
 ```text
-format = spellchecker-settings
-version = 1
-minSuggestionLimit = 1
-maxSuggestionLimit = 10
+ruleId
+displayName
+capturedIssueCount
+totalIssueCount
 ```
 
-`encode(document)` validates language IDs, suggestion limits, and rule IDs and emits deterministic indented JSON with sorted language keys/rule IDs.
+### `WritingAnalysisDiagnosticSummary`
 
-`decode(source)` rejects malformed JSON, unsupported format/version, unsupported language IDs, invalid override structures, malformed rule IDs, and suggestion limits outside 1–10. Well-formed unknown future rule IDs are preserved instead of being discarded by the codec.
-
-The codec is intentionally storage/network agnostic and never carries editor text, personal vocabulary, ignored words, findings, or correction history.
-
-## Internal `SettingsTransferService`
-
-The Flutter application uses an internal storage service to project `SpellCheckerSettingsDocument` onto `DictionaryPreferences`. It is not part of the public barrel guarantee. The service snapshots prior portable preferences and performs best-effort rollback if a multi-key import write fails; `shared_preferences` does not provide transactional writes.
-
-
-# Application persistence boundary
-
-`DictionaryPreferences` is an application-internal adapter under `lib/storage/`; it is intentionally not exported from the public core/writing barrels.
-
-V2.1 persists:
-
-- Selected language ID.
-- Personal words per language.
-- Suggestion-count preference.
-- Enabled writing-rule IDs per language.
-
-Writing-rule preference keys use:
-
-```text
-spellchecker.writing_rule_ids.v1.<language-id>
-```
-
-The application distinguishes:
-
-- Missing key → use current registry defaults.
-- Non-empty stored list → use those supported IDs.
-- Empty stored list → explicitly disable all rules for that language.
-
-The application does not persist:
-
-- Editor text.
-- Spelling results.
-- Writing findings.
-- Ignored words.
-- Active issue position.
-- Correction undo snapshots.
-- Batch correction plans.
-
-# UI integration types
-
-`SpellCheckEditingController`, `SpellCheckerPage`, `DictionaryManagerDialog`, and `WritingInsightsDialog` live under `lib/features/` and are not currently part of the reusable public API guarantee.
-
-Application-level behavior includes:
-
-- Inline spelling highlighting.
-- Active issue navigation and selection.
-- `F7` / `Shift+F7` spelling navigation.
-- `Ctrl/Command+Enter` spelling check.
-- `Ctrl/Command+Shift+Enter` Writing insights.
-- Spelling replace-all.
-- Writing individual safe fix.
-- Writing **Apply all safe fixes**.
-- Shared bounded correction undo.
-- Per-language saved word and writing-rule preferences.
-- Accessibility live regions and semantic labels.
-
-# Stability
-
-`lib/spell_checker.dart`, `lib/language.dart`, and `lib/writing.dart` are the intended reusable public API barrels for the 2.x line.
-
-Internal files under `lib/features/`, `lib/data/`, and `lib/storage/` can evolve more freely, but documented data formats, persisted preference semantics, correction-safety behavior, and public exported APIs require compatibility review and release notes when changed.
-
-# V2.5 bounded spelling-analysis APIs
-
-## `SpellCheckReport`
-
-`SpellCheckReport` is exported through `package:spellchecker/spell_checker.dart` and is an in-memory immutable report value.
+Build with:
 
 ```dart
-final report = engine.analyze(text, maxIssues: 200);
-```
-
-Fields/getters:
-
-```text
-issues                 immutable captured SpellIssue list
-scannedTokenCount      tokens inspected before completion/truncation proof
-truncated              true only when another uncaptured issue is proven
-issueLimit             requested positive capture bound, or null
-complete               !truncated
-capturedIssueCount     issues.length
-```
-
-The report does not claim `scannedTokenCount` is the document's total token count when `truncated` is true; analysis returns at the first proven overflow unknown token. The public constructor enforces its consistency invariants at runtime in debug and release builds: non-negative scanned counts, positive optional limits, a declared limit for truncated reports, captured issues not exceeding the limit, and scanned-token counts not smaller than captured issue counts.
-
-## `SpellCheckerEngine.analyze`
-
-```dart
-SpellCheckReport analyze(
-  String text, {
-  int suggestionLimit = 5,
-  int? maxIssues,
-})
-```
-
-`maxIssues == null` performs unbounded issue capture. A supplied value must be greater than zero or `ArgumentError` is thrown.
-
-The engine captures issues in source order. Once the cap is full it continues token inspection without materializing further issues until it reaches the end or sees one more unknown token. That overflow token proves truncation and causes immediate return without suggestion generation for the overflow issue.
-
-## `check()` compatibility
-
-```dart
-List<SpellIssue> check(String text, {int suggestionLimit = 5})
-```
-
-The historical method remains public and unbounded. It delegates to `analyze()` with no issue cap and returns the report's immutable issue list. Existing call sites do not need to opt into V2.5 bounds.
-
-## Safety boundary
-
-`maxIssues` does not weaken language normalization, known-word checks, source offsets, suggestion ranking, edit-distance thresholds, stale correction protection, or personal/ignored dictionary behavior. It controls issue capture/suggestion work only.
-
-## V2.6 writing-rule API additions
-
-`package:spellchecker/writing.dart` now exports `PunctuationSpacingRule` and `TrailingWhitespaceRule`. Their stable IDs are `punctuation-spacing` and `trailing-whitespace` respectively. Both implement the existing `WritingRule` contract; no abstract interface member was added, so external rule implementations remain source-compatible.
-
-Both rules return exact, non-empty source ranges and deterministic empty-string replacements. `WritingRuleRegistry.builtIns` and `defaultEnabledRuleIds` now contain six built-ins. Existing explicit per-language stored rule-ID sets remain explicit and are intersected with supported registered IDs as before.
-
-`RepeatedSpaceRule` retains its public ID/API but narrows its matching responsibility to repeated interior spaces, delegating punctuation-adjacent and terminal whitespace ranges to the specialized V2.6 rules.
-
-## V2.7 writing-analysis bounds
-
-`WritingAnalyzer.analyze()` adds the optional named parameter `int? maxIssues`. Existing callers remain source-compatible because the parameter is optional and defaults to unbounded behavior.
-
-`WritingAnalysisResult` adds:
-
-```text
-issueLimit          requested positive capture limit, or null
-isTruncated         true only after an additional finding exists
-isComplete          convenience inverse of isTruncated
-capturedIssueCount  number of retained findings
-```
-
-`issues` remains immutable. In bounded mode it contains the globally earliest findings according to the analyzer's existing deterministic comparator. `issueCountByRule` describes retained findings only when a result is truncated.
-
-Passing zero or a negative `maxIssues` throws `ArgumentError`. Constructing inconsistent result metadata, such as a non-positive `issueLimit` or `isTruncated == true` without a limit, also throws `ArgumentError`.
-
-## V2.8 writing-analysis diagnostics
-
-Analyzer-produced `WritingAnalysisResult` values now expose exact deterministic finding totals in addition to the V2.7 retained-result metadata.
-
-### `WritingAnalysisResult.totalIssueCount`
-
-```dart
-int? get totalIssueCount;
-```
-
-For values returned by `WritingAnalyzer.analyze()`, this is the exact number of findings yielded by all enabled, supported rules for the supplied analysis input. It includes findings that were observed but not retained because `maxIssues` limited the captured list.
-
-Direct construction remains source-compatible with V2.7: callers may omit the diagnostic total, in which case `totalIssueCount` is `null` and the result must not be presented as having exact whole-analysis totals.
-
-### `WritingAnalysisResult.totalIssueCountByRule`
-
-```dart
-Map<String, int>? get totalIssueCountByRule;
-```
-
-Analyzer-produced results expose an immutable map from analyzed rule ID to the exact number of findings produced by that rule. Disabled or unsupported rules are not counted. Enabled/supported rules that produce no findings may appear with a zero count according to the analyzer's result construction.
-
-The map describes the same whole-analysis observation pass as `totalIssueCount`; it is not limited to `issues` when the result is truncated.
-
-### `WritingAnalysisResult.hasExactIssueTotals`
-
-```dart
-bool get hasExactIssueTotals;
-```
-
-This is true when exact overall diagnostics are available. Analyzer-produced results return true. Direct V2.7-style result construction may return false.
-
-### `WritingAnalysisResult.uncapturedIssueCount`
-
-```dart
-int? get uncapturedIssueCount;
-```
-
-When exact totals are present this equals:
-
-```text
-totalIssueCount - capturedIssueCount
-```
-
-For complete analyzer results the value is zero. For a genuinely truncated result it is positive. When exact totals are unavailable it is `null`.
-
-### Result consistency requirements
-
-`WritingAnalysisResult` validates exact diagnostics together with the existing V2.7 bounded metadata:
-
-- an exact total cannot be smaller than the retained issue count;
-- a complete result with exact totals must report an exact total equal to the retained count;
-- a truncated result with exact totals must prove at least one uncaptured finding;
-- captured findings must belong to a rule listed in `analyzedRuleIds`;
-- captured findings must use the same `languageId` as the result;
-- per-rule exact totals must be non-negative and may contain only analyzed rule IDs;
-- the per-rule exact-total map must sum to the exact overall total;
-- a per-rule exact total cannot under-report the retained count for that rule;
-- exact diagnostic maps are exposed immutably.
-
-### Analyzer behavior
-
-```dart
-final result = analyzer.analyze(
-  text,
-  languagePack: pack,
-  maxIssues: 200,
-);
-
-print(result.capturedIssueCount);   // retained findings, at most 200
-print(result.totalIssueCount);      // exact findings observed across the full analysis
-print(result.uncapturedIssueCount); // exact omitted count when diagnostics are available
-```
-
-V2.8 does not change the meaning of `maxIssues`. The bound controls retained `WritingIssue` objects and downstream review workload. Enabled/supported rules are still scanned across the supplied text so the analyzer can preserve the correct global review-order prefix and compute exact diagnostics.
-
-The diagnostics are count metadata only. They do not imply a CPU-time limit, wall-clock guarantee, document-size guarantee, network telemetry, or persistence behavior.
-
-# V2.9 writing-analysis diagnostic summary
-
-`package:spellchecker/writing.dart` exports `WritingAnalysisDiagnosticSummary` and `WritingRuleDiagnosticSummary`.
-
-```dart
-final result = WritingAnalyzer().analyze(
-  text,
-  languagePack: SpellLanguageRegistry.englishUs,
-  maxIssues: 200,
-);
 final summary = WritingAnalysisDiagnosticSummary.fromResult(
   result,
-  rules: WritingRuleRegistry.builtIns,
+  rules: analyzer.rules,
 );
-final reportText = summary.toPlainText();
 ```
 
-`fromResult` snapshots only analysis metadata. Rule rows are ordered lexically by stable rule ID regardless of iterable/set insertion order. If a direct compatibility result omits V2.8 exact totals, the summary preserves that uncertainty and renders exact total/uncaptured values as unavailable rather than guessing.
+Important members:
 
-`WritingAnalysisDiagnosticSummary` exposes language ID, captured count, optional exact total, optional capture limit, truncation state, immutable rule rows, `hasExactIssueTotals`, `uncapturedIssueCount`, and format version `1`. Each `WritingRuleDiagnosticSummary` contains rule ID/display name plus captured and optional exact total counts.
+```text
+formatVersion
+languageId
+capturedIssueCount
+totalIssueCount
+issueLimit
+isTruncated
+rules
+hasExactIssueTotals
+uncapturedIssueCount
+toPlainText()
+```
 
-The formatter does not read or serialize editor text, source excerpts, finding messages, replacements, source offsets, personal vocabulary, ignored words, review filters, correction history, timestamps, device identifiers, telemetry, or network metadata. Constructing/formatting the summary has no persistence, clipboard, or network side effect.
+Rule rows are sorted lexically by rule ID for deterministic output. The plain-text summary contains count/rule metadata only and intentionally excludes editor text, source excerpts, finding messages, replacements, and source offsets.
 
-# V2.10 developer benchmark API boundary
+# API stability and validation principles
 
-V2.10 adds developer tooling under `tool/benchmark/` and the `tool/benchmark_large_document.dart` command. These benchmark scenario/result/runner/options/reporter/command types are intentionally **not** exported from `package:spellchecker/spell_checker.dart`, `package:spellchecker/language.dart`, or `package:spellchecker/writing.dart`.
+## Immutable snapshots
 
-The benchmark composes the existing public spelling/language/writing APIs from outside the application runtime. V2.10 therefore adds no supported runtime package API surface, no application timing field on `SpellCheckReport` or `WritingAnalysisResult`, and no timing telemetry contract. Consumers that need performance measurements should treat the `tool/` implementation as repository developer tooling rather than a semver-stable library API.
+Public result/metadata collections are generally exposed as unmodifiable snapshots so callers cannot mutate analyzer/engine result ownership indirectly.
 
-See [V2.10 benchmark](V2_10_BENCHMARK.md) and [Performance](PERFORMANCE.md).
+## Runtime validation
 
-## V2.11 runtime and benchmark invariant hardening
+Invalid public values that would create ambiguous result semantics are rejected with `ArgumentError`, `FormatException`, or related runtime failures rather than relying solely on debug assertions.
 
-`WritingInsightsDialog` remains an editor-feature widget rather than a new exported writing-model API, but its existing `maxIssues` constructor parameter is now validated at runtime. Values less than or equal to zero throw `ArgumentError` in release and debug builds. The default remains 200.
+## Determinism
 
-V2.11 does not change `WritingAnalyzer.analyze()`, `WritingAnalysisResult`, `WritingIssue`, writing-rule IDs, correction APIs, language packs, persistence keys, or diagnostic-summary format. Review keyboard shortcuts and semantic labels operate over the existing analysis/query models.
+Suggestion ranking, writing result ordering, bounded retention, batch conflict selection, codecs, and diagnostic-summary ordering are designed to be deterministic for the same source/configuration.
 
-The developer benchmark under `tool/` strengthens its internal sample invariant: `writingTotalIssueCountByRule` must contain exactly one non-negative entry for every analyzed writing rule and no other rule. The runner materializes explicit zero values for analyzed rules that produced no findings before constructing a sample. This benchmark tooling remains outside the public package barrels and keeps JSON format version 1.
+## Privacy
+
+Public analysis/model types do not perform network requests. Clipboard and persistence actions belong to application integration code, not the core analyzer/issue types.
+
+## Source compatibility
+
+Several nullable/defaulted fields preserve compatibility with earlier API shapes, including optional `SpellIssue.languageId`, concrete default `WritingRule.category`, and nullable exact-total metadata on directly constructed `WritingAnalysisResult` values.
+
+# Examples and integration guidance
+
+Use [Library examples](EXAMPLES.md) for copyable code and [Architecture](ARCHITECTURE.md) for layer boundaries.
+
+For specific topics:
+
+- [Language packs](LANGUAGE_PACKS.md)
+- [Writing rules](WRITING_RULES.md)
+- [Configuration and transfer formats](CONFIGURATION.md)
+- [Performance and bounded analysis](PERFORMANCE.md)
+- [Testing](TESTING.md)
+- [Glossary](GLOSSARY.md)

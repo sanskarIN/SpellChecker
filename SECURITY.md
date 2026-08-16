@@ -1,336 +1,347 @@
 # Security Policy
 
-## V2.16 final stabilization
-V2.16 strengthens fail-closed local import parsing and persistence error reporting. It adds no network service, telemetry, account system, document upload, or new runtime dependency. Security reports should continue to distinguish malformed local data handling from remote attack surfaces the application does not expose.
+This policy describes the current SpellChecker `2.16.0+21` security model, supported versions, reporting process, trust boundaries, and contributor expectations.
 
+For privacy/data-flow details, see [docs/PRIVACY.md](docs/PRIVACY.md). Historical release-specific security notes remain available through [docs/RELEASE_HISTORY.md](docs/RELEASE_HISTORY.md).
 
-## V2.15 local-analysis boundary
-Unmatched curly-brace diagnostics are computed locally from in-memory editor text. V2.15 adds no network request, telemetry, account behavior, background upload, cloud grammar service, or document persistence.
-
-
-## V2.14 structural diagnostic security boundary
-
-`UnmatchedSquareBracketRule` scans the in-memory editor string locally and never executes or interprets bracket contents. It adds no parser, network request, telemetry, account, upload, persistence key, runtime dependency, or hidden clipboard action. Copied writing diagnostics continue to expose stable rule metadata/counts rather than document excerpts.
-
-## V2.13 writing-rule security boundary
-
-`UnmatchedParenthesisRule` treats input as data only: it scans literal UTF-16 delimiters and does not execute, interpret, fetch, or evaluate surrounding code/markup. It is advisory-only and therefore cannot mutate a document through its own finding. Large/untrusted-input policies still belong to the host application; the built-in stress tests are regression coverage, not an execution-time sandbox.
-
-## V2.12 security note
-
-The new missing-punctuation rule is deterministic, source-controlled, local code. It deliberately excludes period/colon syntax, does not load remote rules or data, and uses the existing stale-source validation and conservative batch-overlap policy before mutation. V2.12 adds no new dependency, service, credential, network request, file parser, or dynamic plugin-loading path.
 ## Supported versions
 
-Security fixes are applied to the latest code on `main` and, when applicable, the newest tagged release.
+Security fixes are applied to the latest code on `main` and, when practical, the newest tagged release.
 
-| Version | Supported |
+| Version | Support |
 | --- | --- |
-| Latest `main` | Yes |
-| Latest release | Yes |
-| Older releases | Best effort |
+| Latest `main` | supported |
+| Latest release | supported |
+| Older releases | best effort |
 
 ## Reporting a vulnerability
 
-Do not publish exploitable security details, secrets, private documents, sensitive personal vocabulary, writing findings, or correction-history content in a normal public issue.
+Do not publish exploitable details, secrets, private documents, sensitive personal vocabulary, or other user data in a normal public issue.
 
-Preferred reporting method:
+Preferred process:
 
-1. Use GitHub Private Vulnerability Reporting if enabled for the repository.
-2. If unavailable, contact the maintainer through a private contact method listed on the maintainer's GitHub profile.
+1. use GitHub Private Vulnerability Reporting for this repository when available;
+2. if private reporting is unavailable, contact the maintainer through a private contact method listed on the maintainer's GitHub profile;
+3. provide a minimal synthetic reproduction rather than real private data.
 
 A useful report includes:
 
-- Affected version or commit.
-- Affected component.
-- Reproduction steps using non-sensitive synthetic data.
-- Expected and actual behavior.
-- Security impact.
-- Suggested mitigation, if known.
+- affected version/commit;
+- affected component;
+- reproduction steps;
+- expected versus actual behavior;
+- security impact;
+- environment/platform when relevant;
+- mitigation idea, if known.
 
-## Security principles
+Do not include credentials/tokens/keys in the report body; rotate exposed credentials through the relevant provider first.
+
+## Security goals
 
 SpellChecker is designed to:
 
-- Perform spelling and deterministic writing analysis locally.
-- Avoid transmitting editor text by default.
-- Persist only user-controlled local settings.
-- Keep ignored words, findings, active analysis state, and correction history in memory only.
-- Validate source offsets before automatic text mutation.
-- Resolve batch correction overlaps conservatively and deterministically.
-- Validate imported dictionary data instead of executing/interpreting arbitrary content.
-- Avoid embedding secrets in source code.
-- Minimize runtime dependencies.
-- Keep persisted key/data formats versioned where compatibility matters.
-- Run automated analysis/tests before release.
+- perform spelling and deterministic writing analysis locally;
+- avoid requiring a remote text-analysis service;
+- minimize runtime dependencies;
+- keep editor text/findings/correction history out of durable preference storage;
+- validate imported settings/dictionary metadata strictly;
+- validate current source ownership before automatic text mutation;
+- resolve writing batch overlaps conservatively/deterministically;
+- keep rule/language/persistence identifiers versioned/stable where compatibility matters;
+- avoid dynamic execution of imported dictionary/settings data;
+- avoid downloading/executing untrusted writing rules;
+- surface preference write failures instead of falsely claiming durability;
+- run automated formatting/analyzer/tests/benchmark smoke before merge/release.
 
-## Local persistence — V2.1
+## Current runtime attack surface
 
-SpellChecker uses Flutter `shared_preferences` for local device/profile settings:
-
-- Selected language ID.
-- Personal dictionary words per language.
-- Suggestion-count preference.
-- Enabled writing-rule IDs per language.
-
-Example key families:
+The bundled application currently has a deliberately small runtime integration surface:
 
 ```text
-spellchecker.language_id.v1
-spellchecker.personal_words.v2.<language-id>
-spellchecker.suggestion_limit.v1
-spellchecker.writing_rule_ids.v1.<language-id>
+Flutter framework
+shared_preferences local storage
+Flutter clipboard API for explicit copy actions
+browser/host rendering/storage/clipboard behavior
 ```
 
-The stored writing-rule values are identifiers only; they do not contain editor text or finding excerpts.
+There is no current runtime dependency for:
 
-The application does not persist:
+- HTTP/network text analysis;
+- telemetry/analytics;
+- advertising;
+- user authentication/accounts;
+- remote logging;
+- cloud document sync;
+- dynamic plugin/rule downloads;
+- remote model inference.
 
-- Editor documents.
-- Checked spelling-result lists.
-- Writing finding lists/messages/source excerpts.
-- Active issue selection.
-- Temporary ignored words.
-- Suggestion caches.
-- Correction undo snapshots.
-- Batch correction plans.
+A future change adding any of those materially changes the threat model and requires explicit security/privacy/design review.
 
-Treat persisted personal vocabulary as user data and avoid logging/exposing it unnecessarily.
+## Untrusted editor text
 
-## V2.2 review-query security/privacy boundary
+Treat editor text as untrusted data.
 
-Review search/category/automatic-only controls operate only on already-local rule metadata and in-memory findings. They do not trigger remote search, external rule loading, or background document indexing.
+Core analyzers:
 
-Search text can contain words copied from a finding/document, so it must remain memory-only and must not be added to preference keys, logs, analytics, crash metadata, or network requests.
+- tokenize/compare/scan strings;
+- do not execute document contents;
+- do not evaluate code/markup;
+- do not interpret strings as commands;
+- do not fetch URLs embedded in text;
+- do not dynamically load code based on text.
 
-Filtered batch actions still pass through `WritingCorrection.applyAll`; filtering does not grant permission to bypass stale-range or overlap checks.
+Structural delimiter rules scan literal delimiter characters only. They are not programming-language/template/Markdown parsers and never execute surrounding text.
 
-**Reset rules to defaults** removes only the selected language's writing-rule preference key. It must not clear unrelated language vocabulary/settings or execute/load rules based on untrusted stored IDs.
+## Source-range mutation safety
 
-## Writing-rule preference integrity
+Automatic correction is a security/correctness boundary because stale offsets could mutate unintended text.
 
-V2.1 preserves three distinct states:
+### Spelling
+
+`TextCorrection` requires current source ranges to still match `SpellIssue.word` before applying. Replace-all operates only on supplied represented issues and applies from source end toward the beginning.
+
+### Writing
+
+`WritingCorrection.apply` requires a non-null replacement plus exact current `originalText` ownership.
+
+`applyAll`:
+
+- sorts by deterministic source ordering;
+- skips advisory findings;
+- skips invalid/stale ranges;
+- skips later overlapping candidates;
+- applies accepted edits end-to-start.
+
+Filtered UI batches use the same correction engine; filtering does not bypass validation/conflict rules.
+
+## Advisory structural rules
+
+`unmatched-parenthesis`, `unmatched-square-bracket`, and `unmatched-curly-brace` are advisory-only. They detect literal imbalance but do not guess insertion/deletion/movement rewrites.
+
+This separates deterministic detection from mutation when the correct fix is ambiguous.
+
+## UTF-16 / Unicode safety
+
+Public issue source ranges are UTF-16 code-unit offsets matching Dart/Flutter string editing. Scalar-sensitive algorithms use Unicode scalar iteration where required to avoid splitting non-BMP characters.
+
+Changes to Unicode-sensitive parsing/correction must include non-BMP/decomposed-sequence regression coverage where relevant.
+
+Malformed imported text/metadata must not be used to bypass source ownership or index validation.
+
+## Local persistence
+
+Durable preference categories:
 
 ```text
-missing rule key   -> use current built-in defaults
-stored ID list     -> explicit enabled set
-stored empty list  -> explicit disable-all
+selected language
+suggestion limit
+per-language personal vocabulary
+per-language explicit writing-rule IDs
 ```
 
-Security/correctness implications:
+Not durably persisted by SpellChecker:
 
-- Do not reinterpret an explicit empty list as defaults.
-- Unknown stale rule IDs should be ignored safely, not executed dynamically.
-- Rule IDs are data identifiers, not code-loading instructions.
-- Renaming shipped IDs requires migration/compatibility review.
+```text
+editor text
+spelling results
+writing findings/messages/excerpts
+ignored session words
+suggestion cache
+active issue selection
+correction history
+review search/filter/preset state
+```
 
-## Spelling correction safety
+Personal vocabulary is user data and should not be exposed/logged unnecessarily.
 
-`SpellIssue` offsets are valid only for the checked text snapshot.
+## Preference integrity
 
-Correction code validates that current source text still matches before mutation.
+Writing-rule preferences intentionally distinguish:
 
-For spelling replace-all:
+```text
+missing key          -> current defaults
+non-empty stored set -> explicit enabled IDs
+empty stored set     -> explicit disable-all
+```
 
-- Only current checked matching ranges are eligible.
-- Replacements are applied from later offsets toward earlier offsets.
-- Stale ranges are skipped/refreshed rather than blindly mutating unrelated text.
+Do not collapse empty to missing/default. Unknown/stale rule IDs are intersected with supported current rules rather than executed dynamically.
 
-A correction path that applies unchecked stale offsets can corrupt user text and should be treated as a security/correctness defect.
+Preference writes/removals are considered successful only when the platform preference API reports success.
 
-## Writing correction safety
+## Import/export security
 
-Rules process current document text in memory and return exact source ranges.
+### Personal dictionary
 
-Individual automatic fixes must validate:
+Dictionary import treats input as data only. It validates JSON/version/language/word entries or supported plain-list forms, normalizes with the target language pack, and never evaluates content.
 
-- Replacement exists.
-- Source offsets are valid/current.
-- Current substring equals `WritingIssue.originalText` exactly.
+Current language-aware version-2 documents require a registered supported language ID. The bundled UI refuses to silently merge a document tagged for another language into the current language.
 
-V2.1 batch correction additionally:
+### Portable settings
 
-1. Sorts candidates deterministically by start/end/rule ID.
-2. Skips advisory/no-replacement findings.
-3. Skips invalid/stale findings.
-4. Accepts the earliest deterministic non-overlapping fix and skips later overlaps.
-5. Applies accepted edits from document end toward beginning.
-6. Returns one final text plus applied/skipped counts.
+Portable settings requires:
 
-Do not bypass `WritingCorrection` by directly applying finding replacements in widgets.
+```text
+format: spellchecker-settings
+version: 1
+```
 
-## Correction undo data
+The codec validates object shape, registered language IDs, suggestion bounds, override shapes, rule-ID syntax, and duplicates.
 
-The bounded shared correction stack can contain complete editor-text snapshots.
+Settings import does not load/execute rules from imported IDs. Effective enabled rules remain limited to source-controlled current registry rules that support the selected language.
 
-It is intentionally:
+### Fail-closed parsing
 
-- Memory-only.
-- Bounded.
-- Cleared by a new manual editing sequence.
-- Discarded with the application session.
-- Excluded from preferences and exports.
+Unsupported/malformed metadata should raise a validation failure rather than silently interpreting an ambiguous format.
 
-One snapshot can represent a spelling or writing automatic operation, including a V2.1 writing batch.
+## Import persistence transaction
 
-Persisting, logging, synchronizing, or uploading correction snapshots requires explicit security/privacy redesign.
+The application attempts to preserve/restore previous durable settings if Portable settings persistence fails partway through import.
 
-## Writing-rule code trust
+A failed storage write should not be reported as durable success. If restoration cannot be guaranteed, the UI marks storage unavailable/reports the failure.
 
-Current built-in rules are source-controlled Dart code compiled with the application.
+## Clipboard boundary
 
-`WritingRule` is an extension interface, but V2.1 does **not** dynamically download or execute untrusted third-party rule code.
+Dictionary/settings/diagnostic copy actions require explicit user action.
 
-Any future dynamic/plugin registry needs a separate threat model covering:
+Copied personal vocabulary or settings can become visible to other software according to host clipboard policy. SpellChecker cannot control clipboard readers after data has been copied.
 
-- Code origin/trust.
-- Signing/integrity.
-- Update channel.
-- Permission scope.
-- Sandbox/process boundaries where applicable.
-- Document access.
-- Network access.
-- Revocation.
-- Privacy disclosure.
+The metadata-only writing diagnostic excludes editor text/excerpts/replacements/offsets by design, reducing accidental data disclosure in support workflows.
 
-Do not treat a stored rule ID as permission to load arbitrary code.
+## Diagnostic output
 
-## Language-pack safety
+`WritingAnalysisDiagnosticSummary` contains counts and stable rule/language metadata only.
 
-Built-in packs are compiled local data. The current application does not download executable/content packs at runtime.
+It deliberately excludes:
 
-Language-tagged dictionary imports validate document version and supported language identity before merging.
+- document text;
+- source excerpts;
+- finding messages;
+- suggested replacements;
+- source offsets.
 
-Pack switches construct isolated session state so ignored words and personal vocabulary do not silently leak across languages. V2.1 also isolates writing-rule preferences by language.
+Future diagnostics/logging should default to similarly privacy-minimized metadata and require explicit design before including user content.
 
-Any remote pack/download mechanism requires separate signature/integrity, licensing, privacy, and update-channel review.
+## Denial-of-service / large inputs
 
-## Import/export safety
+The application provides bounded retained issue/finding policies, but these are not execution-time sandboxes.
 
-Personal dictionary imports accept only validated word data from supported versioned JSON, JSON arrays, or plain word lists.
+Important distinctions:
 
-Codec changes should:
+- spelling UI captures first 200 issues and avoids suggestion generation after overflow proof;
+- writing UI captures first 200 findings, but enabled rules still scan input to produce exact totals;
+- structural rules are iterative/stress-tested but large input still consumes CPU/memory;
+- public callers can request different/unbounded limits.
 
-- Reject malformed entries rather than evaluate/execute imported content.
-- Keep transfer formats data-only.
-- Preserve explicit version/language checks.
-- Avoid automatic remote fetch/import without separate review.
+Host applications accepting attacker-controlled very large inputs must apply their own input/resource policies as appropriate.
 
-Export writes user-approved vocabulary to the clipboard after explicit user action. It does not upload the export.
+Do not describe current capture limits as hard protection against all computational denial-of-service conditions.
 
-## Keyboard handling
+## Dynamic code/plugin boundary
 
-SpellChecker handles local key events for editor workflows, including spelling check, Writing insights, and spelling issue navigation.
+Current built-in writing rules are source-controlled Dart code. SpellChecker does not dynamically download or execute third-party rule code.
 
-It does not record keyboard telemetry or maintain a key-event history.
+Any future plugin-loading system must define before implementation:
 
-Global keyboard hooks, background key capture, or keyboard analytics require explicit security/privacy review.
+- trusted origin/signing;
+- update/revocation;
+- code execution permissions;
+- filesystem/network access;
+- sandboxing/host process isolation;
+- privacy/data access;
+- dependency/supply-chain policy.
 
-## Dependency review
+## Dependency/supply-chain policy
 
-Review new dependencies for:
+Runtime dependencies are intentionally minimal. Before adding a dependency, review:
 
-- Runtime network behavior.
-- Telemetry/analytics behavior.
-- Storage scope.
-- Platform permissions.
-- Maintenance/security posture.
-- Supply-chain/update behavior.
-- Whether the functionality can remain local.
+- necessity;
+- maintainer/source trust;
+- license;
+- transitive dependency footprint;
+- known advisories;
+- network/telemetry behavior;
+- native permissions/code;
+- update cadence;
+- data access.
 
-`shared_preferences` remains the only non-SDK runtime dependency and is used for application-local preferences. V2.3 adds no new runtime package.
+Dependabot configuration can surface dependency updates, but maintainers still need to review compatibility/security impact.
 
-## Dependency and secret hygiene
+GitHub Actions should use explicit trusted actions/versions and least permissions practical for the job.
 
-Do not commit:
+## CI/release security
 
-- API keys.
-- Passwords.
-- Signing certificates.
-- Service-account credentials.
-- Access tokens.
-- Private user documents.
-- Sensitive real personal dictionary exports.
-- Real editor/correction-history samples containing private content.
-- Private writing findings/source excerpts.
+Current CI/release workflows use GitHub-hosted runners and read repository contents.
 
-The repository `.gitignore` covers common secret/build patterns, but contributors remain responsible for reviewing every commit.
+The release workflow validates source then builds Flutter web and uploads an Actions artifact. It does not currently use code-signing/app-store secrets or publish native artifacts.
 
-## Privacy-sensitive changes
+If release automation gains deployment/write permissions/secrets, apply least privilege, environment protections where appropriate, and document rollback/provenance/secret handling.
 
-These require explicit security/privacy review before implementation/release:
+## Secrets
 
-- Synchronization/accounts.
-- Cloud spelling/grammar/AI services.
-- Analytics/remote logging.
-- Crash reporting that may capture editor text.
-- Remote configuration affecting analysis behavior.
-- Editor-document persistence.
-- Persistent general/correction history.
-- Automatic dictionary/rule upload/download.
-- Keyboard/usage telemetry.
-- Global/background key capture.
-- Dynamic external rule/plugin execution.
+No application secret should be required for local spelling/writing analysis.
 
-Update [docs/PRIVACY.md](docs/PRIVACY.md) and relevant user/security documentation before shipping such behavior.
+Never commit:
 
-## Portable settings security boundary — V2.3
+- API keys;
+- passwords;
+- OAuth tokens;
+- signing keys/keystores;
+- private certificates;
+- provisioning profiles containing secrets;
+- service-account credentials.
 
-Portable settings are untrusted user-supplied JSON. Import validates format/version, supported language IDs, suggestion limits, override structure, and rule-ID syntax before persistence. The format does not execute code or dynamically load rules. Export is copied to the local clipboard only after explicit user action. Imported data is not sent to a remote service. `shared_preferences` writes are not transactional; rollback is best effort and must not be represented as an atomic security boundary.
+Use repository/environment secret stores for future CI integrations and expose only the minimum scope needed.
 
-## Suggestion-ranker extension boundary — V2.4
+## Platform security
 
-`SpellSuggestionRanker` is an injected in-process interface, not a trusted/dynamic plugin-loading system. SpellChecker does not discover, download, execute, or sandbox third-party ranker packages at runtime. Candidate eligibility and edit-distance limits remain in `SpellCheckerEngine` before custom ranking. Applications that compile in third-party ranker code are responsible for reviewing that code like any other dependency.
+Only the web host is committed/release-built today. Official native support would require target-specific review for:
 
-## V2.5 bounded-analysis safety boundary
+- preference storage;
+- clipboard;
+- filesystem permissions;
+- network permissions;
+- signing/update mechanism;
+- deep links/URL handlers;
+- crash reporting;
+- package identifiers/distribution.
 
-A spelling issue cap is a resource/UX boundary, not permission to weaken correction safety. Captured issues retain exact checked source ranges and all existing stale-source validation.
+See [docs/PLATFORM_SUPPORT.md](docs/PLATFORM_SUPPORT.md).
 
-When a report is truncated, the built-in editor hides Replace all because the checked issue list is incomplete. Do not re-enable bulk mutation by searching raw text from the widget or by treating uncaptured matches as checked ranges.
+## External links and BMC
 
-`maxIssues` must be positive when supplied. The bound does not execute imported data, alter ranker trust, add network processing, or persist document-derived report metadata.
+Repository/support documentation includes external links such as GitHub and [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN).
 
-## V2.6 deterministic rule safety
+These are project navigation/funding surfaces, not editor-analysis services. SpellChecker does not send editor text/findings to BMC.
 
-The two new spacing rules are source-controlled Dart implementations compiled with the application. They do not interpret or execute document content, load external rules, or bypass `WritingCorrection` source validation. Specialized ownership of punctuation-adjacent/trailing whitespace prevents conflicting built-in automatic replacements for the same exact source range. V2.6 adds no dependency, permission, remote service, telemetry, or dynamic-code boundary.
+Funding never changes vulnerability handling or support access.
 
-## V2.7 bounded writing-analysis security
+## Security-sensitive contributor checklist
 
-V2.7 does not introduce remote rule loading, executable plugins, dynamic code evaluation, worker downloads, or network-backed analysis. `maxIssues` constrains retained `WritingIssue` objects but is not a denial-of-service boundary for arbitrary custom rules because every enabled/supported rule is still executed to preserve global result ordering.
+Before merging a security-relevant change, verify:
 
-Callers that accept untrusted very large documents or untrusted third-party rule implementations must enforce their own input-size, execution-time, isolation, or plugin-trust policies. The built-in local rules remain source-controlled and deterministic.
+- threat boundary clearly identified;
+- no hidden new network/data flow;
+- strict input validation;
+- source-range/index validation;
+- no dynamic execution of imported data;
+- no secret/private data committed/logged;
+- least privilege for workflow/permissions;
+- persistence error behavior truthful;
+- Unicode/large-input behavior tested;
+- privacy/security/docs updated;
+- regression test reproduces the weakness safely.
 
-Automatic mutations continue to use exact-source stale checks and conservative overlap handling; a bounded result does not bypass those protections.
+## Coordinated disclosure
 
-## V2.8 writing diagnostics security boundary
+Maintainers should avoid publishing exploit details before a fix/mitigation is available when early disclosure could harm users.
 
-Exact V2.8 finding totals are correctness/observability metadata, not an execution sandbox or denial-of-service control.
+A security fix should include regression coverage and appropriate changelog/release notes without unnecessarily publishing sensitive exploit detail.
 
-The analyzer still consumes findings from every enabled/supported rule across the supplied text so it can preserve global ordering and calculate exact totals. Therefore neither `maxIssues` nor `totalIssueCount` should be represented as bounding:
+## Related documentation
 
-- arbitrary custom-rule CPU time;
-- wall-clock execution time;
-- memory allocated internally by a custom rule;
-- document length;
-- untrusted plugin execution.
-
-Applications embedding SpellChecker with untrusted documents or third-party rule code remain responsible for their own input-size, isolation, timeout, and plugin-trust controls.
-
-Exact totals and per-rule totals are memory-only and are not automatically logged, persisted, uploaded, or exported. A future diagnostic/crash-report feature must treat them as document-derived metadata and must not silently transmit them with user text or source excerpts.
-
-The repository's Buy Me a Coffee link does not change security-reporting priority, disclosure handling, maintainer trust boundaries, or project governance.
-
-## V2.9 diagnostic-summary security boundary
-
-The V2.9 `WritingAnalysisDiagnosticSummary` API is intentionally metadata-only. It does not read or serialize editor text, finding excerpts/messages, replacements, source offsets, personal vocabulary, correction history, timestamps, device identifiers, or network metadata. It adds no automatic clipboard write, persistence, telemetry, or remote logging behavior. The current Writing insights **Copy diagnostic summary** control is an explicit user action and copies only the safe formatted summary; any future file/network transport requires separate security/privacy review and must not silently substitute raw `WritingIssue` data for the safe summary.
-
-## V2.10 benchmark security boundary
-
-The V2.10 benchmark is source-controlled developer tooling, not an application service, plugin loader, or execution sandbox. CLI values are parsed as validated integer/language configuration and are not evaluated as code. Unsupported language IDs and malformed/duplicate options are rejected.
-
-The benchmark uses generated synthetic text and fixed in-process dictionary metadata. It does not automatically read arbitrary document paths, execute imported content, contact a remote endpoint, write preferences, or upload results. Timing numbers are descriptive machine-local measurements and must not be treated as a security/resource guarantee. Untrusted third-party rule code or arbitrarily large externally supplied documents remain outside this benchmark's threat/resource boundary.
-
-## V2.11 keyboard and semantics security boundary
-
-V2.11 keyboard shortcuts operate only inside the local Writing insights widget tree. Ctrl/Command+F requests focus on an existing `FocusNode`; Escape changes transient in-memory review state or closes the modal. Neither shortcut evaluates user input as code, launches a URL, reads arbitrary files, escalates permissions, accesses credentials, or introduces a network/telemetry path.
-
-Live semantic labels expose count/status metadata already derived in memory. They do not include editor text, finding excerpts, replacements, personal vocabulary, ignored words, or correction snapshots. Runtime validation rejects invalid non-positive dialog capture limits before analysis begins.
+- [Privacy](docs/PRIVACY.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Configuration](docs/CONFIGURATION.md)
+- [Testing](docs/TESTING.md)
+- [Releasing](docs/RELEASING.md)
+- [Support](SUPPORT.md)

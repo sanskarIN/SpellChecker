@@ -1,261 +1,278 @@
-# Performance and large-document behavior
+# Performance and Benchmarking
 
-## V2.16 final stabilization
-Unrestricted Damerau-Levenshtein now uses a last-seen-row/column matrix over Unicode scalars. This is correctness-first and remains bounded in practice by the existing suggestion-distance and candidate-length filters. The deterministic benchmark smoke remains a release gate; no timing threshold was added.
+SpellChecker uses bounded result retention and deterministic synthetic benchmark tooling to keep large-document behavior measurable without turning performance measurements into user telemetry or unsafe correctness shortcuts.
 
+## Performance model
 
-## V2.15 benchmark catalogue
-Deterministic benchmark identity now includes ten stable writing-rule IDs, including `unmatched-curly-brace`. The new scanner is iterative and focused tests exercise 5,000 balanced and 5,000 unmatched braces; benchmark timings remain observational, not correctness thresholds.
-
-
-## V2.14 square-bracket analysis cost
-
-The structural scan is iterative and makes one pass over UTF-16 code units while retaining unmatched opening offsets. Final unmatched indexes are source-ordered before issue emission. Stress tests cover 5,000 nested pairs and 5,000 unmatched openings to guard against recursion/stack-overflow regressions. Benchmark correctness continues to use deterministic counts; timing remains observational.
-
-## V2.13 parenthesis scanner
-
-`UnmatchedParenthesisRule` scans the supplied UTF-16 string once and uses an iterative stack of opening offsets. The final unmatched indexes are source ordered before findings are emitted. Runtime is dominated by the linear scan plus ordering of unmatched indexes; retained memory grows with unmatched/nesting depth rather than recursion. Stress tests cover 5,000 balanced nesting levels and 5,000 unmatched openings. This remains a correctness regression, not a timing threshold.
-
-## V2.12 benchmark note
-
-The deterministic benchmark's writing workload now contains seven analyzed built-in rule IDs, including `missing-punctuation-space`. Exact per-rule totals continue to include zero values for analyzed rules with no findings. The new regular expression is local/deterministic; benchmark timings remain machine/toolchain observations and are not correctness thresholds or a CPU-time/document-size security guarantee.
-SpellChecker is designed to keep spelling and deterministic writing analysis local. Performance work must preserve correctness, privacy, deterministic ordering, source-range safety, and the existing public compatibility contracts.
-
-## V2.5 bounded spelling analysis
-
-`SpellCheckerEngine.analyze` adds an optional `maxIssues` bound for callers that need to avoid generating and retaining an unbounded number of spelling suggestions/results.
-
-```dart
-final report = engine.analyze(
-  text,
-  suggestionLimit: 5,
-  maxIssues: 200,
-);
-```
-
-`SpellCheckReport` exposes:
+The bundled application applies these review capture limits:
 
 ```text
-issues                 captured spelling issues, in source order
-scannedTokenCount      tokens inspected before completion/truncation proof
-truncated              true only when an additional uncaptured issue exists
-issueLimit             requested capture limit, or null for unbounded analysis
-complete               convenience inverse of truncated
-capturedIssueCount     captured issue count
+spelling issues: 200
+writing findings: 200
 ```
 
-A positive `maxIssues` is required when a bound is supplied. `null` means unbounded issue capture and preserves the historical `check()` behavior.
+These limits bound retained issue/finding objects and related UI work. They do **not** mean analysis stops after 200 source tokens/characters or that the application guarantees a fixed CPU-time/memory budget.
 
-## What the bound guarantees
+## Bounded spelling behavior
 
-When the issue cap has not been reached, analysis behaves normally.
+`SpellCheckerEngine.analyze(..., maxIssues: N)` retains at most N spelling issues.
 
-After the cap is reached, SpellChecker does not immediately claim truncation. It continues token inspection until one of these conditions occurs:
+After retaining N unknown words, it continues scanning only until:
 
-1. The token stream ends. The report is complete because no additional spelling issue exists.
-2. One additional unknown token is encountered. The report becomes truncated and returns immediately.
+- the token stream ends, producing a complete result at exactly the cap; or
+- another unknown word is found, proving truncation.
 
-The overflow issue is not materialized as a `SpellIssue` and no suggestions are generated for it.
+The overflow word used only to prove truncation does not receive suggestions. This bounds expensive suggestion generation to retained issues.
 
-This means `truncated == true` is evidence of at least one additional spelling issue, not merely evidence that the configured count happened to equal the number captured.
+Implication: a spelling result at the numerical limit may still be complete.
 
-## What remains unbounded
+## Bounded writing behavior
 
-The V2.5 bound is an **issue-capture/suggestion-work bound**, not a document byte/character/token hard limit.
+`WritingAnalyzer.analyze(..., maxIssues: N)` retains the globally earliest N findings according to deterministic review ordering.
 
-To distinguish an exact-N complete result from a genuinely truncated result, the engine can continue inexpensive tokenization/known-word checks after N captured issues until it finds one additional unknown word or reaches the end of the text.
+It cannot stop rule execution after N yielded values because:
 
-Callers that require a strict input-size policy should enforce that policy separately before invoking SpellChecker. Do not reinterpret `maxIssues` as a maximum document length.
+- rules execute separately;
+- later rules can yield earlier source positions;
+- exact overall/per-rule totals are part of analyzer-produced diagnostics.
 
-## Editor policy
+Therefore every enabled/supported rule still scans the supplied source, while the bounded collector limits retained finding objects.
 
-The built-in Flutter editor uses:
+Implication: writing `maxIssues` is a retained-result bound, not a rule-runtime bound.
+
+## Suggestion cost
+
+Spelling suggestions can be the most expensive spelling path because candidate dictionaries are iterated for unknown captured words.
+
+The engine reduces work by:
+
+1. normalizing the target;
+2. splitting recognized suffixes where applicable;
+3. comparing Unicode-scalar candidate length difference against maximum distance;
+4. skipping candidates outside that bound;
+5. calculating unrestricted scalar Damerau-Levenshtein only for remaining candidates;
+6. ranking eligible candidates;
+7. caching detailed suggestions by normalized unknown word.
+
+Personal-dictionary changes clear the cache because candidate membership changes.
+
+## Writing-rule cost
+
+Built-in rules are deterministic local scans. Their complexity differs by rule shape:
+
+- regular-expression/token rules generally scan the source/token stream;
+- structural delimiter rules iteratively balance literal delimiters and must remain stack-safe for deep input;
+- bounded analysis still counts every yielded finding to preserve exact totals.
+
+Do not assume that lowering the writing capture limit proportionally lowers analysis runtime.
+
+## Benchmark entry point
+
+```bash
+dart run tool/benchmark_large_document.dart
+```
+
+The command wraps the reusable benchmark components under `tool/benchmark/`.
+
+## Standard synthetic scenario
+
+The benchmark's standard chunk is:
 
 ```text
-maximum captured spelling issues: 200
+hello wrld  this is is a sentence !! next sentence??  
 ```
 
-When more than 200 spelling issues exist:
+The scenario repeats that chunk with newline separators. It intentionally contains both spelling and writing findings.
 
-- The Results badge displays `200+`.
-- The Results panel explains that only the first 200 issues were captured.
-- Inline highlights and F7/Shift+F7 navigation cover only the captured issues.
-- Single-occurrence corrections remain available.
-- Personal-dictionary and ignore actions remain available.
-- **Replace all** is hidden for limited results because the captured occurrence set is incomplete.
+Default scenario name:
 
-The UI does not label a limited result as a complete count.
+```text
+large-document-v2.10
+```
 
-## Why bulk replacement is disabled for limited results
+The historical name is retained for report identity compatibility even though the current application/writing registry has evolved after V2.10.
 
-`TextCorrection.replaceAll` intentionally operates on checked issue ranges rather than searching/replacing arbitrary text. This protects case handling and stale-range safety.
+## Benchmark options
 
-A bounded result set intentionally omits later issue ranges. Calling that partial mutation “Replace all” would be misleading and could leave unchecked occurrences behind. V2.5 therefore refuses to expose the bulk action when the current result report is truncated.
+```text
+--repeats=N          Synthetic chunk repetitions (default: 2000)
+--warmup=N           Unmeasured warmup iterations (default: 1)
+--iterations=N       Measured iterations (default: 5)
+--spelling-limit=N   Captured spelling issue limit (default: 200)
+--writing-limit=N    Captured writing finding limit (default: 200)
+--suggestions=N      Suggestions requested per spelling issue (default: 5)
+--language=ID        Built-in language: en-US or en-GB (default: en-US)
+--json               Print versioned JSON report
+--help               Print help
+```
 
-A future whole-document replacement design would need a separate complete-range discovery/safety contract rather than weakening this rule.
+Validation:
 
-## Suggestion ranking and caching
+- repeats > 0;
+- warmup >= 0;
+- measured iterations > 0;
+- spelling/writing limits > 0;
+- suggestions >= 0;
+- language option must be non-blank and command execution validates supported built-in language IDs;
+- duplicate/unknown/malformed options fail.
 
-V2.4 ranker behavior remains unchanged:
+Unlike the application UI, benchmark suggestion count can be zero so timing can isolate analysis with no suggestion generation.
 
-- Candidate eligibility and maximum edit distance are decided before ranking.
-- The configured ranker orders eligible candidates.
-- The engine provides a lexical final tie-break.
-- Suggestion results are cached by normalized queried word for the engine lifetime/state epoch.
-- Personal-dictionary mutation clears the suggestion cache.
+## CI smoke scenario
 
-V2.5 bounded analysis reuses that cache and avoids asking for suggestions for the first proven overflow issue.
+CI/release use a deliberately tiny deterministic command to validate the benchmark pipeline rather than measure meaningful speed:
+
+```bash
+dart run tool/benchmark_large_document.dart \
+  --repeats=4 \
+  --warmup=0 \
+  --iterations=1 \
+  --spelling-limit=2 \
+  --writing-limit=5 \
+  --suggestions=0 \
+  --language=en-US \
+  --json
+```
+
+This smoke test answers “does the tool/options/scenario/analysis/report pipeline still work?” not “is this commit fast enough on all computers?”
+
+## Human-readable benchmark
+
+Use defaults or explicit controlled options:
+
+```bash
+dart run tool/benchmark_large_document.dart \
+  --repeats=2000 \
+  --warmup=1 \
+  --iterations=5 \
+  --spelling-limit=200 \
+  --writing-limit=200 \
+  --suggestions=5 \
+  --language=en-US
+```
+
+Record exact command, Flutter/Dart versions, OS/hardware, commit SHA, and whether the environment was otherwise busy when comparing runs.
+
+## JSON report
+
+Add `--json` for machine-readable/versioned report output:
+
+```bash
+dart run tool/benchmark_large_document.dart --json
+```
+
+The report contains benchmark/scenario/configuration/outcome/timing metadata. It is based on synthetic source and analysis counts, not user documents.
+
+Do not parse human-readable output when the versioned JSON reporter is available for automation.
+
+## Benchmark component architecture
+
+```text
+tool/benchmark_large_document.dart
+  -> analysis_benchmark_command.dart
+  -> analysis_benchmark_options.dart
+  -> analysis_benchmark_scenario.dart
+  -> analysis_benchmark_runner.dart
+  -> analysis_benchmark_result.dart
+  -> analysis_benchmark_reporter.dart
+```
+
+Tests separately cover command, option parsing, scenario identity, runner, result invariants, and reporter behavior.
+
+## Determinism requirements
+
+Benchmark correctness depends on stable scenario/configuration/outcome identity.
+
+Across measured iterations with identical configuration, analysis outcomes must remain deterministic. A timing tool that produces changing issue counts/order/state is exposing a correctness problem, not merely variance.
+
+Suggestion rankers used by the engine should also be deterministic; the engine supplies lexical fallback for custom ranker ties.
+
+## What timing means
+
+Elapsed time is environment-sensitive. Comparisons are meaningful only when the major variables are controlled:
+
+- same commit/tool code except intended change;
+- same Flutter/Dart version;
+- same hardware/OS/power mode;
+- same benchmark options;
+- same language pack/rule registry;
+- similar system load;
+- appropriate warmup.
+
+Do not compare unrelated developer machines and conclude a regression from raw milliseconds alone.
+
+## No universal performance threshold
+
+The project intentionally does not put a fixed millisecond threshold in CI because hosted runners and local machines vary.
+
+CI validates correctness/executability. Performance investigation is comparative and controlled.
+
+If a future regression threshold is introduced, it should use a stable environment/statistical policy and distinguish infrastructure noise from application regression.
+
+## Benchmark changes that require review
+
+Changing any of these can invalidate historical comparisons:
+
+- standard chunk;
+- default repeats;
+- capture limits;
+- suggestion limit;
+- language;
+- scenario name;
+- warmup/iteration model;
+- report schema;
+- built-in language dictionary/frequency data;
+- default suggestion ranker;
+- writing-rule registry/defaults;
+- spelling/writing analysis semantics.
+
+When such changes are intentional, document the comparability boundary rather than presenting before/after numbers as the same workload.
+
+## Large-document correctness before speed
+
+Performance changes must preserve:
+
+- Unicode correctness;
+- exact UTF-16 source ownership;
+- deterministic suggestion ordering;
+- spelling truncation proof semantics;
+- globally earliest bounded writing prefix;
+- exact writing totals;
+- stale-safe correction;
+- overlap-safe batch mutation;
+- preference/format compatibility.
+
+Do not weaken a correctness invariant solely to improve benchmark numbers without an explicit API/product design change.
 
 ## Profiling guidance
 
-Use synthetic, non-sensitive documents for profiling.
+When investigating a slowdown, separate:
 
-Useful scenarios include:
+- tokenization/normalization;
+- dictionary membership;
+- suggestion candidate distance/ranking;
+- repeated unknown-word cache behavior;
+- writing rule scans;
+- bounded collector insertion/ordering;
+- Flutter widget rendering (not measured by the CLI benchmark);
+- preference/clipboard operations (outside analysis benchmark).
 
-- Mostly-correct long documents.
-- Repeated unknown words, which exercise suggestion caching.
-- Many distinct unknown words, which exercise candidate generation/ranking.
-- A mix of correct and incorrect Unicode words.
-- Inputs that stop just below, exactly at, and above the issue cap.
-- US and UK language packs.
-- Different suggestion-count preferences.
-
-Measure separately when practical:
-
-```text
-tokenization/known-word scan
-candidate edit-distance work
-ranking
-suggestion materialization
-widget rendering/scrolling
-```
-
-Do not commit machine-specific timing thresholds as correctness tests unless the project has a stable controlled benchmark environment. Timing can vary with Flutter/Dart version, runner hardware, browser/runtime, debug/profile/release mode, and dictionary size.
-
-## Regression tests
-
-V2.5 protects performance semantics with deterministic tests instead of wall-clock assumptions:
-
-- Unbounded `analyze()` matches historical `check()` output.
-- Exactly reaching the issue cap remains complete when no later issue exists.
-- A later overflow issue sets `truncated`.
-- Suggestions are not generated for the proven overflow issue.
-- Non-positive caps are rejected.
-- Report issue lists are immutable.
-- The editor renders the limited-results state for 201 synthetic unknown tokens.
-- The editor suppresses **Replace all** for limited results.
-- Small complete result sets retain **Replace all**.
+The CLI benchmark measures reusable analysis, not full browser UI paint/input latency.
 
 ## Privacy
 
-Bounded analysis does not add persistence, telemetry, remote logging, network requests, background uploads, or document history.
+The benchmark uses generated synthetic text and local timing/result metadata. It is not telemetry and does not send reports anywhere automatically.
 
-`SpellCheckReport` is an in-memory analysis value. It can contain `SpellIssue` source words and offsets and therefore must not be logged or persisted by default.
+Do not substitute private production documents into public benchmark artifacts. If a real document is required for local debugging, do not commit/share it without appropriate authorization.
 
-## Future work
+## Historical benchmark record
 
-Potential follow-up profiling work includes:
+The V2.10 benchmark design/validation record is preserved at [V2_10_BENCHMARK.md](V2_10_BENCHMARK.md). Use this page for current tooling behavior.
 
-- Dedicated benchmark targets for controlled environments.
-- Candidate-index structures that reduce dictionary scans while preserving deterministic output.
-- Incremental re-checking after local text edits.
-- Background/isolate execution where platform behavior and cancellation semantics can be defined safely.
-- Explicit caller-configurable document-size policies.
+## Related documentation
 
-Any optimization must preserve source offsets, language normalization, suggestion correctness, deterministic ranking, stale-correction protection, and privacy boundaries.
-
-## V2.7 bounded Writing insights analysis
-
-Writing analysis now supports an optional retained-finding bound:
-
-```dart
-final result = analyzer.analyze(
-  text,
-  languagePack: pack,
-  enabledRuleIds: enabledIds,
-  maxIssues: 200,
-);
-```
-
-`null` preserves unbounded finding capture. A supplied bound must be positive.
-
-The collector stores at most the requested number of `WritingIssue` objects and maintains the analyzer's global review ordering: source start, severity ordering, then rule ID. If a later rule yields an earlier finding, that finding can replace a worse retained item. Bounded results therefore equal the first N items of the corresponding unbounded sorted result.
-
-The analyzer does **not** stop running rules after N findings. It must inspect all enabled/supported rule streams to know whether a later rule contributes an earlier result and to distinguish an exact-N complete result from a genuinely truncated result. `maxIssues` is therefore a retained-finding memory/UI bound, not a CPU-time, rule-invocation, character, line, or document-size bound.
-
-The built-in Writing insights policy is 200 captured findings. A `200+`-style limited state appears only when another finding beyond the cap has actually been observed. Search, presets, category filters, automatic-fix filtering, and batch actions operate only on the captured prefix when analysis is truncated.
-
-For profiling, measure writing-rule execution and bounded-result maintenance separately. Synthetic workloads should cover many findings from one rule, many enabled rules, out-of-order custom-rule yields, exact-at-limit documents, and true overflow. Avoid wall-clock correctness thresholds unless the runner environment is explicitly controlled.
-
-## V2.8 exact writing-analysis diagnostics
-
-V2.8 adds exact deterministic finding counts to analyzer-produced writing results. These counters improve observability of bounded Writing insights without converting the V2.7 finding-retention bound into a CPU or wall-clock limit.
-
-For each enabled/supported rule, the analyzer continues consuming the rule's findings across the supplied text. Every yielded finding increments the overall and per-rule counters. Only the retained result path is bounded by `maxIssues`.
-
-For example, with `maxIssues: 200`, a result can report:
-
-```text
-capturedIssueCount: 200
-totalIssueCount: 1437
-uncapturedIssueCount: 1237
-```
-
-The analyzer still retains at most 200 `WritingIssue` objects for the bounded result while counting the remaining 1,237 findings as integers.
-
-### What is bounded
-
-- retained `WritingIssue` objects in the result;
-- retained finding list sorting/storage after the bounded collector reaches capacity;
-- downstream Writing insights rendering/filtering/fix candidate work over the retained set.
-
-### What is not bounded by V2.8 diagnostics
-
-- characters, tokens, or lines supplied to an arbitrary writing rule;
-- rule scan time;
-- wall-clock duration;
-- CPU usage of third-party/custom rule implementations;
-- allocations performed internally by a custom rule;
-- number of findings a rule may yield before the analyzer finishes counting them.
-
-Exact totals therefore describe **observed findings**, not a resource budget.
-
-### Benchmarking guidance
-
-When profiling very large documents:
-
-1. use synthetic/non-sensitive generated text;
-2. record document size separately from finding count;
-3. record active language and enabled rule IDs;
-4. record `capturedIssueCount`, `totalIssueCount`, and per-rule exact totals;
-5. measure elapsed time externally in a benchmark harness rather than embedding timing telemetry in production results;
-6. compare unbounded and bounded retention separately from total rule-scan cost;
-7. avoid treating one device/browser measurement as a correctness guarantee.
-
-V2.8 intentionally does not persist benchmark data or document-derived diagnostic totals.
-
-## V2.9 diagnostic-summary cost
-
-`WritingAnalysisDiagnosticSummary.fromResult` does not re-run writing rules or re-scan editor text. It reads already-produced result count metadata, derives captured per-rule counts from the retained findings, sorts analyzed rule IDs, and formats one row per analyzed rule. Its cost is tied to retained findings/analyzed-rule metadata rather than document length beyond the analysis work that already occurred. It does not change V2.7 `maxIssues` or V2.8 exact-count semantics.
-
-## V2.10 deterministic benchmark harness
-
-V2.10 implements the external benchmark harness anticipated by the V2.8 profiling guidance. Run it from a dependency-resolved checkout:
-
-```bash
-dart run tool/benchmark_large_document.dart --repeats=2000 --warmup=1 --iterations=5 --spelling-limit=200 --writing-limit=200 --suggestions=5 --language=en-US
-```
-
-Add `--json` for the stable version-1 machine-readable report. The default scenario repeats a source-controlled synthetic chunk; no editor document, clipboard content, personal dictionary, or persisted preference is read. A fixed synthetic spelling dictionary/frequency map keeps benchmark eligibility stable when bundled vocabulary changes.
-
-Every sample creates a fresh `SpellCheckerEngine` and `WritingAnalyzer`. Warmup samples are discarded; measured samples must produce identical analysis outcomes or summary construction fails. The report records spelling scanned/captured/truncated metadata and writing captured/exact-total/truncated metadata, sorted analyzed rule IDs, and sorted exact per-rule totals alongside elapsed microseconds.
-
-Min/median/max timings are descriptive only. They vary with hardware, operating system, Flutter/Dart version, process scheduling, build/runtime mode, and other machine conditions. CI therefore executes a small smoke scenario solely to prove the benchmark command and report path work; it does not compare timing values against a threshold.
-
-For comparisons, keep the command/options, Flutter/Dart versions, machine/runtime mode, and repository commit constant. Prefer multiple measured iterations and compare medians. Never replace the built-in synthetic corpus with private user documents for public benchmark reports.
-
-## V2.11 accessibility and benchmark-total impact
-
-V2.11 does not increase spelling or writing capture limits and does not add another analysis pass. Keyboard focus handling and live semantic count labels are computed from the already available dialog query/analysis state. The existing 200-finding Writing insights capture policy and captured-only limited-review behavior remain unchanged.
-
-The benchmark runner now builds a complete exact per-rule total map by adding zero entries for analyzed rules omitted from `WritingAnalysisResult.totalIssueCountByRule`. With the six built-in rules this is a tiny bounded metadata normalization step; it does not retain additional findings or alter timing-threshold policy. Benchmark elapsed times remain descriptive machine/toolchain observations, not correctness gates.
+- [Testing](TESTING.md)
+- [Development](DEVELOPMENT.md)
+- [Architecture](ARCHITECTURE.md)
+- [Writing rules](WRITING_RULES.md)
+- [Public API](API.md)

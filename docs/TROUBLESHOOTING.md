@@ -1,552 +1,429 @@
 # Troubleshooting
 
-## V2.16 final stabilization
-If saved preferences fail, V2.16 now reports storage unavailability instead of assuming success. If Unicode spelling differs, compare precomposed and decomposed input and record the selected language. During startup, Writing Insights and Ignore-once may report that preferences are still loading; retry after restoration finishes rather than treating temporary defaults as durable state.
+This guide covers common SpellChecker `2.16.0+21` application, storage, import/export, analysis, keyboard, development, and release-build problems.
 
+Before opening a public issue, prefer a small synthetic example instead of a private document. See [Support](../SUPPORT.md).
 
-## V2.15 unmatched curly-brace findings
-An unmatched `{` or `}` warning is advisory. SpellChecker does not know whether your intended correction is to add the opposite brace, remove the current brace, move text, or rewrite a larger expression. Disable `Unmatched curly brace` in Writing insights when literal brace balancing is not useful for the selected language/workflow.
+# Application startup
 
+## Preferences are still loading
 
-## V2.14 unmatched square bracket troubleshooting
+Some durable-setting actions are unavailable until local preferences finish loading.
 
-The V2.14 rule is a literal `[`/`]` balancer. It can therefore report brackets that are intentionally unpaired inside code, Markdown, URLs, citations, quotations, mathematics, or another domain syntax. Disable the rule for the current language when that literal policy does not fit the document; do not treat the warning as an automatic deletion recommendation. **Automatic fixes only** hides these advisory findings.
+What to do:
 
-## V2.13 unmatched-parenthesis troubleshooting
+1. allow the startup load to finish;
+2. look for a storage/loading warning;
+3. retry the action after controls become enabled.
 
-The new rule balances literal `(` and `)` characters and is not a Markdown, programming-language, URL, quoting, or mathematical parser. If syntax intentionally contains an unmatched literal parenthesis, disable `unmatched-parenthesis` for that language or review the finding manually; V2.13 will not auto-edit it. Privacy-safe diagnostic summaries can report the rule ID/count without including the source text.
+SpellChecker avoids accepting settings/dictionary actions while it cannot yet truthfully describe the durable state.
 
-## V2.12 troubleshooting note
+## “Could not load saved dictionary preferences” or similar storage warning
 
-If **Missing punctuation space** is absent or disabled after upgrading, check whether that language already has an explicit saved writing-rule selection. V2.12 respects explicit lists instead of silently adding the new rule. Use **Reset rules to defaults** to clear the override and adopt the current seven-rule default catalogue. Period/colon cases and punctuation not bounded by letters are deliberate non-matches, not failed analysis.
-## `flutter` command not found
+The host preference layer failed during startup.
 
-Install Flutter and ensure its `bin` directory is on `PATH`.
+Effects can include:
 
-```bash
-flutter doctor
-```
+- built-in defaults/session state used instead of saved values;
+- persisted personal vocabulary not restored;
+- persisted language/rule preferences unavailable;
+- spelling still usable in session mode.
 
-## Dependencies fail to resolve
+Try:
 
-```bash
-flutter clean
-flutter pub get
-```
+- reload the app/browser;
+- verify site/app storage is permitted;
+- leave private/incognito mode if it discards/blocks storage;
+- check enterprise/browser storage policies;
+- do not clear existing site data if you still need saved vocabulary and have not backed it up.
 
-Confirm the Dart SDK satisfies `pubspec.yaml` and Flutter stable is installed.
+If reproducible, report browser/platform/Flutter version and a synthetic workflow.
 
-SpellChecker 2.9 keeps the small runtime dependency surface: Flutter plus `shared_preferences` for local settings.
+# Spelling results
 
-## Analyzer reports formatting or lint issues
+## A valid word is marked unknown
 
-```bash
-dart format lib test
-flutter analyze
-```
+Check the selected language first. Regional spelling can differ between `en-US` and `en-GB`.
 
-Fix source/test findings rather than suppressing lints only to make CI green.
+Also check whether the word:
+
+- belongs in your personal dictionary;
+- uses unusual punctuation/hyphen/apostrophe characters;
+- contains a decomposed/unsupported Unicode sequence;
+- is simply not in the bundled dictionary.
+
+If it is a user/domain word, use **Save word** for the selected language.
+
+## A saved word is unknown after switching language
+
+Expected: personal dictionaries are language-specific.
+
+A word saved in `en-US` does not automatically exist in `en-GB`. Save/import it separately for the other language if appropriate.
+
+## A saved word disappeared after restart
+
+Likely causes:
+
+- local preference write failed;
+- browser/site/app data was cleared;
+- private/incognito storage did not persist;
+- the word was saved under another language;
+- host storage policy removed local data.
+
+Check for prior storage warnings and select the language under which the word was saved.
+
+Use personal-dictionary export for backups.
+
+## Ignore once did not survive restart
+
+Expected. Ignored words are session/engine state only.
+
+Use **Save word** for durable acceptance.
+
+## Spelling results disappeared after typing
+
+Expected. Manual editing invalidates the previous checked source snapshot so stale issue offsets are not reused.
+
+Run **Check spelling** again when ready.
+
+## Suggestions look different after changing language
+
+Expected. Language pack dictionary/frequencies and regional vocabulary influence suggestions.
+
+## Too many/few suggestions
+
+Open **Manage personal dictionary** and set **Suggestions per spelling issue** from 1 to 10.
+
+Portable settings can also transfer this value.
+
+## Result says more than 200 issues / limited result
+
+The bundled UI captures the first 200 spelling issues. When it observes another unknown word, it reports truncation/limited state.
+
+This is not data loss in the editor; it is a result-capture policy. Correct/edit/recheck the text to review later issues, or use the public engine differently in a custom integration.
+
+# Spelling correction
+
+## A suggestion did not apply
+
+The issue may be stale. SpellChecker applies a correction only if the current source range still contains the checked word.
+
+If you edited text after checking, run the spelling check again.
+
+## Replace all changed fewer occurrences than expected
+
+Replace all operates only on current matching `SpellIssue` ranges represented by the checked result. It is intentionally not a global text replacement.
+
+A limited 200-issue result can therefore represent only a prefix of unknown occurrences.
+
+## Casing changed
+
+SpellChecker preserves common lower/title/upper casing patterns per occurrence. If a specialized casing rule is needed beyond those patterns, apply/edit manually and report a synthetic example if behavior seems incorrect.
 
 # Writing insights
 
-## Writing insights reports something intentional
-
-The built-in rules are optional deterministic checks, not universal style judgments.
-
-Disable the corresponding rule in Writing insights. In V2.1 that choice is saved locally for the selected language when storage is available.
-
-## Writing rule switches reset after restart
-
-This is **not expected in V2.1** when local preference storage is available.
+## Writing insights shows no findings
 
 Check:
 
-1. The switch visibly changed before closing Writing insights.
-2. No local-storage warning appeared.
-3. The same language is selected after restart.
-4. Browser/profile/app storage has not been cleared.
-5. Private/incognito restrictions are not discarding application preferences.
+- editor text is not blank;
+- selected language is English (US/UK);
+- relevant writing rules are enabled;
+- a search/category/preset/Automatic fixes only filter is not hiding findings;
+- the text actually matches a deterministic built-in rule.
 
-Rule preferences are language-specific. A choice made in `en-US` does not automatically change `en-GB`.
+Use Escape once to clear an active transient query/filter state.
 
-## All writing rules are disabled after restart
+## Some rules are disabled after restart
 
-An explicitly empty rule set is a valid V2.1 preference. If every switch was turned off, SpellChecker preserves that choice instead of restoring defaults.
+Rule choices are persisted per language. You may be looking at the explicit configuration for that pack.
 
-Re-enable the desired switches in Writing insights. If no rule preference has ever been stored for a language, SpellChecker uses the current built-in defaults.
+Use **Reset rules to defaults** if you want to remove the explicit override and return to current built-in defaults.
 
-## A new built-in rule is not enabled after upgrade
+## I turned every rule off, then expected Reset behavior
 
-If you already have an explicit stored rule set for that language, SpellChecker respects your stored IDs rather than automatically adding every future rule.
+Turning all switches off stores an explicit empty set: “all rules disabled.”
 
-Users with **no stored writing-rule preference** receive the current default rule set. This protects explicit choices from being overwritten by upgrades.
+**Reset rules to defaults** removes the explicit override: “follow registry defaults.”
 
-## Writing-rule choices differ between US and UK
+They are deliberately different.
 
-Expected. V2.1 stores rule IDs per language namespace.
+## Automatic fixes only hides unmatched delimiters
 
-Example keys:
+Expected. `unmatched-parenthesis`, `unmatched-square-bracket`, and `unmatched-curly-brace` are advisory and have no automatic replacement.
 
-```text
-spellchecker.writing_rule_ids.v1.en-US
-spellchecker.writing_rule_ids.v1.en-GB
-```
+## A safe writing fix did not apply
 
-Configure each language separately.
+The finding may be advisory or stale.
 
-## Apply safe fix refuses to change text
+Automatic correction requires:
 
-The current editor source no longer matches the exact source range that produced the finding. This can happen after editing while a finding is open.
+- non-null replacement;
+- valid source range;
+- current substring exactly equal to the analyzed `originalText`.
 
-SpellChecker refuses the stale mutation. Close/reopen Writing insights for a fresh analysis.
+Reopen Writing insights after editing to obtain a fresh analysis.
 
-## Apply all safe fixes applied fewer fixes than the button count
+## Batch applied fewer fixes than the count I noticed
 
-The button count represents findings with automatic replacements at analysis time. At application time SpellChecker performs safety checks again.
+Batch correction skips:
 
-A finding can be skipped because:
+- advisory findings;
+- stale/invalid findings;
+- later findings overlapping an already accepted earlier candidate.
 
-- It became stale.
-- Its range is invalid for current text.
-- It overlaps an earlier accepted automatic fix.
-- It is advisory/no longer has a usable automatic replacement in the supplied result set.
+If filters are active, only visible automatic findings are submitted to the batch.
 
-The editor reports applied/skipped counts after the batch.
+The result reports applied/skipped counts.
 
-## Two writing fixes overlap
+## Writing insights shows 200 captured but a larger total
 
-V2.1 uses a deterministic conservative policy:
+Expected for a large result. The dialog retains the globally earliest 200 findings while analyzer-produced diagnostics can count exact totals.
 
-1. Sort by source start.
-2. Then source end.
-3. Then rule ID.
-4. Accept the earliest safe finding.
-5. Skip later overlaps.
+Filters/fixes work only on captured findings. Total metadata does not grant mutation authority for uncaptured ranges.
 
-The application does not attempt to merge ambiguous transformations.
+## Search shortcut opened browser search instead
 
-Run Writing insights again after the batch if another finding may still be relevant to the resulting text.
+Some browsers/host environments can intercept `Ctrl+F` / `Command+F` before Flutter. Use the visible **Search rules and findings** field.
 
-## Apply all safe fixes changed text in an unexpected order
+Inside a normally delivered Writing insights shortcut scope, Ctrl/Command+F is registered to focus the dialog search.
 
-Accepted replacements are applied from the end of the document toward the beginning. This is intentional because earlier source offsets remain valid even when a later replacement changes string length.
+## Escape did not close Writing insights
 
-The **selection** of accepted fixes is still determined in forward source order; only physical mutation occurs from end to start.
-
-## Undo after a writing batch restores everything
-
-Expected. **Apply all safe fixes** is intentionally one correction-history entry.
-
-One **Undo correction** restores the exact editor state from immediately before the batch.
-
-## Ctrl+Shift+Enter / Command+Shift+Enter does not open Writing insights
-
-Try the visible Writing insights app-bar button first.
-
-If the button works but the shortcut does not:
-
-- The browser/OS may intercept the key combination.
-- Verify both modifier keys are actually sent to the Flutter app.
-- Report platform/browser and the exact combination.
-
-The shortcut is supplementary; the visible control remains authoritative.
-
-## Writing insights says “No matching findings”
-
-The enabled rules have findings, but your current V2.2 search/category/automatic-fix filters hide them.
-
-Use **Clear review filters**, clear the search field, deselect category chips, or turn off **Automatic fixes only**. Review filters disappear automatically when the dialog closes.
-
-## Apply visible safe fixes changed fewer items than the total finding count
-
-Expected. With an active review filter, V2.2 sends only **visible automatic findings** into the existing safe batch pipeline. Hidden findings are outside the requested batch scope; stale/advisory/overlapping visible findings can still be skipped by V2.1 safety rules.
-
-## Reset rules to defaults is different from turning every switch on
-
-Expected. Reset clears the selected language's saved rule-ID override so the language returns to the **unset/default** state. Turning switches on creates/updates an explicit stored list instead.
-
-If reset reports a storage failure, defaults are active for the current session but the previous saved override may return after restart because the key could not be removed.
-
-# Language behavior
-
-## US/UK spelling changes after switching language
-
-Expected. The packs deliberately differ on variants such as:
-
-```text
-color / colour
-center / centre
-theater / theatre
-```
-
-Changing language invalidates old spelling issue state and re-checks current non-blank text.
-
-## A saved word exists in one language but not another
-
-Expected. Personal dictionaries are isolated per language.
-
-Save/import the word independently for the intended language.
-
-## A version-2 dictionary import asks me to switch language
-
-Version-2 exports contain a language ID. SpellChecker prevents silently merging tagged vocabulary into a different selected language.
-
-Switch to the export's language and retry.
-
-Legacy version-1/JSON-array/plain-list imports have no language metadata and are interpreted using the currently selected language.
-
-# Spelling and highlighting
-
-## A correct word is reported as misspelled
-
-The bundled dictionaries are curated, not complete linguistic databases.
-
-Options:
-
-- **Save word** for persistent legitimate vocabulary in the selected language.
-- **Ignore once** for a temporary session exception.
-- Add the word through **Manage personal dictionary**.
-- Contribute a broadly useful dictionary entry.
-
-## Inline underlines disappear when I type
-
-Expected. Spelling ranges belong to the exact checked text snapshot. Manual edits invalidate that snapshot, so old highlights/results are cleared.
-
-Run **Check spelling** again or press `Ctrl/Command+Enter`.
-
-## A current highlight looks missing
-
-The editing controller skips invalid/stale/overlapping highlight ranges rather than rendering an incorrect span or throwing.
-
-If a valid issue is missing without any intervening edit, file a bug using minimal synthetic text.
-
-## F7 does not move to an issue
-
-Check:
-
-1. Text contains an unknown word.
-2. Run a spelling check or press F7 on non-blank text so the page can attempt one.
-3. Confirm the browser/OS has not captured F7.
-4. Try visible previous/next controls.
-
-`F7` moves forward; `Shift+F7` moves backward; navigation wraps.
-
-## Ctrl+Enter / Command+Enter does not check spelling
-
-Try **Check spelling** first.
-
-If the button works, the platform/browser may be intercepting the shortcut.
-
-## Replace all is not shown
-
-**Replace all…** requires:
-
-- More than one current checked case-insensitive occurrence of the same unknown word.
-- At least one suggestion for that issue.
-
-Correct or unchecked occurrences are not included.
-
-## Replace all changed fewer spelling occurrences than expected
-
-Spelling replace-all mutates only still-current checked issue ranges. It is not unrestricted find/replace.
-
-If text changed since checking, stale ranges can be skipped/refreshed for safety.
-
-## A spelling replacement does not happen
-
-The current source substring no longer equals the checked issue word. SpellChecker refreshes results instead of applying a stale edit.
-
-# Correction undo
-
-## Undo correction is disabled
-
-The shared correction stack is cleared when:
-
-- No programmatic correction has been applied yet.
-- The user manually edits text after corrections.
-- The editor is cleared.
-- The application session ends.
-
-The stack is not a persistent document history system.
-
-## The active spelling issue changes after Undo
-
-Undo restores the previous `TextEditingValue`, including caret/selection, then runs a fresh spelling check. Active issue selection can legitimately favor an issue near the restored caret rather than always issue 1.
-
-## Snackbar Undo disappeared
-
-The snackbar is temporary. **Undo correction** remains available while the correction stack still contains an entry.
-
-Manual typing intentionally clears that stack.
-
-# Local storage
-
-## Storage warning appears
-
-SpellChecker could not load/write one or more local preferences.
-
-Session spelling/writing analysis remains usable.
-
-Possible causes:
-
-- Browser/profile storage restrictions.
-- Private/incognito policies.
-- Platform plugin/storage unavailability.
-- App/browser data restrictions.
-
-The warning does not indicate editor text was uploaded.
-
-## Writing-rule switch worked but was not saved
-
-V2.1 applies the switch to the current session immediately. If persistence then fails, the session choice remains active but the app reports that it may not survive restart.
-
-This avoids falsely undoing the user's current interaction while still avoiding a false durability claim.
-
-## A saved personal word disappears after restart
-
-Check:
-
-1. You used **Save word**, not **Ignore once**.
-2. The correct language is selected.
-3. The dictionary manager lists the word before restart.
-4. Local application storage is allowed.
-5. App/browser data was not cleared.
-
-Personal vocabulary is local; there is no cloud account synchronization.
-
-## Ignored words return after restart
-
-Expected. **Ignore once** is session-only by design.
+If a transient review query is active, the first Escape intentionally clears search/categories/Automatic fixes only and leaves the dialog open. Press Escape again when the query is empty to close.
 
 # Personal dictionary import/export
 
-## Import is rejected
+## Import says the dictionary is for another language
 
-Current supported forms include:
+Current version-2 exports include language metadata. The bundled UI refuses to merge an `en-US` dictionary into `en-GB` or vice versa.
 
-- Version-2 language-tagged SpellChecker JSON.
-- Legacy version-1 SpellChecker JSON.
-- JSON arrays.
-- Plain line/comma-separated word lists.
+Switch to the document's language and import again.
 
-Malformed entries, unsupported versions/languages, and incompatible tagged-language imports are rejected rather than guessed.
+## Import rejects a word
 
-Version-2 example:
+Each non-blank entry must normalize to a valid word for the target language pack. Entries containing invalid characters/structure cause a format error instead of being silently discarded.
 
-```json
-{
-  "version": 2,
-  "language": "en-US",
-  "words": ["flutter", "open-source"]
-}
-```
+Try a minimal import containing only the problematic entry.
 
-## Export does not create a file
+## Import added no new words
 
-Expected. **Copy export** writes JSON to the local clipboard. It does not upload data or create a filesystem file.
+The imported normalized words may already exist. Import merges into the current dictionary and reports when no new words were found.
 
-Clipboard access can be affected by platform/browser permissions.
+## I expected import to replace my dictionary
 
-# Suggestions and language forms
+Dictionary import **merges**. Use the dictionary manager's clear/remove controls if you want to change existing saved words first.
 
-## Suggestion count is unexpected
+## Clipboard copy failed or nothing appears
 
-Open **Manage personal dictionary** and inspect **Suggestions per spelling issue**.
+Browser/OS clipboard policies can block clipboard writes. Check permissions/secure-context/browser policy and retry from the explicit copy control.
 
-Supported persisted values are 1–10. Out-of-range stored values are normalized into that range.
+# Portable settings
 
-## Suggestion ordering changed
+## Portable settings does not include my personal dictionary
 
-Ranking considers edit distance, first-character agreement, approximate frequency rank, candidate length, then alphabetical order.
+Expected. Personal vocabulary has a separate language-aware transfer format.
 
-Dictionary/frequency improvements can change tie ordering without changing edit-distance behavior.
+Portable settings carries only:
 
-## A possessive/contraction is reported unexpectedly
+- selected language;
+- suggestion limit;
+- explicit per-language writing-rule overrides.
 
-Current English packs support several regular suffixes from known stems, including:
+## Imported settings reset a language to defaults
 
-```text
-'s
-'re
-'ve
-'ll
-'d
-'m
-n't
-```
+A language missing from `writingRuleOverrides` has no explicit override after import and therefore uses registry defaults.
 
-Irregular forms may require direct dictionary coverage.
+A language present with `[]` explicitly disables all rules.
 
-## No suggestions are shown
+## Settings JSON is rejected
 
-Very distant unknown words can fall outside the pack's suggestion distance threshold.
+Check:
 
-Also verify the persisted suggestion-count preference.
+- valid JSON object;
+- `format` exactly `spellchecker-settings`;
+- `version` exactly `1`;
+- `languageId` is `en-US` or `en-GB`;
+- `suggestionLimit` integer 1–10;
+- `writingRuleOverrides` object;
+- override language keys are supported;
+- override values are string arrays;
+- rule IDs use valid syntax and are not duplicated within one override.
 
-# Widget/development troubleshooting
+See [Configuration](CONFIGURATION.md) for an example.
 
-## Tests fail only when tapping an issue action
+## Import failed while saving
 
-Flutter widget tests have a bounded surface. A valid control can exist in a scrollable list but be outside the hit-test viewport.
+The application attempts to restore previous durable settings if the import persistence transaction fails. It reports whether prior settings were restored when possible and marks storage unavailable.
 
-Use:
+Do not assume a failed import was partially durable without checking the UI/state after the error.
 
-```dart
-final control = find.text('Save word');
-await tester.ensureVisible(control);
-await tester.pumpAndSettle();
-await tester.tap(control);
-```
+# Undo
 
-Do not shrink production UI solely for test hit-testing.
+## Undo correction is unavailable
 
-## Writing widget tests cannot find a finding
+The correction stack is in-memory and bounded. It can be empty because:
 
-Writing insights uses a lazy `ListView`. Findings below the rule-switch section might not be built until the list is scrolled.
+- no SpellChecker correction has been applied;
+- manual editing/state reset began a new correction-history path;
+- language/session reset cleared correction history;
+- app restarted.
 
-Drag the dialog list and settle before asserting the finding.
+It is not document version history.
 
-## Web build fails
+## One undo reversed many changes
 
-```bash
-flutter doctor
-flutter clean
-flutter pub get
-flutter build web --release
-```
+Expected after a spelling Replace all or writing batch. Each accepted batch is recorded as one pre-correction editing snapshot.
 
-If a Flutter-generated host template is implicated, regenerate locally with the supported stable Flutter version and review diffs before committing.
+# Statistics
 
-## CI fails but local tests pass
+## Character count differs from visible characters
+
+`TextStatistics.characters` uses Dart string length, which counts UTF-16 code units. Some non-BMP characters use two code units; combining sequences can contain multiple code units/scalars for one user-perceived grapheme.
+
+## Sentence count includes an unfinished final sentence
+
+Expected. Current statistics count completed terminal-punctuation boundaries plus a remaining non-empty trailing fragment.
+
+# Keyboard/accessibility
+
+## F7 does not move issues
+
+Check:
+
+- a current spelling result has issues;
+- focus/browser receives F7 rather than mapping it to hardware/media/system behavior;
+- browser/extension is not intercepting it.
+
+Use visible previous/next controls as an alternative.
+
+## Shortcut conflicts with browser/assistive technology
+
+Host software can reserve shortcuts. Use visible controls and include environment/assistive-technology details in a report.
+
+See [Accessibility](ACCESSIBILITY.md) and [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
+
+# Web/platform
+
+## `flutter run -d chrome` cannot find Chrome
 
 Run:
 
 ```bash
-flutter pub get
-flutter analyze
-flutter test --reporter expanded
+flutter doctor
+flutter devices
 ```
 
-Also run release checks when preparing a release:
+Install/configure a Flutter-supported browser or use an available target for local development.
+
+## Where are Android/iOS/Windows/macOS/Linux project folders?
+
+They are not currently committed. The repository commits `web/` plus portable Flutter/Dart source.
+
+Do not assume a native release artifact exists because the application is written in Flutter. See [Platform support](PLATFORM_SUPPORT.md).
+
+# Development setup
+
+## `flutter pub get` fails
+
+Check:
+
+- network access to package sources;
+- Flutter/Dart version compatibility;
+- `pubspec.yaml` syntax;
+- local package cache/environment proxy configuration.
+
+Use Flutter stable unless intentionally testing another toolchain.
+
+## Formatting CI fails
+
+Run:
 
 ```bash
-dart format --output=none --set-exit-if-changed lib test
-flutter build web --release
+dart format lib test tool
 ```
 
-Compare Flutter/Dart versions with CI output.
+Then verify:
 
-# Clear behavior
+```bash
+dart format --output=none --set-exit-if-changed lib test tool
+```
 
-## Clearing editor text did not clear settings
+Commit canonical formatting changes separately when useful for review clarity.
 
-Expected. **Clear** removes current editor text/results/statistics/highlights and current correction history.
+## `flutter analyze` fails
 
-It does **not** delete:
+Run locally and address every reported analyzer issue before assuming CI/environment failure:
 
-- Selected language.
-- Personal vocabulary.
-- Suggestion-count preference.
-- Writing-rule preferences.
+```bash
+flutter analyze
+```
 
-Use the relevant settings controls for persistent data.
+## A widget test hangs on `pumpAndSettle()`
 
-## Portable settings import problems — V2.3
+If the test deliberately leaves a Future unresolved/loading state active, `pumpAndSettle()` may never reach settled state. Use explicit `pump()` steps and complete the controlled Future when intended.
 
-If a portable settings document is rejected, verify `format` is `spellchecker-settings`, `version` is `1`, `languageId` and every override key are supported built-in language IDs, `suggestionLimit` is 1–10, override values are arrays, and rule IDs use the documented lowercase stable-ID form. If storage fails during import, SpellChecker keeps the live editor on its previous state and attempts to restore the previous durable portable preferences; because local preference storage is not transactional, recovery is best effort. Personal vocabulary is not part of the portable document, so missing personal words should be investigated through the language-specific personal dictionary instead of the settings JSON.
+## A dialog control cannot be found in a widget test
 
-## Results show 200+ — V2.5
+Writing insights/list content can be lazy/off-screen. Scroll or `ensureVisible` before asserting/tapping the control.
 
-`200+` means SpellChecker captured 200 spelling issues and then found at least one additional unknown word later in the text.
+# Benchmark
 
-This is not a crash or storage problem. Single fixes and captured-issue navigation still work. Replace all is hidden because the checked occurrence set is incomplete.
+## Benchmark rejects an option
 
-If you need to review later portions, fix/ignore/save some early issues and check again, or temporarily check a smaller section of the document. Do not interpret the 200 captured issues as the total number of issues in the document.
+Use:
 
-If fewer than 200 issues are shown without `+`, the result completed normally.
+```bash
+dart run tool/benchmark_large_document.dart --help
+```
 
-## V2.6 spacing rules are missing or inactive
+Options are strict. Duplicates, unknown flags, missing values, invalid integers, non-positive required counts/limits, negative suggestions, or unsupported language IDs fail.
 
-If **Punctuation spacing** or **Trailing whitespace** is not enabled after upgrading, check whether the language has an explicit saved writing-rule override. V2.6 preserves explicit non-empty and explicit empty sets. Use **Reset rules to defaults** to clear that override and opt back into the current registry defaults. The two rules are currently eligible for the built-in English (US) and English (UK) packs only.
+## Benchmark is slower than another machine
 
-## Writing insights says results are limited
+Raw timings across unrelated hardware/toolchains are not directly comparable. Record exact command, commit, Flutter/Dart versions, OS/hardware, and load.
 
-The built-in V2.7 Writing insights dialog captures at most 200 findings. A limited notice means at least one additional finding exists beyond that captured prefix.
+Use benchmark smoke for correctness/executability, not universal speed thresholds.
 
-This does not mean analysis failed. Review the captured findings, apply safe captured fixes if desired, edit the text, and open Writing insights again for a fresh analysis. Search and filters only inspect the captured findings while the result is limited.
+See [Performance](PERFORMANCE.md).
 
-The limit controls retained finding objects and dialog workload; it is not a hard maximum document length or a promise that rule execution stops after 200 matches.
+# Release workflow
 
-## V2.8 exact writing-diagnostics troubleshooting
+## Release artifact missing
 
-### The badge says `200/900`. Why can I review only 200 findings?
+The release workflow uploads the web artifact only after format, analyzer, full tests, benchmark smoke, and `flutter build web --release` all succeed.
 
-The first number is the retained Writing insights review set. The second is the exact number of findings observed by all enabled/supported rules during that analysis. The built-in dialog intentionally retains at most 200 findings.
+Inspect the failed step in GitHub Actions.
 
-Filters and fixes operate only on the retained set when the result is limited.
+## I expected a GitHub Release/app-store artifact
 
-### A rule says `Total findings: N`, but fewer of that rule's cards are visible
+The current workflow uploads an Actions web artifact retained for 14 days. It does not automatically create a GitHub Release or native/app-store artifacts.
 
-The rule total describes all findings yielded by that rule. The retained 200-finding list is selected by global review order across every enabled rule, so some findings from that rule may fall outside the retained prefix.
+See [Releasing](RELEASING.md).
 
-Active search/category/fix filters can further reduce the visible subset.
+# Before filing an issue
 
-### Totals changed after I switched language or rule settings
+Include:
 
-That is expected. Exact counts depend on:
-
-- current editor text;
-- active language pack;
-- enabled writing-rule IDs;
-- language eligibility of each rule.
-
-Re-run/reopen Writing insights after those inputs change.
-
-### Totals appear inconsistent
-
-Use a short synthetic example and record:
-
+- exact SpellChecker version/commit;
+- platform/browser and Flutter/Dart version if relevant;
 - selected language;
-- enabled rule IDs;
-- configured `maxIssues` if using the library API;
-- retained count;
-- exact overall total;
-- exact per-rule totals;
-- whether the result is complete/truncated;
-- any active review filters.
+- exact feature/workflow;
+- expected versus observed behavior;
+- minimal synthetic text/data;
+- whether storage loading/saving showed a warning;
+- whether Writing insights/spelling result was limited;
+- relevant safe metadata diagnostic when requested.
 
-The per-rule exact totals should sum to the exact overall total for analyzer-produced results. Do not attach a private document solely to demonstrate a count mismatch.
+Do **not** post private documents, credentials, sensitive personal vocabulary, or real private messages when a synthetic reproducer is enough.
 
-## V2.9 diagnostic-summary troubleshooting
+For security vulnerabilities, follow [SECURITY.md](../SECURITY.md) instead of filing a public issue.
 
-### A diagnostic summary says `unavailable` for exact totals
+## Related documentation
 
-This is expected for a directly constructed compatibility `WritingAnalysisResult` that omitted the optional V2.8 exact-total fields. V2.9 does not invent totals. Analyzer-produced results provide exact totals and therefore normally render numeric total/uncaptured values.
-
-### A diagnostic summary contains a rule ID instead of a friendly rule name
-
-Pass the relevant configured `WritingRule` values to `WritingAnalysisDiagnosticSummary.fromResult(..., rules: ...)`. Unknown rule IDs intentionally fall back to their stable ID rather than guessing a display label.
-
-### I need to report a diagnostics bug
-
-Prefer the V2.9 metadata-only summary or a synthetic minimal example. Do not attach a private document, raw finding excerpts, personal vocabulary, or correction history unless a private security/support channel explicitly requires and authorizes it.
-
-## V2.10 benchmark troubleshooting
-
-If the benchmark command rejects an option, run `dart run tool/benchmark_large_document.dart --help` and use the documented `--name=value` forms. Repeated options are rejected deliberately, numeric bounds/iteration counts must satisfy their positive/non-negative contracts, and language IDs are limited to the built-in `en-US` / `en-GB` packs.
-
-If analysis outcomes differ between measured samples, treat that as a determinism defect and report the exact commit/command using synthetic data. If only elapsed times differ, first compare Flutter/Dart versions, hardware, runtime load, build/runtime mode, options, and commit; timing variation alone is expected and is not a normal correctness failure.
-
-## V2.11 Writing insights keyboard review
-
-### Ctrl/Command+F does not focus review search
-
-Confirm Writing insights is the active modal and keyboard focus is inside it. V2.11 routes Ctrl+F and Command+F to **Search rules and findings** only while that dialog owns focus; the shortcut does not replace browser/application find outside the modal. The visible search field remains available for pointer/touch access.
-
-### Escape did not close Writing insights
-
-If search text, a category filter, or **Automatic fixes only** is active, the first Escape intentionally clears that transient review query and keeps the dialog open. Search focus is restored. Press Escape again after the query is empty to close. Enabled writing-rule switches are not review filters and are not reset by Escape.
-
-### A rule/finding count is not immediately present in a widget test
-
-Writing insights uses a lazy `ListView`. Scroll until the keyed semantics node is built before inspecting it. Scrolling to another distant child can unmount the first; assert each lazy target while it is mounted.
+- [FAQ](FAQ.md)
+- [User guide](USER_GUIDE.md)
+- [Configuration](CONFIGURATION.md)
+- [Support](../SUPPORT.md)
+- [Development](DEVELOPMENT.md)
+- [Testing](TESTING.md)

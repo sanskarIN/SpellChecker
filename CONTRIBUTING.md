@@ -1,25 +1,8 @@
 # Contributing to SpellChecker
 
-## V2.16 final stabilization
-The final stabilization baseline requires regression-first fixes. Unicode-sensitive code must define whether offsets are UTF-16 or Unicode scalars, imported formats must fail closed on malformed metadata, persistence operations must surface platform failures, and widget tests must not depend on off-screen hit tests or settling intentionally pending futures.
+Thank you for helping improve SpellChecker. This guide describes the current contribution workflow and compatibility/safety expectations for `2.16.0+21`.
 
-
-## V2.15 writing-rule contribution baseline
-The current built-in catalogue has ten rules. New structural rules must define exact source ownership, demonstrate non-BMP offset behavior where relevant, preserve explicit historical overrides, and avoid guessed automatic replacements unless the edit is deterministic.
-
-
-## V2.14 structural diagnostics contribution boundary
-
-The current built-in catalogue contains nine rules. `unmatched-square-bracket` demonstrates the expected contract for structural advisory diagnostics: literal deterministic detection, exact source ownership, no guessed mutation, explicit compatibility tests for stored rule sets, bounded/exact diagnostic coverage, and privacy-safe copied summaries. New delimiter/parser behavior must document whether it is literal or syntax-aware and must not silently broaden automatic correction scope.
-
-## V2.13 writing-rule contribution example
-
-The `unmatched-parenthesis` rule demonstrates the required separation between deterministic detection and safe mutation. New rules should have stable IDs, explicit language eligibility, exact source-range ownership, adversarial/Unicode tests, and a justified `replacement` decision. When a correction is ambiguous, prefer an advisory finding over guessing an edit.
-
-## V2.12 contributor note
-
-The built-in writing catalogue now contains seven stable IDs, including `missing-punctuation-space`. Writing-rule contributions that touch token or punctuation boundaries must include Unicode/UTF-16 offset cases and interaction tests with existing automatic rules. Do not broaden V2.12's period/colon exclusions or punctuation-only ownership without a separately reviewed behavior contract and regression set.
-Thank you for helping improve SpellChecker. This guide defines the contribution workflow and compatibility/safety boundaries for the current 2.x project.
+For project behavior, start with the [complete documentation hub](docs/README.md). Historical release-specific contributor notes are preserved through [Release history](docs/RELEASE_HISTORY.md), not mixed into this current guide.
 
 ## Code of Conduct
 
@@ -27,19 +10,32 @@ Participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Before starting
 
-1. Search existing issues and pull requests for related work.
-2. Open an issue before large architecture changes, public API changes, persisted-data/key changes, language-pack changes, writing-rule ID changes, keyboard-contract changes, or security/privacy-sensitive work.
-3. Keep each pull request focused on one logical change.
-4. Do not include credentials, private keys, personal data, real user documents, sensitive dictionary exports, or generated build outputs.
-5. Preserve local-first runtime behavior unless a separately reviewed feature explicitly changes it.
-6. Preserve keyboard/accessibility behavior when changing editor interactions.
-7. Treat persisted rule IDs, language IDs, and transfer-format versions as compatibility contracts rather than internal implementation details.
+Search existing issues and pull requests for related work.
+
+Open an issue/design discussion before large changes involving:
+
+- public API compatibility;
+- architecture/layer boundaries;
+- persisted preference/key semantics;
+- transfer-format versions;
+- built-in language packs/dictionary data;
+- writing-rule IDs/default registry;
+- correction conflict/source-range behavior;
+- keyboard/accessibility contracts;
+- platform runners/releases;
+- runtime networking/dependencies;
+- privacy/security-sensitive behavior.
+
+Keep a pull request focused on one logical goal even when that goal requires implementation, tests, and documentation across several files.
+
+Never commit credentials, tokens, signing keys, provisioning profiles, private documents, sensitive personal dictionary exports, or unrelated generated build output.
 
 ## Development requirements
 
-- Flutter stable.
-- Dart SDK compatible with `pubspec.yaml` (currently `>=3.8.0 <4.0.0`).
-- Git.
+- Git;
+- Flutter stable;
+- Dart compatible with `>=3.8.0 <4.0.0`;
+- Chrome or another suitable Flutter development target.
 
 Verify:
 
@@ -55,58 +51,80 @@ dart --version
 git clone https://github.com/sanskarIN/SpellChecker.git
 cd SpellChecker
 flutter pub get
-flutter analyze
-flutter test --reporter expanded
 flutter run -d chrome
 ```
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+See [Development](docs/DEVELOPMENT.md) and [Platform support](docs/PLATFORM_SUPPORT.md).
 
 ## Branch naming
 
-Use short descriptive names:
+Use a short descriptive name, for example:
 
 ```text
-feature/writing-rule-category
-feature/language-pack-loader
-fix/batch-overlap-caret
-fix/rule-preference-migration
-docs/update-user-guide
+feature/new-writing-rule
+feature/language-pack-example
+fix/unicode-source-range
+fix/settings-import-rollback
+docs/api-reference
 refactor/suggestion-ranking
 ```
 
 ## Commit messages
 
-Prefer imperative, descriptive commit messages. Conventional Commit prefixes are encouraged:
+Prefer focused imperative messages. Conventional Commit prefixes are encouraged:
 
 ```text
-feat: persist writing rule choices per language
-fix: skip stale overlapping writing fixes
-test: cover batch correction undo grouping
-docs: document writing shortcut
-chore: update CI configuration
+feat: add deterministic writing rule
+fix: preserve non-BMP source range
+perf: reduce suggestion candidate work
+test: cover settings rollback
+docs: update language pack guide
+chore: adjust CI configuration
 ```
 
-## Required local checks
+Do not manufacture meaningless commits solely to increase commit count; each commit should remain reviewable and logically explainable.
+
+## Required local quality gate
+
+After `flutter pub get`:
 
 ```bash
-dart format lib test
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test tool
 flutter analyze
 flutter test --reporter expanded
 ```
 
-Before release-sensitive work also run:
+Apply formatting with:
+
+```bash
+dart format lib test tool
+```
+
+Run benchmark smoke for analysis/benchmark-sensitive work:
+
+```bash
+dart run tool/benchmark_large_document.dart \
+  --repeats=4 \
+  --warmup=0 \
+  --iterations=1 \
+  --spelling-limit=2 \
+  --writing-limit=5 \
+  --suggestions=0 \
+  --language=en-US \
+  --json
+```
+
+For release/web-build changes also run:
 
 ```bash
 flutter build web --release
 ```
 
-Fix analyzer/test failures in source or tests. Do not broadly suppress checks for convenience.
+Do not suppress analyzer/test failures broadly for convenience. Fix the implementation/test/design mismatch.
 
-# Public API boundaries
+## Public API boundaries
 
-Current reusable API barrels are:
+Supported reusable imports are:
 
 ```dart
 import 'package:spellchecker/spell_checker.dart';
@@ -114,396 +132,234 @@ import 'package:spellchecker/language.dart';
 import 'package:spellchecker/writing.dart';
 ```
 
-Changes to exported names or documented semantics need API documentation, compatibility review, regression tests, and release notes.
+Changes to exported names, signatures, nullability/defaults, validation, ordering, source-range semantics, or documented behavior require:
 
-Application widgets and `DictionaryPreferences` remain internal integration types even though their user-visible behavior is documented.
+- compatibility review;
+- regression tests;
+- [API](docs/API.md) update;
+- [Examples](docs/EXAMPLES.md) update when usage changes;
+- changelog/release note when user/developer visible.
 
-# Architecture rules
+Application widgets and `DictionaryPreferences` are internal integration types unless intentionally exported.
 
-## Spelling logic
+## Unicode and source offsets
 
-Keep tokenization, normalization, dictionary checks, suffix handling, and suggestion ranking out of Flutter widgets.
+SpellChecker source ranges use Dart/Flutter UTF-16 code-unit offsets. Unicode-sensitive algorithms such as edit distance and selected casing/length operations use Unicode scalar values.
 
-Language-specific behavior belongs behind `SpellLanguagePack`.
+When changing Unicode-sensitive code:
 
-## Spelling correction
+- explicitly identify whether a value is UTF-16 offset or scalar count;
+- include non-BMP regression coverage when single-code-unit mistakes are possible;
+- include decomposed combining-mark coverage when normalization/boundaries are relevant;
+- verify exact substring source ownership.
 
-Spelling single/replace-all mutation belongs in `TextCorrection` or another reusable core abstraction.
+Do not call a source offset a rune/grapheme index.
 
-Correction code must:
+## Spelling changes
 
-- Validate checked source ranges against current text.
-- Refuse stale ranges safely.
-- Apply replace-all from document end toward beginning.
-- Preserve case per occurrence.
-- Return deterministic mutation metadata.
+Preserve:
 
-## Writing rules
+- deterministic token/source order;
+- language-pack normalization;
+- personal/ignored word behavior;
+- suggestion cache correctness;
+- deterministic ranker + lexical fallback;
+- scalar edit-distance/candidate-length consistency;
+- safe represented-range correction;
+- bounded spelling truncation proof semantics.
 
-Writing-rule matching belongs in `WritingRule` implementations under `lib/writing/`, not in the dialog/page.
+A bounded report is truncated only after an additional unknown word exists beyond the retained limit.
 
-A rule must provide:
+## Suggestion ranker changes
 
-- Stable persistent ID.
-- Clear display name/description.
-- Explicit language eligibility.
-- Side-effect-free deterministic analysis.
-- Exact source ranges and `originalText`.
-- Automatic replacement only when deterministic for the documented scope.
+`SpellSuggestionRanker` should be deterministic and side-effect-free. The engine applies a final lexical tie-break for equal custom scores.
 
-V2.1 persists rule IDs. Renaming a shipped ID therefore requires preference migration/compatibility handling and tests.
+Test custom dictionaries, personal candidates, equal-score ties, Unicode candidates, frequency metadata, and suffix behavior as relevant.
 
-See [docs/WRITING_RULES.md](docs/WRITING_RULES.md).
+## Writing-rule contributions
 
-## Writing correction
+The current built-in/default registry contains exactly ten stable rules. See [Writing rules](docs/WRITING_RULES.md).
 
-Never apply `WritingIssue.replacement` directly in widget code.
+A new/changed built-in rule must define:
 
-Use:
+- stable unique ID;
+- display name/description;
+- category and severity;
+- explicit language eligibility;
+- exact UTF-16 source ownership;
+- deterministic positive/negative scope;
+- automatic replacement only when the edit is genuinely deterministic;
+- interaction with every existing automatic rule;
+- bounded/exact-total behavior;
+- preference/default compatibility;
+- Portable-settings compatibility;
+- review filter/search/diagnostic behavior;
+- widget/undo behavior;
+- Unicode/stress coverage where relevant.
 
-```dart
-WritingCorrection.apply(...)
-WritingCorrection.applyAll(...)
-```
+When detection is deterministic but correction is ambiguous, return an advisory finding (`replacement: null`) instead of guessing.
 
-V2.1 batch invariants:
+## Writing analyzer/correction changes
 
-1. Deterministic candidate order: start, end, rule ID.
-2. Advisory/no-replacement findings are skipped.
-3. Invalid/stale findings are skipped.
-4. The earliest accepted candidate wins an overlap; later overlaps are skipped.
-5. Accepted edits are applied from end toward start.
-6. Applied/skipped counts are reported.
-7. One user-visible batch becomes one correction-history entry.
+Preserve:
 
-A new rule that can overlap another automatic rule needs interaction/batch tests.
+- duplicate rule-ID rejection;
+- language/enabled filtering;
+- deterministic global ordering;
+- globally earliest bounded prefix;
+- exact analyzer totals;
+- captured-only correction authority;
+- stale-source validation;
+- deterministic start/end/rule-ID batch conflict selection;
+- end-to-start mutation;
+- applied/skipped accounting.
 
-## Inline highlighting
+Do not create a separate weaker correction algorithm for filtered UI batches.
 
-`SpellCheckEditingController` owns inline spelling styling only.
+## Language-pack contributions
 
-Checked highlight ranges must be validated against current text and cleared when manual edits invalidate the spelling snapshot.
+Before adding an official built-in language, review:
 
-Do not move dictionary/ranking/writing-rule logic into the controller.
+- dictionary/frequency source licensing;
+- stable ID/code/region/display metadata;
+- tokenization and personal-word validation;
+- normalization/canonicalization;
+- regional variants;
+- suffix behavior;
+- suggestion ranking/distance expectations;
+- personal-dictionary transfer;
+- preference isolation;
+- writing-rule eligibility;
+- Portable-settings validation;
+- benchmark/UI integration;
+- tests and documentation.
 
-## Shared correction undo
+A custom `SpellLanguagePack` passed directly to reusable APIs is not automatically registered with the bundled UI/registry.
 
-The page-level correction stack is bounded, memory-only, and shared across programmatic spelling/writing corrections.
+See [Language packs](docs/LANGUAGE_PACKS.md).
 
-One entry currently represents:
+## Persistence and transfer changes
 
-- One spelling replacement.
-- One spelling replace-all.
-- One individual writing safe fix.
-- One writing batch safe-fix operation.
-
-Manual typing clears the correction stack.
-
-Do not persist editor/correction snapshots without explicit privacy/product redesign. Snapshots can contain full editor text.
-
-## Active spelling issue state
-
-Changes must keep these views coherent:
-
-- Editor selection.
-- Inline active styling.
-- Results selected state.
-- Previous/next controls.
-- Results auto-scroll.
-
-## Persistence
-
-Keep persistence outside reusable spelling/writing analysis/correction layers.
-
-V2.1 locally persists:
-
-- Selected language ID.
-- Personal words per language.
-- Suggestion count.
-- Writing-rule IDs per language.
-
-It does not persist editor text, issue/finding lists, ignored words, or correction history.
-
-# V2.2 review management compatibility
-
-`WritingRule.category` is public API with a source-compatible Mechanics default. New category behavior should not force existing V2 external rules to implement a new abstract member unless a deliberate breaking release documents that change.
-
-`WritingReviewQuery` is the reusable filtering authority. Search/category/fix-only matching should not be duplicated inside widgets.
-
-Review filters are temporary and must not be persisted without explicit privacy/product review.
-
-Filtered batch fixes must reuse `WritingCorrection.applyAll` and preserve V2.1 stale/advisory/overlap/end-to-start/one-step-undo behavior.
-
-**Reset rules to defaults** must clear the current language's stored override rather than save the registry's current default set. Add tests proving the key becomes missing/unset and defaults are resolved on the next dialog/session.
-
-# Writing-rule preference compatibility
-
-Current key shape:
+Current durable state includes:
 
 ```text
-spellchecker.writing_rule_ids.v1.<language-id>
+selected language
+suggestion limit
+per-language personal vocabulary
+per-language explicit writing-rule IDs
 ```
 
-Preserve these three distinct states:
+Writing-rule preferences distinguish:
 
 ```text
-missing key       -> no explicit preference -> registry defaults
-stored non-empty  -> explicit enabled IDs
-stored empty list -> explicit disable-all
+missing key          -> defaults
+non-empty stored set -> explicit enabled set
+empty stored set     -> explicit disable-all
 ```
 
-Do not convert an explicit empty list to defaults.
+Do not collapse explicit empty into defaults.
 
-Stored IDs should be trimmed, empty IDs removed, deduplicated, and sorted before persistence.
-
-When restoring effective IDs, intersect stored/default IDs with rules that both exist and support the active language. Unknown stale IDs should be ignored safely.
-
-## Language isolation
-
-Personal vocabulary and writing-rule preferences are independently namespaced by language.
-
-Tests for a new language/state feature should prove pack A state does not leak to pack B.
-
-# Keyboard and accessibility contracts
-
-Current shortcuts:
+Current transfer contracts:
 
 ```text
-Ctrl+Enter             spelling check
-Command+Enter          spelling check
-Ctrl+Shift+Enter       Writing insights
-Command+Shift+Enter    Writing insights
-F7                     next spelling issue
-Shift+F7               previous spelling issue
+personal dictionary: language-aware version 2, legacy readers retained
+Portable settings: spellchecker-settings version 1
 ```
 
-When changing controls/shortcuts:
+Format/key migrations require strict validation, backward-compatibility tests, rollback/error behavior, and docs.
 
-- Preserve keyboard-only access.
-- Avoid focus traps.
-- Keep visible alternatives for shortcuts.
-- Preserve ordinary text-editing shortcuts.
-- Keep issue/finding meaning available through text/semantics, not color alone.
-- Give icon-only actions meaningful tooltips/labels.
-- Update accessibility/user docs and widget tests.
+A failed `shared_preferences` write/remove must not be presented as successfully durable.
 
-See [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
+See [Configuration](docs/CONFIGURATION.md).
 
-# Tests
+## Flutter UI contributions
 
-Behavior changes should include tests at the correct layer.
+Preserve:
 
-## Spelling
+- checked-result invalidation after manual text editing;
+- loading/storage truthfulness;
+- language switch state restoration/reset behavior;
+- first-200 spelling/writing UI policies;
+- captured-only limited actions;
+- shared bounded correction undo;
+- visible alternatives for keyboard shortcuts;
+- wide/narrow layout usability;
+- semantics/live-state feedback for important results/errors.
 
-- Engine/dictionary/suggestions → `test/spell_checker_test.dart`.
-- Edit distance → `test/edit_distance_test.dart`.
-- Spelling corrections → `test/text_correction_test.dart`.
-- Inline controller → `test/spell_check_editing_controller_test.dart`.
-- Main editor workflow → `test/widget_test.dart`.
+See [User guide](docs/USER_GUIDE.md), [Accessibility](docs/ACCESSIBILITY.md), and [Keyboard shortcuts](docs/KEYBOARD_SHORTCUTS.md).
 
-## Language
+## Widget tests
 
-- Pack/token/variant behavior → `test/language_pack_test.dart`.
-- Language-aware dictionary transfer → `test/language_dictionary_codec_test.dart`.
-- Language preference/migration → `test/language_preferences_test.dart`.
-- Language selector/isolation UI → `test/language_widget_test.dart`.
+Do not use `pumpAndSettle()` when a test intentionally leaves a Future unresolved. Use controlled `pump()`/completion instead.
 
-## Writing
+For lazy/off-screen dialog content, scroll/ensure visibility rather than assuming every item is mounted.
 
-- Rule/analyzer behavior → `test/writing_rules_test.dart`.
-- Individual/batch safe correction → `test/writing_correction_test.dart`.
-- Per-language rule preferences → `test/writing_preferences_test.dart`.
-- Writing insights/persistence/keyboard/undo → `test/writing_widget_test.dart`.
+## Performance contributions
 
-## Persistence
+Use the deterministic benchmark for controlled comparisons. Do not add arbitrary universal millisecond CI thresholds across varying hosted hardware.
 
-Use isolated mock values:
+Performance improvements must preserve Unicode, source ownership, deterministic results, exact totals, and correction safety.
 
-```dart
-SharedPreferences.setMockInitialValues(<String, Object>{});
-```
+See [Performance](docs/PERFORMANCE.md).
 
-Never read/write a contributor machine's real settings in tests.
+## Privacy/security contributions
 
-## Scrollable/lazy UI tests
+The current application is local-first and does not require a network analysis service, telemetry, accounts, or cloud document sync.
 
-Use `tester.ensureVisible` when a real user would scroll to a control.
+Any change introducing runtime networking, telemetry, logging upload, user identity, file/document persistence, new permissions, external model/dictionary downloads, dynamic plugin execution, or new sensitive durable data requires explicit review and documentation in the same PR.
 
-Writing insights uses a lazy `ListView`; findings below rule switches may not be built until the list is scrolled.
+Update [Privacy](docs/PRIVACY.md) and [Security](SECURITY.md) before merge when these boundaries change.
 
-Do not distort production layout to satisfy a fixed test-viewport assumption.
+For a vulnerability, do not open a public issue; follow [SECURITY.md](SECURITY.md).
 
-## Regression tests
+## Documentation contributions
 
-Every deterministic bug fix should include a test reproducing the previous failure.
+Follow [Documentation maintenance](docs/DOCUMENTATION_MAINTENANCE.md).
 
-Protect the user/public contract rather than incidental internals.
+Current behavior belongs in evergreen docs. Release-specific design/audit evidence belongs in historical files indexed by [Release history](docs/RELEASE_HISTORY.md).
 
-# Pull requests
+When code changes current behavior, update the matching docs in the same PR rather than filing a follow-up documentation task.
 
-A PR should:
+## Tests
 
-- Explain the problem and solution.
-- Describe user-visible behavior.
-- Link relevant issues.
-- Include appropriate tests.
-- Pass formatting, analysis, and tests.
-- Build the release target for release-sensitive changes.
-- Update docs/changelog when needed.
-- Avoid unrelated refactoring.
-- Call out persistence/privacy/migration implications.
-- Call out public API changes.
-- Call out keyboard/accessibility changes.
-- Call out correction grouping/safety changes.
+Use focused tests while iterating, but run the complete suite before merge. See [Testing](docs/TESTING.md) for component checklists and commands.
 
-Use the repository PR template.
+New regressions should normally include the narrowest test that fails before the fix and passes after it.
 
-# Documentation matrix
+## Pull request description
 
-Update documentation when changing:
+A useful PR explains:
 
-- Public APIs → `docs/API.md`.
-- Internal architecture → `docs/ARCHITECTURE.md`.
-- Language pack/state behavior → `docs/LANGUAGE_PACKS.md`.
-- Writing-rule/correction behavior → `docs/WRITING_RULES.md`.
-- Setup/dependencies/internals → `docs/DEVELOPMENT.md`.
-- User workflow/shortcuts → `docs/USER_GUIDE.md`.
-- Privacy/state retention → `docs/PRIVACY.md`.
-- Security boundaries → `SECURITY.md`.
-- Accessibility/keyboard behavior → `docs/ACCESSIBILITY.md`.
-- Test strategy → `docs/TESTING.md`.
-- Failure/recovery behavior → `docs/TROUBLESHOOTING.md`.
-- Release/smoke checks → `docs/RELEASING.md`.
-- Planned/completed scope → `docs/ROADMAP.md`.
-- Released behavior → `CHANGELOG.md`.
-- Repository overview/current version → `README.md`.
-- User support/reporting context → `SUPPORT.md` / issue templates.
+- problem/goal;
+- solution/scope;
+- compatibility/migration impact;
+- privacy/security/platform/accessibility impact;
+- tests run;
+- docs updated;
+- known limitations/non-goals.
 
-# Language-pack contributions
+Do not claim “zero bugs” or “all platforms supported” when the repository evidence does not establish that.
 
-Follow [docs/LANGUAGE_PACKS.md](docs/LANGUAGE_PACKS.md).
+## Review checklist
 
-New packs require compatible/licensed data, Unicode tests, state-isolation tests, selector/persistence coverage, migration considerations, writing-rule eligibility review, and documentation.
+Before requesting/merging review, confirm:
 
-Do not add runtime dictionary downloads or network language detection without explicit privacy/security design review.
+- format check passes;
+- analyzer passes;
+- complete test suite passes;
+- benchmark smoke passes when applicable;
+- web release build passes for release/build changes;
+- public API compatibility reviewed;
+- UTF-16/scalar semantics reviewed;
+- persistence/transfer compatibility reviewed;
+- writing-rule/language default compatibility reviewed;
+- privacy/security/accessibility/platform impact reviewed;
+- current docs updated;
+- historical docs remain historically accurate;
+- no secrets/private data/generated build artifacts added.
 
-# Dictionary contributions
+## Support and funding
 
-- Use pack-normalized entries.
-- Avoid obvious misspellings.
-- Prefer broadly useful vocabulary over personal one-off terms.
-- Add regression tests for reported bugs.
-- Check shared/variant dictionary data for accidental conflicts.
+Normal questions/bugs use [SUPPORT.md](SUPPORT.md). Security issues use [SECURITY.md](SECURITY.md).
 
-For frequency ranks:
-
-- Lower rank means stronger preference.
-- Add deterministic ranking tests when ordering matters.
-- Do not present compact ranks as a complete linguistic corpus.
-
-# Personal dictionary format contributions
-
-`PersonalDictionaryCodec` defines a portable user-data format.
-
-- Keep transfer formats versioned.
-- Preserve existing documented version readability unless a migration explicitly changes it.
-- Never silently reinterpret unsupported versions or languages.
-- Keep output normalized/deduplicated/sorted.
-- Reject malformed entries.
-- Update API/user/privacy/changelog docs for format changes.
-
-# Persistence contributions
-
-When modifying `DictionaryPreferences`:
-
-- Add mocked persistence tests.
-- Use versioned keys/documented migrations when data meaning changes.
-- Preserve explicit-empty vs unset semantics for rule IDs.
-- Do not display durable-success UI before writes complete.
-- Preserve no-false-success/rollback behavior where current flows require it.
-- Preserve session spelling/writing functionality when storage is unavailable.
-- Keep editor text/findings/correction history unpersisted unless a separately reviewed feature changes that boundary.
-
-# Security and privacy
-
-Use [SECURITY.md](SECURITY.md) for security-sensitive reports instead of public exploit details.
-
-These require explicit privacy/security design review before implementation:
-
-- Synchronization/accounts.
-- Cloud spelling/grammar/AI rewriting.
-- Analytics/telemetry/remote logging.
-- Crash reporting that may capture editor text.
-- Editor-document persistence.
-- Persistent correction history.
-- Keyboard/usage telemetry.
-- Runtime remote dictionary/rule downloads.
-- Dynamic external rule/plugin execution.
-
-# Support development
-
-Code, documentation, testing, issue triage, accessibility feedback, and careful bug reports are all valuable contributions. If you also want to support the maintainer financially, the optional project support link is [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN).
-
-Financial support does not change code-review standards, project governance, roadmap priority, security handling, or access to the MIT-licensed source.
-
-# License
-
-By contributing, you agree that your contribution may be distributed under the repository's [MIT License](LICENSE).
-
-## V2.3 review preset and portability changes
-
-Changes to `WritingReviewPreset` IDs or semantics require compatibility notes and focused query/widget tests. Changes to portable settings must document format/version compatibility, supported languages, suggestion bounds, explicit override semantics, excluded data, failure/rollback behavior, and privacy impact. Never add editor text, personal dictionary contents, findings, correction snapshots, credentials, or private user samples to portable-settings fixtures; use synthetic values only.
-
-## V2.4 suggestion-ranking changes
-
-Preserve the default ranking order unless a release explicitly documents an intentional behavior change. Custom ranker support must not bypass engine eligibility filters, must retain deterministic lexical tie fallback, and must include focused tests for context/candidate metadata and cache-stability assumptions. Do not add dynamic plugin loading as part of a ranker change without a separate security design review.
-
-## V2.5 performance and bounded-analysis changes
-
-Changes to issue limits, scan termination, candidate generation, caching, ranking, or large-result rendering should include deterministic regression coverage and an update to `docs/PERFORMANCE.md`.
-
-Do not use private documents as benchmark fixtures. Do not describe `maxIssues` as a hard document-size bound. Do not expose Replace all on a truncated issue report unless a future design supplies a separate complete-range safety contract.
-
-## V2.6 writing-rule catalogue contributions
-
-Whitespace-rule changes must document source-range ownership and include interaction tests with existing automatic rules. Do not rely on rule-ID alphabetical ordering to repair avoidable overlap: when two built-ins have distinct semantic responsibilities, prefer non-overlapping matching boundaries. Preserve stable shipped IDs, per-language explicit preference semantics, deterministic fixes, and the existing correction safety/undo pipeline.
-
-## V2.7 bounded-analysis contributions
-
-Changes to `WritingAnalyzer` bounds must preserve unbounded source compatibility, positive-limit validation, global deterministic ordering, exact-at-limit completeness, proven-overflow truncation semantics, and immutable result data.
-
-Custom-rule tests used for bounded analysis should include out-of-order yields so implementations cannot accidentally depend on registry order. UI contributions must describe incomplete result sets as captured/limited and must retain stale-source and one-step undo safety.
-
-Do not turn the V2.7 finding-retention bound into a claimed CPU/document-size security limit without a separate design and test contract.
-
-## V2.8 diagnostics contributions
-
-Changes to writing-analysis diagnostics must preserve these contracts unless a deliberately documented breaking release changes them:
-
-- analyzer-produced results expose internally consistent exact overall/per-rule totals;
-- direct V2.7-style `WritingAnalysisResult` construction may omit diagnostics;
-- exact totals include uncaptured findings;
-- the bounded retained list remains the global deterministic review-order prefix;
-- exact counting does not require retaining all uncaptured `WritingIssue` objects;
-- filters and corrections remain scoped to retained findings when analysis is truncated;
-- diagnostic maps remain immutable;
-- disabled/unsupported rules do not contribute totals;
-- no timing telemetry or persistence is introduced implicitly.
-
-Add focused core tests for result invariants and widget tests for user-visible count semantics. When testing the Writing insights dialog, navigate its real lazy list instead of making production rows eager for test convenience.
-
-Performance experiments must use synthetic/non-sensitive text. Treat exact counts as document-derived metadata if proposing logging, exporting, persistence, or remote diagnostics.
-
-## V2.9 diagnostics and hardening contributions
-
-For V2.9-sensitive changes, preserve the metadata-only diagnostic-summary boundary, public runtime result/report invariants, unique writing-rule IDs, language ownership of findings, IME composing visibility, Unicode token/statistics consistency, and deterministic custom-frequency normalization. Add focused regressions for any changed invariant. Before a release-sensitive PR is complete, `flutter pub get` must leave `pubspec.lock` clean and the exact tree must pass format, analyze, full tests, and the release web build. Disposable reconciliation workflows/scripts must not remain in the release tree.
-
-## V2.10 benchmark contributions
-
-Benchmark changes must preserve synthetic-only corpus generation, report-text exclusion, fixed benchmark spelling metadata unless intentionally versioned, strict option validation, and threshold-free normal CI. Include focused tests for corpus/result/options/report changes. If the JSON shape changes incompatibly, advance its format version and document migration/consumer impact. Do not add real user documents, private corpora, network telemetry, automatic result upload, or machine-specific pass/fail timing thresholds to normal project validation.
-
-## V2.11 accessibility regression expectations
-
-Changes to Writing insights focus, shortcuts, filters, semantics, or dialog layout should preserve the V2.11 keyboard contract and add/update focused widget coverage. Keep pointer/touch-visible equivalents for shortcuts; do not make lazy dialog content eager solely for tests. Exercise Ctrl/Command+F, first/second Escape semantics, transient-versus-persisted state, and screen-reader count meaning when affected.
-
-Benchmark changes must keep exact deterministic outcome metadata internally consistent. Per-rule total maps now cover every analyzed rule, including zero-count rules, while elapsed timing remains unsuitable as an ordinary CI correctness threshold.
+Optional project funding is available at [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN), but funding does not affect whether issues, security reports, contributions, or feature proposals can be submitted/reviewed.

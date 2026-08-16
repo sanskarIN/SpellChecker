@@ -1,437 +1,322 @@
 # Releasing
 
-## V2.16 final stabilization
-The final release candidate is `2.16.0+21` / About `2.16.0`. Acceptance requires canonical formatting, static analysis, the complete Flutter suite, deterministic benchmark smoke, `flutter build web --release`, exact version/bug-audit/privacy/dependency assertions, absence of disposable V2.16 helpers, and green merged-main CI. The repository still does not invent a first tag/release convention unless maintainers explicitly choose one.
+This page documents the current SpellChecker release process. The repository's automated release contract is a validated **Flutter web build artifact**; it does not currently build/publish native Android/iOS/Windows/macOS/Linux artifacts or automatically create a GitHub Release entry.
 
+## Current package
 
-## V2.15 release acceptance
-The V2.15 candidate is `2.15.0+20` / About `2.15.0`. Acceptance requires clean package-aware formatting, static analysis, complete tests, benchmark smoke, release web build, exact ten-rule/export/version/documentation checks, and zero disposable V2.15 helper residue before normal merge.
+```text
+name: spellchecker
+version: 2.16.0+21
+Dart SDK: >=3.8.0 <4.0.0
+```
 
+`pubspec.yaml` is the package-version source of truth.
 
-## V2.14 release acceptance
+## Release workflow trigger
 
-The V2.14 release identity is package `2.14.0+19` and About `2.14.0`. Release validation must verify the public `UnmatchedSquareBracketRule` export, stable ID `unmatched-square-bracket`, exactly nine built-in rules, focused V2.14 regression files, explicit V2.13 preference compatibility, synchronized `what_changed.md`/changelog/README/web metadata, unchanged direct runtime dependencies, a successful release web build, and zero disposable V2.14 helper residue.
+`.github/workflows/release.yml` runs when:
 
-## V2.13 release gate
+- a Git tag matching `v*` is pushed; or
+- a maintainer manually dispatches the workflow.
 
-The V2.13 candidate identity is package `2.13.0+18` / About `2.13.0`, with eight built-in writing rules including `unmatched-parenthesis`. Release validation must confirm package-aware formatting, static analysis, the complete Flutter suite, deterministic benchmark smoke, `flutter build web --release`, public export/registry identity, manifest JSON, unchanged direct runtime dependency boundary, V2.13 `what_changed.md` coverage, and zero disposable V2.13 helper files.
+Workflow name:
 
-## V2.12 release note
+```text
+Release build
+```
 
-The V2.12 candidate identity is package `2.12.0+17` and About `2.12.0`. Release acceptance must verify the seven-rule registry/export, focused Unicode and widget regressions, full formatting/analyzer/tests, deterministic benchmark smoke, release web build, documentation identity, and absence of disposable `v212` helper files. A tag/release must point only at the exact validated merged tree.
-This document describes the SpellChecker release procedure.
+Job:
 
-## Preconditions
+```text
+Validate benchmark tooling and build web release
+```
 
-Before releasing:
+Runner:
 
-- `main` contains the intended code.
-- CI is passing on the exact release commit.
-- `pubspec.yaml` contains the intended `MAJOR.MINOR.PATCH+BUILD` version.
-- `CHANGELOG.md` contains a dated release entry.
-- README/current-release text matches behavior.
-- API/architecture/user/development/testing/accessibility/troubleshooting docs are current.
-- Privacy/security/support/contributor documentation matches persisted/runtime data behavior.
-- Persistent key/format changes have migration and regression tests.
-- Keyboard, correction safety, batch grouping, and undo behavior are documented/tested.
-- One-time development/reconciliation workflows/scripts are absent from the release tree.
+```text
+ubuntu-latest
+```
 
-Do not tag a branch with failing, unverified, or approval-blocked validation unless an equivalent exact-tree release gate has executed every required check and that evidence is recorded.
+Timeout:
+
+```text
+25 minutes
+```
+
+Workflow permissions are read-only for repository contents.
+
+## What the workflow validates
+
+In order:
+
+```bash
+flutter --version
+dart --version
+flutter pub get
+dart format --output=none --set-exit-if-changed lib test tool
+flutter analyze
+flutter test --reporter expanded
+dart run tool/benchmark_large_document.dart \
+  --repeats=4 \
+  --warmup=0 \
+  --iterations=1 \
+  --spelling-limit=2 \
+  --writing-limit=5 \
+  --suggestions=0 \
+  --language=en-US \
+  --json
+flutter build web --release
+```
+
+Any failed gate prevents artifact upload.
+
+## Artifact
+
+The workflow uploads:
+
+```text
+build/web
+```
+
+Artifact name:
+
+```text
+spellchecker-web-${github.ref_name}
+```
+
+The workflow fails if the build directory is missing and retains the artifact for 14 days.
+
+This Actions artifact is not the same thing as a permanently published GitHub Release asset/site deployment.
+
+## Pre-release checklist
+
+Before tagging/dispatching a release, verify:
+
+- intended code/docs are merged into `main`;
+- CI is green on the exact `main` commit;
+- `pubspec.yaml` version/build number is correct;
+- README/docs current-version references are updated;
+- About dialog/version tests match the package release intention;
+- `CHANGELOG.md` contains the release entry;
+- public API compatibility was reviewed;
+- persistence/transfer-format compatibility was reviewed;
+- writing-rule/language default migrations were reviewed;
+- privacy/security docs match runtime data flows;
+- full Flutter suite and benchmark smoke pass;
+- web release build succeeds;
+- historical release/validation record is added when the release needs durable audit evidence.
 
 ## Versioning
 
-Flutter version format:
+SpellChecker currently uses a semantic-looking package version plus Flutter build metadata:
 
 ```text
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Current V2.11 release candidate:
+Example:
 
 ```text
-2.11.0+16
+2.16.0+21
 ```
 
-Increase the semantic version for user-visible releases and build number for packaging iterations as appropriate.
+When incrementing the version:
 
-# Persistent-data compatibility
+1. edit `pubspec.yaml`;
+2. update root README/docs current release references;
+3. update user-visible About/version text if it is not derived dynamically;
+4. update tests asserting version text;
+5. update `CHANGELOG.md`;
+6. ensure release/history documentation identifies the intended version.
 
-V2.3 persists:
+Do not rewrite historical files' old versions merely because the current version changes.
 
-- Selected language ID.
-- Personal dictionary words per language.
-- Suggestion-count preference.
-- Enabled writing-rule IDs per language.
+## Tagging
 
-Current key families include:
+The workflow accepts any tag beginning with `v`. Use a tag that clearly corresponds to the intended package release, for example:
+
+```bash
+git tag v2.16.0
+git push origin v2.16.0
+```
+
+Before pushing a tag, make sure it points to the reviewed/green release commit. Replacing/moving public release tags damages reproducibility and should be avoided.
+
+## Manual dispatch
+
+A maintainer can run the workflow manually from GitHub Actions without creating a tag. In that case, `${{ github.ref_name }}` determines the artifact suffix from the dispatched ref.
+
+Manual dispatch is useful for release-candidate verification but does not by itself change package version or create a release record.
+
+## Release candidate validation
+
+For a significant release, consider recording exact evidence:
+
+- commit SHA;
+- Flutter/Dart versions;
+- format/analyzer/full test results;
+- benchmark smoke result;
+- web build result;
+- migration/compatibility checks;
+- known limitations;
+- relevant focused stress/Unicode/accessibility tests.
+
+Historical validation records should be linked from [Release history](RELEASE_HISTORY.md).
+
+## Changelog
+
+`CHANGELOG.md` should summarize user/developer-visible changes in release order.
+
+A useful release entry separates:
+
+- new features;
+- bug fixes;
+- API behavior;
+- persistence/format migrations;
+- accessibility/privacy/security changes;
+- platform/release changes;
+- notable compatibility notes.
+
+Do not duplicate entire design documents into the changelog; link durable docs where necessary.
+
+## Public API release review
+
+Before releasing an exported API change, inspect the three public barrels:
 
 ```text
-spellchecker.personal_words.v2.<language-id>
-spellchecker.language_id.v1
-spellchecker.suggestion_limit.v1
-spellchecker.writing_rule_ids.v1.<language-id>
+lib/spell_checker.dart
+lib/language.dart
+lib/writing.dart
 ```
 
-The legacy V1 personal-word key remains a migration/compatibility source for the default US namespace.
+Check:
 
-Before changing persisted semantics:
+- constructor/method signature compatibility;
+- field nullability/default changes;
+- equality/hash behavior where callers may rely on value objects;
+- validation/error behavior;
+- deterministic ordering changes;
+- UTF-16/scalar semantics;
+- source ownership/correction semantics;
+- custom rule/ranker/language extension compatibility.
 
-1. Define old-value compatibility.
-2. Decide whether migration is required.
-3. Add old-to-new tests.
-4. Preserve explicit empty-vs-unset semantics where relevant.
-5. Update API/privacy/security/changelog docs.
-6. Never silently reinterpret an existing key/transfer version.
+Update [API](API.md) and [Examples](EXAMPLES.md).
 
-## Writing-rule preference compatibility
+## Persistence/format release review
 
-V2.1 distinguishes:
+Check:
+
+- selected-language restoration;
+- suggestion limit;
+- personal dictionary per-language keys/migration;
+- writing-rule unset/non-empty/empty semantics;
+- current personal dictionary format version 2 plus legacy readers;
+- Portable settings format/version 1;
+- storage write-failure truthfulness;
+- import rollback behavior.
+
+A persisted format version change requires explicit migration/backward-compatibility design, not only a codec edit.
+
+## Writing-rule release review
+
+If the built-in registry/defaults change, verify:
+
+- stable IDs;
+- exact current registry count;
+- explicit older stored sets remain authoritative;
+- unset/reset state adopts the new default set;
+- explicit empty state remains disable-all;
+- Portable settings preserves explicit overrides;
+- rule interactions/source ownership/batch behavior;
+- diagnostic totals/filtering/UI labels;
+- benchmark workload comparability.
+
+Update [Writing rules](WRITING_RULES.md), [Features](FEATURES.md), and current user/API docs.
+
+## Language release review
+
+If adding/changing a built-in language pack, review dictionary/data licensing, normalization/tokenization, regional variants, suggestions, personal-dictionary transfer, preference isolation, writing eligibility, settings validation, benchmark options, and user docs.
+
+See [Language packs](LANGUAGE_PACKS.md).
+
+## Privacy/security release review
+
+A release must not introduce undisclosed network/storage/diagnostic behavior.
+
+Specifically check for new:
+
+- dependencies;
+- HTTP/network clients;
+- telemetry/analytics/crash upload;
+- account/auth SDKs;
+- file/document persistence;
+- platform permissions;
+- clipboard automation;
+- external plugin/model downloads;
+- logging of document/finding/vocabulary data.
+
+Update [Privacy](PRIVACY.md) and [Security](../SECURITY.md) before release when behavior changes.
+
+## Platform support release review
+
+Current workflow builds only web. Do not call a release “Android/iOS/Windows/macOS/Linux release” unless the repository has intentionally added/validated those runners/builds/artifacts.
+
+Official native release support would need target-specific runner files, CI builds, signing/credential policy, artifact process, platform privacy/security/accessibility review, and documentation.
+
+See [Platform support](PLATFORM_SUPPORT.md).
+
+## Release artifact verification
+
+After workflow success:
+
+1. inspect job summary/logs for every gate success;
+2. confirm the uploaded artifact exists and uses the expected ref/tag suffix;
+3. download/extract if needed and verify the web build directory has expected Flutter web output;
+4. keep the workflow run/tag/commit reference in any release announcement/validation record.
+
+Because artifact retention is currently 14 days, do not treat Actions artifacts as permanent archival storage.
+
+## Publishing/deployment
+
+The current repository workflow stops at artifact upload. Deployment to a web host, GitHub Pages, package registry, app store, or GitHub Release is outside the automated release workflow.
+
+If a future deployment/publishing system is added, document:
+
+- destination;
+- credentials/secrets;
+- approvals;
+- rollback;
+- provenance/signing;
+- retention;
+- privacy/security effects;
+- version/tag mapping.
+
+## Rollback/hotfix
+
+For a release regression:
+
+1. identify/reproduce on the release tag/commit;
+2. fix on a normal review branch with regression tests;
+3. run full CI;
+4. increment version when publishing a corrected release rather than silently moving an old tag;
+5. update changelog/release notes;
+6. create a new tag/artifact.
+
+## BMC/funding
+
+Funding is optional and independent from releases. The canonical BMC link is:
 
 ```text
-missing key       -> use current registry defaults
-stored non-empty  -> explicit enabled IDs
-stored empty list -> explicit disable-all
+https://buymeacoffee.com/sanskarIN
 ```
 
-A future release must not collapse explicit empty into missing/unset.
-
-Rule IDs are persistent identifiers. Renaming/removing them requires compatibility review; unknown old IDs should remain safely ignorable.
-
-# Personal dictionary transfer compatibility
-
-Current application exports use language-aware version 2:
-
-```json
-{
-  "version": 2,
-  "language": "en-US",
-  "words": ["example"]
-}
-```
-
-Legacy version-1 objects/JSON arrays/plain word lists remain supported where documented.
-
-Do not silently import a version-2 document into a mismatched language.
-
-# Non-persistent sensitive state
-
-Do not accidentally persist during release work:
-
-- Editor documents.
-- Spelling issue lists.
-- Writing findings/messages/source excerpts.
-- Active issue index.
-- Ignored words.
-- Suggestion cache.
-- Correction undo snapshots.
-- Batch correction plans.
-
-Correction snapshots can contain complete editor text and must remain memory-only unless a separately reviewed product/privacy change explicitly redesigns this boundary.
-
-# Local release verification
-
-From a clean checkout of the exact intended release commit:
-
-```bash
-flutter clean
-flutter pub get
-git diff --exit-code -- pubspec.lock
-dart format --output=none --set-exit-if-changed lib test tool
-flutter analyze
-flutter test --reporter expanded
-dart run tool/benchmark_large_document.dart --repeats=4 --warmup=0 --iterations=1 --spelling-limit=2 --writing-limit=5 --suggestions=0 --language=en-US --json
-flutter build web --release
-```
-
-Verify printed Flutter/Dart versions satisfy `pubspec.yaml`.
-
-# V2.2 review-management smoke additions
-
-1. Open Writing insights and verify rule categories/visible counts.
-2. Search `clarity` and confirm repeated-word review remains while Mechanics rules are hidden.
-3. Clear filters and confirm the complete enabled-rule review returns.
-4. Select Mechanics only on synthetic text containing Mechanics and Clarity findings.
-5. Use **Apply visible safe fixes** and verify only visible automatic fixes are applied.
-6. Undo once and verify the exact pre-batch document returns.
-7. Disable a rule so a language-specific override exists.
-8. Use **Reset rules to defaults**.
-9. Verify the rule preference key is removed/unset rather than stored as a concrete list.
-10. Reopen Writing insights and verify current registry defaults are active.
-11. Verify review search/chips/automatic-only state do not persist after closing/reopening the dialog.
-12. Exercise a reset storage-failure test/path and verify session defaults remain active while durability failure is reported.
-
-# V2.1 smoke test
-
-Use synthetic text/vocabulary only.
-
-## Startup/persistence
-
-1. Launch with no saved settings.
-2. Verify default language is English (US).
-3. Open Writing insights and confirm default enabled rules.
-4. Disable one rule, close the dialog, reopen it, and confirm it remains disabled.
-5. Restart/reload and confirm the rule choice restores.
-6. Switch to English (UK) and confirm its rule choices are independent.
-7. Disable every UK writing rule, restart/reload, and confirm explicit disable-all restores rather than defaults.
-8. Switch back to US and confirm the US rule set returns.
-9. Save synthetic personal vocabulary in each language and confirm isolation/restoration.
-10. Change suggestion count and confirm restoration.
-
-## Spelling regression
-
-11. Check a known synthetic misspelling with the button.
-12. Check with `Ctrl/Command+Enter`.
-13. Verify inline highlighting and Results agree.
-14. Verify F7 / Shift+F7 wrap navigation.
-15. Replace one spelling issue and test Undo.
-16. Replace all checked repeated spelling occurrences and test one-step Undo.
-17. Modify text after checking and verify stale correction is refused/refreshed.
-
-## Writing insights regression
-
-18. Open Writing insights from the app-bar control.
-19. Open it with `Ctrl/Command+Shift+Enter`.
-20. Verify all supported built-in rules are listed.
-21. Use synthetic text containing each built-in finding pattern.
-22. Apply one safe fix and undo it.
-23. Change text after analysis and verify stale individual fix is refused.
-
-## V2.1 batch writing fix
-
-24. Use text such as `hello  world world!!`.
-25. Open Writing insights and verify **Apply all safe fixes (N)**.
-26. Apply the batch.
-27. Verify deterministic safe fixes are reflected in one final text.
-28. Verify applied/skipped feedback is understandable.
-29. Use **Undo correction** once and verify the exact pre-batch document returns.
-30. Exercise a synthetic overlap case through unit tests; manual UI overlap depends on available built-in ranges.
-
-## Language/transfer regression
-
-31. Verify `color`/`colour` variant behavior under US/UK.
-32. Verify Unicode tokens such as `café` remain whole tokens.
-33. Export personal vocabulary and inspect `version: 2` plus language ID.
-34. Attempt a tagged cross-language import and confirm it is blocked.
-35. Verify legacy V1 personal-word migration into US remains intact on a migration fixture/test profile.
-
-## Accessibility/layout
-
-36. Verify keyboard-only spelling and Writing insights workflows.
-37. Verify rule switches, individual fix, batch fix, and Undo are keyboard reachable.
-38. Verify light/dark themes.
-39. Verify increased text scale.
-40. Verify narrow/800×600 layout does not overflow and scrollable actions remain reachable.
-41. Verify important state is understandable without color alone.
-
-# Automated release checks
-
-Normal CI now requires all of these checks to pass:
-
-```bash
-flutter pub get
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test --reporter expanded
-```
-
-The tagged release workflow runs those same quality checks and additionally builds the release web application:
-
-```bash
-flutter build web --release
-```
-
-For a feature branch that uses an exact-tree integration/reconciliation gate, record the final validated commit SHA and confirm all temporary gate/helper files were deleted before the commit was pushed.
-
-# Tagging
-
-From verified `main`:
-
-```bash
-git checkout main
-git pull --ff-only
-git tag -a v2.10.0 -m "SpellChecker v2.10.0"
-git push origin v2.10.0
-```
-
-Pushing a `v*` tag triggers the repository release workflow. Do not tag an unmerged feature/reconciliation branch.
-
-# Verify tagged workflow
-
-The tagged workflow must finish successfully before presenting its artifact as verified.
-
-If it fails:
-
-1. Do not silently move/overwrite the published tag.
-2. Diagnose the failure.
-3. Fix on `main` with regression tests.
-4. Increment/publish a new version/tag if the failed tag was already shared externally.
-
-# GitHub Release
-
-After the tagged workflow passes:
-
-1. Create a GitHub Release for that tag.
-2. Use the matching changelog section as the release-note foundation.
-3. Highlight V2.10 deterministic synthetic large-document benchmarking, retained V2.9 privacy-safe diagnostic summaries, V2.8 exact-count diagnostics, and V2.7 bounded-review safety, while noting compatibility with earlier writing-rule, Portable settings, ranking, and correction-safety foundations.
-4. Mention persistent-data/privacy behavior.
-5. Attach approved artifacts where appropriate.
-6. Verify links/version text.
-7. Verify the release points to the same commit that passed release validation.
-
-# Rollback and hotfixes
-
-Do not silently move a published tag.
-
-For a defect:
-
-1. Fix on `main`.
-2. Add a regression test.
-3. Update changelog.
-4. Increment patch/build version.
-5. Publish a new tag.
-
-For writing batch defects test:
-
-- Stale range behavior.
-- Advisory skipping.
-- Overlap resolution.
-- End-to-start mutation.
-- Applied/skipped counts.
-- One-step undo grouping.
-
-For preference defects test:
-
-- Unset/default state.
-- Explicit empty state.
-- Language isolation.
-- Existing stored IDs.
-- Storage failure behavior.
-
-For personal-vocabulary defects test migration/import compatibility before release.
-
-# Dependency review
-
-Before a release changing dependencies:
-
-- Document the purpose.
-- Review runtime network/storage/analytics permissions/behavior.
-- Run a clean dependency resolution.
-- Confirm CI resolves the same constraints.
-- Update development/privacy/security docs.
-
-V2.10 adds no new runtime dependency. `shared_preferences` remains the application-local preference adapter.
-
-# Signing and stores
-
-Never commit:
-
-- Signing certificates.
-- Store tokens.
-- API credentials.
-- Service-account keys.
-- Release secrets.
-
-Use secure facilities of the release/build platform.
-
-## V2.3 release checks
-
-For a V2.3-compatible release, verify the package/About version pair, stable review-preset IDs, `spellchecker-settings` format/version compatibility, unset-versus-empty rule override semantics, deterministic settings encoding, privacy exclusions, rollback tests, focused V2.3 suites, complete regression suite, and `flutter build web --release`. Confirm the intended release tree contains no one-time `tools/v23_*` helper or `.github/workflows/v23-*` recovery/integration workflow before tagging.
-
-## V2.5 bounded-analysis release checks
-
-Before tagging V2.5-compatible code, verify:
-
-1. `SpellCheckerEngine.check()` still matches unbounded `analyze()` results.
-2. Exact-cap inputs without later unknowns remain complete.
-3. Overflow inputs prove truncation without suggestion generation for the overflow issue.
-4. The editor displays `200+` only for proven truncation.
-5. The limited-results notice is visible and exposed to semantics.
-6. Replace all is absent for limited results and still present for complete repeated-issue results.
-7. `docs/PERFORMANCE.md` matches the implementation.
-8. No new runtime dependency/persistence/network behavior was introduced unintentionally.
-9. Formatting, analyzer, focused V2.5 tests, complete tests, and `flutter build web --release` pass on the exact release tree.
-
-## V2.6 release checks
-
-Verify package/About versions `2.6.0+11` / `2.6.0`, both stable new rule IDs, six built-in registry/default IDs, punctuation/trailing exact-range behavior, repeated-space non-overlap ownership, explicit rule-preference compatibility, focused V2.6 tests, complete writing tests, complete regression suite, and `flutter build web --release`.
-
-Smoke-test synthetic input containing interior repeated spaces, spaces before punctuation, LF/CRLF trailing whitespace, document-end whitespace, and repeated punctuation. Confirm **Apply all safe fixes** yields the expected complete text and one **Undo correction** restores the exact original. Confirm an explicit old saved rule list does not silently gain V2.6 IDs, while **Reset rules to defaults** makes the current six-rule defaults active.
-
-Before tagging, confirm the tracked tree has no `tools/v26_*` helper and no `.github/workflows/v26-*` temporary gate/recovery workflow.
-
-## V2.7 bounded Writing insights release checks
-
-Before tagging V2.7:
-
-1. Verify `WritingAnalyzer.analyze()` remains unbounded when `maxIssues` is omitted.
-2. Verify zero/negative `maxIssues` values are rejected.
-3. Verify an exact-limit result is complete when no additional finding exists.
-4. Verify a true overflow result exposes `isTruncated == true`, `isComplete == false`, and the configured `issueLimit`.
-5. Verify bounded results equal the globally sorted prefix of unbounded results even when custom rules yield findings out of order.
-6. Verify Writing insights uses a 200-finding limit and only shows limited-state wording after overflow is proven.
-7. Verify search/presets/category/fix-only filters operate on captured findings in a limited result.
-8. Verify limited batch labels say **captured** and one Undo restores the complete pre-batch editor text.
-9. Verify `pubspec.lock` and direct runtime dependencies are unchanged unless a separately reviewed dependency change is intended.
-10. Verify `what_changed.md`, README, changelog, roadmap, API/performance/writing/user/accessibility/privacy/security/support docs, and web metadata describe V2.7 consistently.
-11. Verify no `tools/v27*` or `.github/workflows/v27-*` helper/gate artifact is present in the release tree.
-12. Run formatting, analyzer, the complete test suite, and `flutter build web --release` on the exact intended release SHA.
-
-Tag the verified release only from the exact merged `main` commit:
-
-```bash
-git tag -a v2.7.0 <verified-main-sha> -m "SpellChecker 2.7.0"
-git push origin v2.7.0
-```
-
-## V2.8 exact writing-diagnostics release checks
-
-Before tagging V2.8:
-
-1. Verify package/About versions are `2.8.0+13` / `2.8.0`.
-2. Verify analyzer-produced results expose exact `totalIssueCount`, immutable `totalIssueCountByRule`, `hasExactIssueTotals`, and `uncapturedIssueCount`.
-3. Verify direct V2.7-style `WritingAnalysisResult` construction can still omit exact diagnostics.
-4. Verify an unbounded analyzer result reports exact totals equal to its retained result count.
-5. Verify an exact-at-limit bounded result remains complete with zero uncaptured findings.
-6. Verify a true overflow result reports an exact total greater than `capturedIssueCount`, a positive exact uncaptured count, and the correct global retained prefix.
-7. Verify exact per-rule totals sum to the exact overall total and disabled/unsupported rules do not contribute.
-8. Verify Writing insights displays exact first-N-of-total wording and the exact number of findings not retained.
-9. Verify the `writing-findings-total-badge` renders the intended captured/total value when limited.
-10. Verify enabled rule metadata shows exact `Total findings: N` values and the dialog remains lazy/scrollable without inaccessible controls.
-11. Verify limited search/presets/categories/fix-only review and individual/batch fixes remain captured-only.
-12. Verify singular/plural uncaptured-finding wording and filtered-empty limited-result wording.
-13. Verify one Undo still restores a complete pre-batch document and stale-range/overlap safety remains unchanged.
-14. Verify `pubspec.lock` and direct runtime dependencies are unchanged from V2.7 unless an independently reviewed dependency change exists.
-15. Verify `.github/FUNDING.yml`, README, `SUPPORT.md`, and `CONTRIBUTING.md` contain `https://buymeacoffee.com/sanskarIN` and that no application runtime code contacts that service.
-16. Verify `CHANGELOG.md`, `docs/ROADMAP.md`, API/architecture/performance/writing/development/testing/user/accessibility/troubleshooting/language/privacy/security/support/contribution/releasing docs, README/web metadata, and `what_changed.md` describe V2.8 consistently.
-17. Verify no `tools/v28*`, `.github/workflows/v28-*`, or other disposable V2.8 helper/final-gate file is present in the release tree.
-18. Run `flutter pub get`, format verification, analyzer, focused V2.8 diagnostics/limited-dialog tests, the complete regression suite, and `flutter build web --release` on the exact intended release SHA.
-19. Record the exact final release-gate run and permanent-CI run in the V2.8 PR and engineering ledger without changing the validated SHA.
-20. Merge only that exact green feature SHA, then compare the merged `main` tree with the validated feature tree and require zero file differences.
-
-Tag only the verified merged `main` commit:
-
-```bash
-git tag -a v2.8.0 <verified-main-sha> -m "SpellChecker 2.8.0"
-git push origin v2.8.0
-```
-
-## V2.10 deterministic benchmark release checks
-
-Before tagging V2.10, verify package/About versions `2.10.0+15` / `2.10.0`; deterministic scenario generation and option validation; immutable/stable benchmark result aggregation; US/UK runner coverage; human/JSON report exclusion of corpus text; formatter coverage for `tool/`; the threshold-free benchmark smoke command in both CI and release workflows; unchanged runtime dependencies/persistence formats; complete regression tests; and `flutter build web --release`.
-
-Run the documented benchmark command on synthetic data only and record the exact command plus Flutter/Dart versions when publishing comparative timing evidence. Do not fail a release merely because machine-dependent elapsed values differ from another machine. Confirm no temporary V2.10 synchronization/validation workflow remains in the release tree before tagging.
-
-## V2.11 release-specific checks
-
-Before tagging `v2.11.0`, additionally verify:
-
-- `pubspec.yaml` reports `2.11.0+16` and About reports `2.11.0`.
-- Ctrl/Command+F focuses Writing insights review search while focus is inside the dialog.
-- First Escape clears active transient review filters and keeps the dialog open; a subsequent Escape closes when the query is empty.
-- Rule/finding live semantics remain reachable in the real lazy list, including exact limited-result wording.
-- Non-positive `WritingInsightsDialog.maxIssues` is rejected in release-mode runtime code.
-- Benchmark samples contain exact per-rule totals for every analyzed rule, including explicit zero entries.
-- The permanent workflow directory contains only intended reusable workflows; all `v211-*` development helpers are removed.
-
-The normal release gate remains dependency resolution + lockfile cleanliness + formatting + analyze + full tests + synthetic benchmark smoke + release web build.
-
+Do not condition release access, bug/security reporting, or contribution review on financial support.
+
+## Related documentation
+
+- [Testing](TESTING.md)
+- [Development](DEVELOPMENT.md)
+- [Platform support](PLATFORM_SUPPORT.md)
+- [Performance](PERFORMANCE.md)
+- [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md)
+- [Release history](RELEASE_HISTORY.md)

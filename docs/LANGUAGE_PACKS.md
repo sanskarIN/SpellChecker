@@ -1,364 +1,286 @@
 # Language Packs
 
-## V2.16 final stabilization
-Built-in English tokenization now treats each Unicode letter plus following combining marks as one word cluster. The English normalizer deterministically composes the common Latin accent sequences represented by bundled loanwords. Suggestion distance and length thresholds operate on Unicode scalars; editor offsets remain UTF-16.
+SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `2.16.0+21` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.
 
-
-## V2.15 language-pack behavior
-`UnmatchedCurlyBraceRule` declares supported language code `en`, so both built-in English (US) and English (UK) packs enable it by default when no explicit rule override exists. Explicit per-language historical overrides remain authoritative.
-
-
-## V2.14 language eligibility
-
-`unmatched-square-bracket` declares support for language code `en`, so both built-in `en-US` and `en-GB` packs receive the ninth default writing rule when no explicit override is stored. The release does not add auto-detection, a new language pack, or language-specific bracket parsing.
-
-## V2.13 writing-rule eligibility
-
-`UnmatchedParenthesisRule` declares language code `en`, so it is available to both built-in `en-US` and `en-GB` packs without duplicating pack-specific logic. Language eligibility still flows through `WritingRule.supports(pack)`. Explicit per-language rule overrides remain isolated; adding the eighth default does not rewrite an existing explicit V2.12 set.
-
-## V2.12 language-pack note
-
-`MissingPunctuationSpaceRule` declares support for language code `en`, so both registered built-in English variants (`en-US` and `en-GB`) are eligible. V2.12 does not add a language pack, language auto-detection, cross-language preference merging, or a new normalization contract.
-SpellChecker uses an explicit language-pack architecture. A language pack owns the language-specific data and rules needed to tokenize, normalize, validate, check, and rank words without moving those concerns into editor widgets.
-
-V2.1 extends language isolation beyond spelling vocabulary: enabled writing-rule preferences are also stored per language.
-
-## Built-in packs
-
-| ID | Display name | Language | Region |
-| --- | --- | --- | --- |
-| `en-US` | English (US) | English | United States |
-| `en-GB` | English (UK) | English | United Kingdom |
-
-`en-US` remains the default for backward compatibility with the original 1.x spelling behavior.
-
-## Explicit selection
-
-Core callers choose a language explicitly:
+## Public import
 
 ```dart
 import 'package:spellchecker/language.dart';
-import 'package:spellchecker/spell_checker.dart';
-
-final engine = SpellCheckerEngine(
-  languagePack: SpellLanguageRegistry.englishGb,
-);
 ```
 
-The Flutter application exposes the same built-in registry through the editor language selector. The selected pack is stored locally and restored later.
+Core engine APIs are available from:
 
-SpellChecker does not perform automatic language detection. Explicit selection avoids silently changing spelling/writing assumptions on short or ambiguous text.
+```dart
+import 'package:spellchecker/spell_checker.dart';
+```
+
+## Current built-ins
+
+| ID | Language | Region | Display name | Status |
+| --- | --- | --- | --- | --- |
+| `en-US` | `en` | `US` | English (US) | built in, default |
+| `en-GB` | `en` | `GB` | English (UK) | built in |
+
+SpellChecker does not auto-detect language. The bundled UI requires explicit selection.
 
 ## `SpellLanguagePack`
 
-A pack contains:
-
-- `id` — stable project language identifier such as `en-US`.
-- `languageCode` — base language code.
-- `regionCode` — region/variant code.
-- `displayName` — user-facing label.
-- `dictionary` — normalized accepted words.
-- `wordFrequencies` — deterministic suggestion tie-break metadata.
-- `tokenPattern` — candidate token regular expression.
-- `validWordPattern` — whole-word personal-vocabulary validation.
-- `normalizer` — language-specific canonicalization.
-- `recognizedSuffixes` — deterministic suffix handling.
-- `suggestionSource` — metadata source label.
-- Suggestion edit-distance policy.
-
-The engine delegates tokenization, normalization, personal-word validation, suffix handling, and suggestion threshold behavior to the selected pack.
-
-## Unicode tokenization
-
-The built-in English packs use Unicode letter properties instead of ASCII-only `[A-Za-z]` matching, so tokens such as:
+A pack owns:
 
 ```text
-café
-naïve
-résumé
-façade
-jalapeño
+id
+languageCode
+regionCode
+displayName
+dictionary
+wordFrequencies
+tokenPattern
+validWordPattern
+normalizer
+recognizedSuffixes
+suggestionSource
 ```
 
-remain complete words.
+The constructor captures dictionary, frequency, and suffix collections as immutable snapshots.
 
-Supported internal punctuation includes straight/curly apostrophes and the supported ASCII/Unicode hyphen forms normalized by the pack.
+### Stable ID
 
-The English normalizer lowercases text, converts curly apostrophes to straight apostrophes, and converts supported Unicode hyphens to ASCII `-`.
+`id` is the full pack identifier used by issues, persistence, dictionary transfer, Portable settings, and UI selection. Built-in IDs use language-region form such as `en-US`.
 
-Unicode-aware tokenization is not a claim that every Unicode word is present in the bundled dictionary.
+Pack equality/hash code use `id`, so IDs should be stable and unique in any integration.
 
-## US and UK variant behavior
+### Language code
 
-The packs deliberately differ for curated variant spellings, for example:
+`languageCode` is the broader code used by writing-rule eligibility. Current built-in writing rules declare `en`, so both `en-US` and `en-GB` are eligible.
+
+### Dictionary
+
+`dictionary` contains normalized accepted base words for the pack. The spelling engine also considers personal dictionary words, ignored session words, and recognized suffixes.
+
+### Frequency ranks
+
+`wordFrequencies` supplies approximate ranking metadata for suggestions. Lower numeric ranks are preferred by the default suggestion ranker after edit-distance/prefix criteria.
+
+### Token pattern
+
+The built-in Unicode token pattern recognizes sequences of Unicode letters plus combining marks, with supported internal apostrophe/hyphen forms:
+
+- straight apostrophe `'`;
+- curly apostrophe `’`;
+- ASCII hyphen `-`;
+- supported Unicode hyphen variants `‐` and `‑`.
+
+A token match's offsets remain Dart UTF-16 code-unit offsets.
+
+### Valid personal-word pattern
+
+The built-in valid-word pattern accepts normalized Unicode letter/combining-mark sequences with supported normalized apostrophe/hyphen separators. Input is normalized before validation.
+
+### Normalizer
+
+Built-in English normalization:
+
+1. trims outer whitespace;
+2. lowercases;
+3. converts curly apostrophe `’` to `'`;
+4. converts supported Unicode hyphen variants to `-`;
+5. composes a defined set of common decomposed Latin base+combining-mark sequences into their precomposed forms.
+
+This lets common decomposed inputs such as an accented Latin letter normalize consistently with bundled vocabulary.
+
+The composition table is explicit rather than a general Unicode-normalization library. New language packs should define normalization appropriate to their dictionaries and tests.
+
+### Recognized suffixes
+
+Current built-in English packs recognize:
 
 ```text
-US: color          UK: colour
-US: behavior       UK: behaviour
-US: center         UK: centre
-US: organization   UK: organisation
-US: theater        UK: theatre
-US: traveler       UK: traveller
+n't
+'re
+'ve
+'ll
+'d
+'m
+'s
 ```
 
-Each variant pack removes the opposite curated variant list before adding its own so these differences remain deterministic even when the shared dictionary grows.
+The spelling engine accepts a suffixed token when the normalized stem is known. Suggestions are ranked on the stem and then the recognized suffix is reattached.
 
-Changing selected language re-checks non-blank text. It never rewrites the user's document automatically.
+### Suggestion source
 
-## Suggestion metadata
+`suggestionSource` is a human-readable label copied into detailed `SpellSuggestion.source` metadata for base dictionary candidates.
 
-`SpellCheckerEngine.suggestionDetailsFor` returns `SpellSuggestion` values containing:
+Current built-ins use labels describing bundled English (US)/(UK) sources.
 
-- Candidate word.
-- Edit distance.
-- Frequency rank.
-- Language ID.
-- Language display name.
-- Suggestion source.
+## Pack methods
 
-The backward-compatible `suggestionsFor` method returns candidate strings only.
+```dart
+String normalizeWord(String word)
+Iterable<RegExpMatch> tokenize(String text)
+bool isValidWord(String word)
+int maximumSuggestionDistance(int wordLength)
+```
 
-## Language-tagged spelling issues
-
-`SpellIssue.languageId` identifies the pack that produced an issue when available.
-
-Issue offsets still belong only to the exact checked text snapshot. Changing language invalidates old spelling issues/highlights and produces new language-tagged results.
-
-# Per-language application state
-
-V2.1 treats language as a namespace boundary for multiple state categories.
-
-## Personal dictionary
-
-Conceptually:
+`maximumSuggestionDistance` currently returns:
 
 ```text
-en-US -> {US personal vocabulary}
-en-GB -> {UK personal vocabulary}
+1 for length <= 4
+2 for length <= 8
+3 otherwise
 ```
 
-A saved word in one pack is not automatically accepted in another.
+The engine passes Unicode-scalar word length to this policy.
 
-## Ignored words
+## `SpellLanguageRegistry`
 
-Ignored words are engine/session state. Switching language constructs a fresh spelling engine, preventing temporary ignores from leaking across packs.
+```dart
+SpellLanguageRegistry.englishUs
+SpellLanguageRegistry.englishGb
+SpellLanguageRegistry.builtIns
+SpellLanguageRegistry.defaultPack
+SpellLanguageRegistry.byId(id)
+SpellLanguageRegistry.contains(id)
+```
 
-## Writing-rule preferences — V2.1
+`defaultPack` is `en-US`.
 
-Enabled writing-rule IDs are also language-specific:
+`byId` is fallback-oriented: null, empty, or unsupported IDs return the default pack. For strict validation, call `contains(id)` before `byId`.
+
+## US/UK dictionary behavior
+
+The packs share the common English dictionary/frequency foundation but apply explicit regional additions/exclusions.
+
+Representative difference:
 
 ```text
-en-US -> {enabled writing rule IDs for US}
-en-GB -> {enabled writing rule IDs for UK}
+en-US: color
+en-GB: colour
 ```
 
-A rule disabled in US mode remains independent from UK mode.
+The codebase includes additional explicit US/UK regional variants. Do not assume every spelling variant can be generated mechanically; the dictionaries are the authority.
 
-The editor resolves effective rule IDs by intersecting stored/default IDs with rules that currently exist and support the selected pack.
+## Common Unicode loanwords
 
-## Language switch restoration
+Both built-in packs include a small explicit set of Unicode loanwords such as accented forms. Combined with normalization, this provides regression coverage for Unicode letter handling without claiming exhaustive multilingual dictionaries.
 
-A normal language switch restores:
+## Use a built-in pack with the engine
 
-1. Target pack identity.
-2. Target pack personal words.
-3. Target pack writing-rule IDs.
-4. A fresh spelling engine/session state.
-5. Fresh spelling issues for non-blank current editor text.
+```dart
+final engine = SpellCheckerEngine(
+  languagePack: SpellLanguageRegistry.englishGb,
+);
 
-The document text itself is not changed or persisted as part of the switch.
-
-# Preference keys and migration
-
-Current language-related local keys include:
-
-```text
-spellchecker.language_id.v1
-spellchecker.personal_words.v2.en-US
-spellchecker.personal_words.v2.en-GB
-spellchecker.writing_rule_ids.v1.en-US
-spellchecker.writing_rule_ids.v1.en-GB
+final issues = engine.check('The colour is nice.');
 ```
 
-The old personal-word key:
+## Custom pack example
 
-```text
-spellchecker.personal_words.v1
+A caller can construct a custom pack and pass it directly to reusable APIs:
+
+```dart
+final customPack = SpellLanguagePack(
+  id: 'example-EX',
+  languageCode: 'example',
+  regionCode: 'EX',
+  displayName: 'Example',
+  dictionary: <String>{'hello', 'world'},
+  wordFrequencies: <String, int>{'hello': 1, 'world': 2},
+  tokenPattern: RegExp(r'[A-Za-z]+'),
+  validWordPattern: RegExp(r'^[a-z]+$'),
+  normalizer: (word) => word.trim().toLowerCase(),
+  recognizedSuffixes: const <String>[],
+  suggestionSource: 'example dictionary',
+);
+
+final engine = SpellCheckerEngine(languagePack: customPack);
 ```
 
-is treated as default `en-US` vocabulary during migration/compatibility handling.
+## Custom packs and the writing analyzer
 
-An unsupported stored selected-language ID falls back to the default pack.
+Writing rules decide support independently through `supportedLanguageIds`.
 
-## Writing-rule preference states
+A custom pack with `languageCode: 'en'` is eligible for rules that declare `en`, even if its full pack ID is not a built-in registry ID:
 
-For each language V2.1 preserves:
-
-```text
-missing writing-rule key -> current registry default IDs
-stored non-empty list     -> explicit enabled IDs
-stored empty list         -> explicit disable-all
+```dart
+final result = WritingAnalyzer().analyze(
+  text,
+  languagePack: customEnglishPack,
+);
 ```
 
-The explicit empty state must not be converted into the missing/default state.
+Only use that broad eligibility when the rule's behavior is actually valid for the custom pack.
 
-Unknown stored rule IDs are ignored by effective-rule resolution rather than causing a language switch failure.
+## Important registry/application limitation
 
-# Personal dictionary transfer format
+Constructing a custom `SpellLanguagePack` does **not** automatically register it with `SpellLanguageRegistry`.
 
-## Version 2
+Current registry-based application features understand only built-in IDs. In particular:
 
-Language-aware exports use:
+- the bundled language dropdown uses `SpellLanguageRegistry.builtIns`;
+- persisted selected language validation uses the registry;
+- version-2 personal dictionary metadata validation uses registered IDs;
+- Portable settings language validation uses registered IDs.
 
-```json
-{
-  "version": 2,
-  "language": "en-GB",
-  "words": [
-    "customword",
-    "open-source"
-  ]
-}
-```
+Therefore a third-party/custom pack can be used directly with reusable engine/analyzer APIs, but making it a first-class bundled application language requires source changes to the registry/data/UI/persistence/tests/docs—not only constructing an object at runtime.
 
-The language ID is part of the portable data contract.
+## Adding an official built-in language
 
-## Version 1 compatibility
+A production-quality new built-in pack should define/review:
 
-Legacy format remains decodable:
+1. stable language-region ID and metadata;
+2. dictionary source/content/licensing;
+3. frequency/ranking metadata;
+4. tokenization regex with Unicode behavior;
+5. valid personal-word policy;
+6. normalization/canonicalization;
+7. recognized suffix/affix policy, if any;
+8. suggestion-distance expectations;
+9. regional variant/exclusion behavior;
+10. personal-dictionary import/export behavior;
+11. persisted language selection;
+12. writing-rule eligibility;
+13. Portable settings validation;
+14. benchmark scenario compatibility;
+15. user/API/privacy documentation.
 
-```json
-{
-  "version": 1,
-  "words": ["customword"]
-}
-```
+## Tests for a new pack
 
-Version 1 has no language metadata and is interpreted in the importing caller's currently selected language.
+At minimum, add tests for:
 
-JSON arrays and plain comma/newline lists behave as current-language legacy imports.
+- registry ID/default behavior;
+- representative accepted/rejected regional words;
+- token source ranges;
+- normalization;
+- decomposed/non-BMP Unicode where applicable;
+- personal-word validation;
+- recognized suffix behavior;
+- suggestions/ranking metadata;
+- dictionary codec round trip and wrong-language handling;
+- per-language persistence isolation;
+- application language switching;
+- writing-rule support filtering;
+- Portable settings round trip;
+- benchmark language option if supported there.
 
-`PersonalDictionaryCodec.encode` remains the legacy version-1 encoder; new application exports should use language-aware encoding.
+## Dictionary source and licensing
 
-## Cross-language imports
+Bundled dictionary/frequency data lives under `lib/data/`. Before adding external language data, confirm its license is compatible with the repository and document attribution/redistribution requirements. Do not copy a dictionary from an incompatible or unclear source.
 
-If a version-2 document names a different language from the selected UI pack, SpellChecker does not silently merge it into the wrong namespace. The user must switch to the tagged language first.
+## Performance considerations
 
-Unsupported language IDs and document versions are rejected explicitly.
+Large dictionaries increase candidate iteration cost for suggestions. `SpellCheckerEngine` filters by scalar length difference and maximum edit distance before ranking, but a new language pack should still be benchmarked with representative synthetic workloads.
 
-## Resetting language-specific writing rules — V2.2
+Do not weaken correctness/source-range guarantees solely for benchmark numbers.
 
-**Reset rules to defaults** removes the active language's `spellchecker.writing_rule_ids.v1.<language-id>` key and resolves current registry defaults for that pack. It does not write a copy of today's default IDs.
+## Privacy
 
-That distinction preserves language isolation and forward-compatible defaults:
+A language pack is local data/configuration. Built-in packs do not cause network requests. A future language implementation that downloads dictionaries or contacts a service would create a new privacy/security architecture and must not be presented as equivalent to current built-ins without explicit review/documentation.
 
-```text
-en-US override cleared -> en-US follows registry defaults
-en-GB override remains -> en-GB keeps its explicit choices
-```
+## Related documentation
 
-Review search/category/automatic-only filters are not language preferences and are never stored in either namespace.
-
-# Writing-rule eligibility
-
-`WritingRule.supports(pack)` is the authority for language eligibility.
-
-A rule can target a full pack ID or a base language code. Current built-in writing rules target English generally and therefore support both built-in English packs.
-
-When adding a new language pack, writing rules must not be assumed compatible merely because the editor can select that language. Each rule's support declaration must be reviewed.
-
-# Adding a built-in language pack
-
-A language-pack contribution should include:
-
-1. Stable pack ID.
-2. Clear display name.
-3. Language/region identity.
-4. Unicode-aware tokenizer.
-5. Whole-word personal-entry validation.
-6. Documented/tested normalization.
-7. Dictionary data with compatible licensing/provenance.
-8. Frequency/suggestion policy or rationale for omission.
-9. Deterministic suffix/morphology rules only when appropriate.
-10. Native-script/diacritic tests.
-11. Personal/ignored isolation tests.
-12. Selected-language persistence tests.
-13. Writing-rule eligibility review.
-14. Per-language writing-rule preference isolation tests when rules support the pack.
-15. UI selector/restoration tests.
-16. Documentation/changelog updates.
-17. Privacy/security review for any runtime network/download requirement.
-
-Do not add a dictionary whose license is incompatible with this repository.
-
-# Pack isolation requirements
-
-For every pair of packs A/B, tests should establish:
-
-- A personal word added/saved to A is not automatically accepted by B.
-- An ignored word in A is not automatically ignored by B.
-- Saved A vocabulary uses an A-specific namespace.
-- Writing-rule preference A does not silently change preference B.
-- Selecting B produces B-tagged issues/suggestions.
-- Pack switching invalidates old issue/highlight state.
-- Version-2 transfer metadata cannot silently place an A export into B.
-
-# Privacy boundary
-
-Language selection, language-specific personal vocabulary, and language-specific writing-rule IDs are local settings.
-
-SpellChecker does not send the selected language, personal vocabulary, rule IDs, or editor text to a SpellChecker server.
-
-Changing language does not enable automatic language detection or keyboard telemetry.
-
-# Non-goals
-
-The current language architecture does not provide:
-
-- Automatic language detection.
-- Cloud language-pack download.
-- Account-based dictionary/rule synchronization.
-- Full grammar parsing for every selected language.
-- Full morphological analyzers.
-- Complete dictionary coverage.
-- Automatic compatibility of writing rules with future language packs.
-
-The goal is a stable, explicit, testable language boundary that can be extended without moving language-specific behavior into widgets or weakening local state isolation.
-
-## V2.3 portable language preferences
-
-Portable settings carry an explicit selected built-in language ID plus explicit writing-rule overrides keyed by supported language ID. The settings codec rejects unsupported language IDs rather than guessing or auto-detecting a substitute. Personal vocabulary is deliberately excluded from portable settings and remains in its existing per-language local namespace. After a successful import, the editor loads the target language's existing personal words into a fresh engine and rechecks non-blank text. A missing override key means that language follows current registry defaults; an empty override list means explicit disable-all.
-
-## V2.6 English writing-rule eligibility
-
-`punctuation-spacing` and `trailing-whitespace` declare the language code `en`, so both built-in English (US) and English (UK) packs are eligible. V2.6 does not change spelling tokenization, normalization, dictionary contents, language IDs, personal vocabulary namespaces, or dictionary transfer formats.
-
-## V2.7 bounded writing analysis and language packs
-
-The writing-analysis capture bound does not change language eligibility. `WritingAnalyzer` still checks each enabled rule with the explicitly selected `SpellLanguagePack` and runs only rules whose `supports()` contract matches that pack.
-
-The built-in 200-finding Writing insights policy is shared by English (US) and English (UK). Language selection, per-language personal vocabulary, and per-language writing-rule preferences remain independently persisted exactly as before V2.7.
-
-## V2.8 diagnostics and language selection
-
-Writing-analysis diagnostics are scoped to the active `SpellLanguagePack` and the rules that support it.
-
-When `WritingAnalyzer` runs, only enabled rules whose language eligibility matches the active pack contribute to `totalIssueCount` and `totalIssueCountByRule`. A disabled or unsupported rule contributes no count to that analysis.
-
-Changing from English (US) to English (UK), or vice versa, can therefore change exact writing totals because language-specific normalization, persisted per-language rule choices, and rule eligibility are resolved again for the selected pack.
-
-Diagnostics are not persisted per language. They are computed from the current in-memory text/rule configuration and discarded with the analysis result. Per-language personal vocabulary and writing-rule preference storage remain unchanged.
-
-Portable settings still transfer durable non-document preferences only; V2.8 exact finding counts are deliberately excluded.
-
-## V2.9 configuration hardening
-
-`SpellLanguagePack` defensively snapshots its dictionary, frequency map, and recognized-suffix list at construction. Mutating caller-owned collections after pack creation therefore cannot silently change token acceptance or suffix behavior.
-
-When a caller supplies a custom `wordFrequencies` map to `SpellCheckerEngine`, its keys are normalized through the active pack just like dictionary words. Empty normalized keys are discarded, and when multiple input keys normalize to the same word the lowest rank value is kept. This preserves deterministic frequency-aware ordering for mixed-case/custom-normalizer inputs.
-
-## V2.10 benchmark language behavior
-
-The V2.10 developer benchmark accepts the two current built-in IDs, `en-US` and `en-GB`, and passes the selected `SpellLanguagePack` through the existing spelling/writing APIs. The pack still owns tokenization, normalization, suffix behavior, suggestion-distance policy, language identity, and writing-rule support.
-
-For workload stability the benchmark supplies its own fixed synthetic dictionary/frequency metadata to `SpellCheckerEngine`; this does **not** change either built-in pack's application dictionary or persisted vocabulary behavior. Adding a future language pack does not automatically make it a benchmark option: benchmark eligibility must be reviewed/tested explicitly so comparisons remain intentional.
+- [Public API](API.md)
+- [Examples](EXAMPLES.md)
+- [Writing rules](WRITING_RULES.md)
+- [Configuration](CONFIGURATION.md)
+- [Development](DEVELOPMENT.md)
+- [Testing](TESTING.md)
