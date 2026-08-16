@@ -1,6 +1,6 @@
 # Documentation Maintenance
 
-This page defines how SpellChecker documentation should evolve with the codebase. The goal is to keep documentation complete without allowing current behavior, historical release notes, public API guarantees, and internal implementation details to blur together.
+This page defines how SpellChecker documentation should evolve with the codebase. The goal is to keep documentation complete without allowing current behavior, historical release notes, public API guarantees, internal implementation details, and executable/release claims to blur together.
 
 ## Documentation layers
 
@@ -32,12 +32,14 @@ docs/USER_GUIDE.md
 docs/CONFIGURATION.md
 docs/KEYBOARD_SHORTCUTS.md
 docs/FAQ.md
+docs/GLOSSARY.md
 docs/EXAMPLES.md
 docs/API.md
 docs/LANGUAGE_PACKS.md
 docs/WRITING_RULES.md
 docs/ARCHITECTURE.md
 docs/PLATFORM_SUPPORT.md
+docs/EXECUTABLE_BUILDS.md
 docs/PERFORMANCE.md
 docs/PRIVACY.md
 docs/ACCESSIBILITY.md
@@ -46,6 +48,8 @@ docs/TESTING.md
 docs/TROUBLESHOOTING.md
 docs/RELEASING.md
 docs/ROADMAP.md
+docs/RELEASE_HISTORY.md
+docs/DOCUMENTATION_MAINTENANCE.md
 ```
 
 Top-level evergreen project-policy files include:
@@ -87,6 +91,8 @@ Code is the implementation source of truth. Tests are executable evidence of int
 
 When documentation and code disagree, fix the mismatch in the same change that establishes the intended behavior.
 
+`test/documentation_repository_test.dart` also treats repository-file coverage as executable documentation evidence: the marked tracked-file inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md) must match `git ls-files` exactly.
+
 ## Source-of-truth priority
 
 For current behavior, review in this order:
@@ -98,6 +104,15 @@ For current behavior, review in this order:
 5. historical release notes.
 
 Historical records are authoritative about what that historical release intended/validated, not about later current behavior.
+
+For executable/release support, also distinguish these separate facts:
+
+1. portable Flutter/Dart source exists;
+2. a target runner is committed;
+3. the target build is validated;
+4. a release artifact is produced and retained/distributed.
+
+Do not collapse those four levels into one “cross-platform” claim.
 
 ## Required documentation updates by change type
 
@@ -165,18 +180,34 @@ Update:
 - keyboard/semantics/widget tests;
 - `CHANGELOG.md` for user-visible changes.
 
-### Platform support change
+### Platform support or executable-build change
 
 Update:
 
 - `docs/PLATFORM_SUPPORT.md` support matrix;
-- `docs/GETTING_STARTED.md` run/build steps;
-- `docs/DEVELOPMENT.md` prerequisites;
-- `docs/RELEASING.md` artifacts/signing process;
+- `docs/EXECUTABLE_BUILDS.md` target prerequisites, runner generation, commands, output/package expectations, signing boundary, verification, and tracked-file inventory;
+- `docs/GETTING_STARTED.md` run/build steps when the supported user path changes;
+- `docs/DEVELOPMENT.md` prerequisites and platform-development process;
+- `docs/RELEASING.md` artifacts/signing/release process;
 - `docs/PRIVACY.md` and `SECURITY.md` for platform-specific storage/network/security implications;
-- root README and repository description when support claims change.
+- root README and repository description when support claims change;
+- CI/release workflows so the advertised target is actually built/validated.
 
-Do not advertise a target as officially supported merely because Flutter can generate a runner. Add build validation and release/support policy first.
+Do not advertise a target as officially supported merely because Flutter can generate a runner. Add reviewed runner files, build validation, artifact policy, and release/support documentation first.
+
+Every newly committed platform runner file must appear in the machine-checked tracked-file inventory in `docs/EXECUTABLE_BUILDS.md`.
+
+### Tracked file addition, deletion, or rename
+
+Regardless of file type:
+
+1. update the marked tracked-file inventory in `docs/EXECUTABLE_BUILDS.md`;
+2. classify the path in the appropriate inventory section;
+3. document any build, validation, release, security, privacy, or support effect;
+4. update inbound/outbound documentation links as needed;
+5. run `test/documentation_repository_test.dart` and then the complete test suite.
+
+This requirement is intentionally broad so “complete executable documentation” cannot silently fall behind the repository tree.
 
 ### CI/release workflow change
 
@@ -184,6 +215,7 @@ Update:
 
 - `docs/TESTING.md`;
 - `docs/RELEASING.md`;
+- `docs/EXECUTABLE_BUILDS.md`;
 - `docs/GETTING_STARTED.md` if developer commands change;
 - `docs/PLATFORM_SUPPORT.md` when build target coverage changes.
 
@@ -231,6 +263,15 @@ Examples should:
 - match current method signatures;
 - avoid referencing unexported classes as if they were public;
 - explain when persistence/UI behavior is application-specific rather than library behavior.
+
+### Keep build commands scoped to actual support
+
+Build documentation must say whether a command is:
+
+- part of the current official repository/release path; or
+- a future/local target procedure that first requires reviewed runner generation and toolchain setup.
+
+A documented native build command must not be interpreted as proof that the native runner is currently committed or release-supported.
 
 ### Be explicit about UTF-16 versus Unicode scalars
 
@@ -280,6 +321,7 @@ Use the package version from `pubspec.yaml` when stating the current release. Wh
 - About dialog/user-visible version strings;
 - docs index/current release references;
 - changelog/release docs;
+- executable build/package docs;
 - tests that assert version text.
 
 Historical release documents keep their historical version references.
@@ -298,7 +340,7 @@ The repository already protects key BMC surfaces with a regression test. Documen
 
 Before merging documentation-heavy work, verify:
 
-- every new file is linked from `docs/README.md` when appropriate;
+- every new evergreen file is linked from `docs/README.md` when appropriate;
 - current package version is correct;
 - language count/IDs match `SpellLanguageRegistry`;
 - writing-rule count/IDs match `WritingRuleRegistry.builtIns`;
@@ -306,15 +348,19 @@ Before merging documentation-heavy work, verify:
 - suggestion bounds match application/storage/codec validation;
 - UI capture limits match code;
 - platform/release claims match workflow files and committed runners;
+- `docs/EXECUTABLE_BUILDS.md` accurately distinguishes current web support from non-committed native runners;
+- the executable-build tracked-file inventory matches `git ls-files` exactly;
 - privacy claims match actual storage/network paths;
 - code examples match current signatures;
 - relative links resolve;
 - no current-state page accidentally repeats stale historical registry counts;
 - `dart format`/analysis/tests still pass when documentation changes include test/script updates.
 
-## Recommended docs CI
+## Documentation CI
 
-The repository currently validates Dart/Flutter code but does not have a dedicated Markdown link/lint job. A future documentation CI enhancement may add checks for:
+The repository has executable documentation assertions in `test/documentation_repository_test.dart`. Among other current-state checks, it now verifies that the marked inventory in `docs/EXECUTABLE_BUILDS.md` accounts for every Git-tracked repository file and contains no stale paths.
+
+A future dedicated Markdown link/lint job may additionally check:
 
 - broken relative Markdown links;
 - duplicate/missing documentation index entries;
@@ -327,3 +373,5 @@ Any such tooling should remain deterministic, fast, and dependency-conscious.
 ## Review responsibility
 
 A code reviewer should treat a stale public/current-state document as part of the change's correctness surface. “Code is correct but docs are wrong” is not complete work when the change affects documented behavior.
+
+For repository structure or executable/release changes, a reviewer should also treat an incomplete tracked-file inventory as a correctness failure, because it breaks the documented guarantee that executable-build documentation accounts for the complete committed project tree.
