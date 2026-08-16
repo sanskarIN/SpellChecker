@@ -2,6 +2,8 @@
 
 This page documents the current SpellChecker release process. The repository's automated release contract is a validated **Flutter web build artifact**; it does not currently build/publish native Android/iOS/Windows/macOS/Linux artifacts or automatically create a GitHub Release entry.
 
+For the complete local build/package procedure, future native-runner generation, target-specific artifact expectations, signing boundaries, release verification, troubleshooting, and the machine-checked tracked-file build inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
 ## Current package
 
 ```text
@@ -70,6 +72,8 @@ flutter build web --release
 
 Any failed gate prevents artifact upload.
 
+The complete Flutter test suite includes the repository documentation checks. In particular, `test/documentation_repository_test.dart` requires the tracked-file inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md) to match `git ls-files`, so a newly committed file cannot be silently omitted from the executable/release documentation.
+
 ## Artifact
 
 The workflow uploads:
@@ -103,8 +107,11 @@ Before tagging/dispatching a release, verify:
 - writing-rule/language default migrations were reviewed;
 - privacy/security docs match runtime data flows;
 - full Flutter suite and benchmark smoke pass;
+- the executable-build tracked-file inventory matches the actual repository;
 - web release build succeeds;
 - historical release/validation record is added when the release needs durable audit evidence.
+
+For any future native release, also complete the target-specific checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md) before advertising or distributing that artifact.
 
 ## Versioning
 
@@ -157,6 +164,7 @@ For a significant release, consider recording exact evidence:
 - format/analyzer/full test results;
 - benchmark smoke result;
 - web build result;
+- executable/package verification result;
 - migration/compatibility checks;
 - known limitations;
 - relevant focused stress/Unicode/accessibility tests.
@@ -261,9 +269,9 @@ Update [Privacy](PRIVACY.md) and [Security](../SECURITY.md) before release when 
 
 Current workflow builds only web. Do not call a release “Android/iOS/Windows/macOS/Linux release” unless the repository has intentionally added/validated those runners/builds/artifacts.
 
-Official native release support would need target-specific runner files, CI builds, signing/credential policy, artifact process, platform privacy/security/accessibility review, and documentation.
+Official native release support would need target-specific runner files, CI builds, signing/credential policy, artifact process, platform privacy/security/accessibility review, and documentation. The complete native-support acceptance requirements and target build/package commands are in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
-See [Platform support](PLATFORM_SUPPORT.md).
+See [Platform support](PLATFORM_SUPPORT.md) for the current support matrix.
 
 ## Release artifact verification
 
@@ -272,7 +280,8 @@ After workflow success:
 1. inspect job summary/logs for every gate success;
 2. confirm the uploaded artifact exists and uses the expected ref/tag suffix;
 3. download/extract if needed and verify the web build directory has expected Flutter web output;
-4. keep the workflow run/tag/commit reference in any release announcement/validation record.
+4. perform the release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+5. keep the workflow run/tag/commit reference in any release announcement/validation record.
 
 Because artifact retention is currently 14 days, do not treat Actions artifacts as permanent archival storage.
 
@@ -290,6 +299,8 @@ If a future deployment/publishing system is added, document:
 - retention;
 - privacy/security effects;
 - version/tag mapping.
+
+Target-specific packaging/signing details belong in [Executable builds and packaging](EXECUTABLE_BUILDS.md) and must remain consistent with this release contract.
 
 ## Rollback/hotfix
 
@@ -316,6 +327,7 @@ Do not condition release access, bug/security reporting, or contribution review 
 
 - [Testing](TESTING.md)
 - [Development](DEVELOPMENT.md)
+- [Executable builds and packaging](EXECUTABLE_BUILDS.md)
 - [Platform support](PLATFORM_SUPPORT.md)
 - [Performance](PERFORMANCE.md)
 - [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md)
