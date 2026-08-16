@@ -1,5 +1,13 @@
 # Support
 
+<p align="center">
+  <a href="https://buymeacoffee.com/sanskarIN">
+    <img alt="Buy Me a Coffee — Support SpellChecker" src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20SpellChecker-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=000000">
+  </a>
+</p>
+
+> SpellChecker is free and open source. Financial support is optional; if you want to help continued development, use the highlighted **Buy Me a Coffee** link above.
+
 ## V2.16 final stabilization
 When reporting a V2.16 problem, include the exact app version, platform, selected language, whether local preferences finished loading, a minimal non-sensitive input, and whether the problem involves decomposed Unicode, imported settings/dictionaries, persistence, or startup actions. Do not include private documents unless the minimal text itself is safe to share.
 

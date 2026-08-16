@@ -12,6 +12,22 @@ void main() {
     expect(statistics.sentences, 2);
   });
 
+  test('TextStatistics counts a trailing unfinished sentence', () {
+    const text = 'Hello world! This sentence has no final punctuation';
+
+    final statistics = TextStatistics.fromText(text);
+
+    expect(statistics.sentences, 2);
+  });
+
+  test('TextStatistics accepts closing punctuation after a sentence mark', () {
+    const text = 'She said “Hello.” Then she left';
+
+    final statistics = TextStatistics.fromText(text);
+
+    expect(statistics.sentences, 2);
+  });
+
   test('TextStatistics counts Unicode words and normalized punctuation', () {
     const text = 'Café naïve résumé writer’s open‑source.';
 
