@@ -3,23 +3,26 @@ import 'package:spellchecker/language.dart';
 import 'package:spellchecker/writing.dart';
 
 void main() {
-  test('sentence capitalization recognizes an opening quote after a boundary', () {
-    const rule = SentenceCapitalizationRule();
-    final pack = SpellLanguageRegistry.englishUs;
+  test(
+    'sentence capitalization recognizes an opening quote after a boundary',
+    () {
+      const rule = SentenceCapitalizationRule();
+      final pack = SpellLanguageRegistry.englishUs;
 
-    final issues = rule
-        .analyze('hello world. “next sentence” Then “another”', pack)
-        .toList();
+      final issues = rule
+          .analyze('hello world. “next sentence” Then “another”', pack)
+          .toList();
 
-    expect(
-      issues.map((issue) => issue.originalText),
-      orderedEquals(<String>['hello', 'next']),
-    );
-    expect(
-      issues.map((issue) => issue.replacement),
-      orderedEquals(<String>['Hello', 'Next']),
-    );
-  });
+      expect(
+        issues.map((issue) => issue.originalText),
+        orderedEquals(<String>['hello', 'next']),
+      );
+      expect(
+        issues.map((issue) => issue.replacement),
+        orderedEquals(<String>['Hello', 'Next']),
+      );
+    },
+  );
 
   test('sentence capitalization supports closing then opening quotes', () {
     const rule = SentenceCapitalizationRule();
