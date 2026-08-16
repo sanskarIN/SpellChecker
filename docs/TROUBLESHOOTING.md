@@ -2,6 +2,8 @@
 
 This guide covers common SpellChecker `2.16.0+21` application, storage, import/export, analysis, keyboard, development, and release-build problems.
 
+For the complete executable build/package procedure and target-specific prerequisites, see [Executable builds and packaging](EXECUTABLE_BUILDS.md). For the current support boundary, see [Platform support](PLATFORM_SUPPORT.md).
+
 Before opening a public issue, prefer a small synthetic example instead of a private document. See [Support](../SUPPORT.md).
 
 # Application startup
@@ -303,7 +305,7 @@ Host software can reserve shortcuts. Use visible controls and include environmen
 
 See [Accessibility](ACCESSIBILITY.md) and [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
 
-# Web/platform
+# Web/platform and executable builds
 
 ## `flutter run -d chrome` cannot find Chrome
 
@@ -320,7 +322,35 @@ Install/configure a Flutter-supported browser or use an available target for loc
 
 They are not currently committed. The repository commits `web/` plus portable Flutter/Dart source.
 
-Do not assume a native release artifact exists because the application is written in Flutter. See [Platform support](PLATFORM_SUPPORT.md).
+Do not assume a native release artifact exists because the application is written in Flutter. See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
+## A native `flutter build` command says the project is not configured for that platform
+
+The corresponding runner directory probably does not exist. That is expected for the current SpellChecker repository.
+
+Follow the target-generation procedure in [Executable builds and packaging](EXECUTABLE_BUILDS.md), review every generated file, configure target metadata/tooling, add target validation, and only then treat the native build as a candidate project artifact.
+
+## `flutter doctor -v` reports missing native tooling
+
+Install/configure the platform toolchain required for the target and rerun `flutter doctor -v`. A portable Flutter source tree does not replace Android SDK/Xcode/Visual Studio/Linux desktop development requirements.
+
+Do not modify SpellChecker source or suppress checks merely to hide a missing host toolchain.
+
+## Windows/Linux executable works only inside the build directory
+
+Desktop Flutter release output is a bundle. Do not copy only the `.exe`/executable and discard its neighboring runtime libraries and data.
+
+Package the complete generated release directory described in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
+## Web release does not work when I open `index.html` directly
+
+Validate/deploy the complete `build/web/` output using a suitable HTTP/static-host environment. Do not use a `file://` open as the only production-build validation path.
+
+## Native signing fails
+
+Keep signing credentials outside the repository. Fix the target toolchain/signing configuration rather than committing private keys, keystore passwords, certificates, provisioning secrets, or store credentials.
+
+See the signing/security section in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 # Development setup
 
@@ -359,6 +389,20 @@ Run locally and address every reported analyzer issue before assuming CI/environ
 flutter analyze
 ```
 
+## Documentation repository test says executable inventory is missing/stale
+
+`test/documentation_repository_test.dart` compares the marked file inventory in `docs/EXECUTABLE_BUILDS.md` to `git ls-files`.
+
+If you added, deleted, or renamed a tracked path:
+
+1. update the marked inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+2. classify the path in the correct inventory section;
+3. document its build/release relevance;
+4. rerun the focused documentation test;
+5. rerun the full suite.
+
+Do not weaken the test to make an incomplete inventory pass.
+
 ## A widget test hangs on `pumpAndSettle()`
 
 If the test deliberately leaves a Future unresolved/loading state active, `pumpAndSettle()` may never reach settled state. Use explicit `pump()` steps and complete the controlled Future when intended.
@@ -393,13 +437,13 @@ See [Performance](PERFORMANCE.md).
 
 The release workflow uploads the web artifact only after format, analyzer, full tests, benchmark smoke, and `flutter build web --release` all succeed.
 
-Inspect the failed step in GitHub Actions.
+Inspect the failed step in GitHub Actions. For a full artifact verification checklist, use [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
-## I expected a GitHub Release/app-store artifact
+## I expected a GitHub Release/app-store/native artifact
 
 The current workflow uploads an Actions web artifact retained for 14 days. It does not automatically create a GitHub Release or native/app-store artifacts.
 
-See [Releasing](RELEASING.md).
+See [Releasing](RELEASING.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and [Platform support](PLATFORM_SUPPORT.md).
 
 # Before filing an issue
 
@@ -415,7 +459,9 @@ Include:
 - whether Writing insights/spelling result was limited;
 - relevant safe metadata diagnostic when requested.
 
-Do **not** post private documents, credentials, sensitive personal vocabulary, or real private messages when a synthetic reproducer is enough.
+For executable/build problems, also include the exact target, `flutter doctor -v` summary with secrets removed, build command, and the failing step/error without private signing material.
+
+Do **not** post private documents, credentials, sensitive personal vocabulary, private signing keys, passwords, tokens, or real private messages when a synthetic/sanitized reproducer is enough.
 
 For security vulnerabilities, follow [SECURITY.md](../SECURITY.md) instead of filing a public issue.
 
@@ -427,3 +473,6 @@ For security vulnerabilities, follow [SECURITY.md](../SECURITY.md) instead of fi
 - [Support](../SUPPORT.md)
 - [Development](DEVELOPMENT.md)
 - [Testing](TESTING.md)
+- [Executable builds and packaging](EXECUTABLE_BUILDS.md)
+- [Platform support](PLATFORM_SUPPORT.md)
+- [Releasing](RELEASING.md)
