@@ -56,7 +56,9 @@ class SentenceCapitalizationRule extends WritingRule {
   }
 
   static bool _endsSentence(String gap) {
-    return RegExp(r'''[.!?]["'’”\)\]]*\s+$''').hasMatch(gap);
+    return RegExp(
+      r'''[.!?]["'’”\)\]]*\s+["'‘“\(\[]*$''',
+    ).hasMatch(gap);
   }
 
   static bool _startsWithLowercaseLetter(String word) {
