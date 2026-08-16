@@ -48,6 +48,7 @@ The authoritative documentation hub is **[docs/README.md](docs/README.md)**.
 | Extend writing analysis | [Writing rules](docs/WRITING_RULES.md) |
 | Understand internals | [Architecture](docs/ARCHITECTURE.md) |
 | Understand target/build support | [Platform support](docs/PLATFORM_SUPPORT.md) |
+| Build/package release artifacts and future native executables | [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) |
 | Understand privacy | [Privacy](docs/PRIVACY.md) |
 | Understand accessibility | [Accessibility](docs/ACCESSIBILITY.md) |
 | Troubleshoot | [Troubleshooting](docs/TROUBLESHOOTING.md) |
@@ -67,7 +68,7 @@ flutter pub get
 flutter run -d chrome
 ```
 
-The repository commits the web host. Additional Android/iOS/Windows/macOS/Linux runners are not currently committed; see [Platform support](docs/PLATFORM_SUPPORT.md) before making cross-platform release claims.
+The repository commits the web host. Additional Android/iOS/Windows/macOS/Linux runners are not currently committed; see [Platform support](docs/PLATFORM_SUPPORT.md) and [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) before generating native runners or making cross-platform release claims.
 
 ## Application workflow
 
@@ -239,7 +240,7 @@ flutter build web --release
 
 and uploads `build/web` as the release workflow artifact.
 
-See [Testing](docs/TESTING.md), [Performance](docs/PERFORMANCE.md), and [Releasing](docs/RELEASING.md).
+See [Testing](docs/TESTING.md), [Performance](docs/PERFORMANCE.md), [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md), and [Releasing](docs/RELEASING.md).
 
 ## Repository structure
 
@@ -271,6 +272,7 @@ Contributions are welcome. Before submitting a change, read:
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [Testing guide](docs/TESTING.md)
+- [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) for platform/build/release-artifact changes
 - [Documentation maintenance](docs/DOCUMENTATION_MAINTENANCE.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 
