@@ -119,11 +119,9 @@ void main() {
       documentedPaths.add(match.group(1)!);
     }
 
-    final gitResult = Process.runSync(
-      'git',
-      const ['ls-files'],
-      runInShell: Platform.isWindows,
-    );
+    final gitResult = Process.runSync('git', const [
+      'ls-files',
+    ], runInShell: Platform.isWindows);
     expect(
       gitResult.exitCode,
       0,
