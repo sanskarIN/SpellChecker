@@ -2,6 +2,8 @@
 
 This is the current development guide for SpellChecker `2.16.0+21`. Historical release engineering notes are indexed in [Release history](RELEASE_HISTORY.md).
 
+For complete executable/release-artifact instructions—including native-runner generation, platform build commands, packaging, signing boundaries, verification, and the machine-checked tracked-file inventory—see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
 ## Prerequisites
 
 Install:
@@ -19,6 +21,8 @@ flutter doctor
 flutter --version
 dart --version
 ```
+
+For platform/executable work, prefer `flutter doctor -v` and verify the specific target toolchain before generating or packaging runner files.
 
 ## Clone and resolve dependencies
 
@@ -41,7 +45,7 @@ Do not add a runtime dependency when a small deterministic implementation is suf
 flutter run -d chrome
 ```
 
-The repository commits the web host plus portable Flutter/Dart source. Native Android/iOS/Windows/macOS/Linux runner directories are not currently committed. See [Platform support](PLATFORM_SUPPORT.md).
+The repository commits the web host plus portable Flutter/Dart source. Native Android/iOS/Windows/macOS/Linux runner directories are not currently committed. See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Repository layout
 
@@ -62,6 +66,8 @@ tool/                     deterministic benchmark tooling
 web/                      committed Flutter web host
 docs/                     current documentation and historical release records
 ```
+
+Every tracked path is classified in the marked inventory inside [Executable builds and packaging](EXECUTABLE_BUILDS.md). `test/documentation_repository_test.dart` compares that inventory to `git ls-files`, so adding, deleting, or renaming a committed file requires updating the inventory in the same change.
 
 ## Architectural boundaries
 
@@ -280,9 +286,26 @@ Do not remove visible pointer/touch alternatives merely because a shortcut exist
 
 Semantics/live-region changes should be tested using Flutter semantics/widget tooling where possible.
 
+## Platform runner and executable changes
+
+The current repository has no committed native runner directories. If work intentionally adds `android/`, `ios/`, `windows/`, `macos/`, or `linux/`:
+
+1. follow the generation and target prerequisites in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+2. review every generated file rather than accepting generated output blindly;
+3. choose stable application identifiers/metadata;
+4. keep signing credentials out of Git;
+5. add target build CI and artifact handling;
+6. validate target-specific storage, clipboard, accessibility, keyboard, and startup behavior;
+7. update the tracked-file inventory for every new committed runner file;
+8. update [Platform support](PLATFORM_SUPPORT.md), [Releasing](RELEASING.md), privacy/security docs, README, and other affected current-state docs.
+
+A locally generated runner is not official release support by itself.
+
 ## Documentation changes
 
 Use [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md). Current-state behavior belongs in evergreen docs; version-specific design/audit evidence belongs in historical files linked from [Release history](RELEASE_HISTORY.md).
+
+Any tracked-file addition/deletion/rename must also update the machine-checked inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Development quality gates
 
@@ -320,6 +343,8 @@ Build the committed release target:
 flutter build web --release
 ```
 
+The complete build/package verification procedure is in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
 CI runs dependency resolution, format check, analyzer, complete tests, and benchmark smoke. The release workflow repeats those gates and additionally builds/uploads the web artifact.
 
 ## Focused testing
@@ -337,6 +362,8 @@ flutter test test/widget_test.dart
 ```
 
 Exact focused files evolve with the project; [Testing](TESTING.md) is the current index.
+
+For documentation/build-inventory work, `test/documentation_repository_test.dart` is a useful focused check, but the full suite remains required before release.
 
 ## Benchmark development
 
@@ -369,6 +396,8 @@ Before merge, confirm:
 - public API/persistence/source-range compatibility is reviewed;
 - privacy/security implications are documented;
 - current docs match code;
+- the executable-build tracked-file inventory matches `git ls-files`;
+- platform/build changes update actual target CI/artifact documentation;
 - historical records were not rewritten merely to match a later release.
 
 ## Related documentation
@@ -379,5 +408,6 @@ Before merge, confirm:
 - [Writing rules](WRITING_RULES.md)
 - [Language packs](LANGUAGE_PACKS.md)
 - [Configuration](CONFIGURATION.md)
+- [Executable builds and packaging](EXECUTABLE_BUILDS.md)
 - [Platform support](PLATFORM_SUPPORT.md)
 - [Releasing](RELEASING.md)
