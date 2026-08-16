@@ -1,930 +1,445 @@
 # Architecture
 
-## V2.16 final stabilization
-The final audit keeps three boundaries explicit: algorithmic similarity operates on Unicode scalars; editor source ranges remain UTF-16 offsets; local persistence/import layers fail closed when a platform write or external format is invalid. Startup restores the selected language, vocabulary, rule choices, and suggestion count before durable/session mutations are allowed.
+This page describes the current SpellChecker `2.16.0+21` architecture: reusable Dart layers, Flutter application workflow, local persistence, analysis/correction lifecycle, and important trust/data boundaries.
 
+## System overview
 
-## V2.15 architecture note
-The writing pipeline now has ten built-ins. `UnmatchedCurlyBraceRule` reuses the existing registry, analyzer, bounded-result, diagnostic-summary, review-query, preference, Portable-settings, and correction-skip paths; no parallel engine or storage/network subsystem was introduced.
+```mermaid
+flowchart TD
+  App[SpellCheckerApp / MaterialApp]
+  Page[SpellCheckerPage]
+  Editor[Editor + SpellCheckEditingController]
+  Results[Spelling Results UI]
+  WritingDialog[WritingInsightsDialog]
+  DictionaryDialog[DictionaryManagerDialog]
+  SettingsDialog[SettingsTransferDialog]
+  Engine[SpellCheckerEngine]
+  Pack[SpellLanguagePack]
+  Ranker[SpellSuggestionRanker]
+  Analyzer[WritingAnalyzer]
+  Rules[WritingRuleRegistry]
+  TextCorrection[TextCorrection]
+  WritingCorrection[WritingCorrection]
+  Preferences[DictionaryPreferences]
+  SharedPrefs[shared_preferences]
+  DictCodec[PersonalDictionaryCodec]
+  SettingsCodec[SpellCheckerSettingsCodec]
+  Diagnostics[WritingAnalysisDiagnosticSummary]
 
+  App --> Page
+  Page --> Editor
+  Page --> Results
+  Page --> WritingDialog
+  Page --> DictionaryDialog
+  Page --> SettingsDialog
+  Page --> Engine
+  Page --> Analyzer
+  Page --> Preferences
+  Engine --> Pack
+  Engine --> Ranker
+  Analyzer --> Rules
+  Results --> TextCorrection
+  WritingDialog --> WritingCorrection
+  Preferences --> SharedPrefs
+  DictionaryDialog --> DictCodec
+  SettingsDialog --> SettingsCodec
+  WritingDialog --> Diagnostics
+```
 
-## V2.14 structural-rule architecture
+## Design principles
 
-The ninth built-in rule is a small iterative delimiter scanner layered on the existing writing subsystem. It scans `[`/`]`, keeps opening UTF-16 offsets in a stack, emits one-character advisory findings, and reuses the shared registry, analyzer ordering/bounds, diagnostic-summary, review/filter, persistence, Portable-settings, correction-skip, and editor pathways. No parallel parser or correction engine is introduced.
+The architecture prioritizes:
 
-## V2.13 architecture note
+- local deterministic analysis;
+- separation of reusable logic from Flutter widgets;
+- explicit language ownership;
+- immutable result metadata;
+- exact source-range ownership;
+- stale-safe correction;
+- bounded UI/result retention for large inputs;
+- per-language local preferences;
+- versioned transfer formats;
+- testability without network/services;
+- conservative behavior when mutation is ambiguous.
 
-The built-in writing registry now contains eight rules. `UnmatchedParenthesisRule` is an iterative local scanner that stores unmatched opening offsets and emits source-ordered one-character advisory findings. It reuses the existing analyzer, review, preference, diagnostic, benchmark, and correction-skip layers; there is no parallel parser, correction engine, persistence subsystem, service, or network path.
-
-## V2.12 architecture note
-
-The deterministic local writing pipeline now has seven built-in rules. `missing-punctuation-space` runs through the existing `WritingRule` → `WritingAnalyzer` → `WritingIssue` → `WritingCorrection` path; it does not introduce a second parser, mutation engine, persistence layer, service, isolate, network path, or dependency. Its punctuation-only ownership is intentionally adjacent to the existing pre-punctuation spacing rule.
-## Goals
-
-SpellChecker is designed around these goals:
-
-1. Keep spelling logic independent from Flutter widgets.
-2. Keep writing-rule analysis independent from Flutter widgets.
-3. Keep automatic text mutation reusable, deterministic, and offset-safe.
-4. Keep user text local by default.
-5. Keep persistence explicit and limited to user-controlled preferences.
-6. Keep language-specific behavior behind language-pack boundaries.
-7. Keep the runtime dependency surface small.
-8. Make core behavior deterministic and regression-testable.
-9. Preserve keyboard and accessibility workflows alongside pointer/touch UI.
-10. Leave clear extension points for richer deterministic local writing rules and language packs.
-
-# Layers
-
-## Application shell
-
-Locations:
+## Top-level public libraries
 
 ```text
-lib/main.dart
-lib/app.dart
+lib/spell_checker.dart   core spelling/correction/codec/statistics public barrel
+lib/language.dart        language-pack public barrel
+lib/writing.dart         writing-analysis public barrel
 ```
 
-`main.dart` initializes Flutter and starts `SpellCheckerApp`. `app.dart` defines Material 3 themes and selects the editor page.
+These barrels define the supported reusable API surface. Flutter UI and storage adapters are not public just because they live under `lib/`.
 
-## Presentation layer
+## Application layer
 
-Location:
+### `lib/main.dart`
+
+Application process entry point. It launches the Flutter application.
+
+### `lib/app.dart`
+
+Defines `SpellCheckerApp`, Material 3 theming, system light/dark behavior, and `SpellCheckerPage` as the home surface.
+
+### `lib/features/editor/spell_checker_page.dart`
+
+The main integration/controller surface. It owns editor/application state such as:
+
+- current text editing controller/focus;
+- selected language;
+- active `SpellCheckerEngine`;
+- personal/ignored word state reflected by the engine;
+- suggestion limit;
+- current spelling result/report;
+- active spelling issue index;
+- per-language writing-rule choices;
+- correction undo stack;
+- preference loading/storage-availability state;
+- dialog invocation/results.
+
+The page orchestrates reusable layers; it does not implement dictionary distance algorithms or individual writing rules.
+
+### `SpellCheckEditingController`
+
+Owns presentation of inline checked spelling ranges while preserving Flutter composing-range visibility. Issue styling is derived from the latest current spelling snapshot.
+
+### Dialogs
+
+`DictionaryManagerDialog` manages personal vocabulary and suggestion count.
+
+`WritingInsightsDialog` performs current text writing analysis, local review query/presets, rule switches, finding display, safe-fix requests, and diagnostic-summary copying.
+
+`SettingsTransferDialog` displays/copies Portable settings and validates imported settings JSON before returning a settings document to the page.
+
+## Core spelling layer
+
+### `SpellLanguagePack`
+
+Language-specific boundary around:
+
+- stable ID/metadata;
+- base dictionary;
+- frequency ranks;
+- tokenization;
+- personal-word validation;
+- normalization;
+- recognized suffixes;
+- suggestion source/distance policy.
+
+### `SpellCheckerEngine`
+
+Stateful reusable spelling service. It owns:
+
+- selected pack;
+- immutable base dictionary/frequencies;
+- personal dictionary set;
+- ignored-word set;
+- suggestion cache;
+- suggestion ranker.
+
+It does not persist state. The Flutter/storage layer restores persisted vocabulary into a newly created engine.
+
+### Spelling analysis lifecycle
+
+```mermaid
+sequenceDiagram
+  participant UI as SpellCheckerPage
+  participant E as SpellCheckerEngine
+  participant P as SpellLanguagePack
+  participant R as SpellSuggestionRanker
+
+  UI->>E: analyze(text, suggestionLimit, maxIssues)
+  E->>P: tokenize(text)
+  loop each token
+    E->>P: normalize / validate / suffix policy
+    alt unknown and capture available
+      E->>R: compare eligible candidates
+      E-->>UI: SpellIssue with UTF-16 range + suggestions
+    else capture limit reached
+      E-->>UI: prove overflow without suggestions
+    end
+  end
+  E-->>UI: SpellCheckReport
+```
+
+The bundled page uses a 200-issue capture limit. The public engine can be unbounded or caller-bounded.
+
+### Suggestion pipeline
+
+For an unknown normalized target:
+
+1. split recognized suffix where applicable;
+2. use scalar length to determine maximum suggestion distance;
+3. iterate base and personal candidates;
+4. skip inappropriate candidate forms in the current engine implementation;
+5. skip scalar length differences beyond the maximum;
+6. calculate unrestricted scalar Damerau-Levenshtein distance;
+7. create candidate metadata;
+8. sort through `SpellSuggestionRanker`;
+9. apply final lexical fallback;
+10. reattach recognized suffix;
+11. cache detailed result by normalized unknown word.
+
+Personal-dictionary mutation clears the cache because candidate membership changes.
+
+## Unicode coordinate architecture
+
+SpellChecker intentionally separates **source coordinates** from **algorithmic scalar iteration**.
+
+Source ranges use UTF-16 code-unit offsets, matching Dart string slicing and Flutter editing.
+
+Scalar-sensitive algorithms use `String.runes`, including unrestricted edit distance and selected length/casing behavior. This prevents non-BMP characters from being split by single-code-unit logic while preserving interoperable source offsets.
+
+## Core correction layer
+
+### `TextCorrection`
+
+Pure spelling mutation helpers. They accept text plus already-produced `SpellIssue` objects and refuse stale ranges.
+
+`replaceOne` validates exact current source ownership before replacing.
+
+`replaceAll` filters to represented matching current issues, sorts from source end to start, and applies case-adjusted replacements.
+
+The helper returns text/caret/count metadata; the application decides how to store undo history and refresh analysis.
+
+## Writing layer
+
+### `WritingRule`
+
+Plugin abstraction defining stable ID, metadata, language support, category, and deterministic `analyze(text, pack)` findings.
+
+### `WritingRuleRegistry`
+
+Owns the current ten built-in rule objects and default-enabled ID set.
+
+### `WritingAnalyzer`
+
+Coordinates:
+
+- configured-rule validation;
+- language support filtering;
+- enabled-ID filtering;
+- rule execution;
+- exact overall/per-rule counting;
+- deterministic global ordering;
+- optional bounded retained prefix.
+
+The analyzer is independent from Flutter widgets and persistence.
+
+### Writing bounded analysis
+
+A bounded analyzer cannot simply stop after N yielded findings because rule execution order and source order are different dimensions. A later rule can produce an earlier source position.
+
+The bounded collector therefore keeps the globally best/earliest N findings according to the same comparator used for complete results and can displace a worse retained finding.
+
+All enabled/supported rules still run so exact totals remain known.
+
+### `WritingCorrection`
+
+Pure safe mutation layer. Individual correction validates current source ownership and non-null replacement.
+
+Batch correction sorts candidates by start/end/rule ID, accepts deterministic non-overlapping current automatic fixes, skips later overlaps/advisory/stale ranges, then mutates accepted ranges from end to start.
+
+### Review layer
+
+`WritingReviewQuery` and `WritingReviewPreset` are reusable pure review/filter metadata. The Flutter dialog keeps current search/category/fix-only state transient.
+
+Rule enablement is not review-filter state; it is durable per-language configuration managed by the application.
+
+### Diagnostic summary
+
+`WritingAnalysisDiagnosticSummary` converts result/rule metadata into a deterministic support-friendly projection. It intentionally does not read/serialize editor text excerpts, finding messages, replacements, or source offsets.
+
+## Persistence layer
+
+### `DictionaryPreferences`
+
+Application-internal adapter around `shared_preferences`.
+
+Durable categories:
 
 ```text
-lib/features/editor/
+selected language
+suggestion limit
+personal vocabulary per language
+explicit enabled writing-rule IDs per language
 ```
 
-### `spell_checker_page.dart`
-
-Owns editor-level application state and orchestrates reusable core/storage services.
-
-Responsibilities include:
-
-- Editor text input.
-- Text statistics.
-- Explicit language selection.
-- Spelling checks with the configured suggestion limit.
-- Inline spelling-highlight synchronization.
-- Active spelling-issue selection/navigation.
-- Single spelling replacement and spelling replace-all.
-- Personal-word persistence and session ignores.
-- Writing insights launch and keyboard shortcut.
-- Per-language writing-rule preference restoration/persistence.
-- Individual writing safe fixes.
-- Batch writing safe fixes.
-- Shared bounded programmatic correction undo.
-- Storage-unavailable state and user-visible warnings.
-
-It does **not** implement edit distance, tokenization, writing-rule matching, preference serialization, or correction-range validation itself.
-
-### `spell_check_editing_controller.dart`
-
-Extends `TextEditingController` and owns inline visual rendering of checked spelling issues.
-
-Responsibilities:
-
-- Hold the current checked spelling issues.
-- Hold the active spelling issue index.
-- Build styled text spans.
-- Draw valid wavy underlines.
-- Apply stronger active-issue styling.
-- Ignore invalid/stale/overlapping highlight ranges instead of throwing.
-- Clear issue styling when text edits invalidate a spelling snapshot.
-
-### `dictionary_manager_dialog.dart`
-
-Owns user-facing personal-dictionary and suggestion-count management for the selected language.
-
-Responsibilities:
-
-- Add/remove/clear saved personal words.
-- Import language-aware or legacy vocabulary.
-- Copy a versioned export.
-- Change suggestions per spelling issue.
-- Surface storage errors.
-
-### `writing_insights_dialog.dart`
-
-Owns presentation of writing-rule configuration and findings.
-
-Responsibilities:
-
-- Show the current language.
-- Show supported writing rules.
-- Toggle enabled rule IDs.
-- Show deterministic findings.
-- Expose an individual **Apply safe fix** action.
-- Expose V2.1 **Apply all safe fixes (N)** when automatic fixes exist.
-- Return the chosen rule configuration/fix request to the page.
-
-The dialog does not mutate editor text directly. `SpellCheckerPage` applies returned requests through `WritingCorrection`.
-
-# Core spelling/language layer
-
-Location:
+Non-durable categories:
 
 ```text
-lib/core/
+editor text
+spelling/writing findings
+ignored session words
+active issue index
+review search/filter/preset state
+correction history
 ```
 
-## `SpellLanguagePack`
+### Writing-rule three-state model
 
-The language pack is the boundary between language-independent application/engine behavior and language-specific behavior.
-
-A pack owns:
-
-- Stable language ID.
-- Language and region codes.
-- Display name.
-- Dictionary data.
-- Approximate frequency metadata.
-- Unicode tokenization pattern.
-- Valid personal-word pattern.
-- Normalizer.
-- Recognized suffix rules.
-- Suggestion source metadata.
-- Suggestion-distance policy.
-
-`SpellLanguageRegistry` currently supplies:
+Persistence distinguishes:
 
 ```text
-en-US  English (US)
-en-GB  English (UK)
+missing key          -> use current registry defaults
+non-empty stored set -> explicit enabled IDs
+empty stored set     -> explicit disable-all
 ```
 
-The US/UK packs intentionally remove the other variant's curated spellings before adding their own variant set, making differences such as `color`/`colour` deterministic.
+Resetting defaults removes the key instead of persisting a snapshot of current defaults.
 
-## `SpellCheckerEngine`
+### Storage failure model
 
-Responsibilities:
+Write/remove operations are considered durable only when `shared_preferences` reports success. Failures are surfaced to the UI rather than silently accepted.
 
-- Tokenize through the selected language pack.
-- Normalize through the selected pack.
-- Check base, personal, and ignored vocabularies.
-- Recognize configured suffix forms.
-- Produce source-positioned `SpellIssue` values.
-- Rank and cache spelling suggestions.
-- Produce detailed `SpellSuggestion` metadata.
-- Manage engine-local personal and ignored-word sets.
+The application can retain session behavior where appropriate, but messages must distinguish active in-memory state from durable saved state.
 
-The engine has no Flutter widget/storage dependency.
+## Startup preference lifecycle
 
-## `SpellIssue`
+Startup preference loading is asynchronous.
 
-Immutable occurrence-specific spelling finding containing:
+At a high level:
 
-- Exact source word.
-- Start/end offsets.
-- Ranked string suggestions.
-- Optional producing language ID.
+1. page starts with built-in defaults/session state;
+2. storage loads selected language and global suggestion count;
+3. storage loads selected language's personal vocabulary and writing-rule override;
+4. a language-specific engine is constructed/restored;
+5. dependent current results are refreshed when appropriate;
+6. loading state ends;
+7. storage failures are reported and session-mode behavior remains available where safe.
 
-Offsets are valid only for the checked text snapshot.
+Controls that require durable settings should not pretend persistence is ready while loading is incomplete.
 
-## `SpellSuggestion`
+## Language switch lifecycle
 
-Detailed suggestion metadata contains candidate text, edit distance, frequency rank, language identity/display name, and suggestion source.
+When the selected language changes:
 
-## `TextCorrection`
+1. load that language's saved personal dictionary;
+2. load that language's explicit writing-rule override/unset state;
+3. build a fresh `SpellCheckerEngine` for the pack;
+4. restore personal words into it;
+5. clear ignored/session/correction/stale issue state;
+6. recheck current non-blank text.
 
-Reusable offset-safe spelling mutation layer.
+This isolates personal vocabulary and writing-rule preferences by language.
 
-Responsibilities:
+## Transfer codecs
 
-- Validate checked spelling ranges against current text.
-- Replace one spelling issue with case preservation.
-- Replace all still-current checked occurrences of the same source word.
-- Apply replace-all edits from end to beginning.
-- Return resulting text/caret/replacement count.
-- Refuse stale corrections without partial mutation.
+### Personal dictionary
 
-Undo is deliberately outside `TextCorrection`; the page decides how a correction result is grouped into history.
+`PersonalDictionaryCodec` owns versioned language-aware vocabulary serialization independent from preference storage.
 
-## `PersonalDictionaryCodec`
+Current UI export: version 2 with language ID. Legacy V1/array/plain formats remain readable.
 
-Responsibilities:
+### Portable settings
 
-- Validate/normalize personal vocabulary.
-- Encode legacy version-1 transfers where requested.
-- Encode language-aware version-2 transfers.
-- Decode versioned JSON, JSON arrays, and plain word lists.
-- Preserve explicit language identity in V2 documents.
-- Reject unsupported versions, unsupported languages, and malformed word entries.
+`SpellCheckerSettingsCodec` owns version 1 of `spellchecker-settings` and intentionally serializes only selected language, suggestion limit, and explicit per-language writing-rule overrides.
 
-## Edit distance
+The two formats remain separate to make vocabulary inclusion an explicit user action rather than an accidental side effect of preference transfer.
 
-`damerauLevenshteinDistance` supports insertion, deletion, substitution, and adjacent transposition.
+## Portable settings import lifecycle
 
-## Text statistics
+At application integration level:
 
-`TextStatistics` calculates character, Unicode-aware word, and sentence counts using the same supported internal apostrophe/hyphen forms as spelling tokenization.
+1. decode/validate document;
+2. obtain target language's already-persisted personal vocabulary separately;
+3. apply imported durable preferences as a transaction with restoration attempts on failure;
+4. rebuild selected language engine using existing target-language personal vocabulary;
+5. set suggestion limit/effective writing rules;
+6. clear stale issue/session/correction state;
+7. recheck non-blank text.
 
-# Writing-rules layer
+Personal vocabulary is not overwritten by settings import.
 
-Locations:
+## Correction undo architecture
+
+The editor keeps a bounded stack of pre-correction `TextEditingValue` snapshots (current depth: 20).
+
+Spelling single fix, spelling replace-all, writing single fix, and writing batch integrate through the same correction-history concept. A batch accepted as one mutation produces one undo entry.
+
+Manual text editing can begin a new correction-history path; the stack is not document persistence/version control.
+
+## Large-document UI policy
+
+The application uses separate bounds:
 
 ```text
-lib/writing.dart
-lib/writing/
+spelling issues: 200 captured
+writing findings: 200 captured
 ```
 
-## `WritingRule`
+Spelling overflow proof avoids unnecessary suggestion generation after the cap.
 
-Public side-effect-free plugin contract. Each rule declares:
+Writing analysis still computes exact totals because every enabled/supported rule scans the input; the capture bound controls retained findings/review scope.
 
-- Stable persistent ID.
-- Display name.
-- Description.
-- Supported language IDs/codes.
-- Deterministic `analyze(text, languagePack)` implementation.
+## Privacy/trust boundary
 
-## `WritingRuleRegistry`
+Core spelling/writing layers do not make network calls. The application does not need a remote model/service for analysis.
 
-Contains built-in rule instances and the default enabled rule IDs.
+External/system boundaries are limited to expected Flutter/project integration such as:
 
-Current built-ins:
+- local `shared_preferences`;
+- explicit clipboard operations;
+- host Flutter/browser rendering/storage behavior;
+- GitHub/project links outside analysis.
+
+See [Privacy](PRIVACY.md) and [Security](../SECURITY.md).
+
+## Platform boundary
+
+Only the web host is committed and release-built. Portable application logic is written in Flutter, but native runner/build/signing behavior is outside the current repository release contract.
+
+See [Platform support](PLATFORM_SUPPORT.md).
+
+## Test architecture
+
+Tests intentionally mirror layer ownership:
+
+- core unit tests for pure algorithms/models;
+- codec tests for strict formats;
+- persistence tests with mocked preferences;
+- writing-rule/analyzer/correction tests;
+- Unicode/source-range regressions;
+- stress tests;
+- Flutter widget/semantics/keyboard tests;
+- benchmark tool/command tests;
+- repository metadata/documentation tests.
+
+See [Testing](TESTING.md).
+
+## Dependency direction
+
+Preferred dependency direction:
 
 ```text
-repeated-word
-sentence-capitalization
-repeated-space
-punctuation-spacing
-trailing-whitespace
-repeated-punctuation
+UI -> storage integration
+UI -> core spelling
+UI -> writing
+writing -> core language pack
+core -> bundled data
 ```
 
-## `WritingAnalyzer`
+Reusable core/writing logic must not import feature widgets. Storage is an application integration layer, not a requirement for core engine use.
 
-Responsibilities:
+## Extension points
 
-- Select rules that support the active language pack.
-- Filter by an optional enabled-ID set.
-- Combine findings.
-- Sort findings deterministically.
-- Report analysed rule IDs and per-rule counts.
+Supported reusable extension points include:
 
-The analyzer has no storage/UI/network dependency.
+- custom `SpellLanguagePack` passed to engine/analyzer;
+- custom dictionary/frequency data for `SpellCheckerEngine`;
+- custom deterministic `SpellSuggestionRanker`;
+- custom `WritingRule` list for `WritingAnalyzer`.
 
-## `WritingIssue`
+These do not automatically extend the bundled application's registry/dropdowns/persistence formats. First-class bundled integration requires source changes and tests/docs.
 
-Immutable writing finding containing:
+## Related documentation
 
-- Rule identity/name.
-- Human-readable message.
-- Exact source range and `originalText`.
-- Optional deterministic replacement.
-- Language ID.
-- Severity.
-
-`replacement == null` means advisory-only. An empty string is a valid automatic replacement.
-
-## `WritingCorrection`
-
-Reusable writing-mutation boundary.
-
-### Individual fix
-
-`WritingCorrection.apply` validates that the current source range still equals `issue.originalText` before replacement.
-
-### V2.1 batch fix
-
-`WritingCorrection.applyAll`:
-
-1. Sorts candidates by start, end, then rule ID.
-2. Skips advisory/no-replacement findings.
-3. Skips invalid/stale findings.
-4. Keeps the earliest deterministic candidate when automatic fixes overlap.
-5. Applies accepted edits from the document end toward the beginning.
-6. Returns one final `WritingBatchCorrectionResult` with applied/skipped counts and a safe caret.
-
-This intentionally conservative policy avoids ambiguous chained transformations.
-
-See [WRITING_RULES.md](WRITING_RULES.md).
-
-# V2.4 suggestion ranking boundary
-
-Suggestion generation now has an explicit eligibility/ranking boundary:
-
-```text
-normalized unknown word
-   │
-   ├── recognized-suffix split
-   │
-   ▼
-base + personal candidates
-   │
-   ├── token exclusions
-   ├── length-difference guard
-   └── language-pack maximum edit distance
-          │ eligible candidates only
-          ▼
-SpellSuggestionRanker.compare
-          │
-          └── engine lexical fallback for score ties
-                    │
-                    ▼
-SpellSuggestion metadata + suffix reattachment + cache
-```
-
-`SpellSuggestionRanker` is intentionally not a dynamic plugin loader. A host application supplies a Dart object when constructing `SpellCheckerEngine`; candidate filtering remains engine/language-pack authority. The cache is per engine instance, so rankers should not change semantics after construction.
-
-
-# V2.3 review presets and preference portability
-
-## Review preset flow
-
-`WritingReviewPreset` lives in `lib/writing/` beside `WritingReviewQuery`. Presets are immutable named projections onto category/automatic-fix filtering; the dialog remains responsible only for transient selection state. Free-text search is not stored in a preset and is intentionally retained when the user switches presets.
-
-```text
-WritingReviewPreset
-   │
-   └── toQuery(search)
-          │
-          ▼
-   WritingReviewQuery
-      ├── filterRules
-      └── filterIssues
-```
-
-No preset bypasses `WritingCorrection`; filtered batch fixes still use the V2.1 correction primitive.
-
-## Portable settings layers
-
-```text
-SpellCheckerSettingsCodec       public pure JSON/validation layer
-SettingsTransferService         internal durable-preference projection/rollback
-SettingsTransferDialog          import/export presentation only
-SpellCheckerPage                live-session mutation after persistence succeeds
-```
-
-The portable document contains selected language, suggestion limit, and the complete explicit per-language writing-rule override map. Personal vocabulary is deliberately outside this format.
-
-## Import flow
-
-```text
-Paste JSON
-   │
-   ▼
-SpellCheckerSettingsCodec.decode
-   │ validate only
-   ▼
-SettingsTransferService.importDocument
-   ├── validate programmatic document
-   ├── snapshot previous portable preferences
-   ├── write language + suggestion limit + complete override map
-   └── write failure -> best-effort restore snapshot, rethrow
-            │ success
-            ▼
-SpellCheckerPage
-   ├── preserve already-loaded editor text
-   ├── load/reuse target-language personal vocabulary
-   ├── create fresh language engine
-   ├── resolve imported/default effective writing rules
-   ├── clear stale issue/correction state
-   └── re-check non-blank editor text
-```
-
-Because `shared_preferences` has no multi-key transaction, rollback is a best-effort safety mechanism rather than an atomic persistence guarantee. The page changes live state only after the service succeeds.
-
-
-# Data layer
-
-Location:
-
-```text
-lib/data/
-```
-
-Contains bundled English dictionary data, US/UK variants, curated extension vocabulary, and approximate frequency ranks.
-
-The application loads bundled data from Dart source and performs no runtime network fetch for spelling dictionaries.
-
-# Persistence layer
-
-Location:
-
-```text
-lib/storage/dictionary_preferences.dart
-lib/storage/settings_transfer_service.dart
-```
-
-`DictionaryPreferences` wraps Flutter `shared_preferences` for application-owned local settings.
-
-V2.1 persists:
-
-- Selected language ID.
-- Personal dictionary words per language.
-- Suggestion-count preference.
-- Enabled writing-rule IDs per language.
-
-It deliberately does not persist:
-
-- Editor documents.
-- Checked spelling issue lists.
-- Writing findings.
-- Finding source excerpts.
-- Ignored words.
-- Active issue index.
-- Suggestion cache.
-- Correction undo snapshots.
-- Batch correction plans.
-
-## Versioned keys
-
-Examples:
-
-```text
-spellchecker.personal_words.v2.en-US
-spellchecker.personal_words.v2.en-GB
-spellchecker.language_id.v1
-spellchecker.suggestion_limit.v1
-spellchecker.writing_rule_ids.v1.en-US
-spellchecker.writing_rule_ids.v1.en-GB
-```
-
-The old `spellchecker.personal_words.v1` key remains a compatibility/migration source for the default US vocabulary namespace.
-
-## Writing-rule preference semantics
-
-The storage API preserves three states:
-
-```text
-missing key       -> null -> use current registry defaults
-stored IDs        -> enable those supported IDs
-stored empty list -> explicitly disable all rules for that language
-```
-
-This distinction is required for backward-compatible V2.0 upgrades and deliberate “disable all” user choices.
-
-# Public library surfaces
-
-Reusable barrels:
-
-```dart
-import 'package:spellchecker/spell_checker.dart';
-import 'package:spellchecker/language.dart';
-import 'package:spellchecker/writing.dart';
-```
-
-UI widgets/controllers and `DictionaryPreferences` remain internal integration types.
-
-# Startup flow
-
-```text
-Application startup
-   │
-   ▼
-DictionaryPreferences
-   ├── selected language ID
-   ├── selected-language personal words
-   ├── suggestion-count preference
-   └── selected-language writing-rule IDs (nullable)
-           │
-           ▼
-SpellCheckerPage
-   ├── resolve SpellLanguagePack
-   ├── build SpellCheckerEngine(pack)
-   ├── restore personal words
-   ├── resolve effective writing-rule IDs
-   └── enter ready state
-```
-
-Effective writing rules are the stored/default IDs intersected with rules currently registered and supported by the active pack.
-
-If preference restoration fails, the page marks storage unavailable and still permits local session spelling/writing workflows.
-
-# Language switch flow
-
-```text
-Language selector
-   │
-   ├── resolve target pack
-   ├── load target-pack personal words
-   ├── load target-pack writing-rule IDs
-   ├── persist selected language ID
-   ├── build fresh SpellCheckerEngine(target pack)
-   ├── resolve effective target-pack writing rules
-   ├── clear stale correction/highlight/session state
-   └── re-check non-blank editor text
-```
-
-Personal vocabulary and writing-rule preferences do not silently leak between language namespaces.
-
-# Spelling-check flow
-
-```text
-Editor text
-   │
-   ├────► TextStatistics.fromText
-   │
-   └────► SpellCheckerEngine.check
-              │
-              ├── pack tokenization/normalization
-              ├── dictionary lookup
-              ├── suffix recognition
-              └── suggestion ranking
-                    │
-                    ▼
-                List<SpellIssue>
-                  │        │
-                  │        └────► Results panel
-                  └─────────────► SpellCheckEditingController inline spans
-```
-
-# Spelling issue navigation
-
-Inputs:
-
-- `F7`: next spelling issue.
-- `Shift+F7`: previous spelling issue.
-- App-bar previous/next controls.
-- Results previous/next controls.
-- Selecting an issue card.
-
-Activating an issue updates page state, highlight styling, editor selection/focus, and Results scrolling.
-
-Navigation wraps at both ends.
-
-# Keyboard shortcuts
-
-`CallbackShortcuts` maps:
-
-```text
-Ctrl+Enter             spelling check
-Command+Enter          spelling check
-Ctrl+Shift+Enter       Writing insights
-Command+Shift+Enter    Writing insights
-F7                     next spelling issue
-Shift+F7               previous spelling issue
-```
-
-The app-bar actions remain available for pointer/touch and assistive-technology workflows.
-
-# Single spelling correction flow
-
-```text
-Suggestion selected
-   │
-   ▼
-TextCorrection.replaceOne
-   │
-   ├── validate range
-   ├── preserve casing
-   └── return result
-          │
-          ├── unchanged -> refresh stale spelling check
-          └── changed
-                ├── push one pre-correction TextEditingValue
-                ├── apply result
-                └── re-check near returned caret
-```
-
-# Spelling replace-all flow
-
-```text
-Replace all with suggestion
-   │
-   ▼
-TextCorrection.replaceAll
-   │
-   ├── filter matching checked occurrences
-   ├── validate current ranges
-   ├── apply from end toward start
-   └── produce one final text
-            │
-            ▼
-       one undo entry
-```
-
-# V2.2 writing review organization
-
-`WritingReviewQuery` is part of reusable `lib/writing/`, not the Flutter dialog. This keeps search/category/fix-only matching deterministic and unit-testable.
-
-The Writing insights dialog owns only transient review controls:
-
-```text
-search controller
-selected rule categories
-automatic-fixes-only toggle
-```
-
-Those values derive a query and visible rule/finding sets on each rebuild. They are discarded when the dialog closes and are never written to `DictionaryPreferences`.
-
-Finding category labels are resolved from the dialog's actual analyzer-supported rules rather than the global built-in registry, preserving custom analyzer metadata.
-
-## Filtered batch flow
-
-```text
-Writing insights filters
-   │
-   ▼
-WritingReviewQuery.filterIssues
-   │
-   ├── visible findings
-   └── visible automatic findings
-            │
-            ▼
-Apply visible safe fixes
-            │
-            ▼
-WritingCorrection.applyAll
-            │
-            └── same V2.1 stale/overlap/end-to-start/undo contract
-```
-
-Filtering selects the user's batch scope; it does not weaken correction validation.
-
-## Reset-to-defaults flow
-
-```text
-Reset rules to defaults
-   │
-   ▼
-WritingInsightsDialogResult(resetRulePreferences: true)
-   │
-   ▼
-SpellCheckerPage
-   ├── resolve _effectiveWritingRuleIds(null, active pack)
-   ├── activate defaults in memory
-   ├── clear language-specific stored rule-ID key
-   └── report persistence failure without discarding session defaults
-```
-
-A successful reset leaves the preference **unset**, not explicitly equal to the current default set.
-
-# Writing insights flow
-
-```text
-App-bar action or Ctrl/Command+Shift+Enter
-   │
-   ▼
-WritingInsightsDialog
-   │
-   ├── WritingAnalyzer(current text, pack, enabled IDs)
-   ├── rule switches
-   ├── findings
-   ├── individual safe-fix request
-   └── batch safe-fix request
-            │
-            ▼
-SpellCheckerPage
-   ├── persist returned rule IDs per language
-   ├── keep session choice if persistence fails
-   └── apply requested fix through WritingCorrection
-```
-
-The dialog is not a mutation authority; the page always re-validates against the current editor text.
-
-# Individual writing correction flow
-
-```text
-Apply safe fix
-   │
-   ▼
-WritingCorrection.apply
-   │
-   ├── replacement exists?
-   ├── source range valid?
-   └── current substring == originalText?
-            │
-            ├── no -> refuse and request fresh analysis
-            └── yes
-                  ├── push one pre-correction TextEditingValue
-                  ├── apply result
-                  └── refresh spelling state
-```
-
-# V2.1 batch writing correction flow
-
-```text
-Apply all safe fixes (N)
-   │
-   ▼
-WritingCorrection.applyAll
-   │
-   ├── deterministic candidate sort
-   ├── skip advisory/stale/invalid findings
-   ├── skip later overlaps
-   ├── apply accepted edits from end toward start
-   └── return one final batch result
-            │
-            ├── no accepted fixes -> leave text unchanged
-            └── accepted fixes
-                  ├── push exactly one pre-batch TextEditingValue
-                  ├── apply final text once
-                  ├── report applied/skipped counts
-                  └── refresh spelling state
-```
-
-# Shared correction undo model
-
-The editor keeps a bounded in-memory list of pre-correction `TextEditingValue` snapshots. The current maximum depth is 20.
-
-One snapshot is pushed for:
-
-- One spelling replacement.
-- One spelling replace-all operation.
-- One writing safe fix.
-- One writing batch safe-fix operation.
-
-Snackbar **Undo** and **Undo correction** restore the latest snapshot.
-
-Manual typing clears this correction-specific history so stale programmatic snapshots are not mixed with a new manual editing sequence.
-
-The history is not persisted.
-
-# Inline spelling-highlight safety
-
-`SpellCheckEditingController.buildTextSpan` validates every spelling issue against current text before styling it. Invalid/stale ranges are skipped. Manual edits immediately clear checked highlight state.
-
-# Suggestion ranking
-
-For an unknown normalized target the engine:
-
-1. Chooses maximum edit distance from the pack policy.
-2. Skips candidates with impossible length differences.
-3. Computes Damerau-Levenshtein distance.
-4. Prefers lower distance.
-5. Prefers first-character agreement.
-6. Prefers lower approximate frequency rank.
-7. Prefers shorter candidates.
-8. Uses alphabetical order as the final deterministic tie-breaker.
-9. Caches the complete candidate list.
-
-The suggestion cache is cleared when personal vocabulary changes.
-
-# Personal versus ignored words
-
-- **Personal words** are persisted per language.
-- **Ignored words** are session-only engine state.
-
-Changing language builds a fresh engine, preventing ignored-word state from silently carrying into another pack.
-
-# Import/export boundary
-
-`PersonalDictionaryCodec` belongs to reusable core code. Clipboard interaction belongs to presentation code.
-
-Version-2 exports include language identity. Imports merge validated normalized vocabulary into the selected language's saved set only after compatibility checks.
-
-# Accessibility state model
-
-Accessibility semantics are derived from the same application state used visually; there is no second disconnected accessibility-only model.
-
-Examples:
-
-- Editor semantics describe inline spelling highlighting.
-- Result counts and important empty/warning states use live-region semantics.
-- Issue tiles identify position/range and selected state.
-- Writing findings identify rule/message and safe-fix action.
-- Batch action has visible text including automatic-fix count.
-- Keyboard shortcuts supplement, rather than replace, normal controls.
-- Color/underline/badge state is supplementary rather than the only signal.
-
-# Privacy boundary
-
-Runtime spelling and writing analysis is local. V2.1 adds persistence only for writing-rule **IDs**, not editor content or findings.
-
-No cloud grammar/spelling API, AI rewriting dependency, analytics, advertising, telemetry, account system, or remote document logger is required by the architecture.
-
-# Current extension points
-
-Future work can extend:
-
-- Language-pack registry and data.
-- Deterministic writing-rule catalogue.
-- Language-specific writing rules.
-- Suggestion ranking strategies.
-- Preference management UI.
-- Large-document performance optimizations.
-- Packaging/signing automation.
-
-Any future dynamic plugin-loading or network feature requires an explicit security/privacy design rather than bypassing the current local-first boundaries.
-
-# Non-goals in V2.1
-
-V2.1 does not attempt to provide:
-
-- Full grammar parsing.
-- AI-generated rewriting.
-- Automatic language detection.
-- Cloud dictionary/rule synchronization.
-- Account-backed preferences.
-- Background document monitoring.
-- Persistent document history.
-- Untrusted dynamic plugin execution.
-- Production-scale linguistic coverage comparable to a specialized language platform.
-
-# V2.5 bounded analysis boundary
-
-V2.5 separates **analysis completeness metadata** from the historical list-returning spell-check API.
-
-```text
-editor/caller
-    |
-    v
-SpellCheckerEngine.analyze(text, maxIssues: N)
-    |
-    +-- tokenization + known-word checks
-    |
-    +-- captured issues (<= N) -> suggestions/ranker/cache
-    |
-    +-- after N, inspect until end or first additional unknown
-    |
-    v
-SpellCheckReport
-```
-
-Only captured issues enter suggestion generation and UI highlighting. The first overflow unknown proves truncation but is not converted into a `SpellIssue`.
-
-The built-in editor selects `N = 200`. This is a presentation/performance policy, not a persisted preference or public engine default. Other callers can choose another positive cap or remain unbounded.
-
-When the editor report is truncated, bulk Replace all is withheld because `TextCorrection.replaceAll` intentionally mutates checked ranges from the current issue list. Single checked-range corrections remain safe.
-
-No new storage layer, isolate/background worker, network boundary, dynamic plugin loader, or document cache is introduced.
-
-## V2.6 spacing-rule ownership boundary
-
-The writing analyzer still executes independent deterministic rules and sorts their findings before correction. V2.6 avoids a new conflict-resolution layer by assigning mutually exclusive whitespace responsibilities: `RepeatedSpaceRule` owns repeated interior spaces, `PunctuationSpacingRule` owns horizontal whitespace before common punctuation, and `TrailingWhitespaceRule` owns horizontal whitespace before line/document endings.
-
-All findings continue through the existing `WritingCorrection` safety boundary. Widgets do not directly mutate source ranges, and V2.6 introduces no new persistence, service, network, or background-processing layer.
-
-## V2.7 bounded writing-result architecture
-
-The writing analyzer now separates rule execution from retained-result storage. Unbounded calls append all findings and sort once. Bounded calls stream findings into a private ordered collector capped at `maxIssues`.
-
-The collector uses the same comparison contract as the public analysis result: source start first, then severity ordering, then rule ID. It performs ordered insertion and drops the current worst retained finding when a better later finding arrives after the cap is full. This matters because rule registration order and rule-yield order are not the global review order.
-
-`isTruncated` means at least one finding existed outside the retained prefix. The architecture deliberately keeps full enabled-rule scanning, so the bound controls retained finding objects and downstream dialog rendering rather than claiming a hard compute budget.
-
-The editor remains a consumer of the public analyzer API. Writing insights supplies its 200-finding policy through `maxIssues`; the core analyzer does not hard-code an editor-specific cap.
-
-## V2.8 exact writing-analysis diagnostics
-
-V2.8 extends the V2.7 bounded writing-analysis pipeline with deterministic whole-analysis counters while keeping the retained finding set bounded.
-
-### Analysis flow
-
-For each enabled rule that supports the active language pack, `WritingAnalyzer` now performs two independent responsibilities during the same local rule scan:
-
-1. increment exact overall and per-rule finding counters for every yielded `WritingIssue`;
-2. pass each finding through the existing deterministic retained-result path, which stores either every issue in unbounded mode or only the globally earliest `maxIssues` prefix in bounded mode.
-
-The exact counters therefore account for uncaptured findings without requiring the analyzer to retain those `WritingIssue` objects.
-
-### Ordering remains authoritative
-
-The V2.7 review comparator remains the source of truth for retained ordering. Exact diagnostics do not create a second ordering path and do not change which findings survive the bound.
-
-A later rule can still displace a worse retained finding when it yields an earlier globally ordered result. The exact counters are independent of that displacement: every yielded finding is counted exactly once even when its issue object is discarded from the bounded collector.
-
-### Result model boundary
-
-`WritingAnalysisResult` owns immutable analysis metadata:
-
-- retained `issues`;
-- analyzed rule IDs;
-- language ID;
-- V2.7 limit/truncation/completeness metadata;
-- V2.8 exact overall/per-rule totals when available.
-
-Direct construction may omit V2.8 diagnostics for compatibility, while `WritingAnalyzer` always populates them.
-
-### Writing insights integration
-
-`WritingInsightsDialog` consumes, but does not recompute, analyzer diagnostics. When exact totals exist it can render the exact relationship between retained and observed findings, per-rule totals, and the exact uncaptured count. Review search, presets, categories, and safe-fix actions still operate only on retained findings.
-
-A stable `ValueKey<String>('writing-findings-total-badge')` exists for regression tests of the exact captured/total badge. This key is a widget-test integration detail, not a public package API.
-
-The dialog remains lazy/scrollable. Tests navigate the real lazy list instead of forcing normally off-screen rule metadata or findings headers to remain eagerly mounted.
-
-### Privacy and persistence boundary
-
-The exact counters are computed from the same in-memory local analysis that already produces writing findings. They are not written to `shared_preferences`, exported through Portable settings, logged remotely, uploaded, or retained after the dialog/result is discarded.
-
-No network service, analytics pipeline, background job, account system, or runtime dependency was added for V2.8 diagnostics.
-
-# V2.9 hardening and diagnostic-summary flow
-
-V2.9 strengthens model boundaries without changing the layer split:
-
-- `SpellCheckReport` validates public report invariants at runtime in release builds.
-- `WritingAnalysisResult` validates captured-rule ownership, result language ownership, and exact per-rule diagnostic ownership.
-- `WritingAnalyzer` rejects duplicate configured rule IDs before analysis so persistence and diagnostics remain unambiguous.
-- `SpellCheckEditingController` delegates to Flutter's native composing-span renderer while a valid IME composing range is active; checked spelling highlights resume after composition is committed.
-- `WritingAnalysisDiagnosticSummary.fromResult` reads only result/rule metadata, sorts rule rows by stable ID, and formats a deterministic metadata-only representation without reading document text.
-
-The summary model belongs to the writing layer and introduces no storage, UI, clipboard, network, or telemetry dependency.
-
-## V2.10 benchmark tooling boundary
-
-V2.10 adds a developer-tooling layer under `tool/`; it is intentionally outside the application runtime and public package barrels. The benchmark scenario owns deterministic synthetic corpus shape, the runner composes existing public spelling/writing APIs with fresh per-sample state, result models own immutable timing/outcome aggregation and versioned JSON serialization, the reporter owns terminal rendering, and the command/options layer owns CLI validation.
-
-This direction keeps performance observation separate from production `SpellCheckReport` and `WritingAnalysisResult` correctness metadata: runtime analysis models remain deterministic and timing-free, while developer tooling may measure elapsed wall-clock time externally. No storage adapter, editor widget, persisted key, network boundary, or rule/ranker plugin contract is added by V2.10.
-
-## V2.11 Writing insights focus and semantics boundary
-
-The Writing insights dialog keeps one transient `WritingReviewQuery` projection over the existing analyzer result. V2.11 adds interaction state around that model, not a second review engine. `CallbackShortcuts` owns Ctrl/Command+F and Escape, while a focus anchor inside the shortcut subtree ensures those bindings remain available as focus moves among modal descendants. The search shortcut requests focus on the existing search `FocusNode`; it does not copy or persist the query.
-
-Escape delegates to a single handler. A non-empty transient query is cleared in one state transition and search focus is restored. An already-empty query closes through the same `_close()` result construction used by the visible Close action, preserving enabled-rule result semantics.
-
-Rule/finding count semantics are derived during the same build from `visibleRules`, `visibleIssues`, and the existing bounded-analysis metadata. They do not add storage, asynchronous analysis, telemetry, or a parallel count cache. The dialog's capture limit is validated before state creation so invalid bounds cannot reach analysis in release builds.
+- [Public API](API.md)
+- [Feature reference](FEATURES.md)
+- [Development](DEVELOPMENT.md)
+- [Testing](TESTING.md)
+- [Language packs](LANGUAGE_PACKS.md)
+- [Writing rules](WRITING_RULES.md)
+- [Configuration](CONFIGURATION.md)
+- [Privacy](PRIVACY.md)
