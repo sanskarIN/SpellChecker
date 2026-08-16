@@ -6,309 +6,281 @@
   </a>
 </p>
 
-> SpellChecker is free and open source. Financial support is optional; if you want to help continued development, use the highlighted **Buy Me a Coffee** link above.
+> SpellChecker is free and open source. Financial support is optional; bug reports, security reports, feature requests, and contributions do not depend on funding.
 
-## V2.16 final stabilization
-When reporting a V2.16 problem, include the exact app version, platform, selected language, whether local preferences finished loading, a minimal non-sensitive input, and whether the problem involves decomposed Unicode, imported settings/dictionaries, persistence, or startup actions. Do not include private documents unless the minimal text itself is safe to share.
+This page explains how to get help with SpellChecker `2.16.0+21` and what information makes a report useful without exposing private documents.
 
-
-## V2.15 support note
-`unmatched-curly-brace` is advisory-only. If a `{` or `}` warning appears, SpellChecker intentionally does not guess whether to insert, delete, move, or rewrite text. The rule can be disabled per language in Writing insights.
-
-
-## V2.14 unmatched-square-bracket reports
-
-For an unexpected V2.14 structural finding, include the app version `2.14.0`, language pack, stable rule ID `unmatched-square-bracket`, whether the rule preference is default or explicit, and a minimal non-sensitive delimiter pattern when possible. Privacy-safe Writing analysis diagnostics can provide rule/count metadata without copying the editor document.
-
-## V2.13 support note
-
-For unmatched-parenthesis reports, include whether the text intentionally contains literal unmatched delimiters (for example in code or markup) and whether the rule was enabled explicitly or through defaults. The **Copy diagnostic summary** action can share the stable rule ID and counts without copying document excerpts. Do not include private document text unless you choose to share it separately.
-
-## V2.12 support note
-
-For `Hello,world`-style cases, confirm the selected language is English (US) or English (UK) and that **Missing punctuation space** is enabled in Writing insights. Users with an older explicit rule selection may need **Reset rules to defaults** to opt into the new seventh default rule. Period and colon boundaries are intentionally outside V2.12's automatic scope.
-SpellChecker is an open-source project maintained through GitHub.
-
-## Usage questions
+## Start here
 
 Before opening an issue:
 
-1. Read the [README](README.md).
-2. Read the [User Guide](docs/USER_GUIDE.md).
-3. Check [Troubleshooting](docs/TROUBLESHOOTING.md).
-4. Search existing issues for the same problem.
+1. read the [documentation hub](docs/README.md);
+2. check the [FAQ](docs/FAQ.md);
+3. follow [Troubleshooting](docs/TROUBLESHOOTING.md);
+4. search existing GitHub issues/pull requests;
+5. reproduce with the smallest synthetic input possible.
 
-## Bug reports
+## Security vulnerabilities
 
-Use the repository **Bug report** issue template. Include:
+Do **not** report a security vulnerability as a normal public bug when disclosure could put users/data at risk.
 
-- SpellChecker version or commit.
-- Flutter/Dart version when developing locally.
-- Platform/browser.
-- Selected language.
-- Minimal synthetic reproduction steps.
-- Expected behavior.
-- Actual behavior.
-- Whether the equivalent visible control works when a keyboard shortcut is involved.
+Follow [SECURITY.md](SECURITY.md) and use GitHub private security reporting when available.
 
-Never attach private documents or sensitive vocabulary when a short synthetic sample can reproduce the problem.
-
-# Spelling/editor reports
-
-For spelling/editor bugs, say whether the issue involves:
-
-- Inline underlines/highlights.
-- Active issue selection.
-- `F7` / `Shift+F7` navigation.
-- `Ctrl+Enter` / `Command+Enter` spelling check.
-- Previous/next issue controls.
-- Single spelling replacement.
-- **Replace all…**.
-- **Undo** / **Undo correction**.
-- Blank/clean states.
-- Storage warning.
-- Narrow/scrollable layout.
-- Screen-reader/keyboard accessibility.
-
-For replace-all/undo bugs, use repeated synthetic words and include the expected replacement count/casing.
-
-# Writing insights reports
-
-For Writing insights bugs include:
-
-- Selected language ID/display name.
-- Rule display name and stable ID when known.
-- Synthetic input text.
-- Which rule switches are enabled.
-- Expected finding/fix.
-- Actual finding/fix.
-- Whether text changed after the analysis was produced.
-- Whether **Undo correction** restores the previous document.
-
-## V2.1 persisted rule preference bugs
-
-State whether the issue is:
-
-- A switch not persisting after close/reopen.
-- A switch not restoring after application restart.
-- US/UK rule preference leakage.
-- Explicit disable-all unexpectedly becoming defaults.
-- A newly added rule unexpectedly changing an explicit stored set.
-- Storage-warning/failure behavior.
-
-If safe to do so, report only the stored **rule IDs**, never editor content. Example:
-
-```text
-en-US enabled IDs: repeated-word, sentence-capitalization
-```
-
-Do not post local preference dumps that contain sensitive personal vocabulary.
-
-## V2.1 batch fix bugs
-
-For **Apply all safe fixes** issues, include:
-
-- Synthetic input.
-- Finding rule IDs/ranges if known.
-- Expected final synthetic text.
-- Actual final synthetic text.
-- Applied/skipped counts shown by the UI.
-- Whether any findings overlapped.
-- Whether text changed after analysis.
-- Whether one Undo restores the exact pre-batch text.
-
-The expected V2.1 overlap policy is deterministic: earliest safe source range wins; later overlapping fixes are skipped.
-
-# V2.2 review-management reports
-
-For search/filter problems include synthetic text plus:
-
-- Search query (synthetic/non-sensitive).
-- Selected category chips.
-- Automatic-fixes-only state.
-- Visible/total finding counts.
-- Whether **Clear review filters** restores the expected finding.
-- Whether the problem affects rule switches, findings, or both.
-
-For **Apply visible safe fixes** bugs include expected/actual synthetic final text, visible automatic finding count, applied/skipped feedback, and whether one Undo restores the exact pre-batch text.
-
-For **Reset rules to defaults** bugs state the selected language, prior enabled rule IDs, whether the stored per-language rule key was removed, whether defaults became active immediately, and whether an old override reappeared after restart. Do not post private editor text or a full preference dump.
-
-# Language-pack reports
-
-Include the selected pack ID/display name and synthetic sample.
-
-Distinguish among:
-
-- Tokenization.
-- Normalization.
-- Dictionary coverage.
-- US/UK variant behavior.
-- Suggestion ranking.
-- Personal-word isolation.
-- Writing-rule preference isolation.
-- Persisted language selection.
-- Import/export language metadata.
-
-Do not attach copyrighted dictionary datasets or private vocabulary dumps.
-
-# Personal dictionary reports
-
-State whether the issue involves:
-
-- **Save word**.
-- **Ignore once**.
-- Import/export.
-- Removing/clearing saved words.
-- Language-specific vocabulary restoration.
-- Suggestion-count persistence.
-- Version-1 migration.
-- Version-2 cross-language import validation.
-
-Create a small synthetic dictionary export instead of attaching a real sensitive export.
-
-# Keyboard reports
-
-Current shortcuts:
-
-```text
-Ctrl+Enter             spelling check
-Command+Enter          spelling check
-Ctrl+Shift+Enter       Writing insights
-Command+Shift+Enter    Writing insights
-F7                     next spelling issue
-Shift+F7               previous spelling issue
-```
+## What to include in a normal bug report
 
 Include:
 
-- Exact key combination.
-- Platform/browser.
-- Whether the visible equivalent action works.
-- Whether focus was in the editor/dialog/another control.
+- SpellChecker version/commit;
+- platform/browser;
+- Flutter/Dart version when development/tooling related;
+- selected language (`en-US` or `en-GB`);
+- exact feature/workflow;
+- minimal synthetic input;
+- expected behavior;
+- actual behavior;
+- whether local preferences finished loading;
+- whether a storage warning appeared;
+- whether the result was limited/truncated;
+- steps that reproduce consistently.
 
-Browser/OS key interception can differ by platform.
+Screenshots can help with layout/accessibility problems, but remove/redact private text/account information first.
 
-# Correction undo expectations
+## Privacy-sensitive reporting
 
-Correction undo is shared by automatic spelling and writing operations, bounded, and session-only.
+Never post unnecessarily:
 
-One history entry represents:
+- private documents;
+- credentials/secrets/tokens;
+- account information;
+- personal messages;
+- sensitive personal vocabulary;
+- real correction-history snapshots;
+- private writing findings/source excerpts;
+- private Portable settings/dictionary exports containing sensitive custom content.
 
-- One spelling replacement.
-- One spelling replace-all.
-- One writing safe fix.
-- One writing batch safe-fix operation.
+Use artificial strings such as:
 
-Manual typing clears the correction stack. Application restart does not restore it.
+```text
+Helo world
+hello  world!!
+word word
+```
 
-If reporting an undo bug, distinguish between immediate undo, undo after a bulk operation, undo after manual typing, and behavior after document clear/restart.
+## Spelling problem report
 
-# Feature requests
+Useful fields:
 
-Use the **Feature request** template. Explain:
+- selected language;
+- exact unknown word/synthetic sentence;
+- whether the word is base, personal, or ignored;
+- suggestion limit;
+- returned suggestion order;
+- whether behavior changes after switching `en-US`/`en-GB`;
+- whether the issue appears only after dictionary import/restart;
+- whether the spelling result is limited to the first 200 issues.
 
-- The writing/spelling problem being solved.
-- Expected behavior.
-- Which language(s) it affects.
-- Whether it changes public APIs, persisted data, keyboard workflows, correction safety, or privacy/security boundaries.
+For suggestion-ranking bugs, include the expected/actual ordered candidate words and whether a custom `SpellSuggestionRanker` is involved.
 
-For storage, synchronization, accounts, cloud services, AI rewriting, analytics, editor persistence, persistent history, remote language/rule downloads, or dynamic plugins, include privacy/security expectations.
+## Unicode/source-range problem report
 
-# Security reports
+Include the exact synthetic Unicode string and say whether it uses:
 
-Do not use normal public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).
+- non-BMP characters;
+- combining marks/decomposed accents;
+- curly/straight apostrophes;
+- Unicode hyphens;
+- quote/bracket boundaries.
 
+Source offsets in SpellChecker APIs are UTF-16 code-unit offsets. If reporting a wrong range, include the expected substring and `start/end` rather than describing only visible character positions.
 
-# Support the project
+## Personal dictionary problem report
 
-SpellChecker is free and open source. If the project is useful to you and you would like to support continued development, you can [buy Sanskar a coffee](https://buymeacoffee.com/sanskarIN).
+Include:
 
-Financial support is optional. It does not provide privileged access to security reports, issue triage, roadmap decisions, releases, or contribution review.
+- selected language;
+- add/remove/clear/import/export action;
+- synthetic word(s);
+- whether a storage error appeared;
+- whether the problem survives restart;
+- import format/version if relevant;
+- whether version-2 document language matches the selected language.
 
-# Privacy-sensitive examples
+For import bugs, minimize the JSON/plain list to the smallest failing document. Do not post a real sensitive vocabulary list.
 
-Never post:
+## Portable settings problem report
 
-- Private documents.
-- Account information.
-- Secrets/credentials.
-- Personal messages.
-- Sensitive personal vocabulary.
-- Real correction-history snapshots.
-- Private writing findings/source excerpts.
+Include:
 
-Replace sensitive data with a minimal synthetic reproducer.
+- whether failure occurs during decode/validation or persistence/application;
+- selected language before import;
+- suggestion count before/after;
+- explicit rule override states involved;
+- a minimized synthetic settings JSON document;
+- whether the UI reported rollback/restoration of prior durable settings.
 
-# Local data recovery
+Portable settings should never contain editor text or personal vocabulary. If a report appears to show that, treat it as a serious correctness/privacy bug.
 
-Personal vocabulary is local and not cloud-synchronized. Before clearing browser/application data, use **Copy export** if you need a portable personal-dictionary backup.
+## Writing insights problem report
 
-Writing-rule preferences, selected language, and suggestion count are local settings that can be copied/imported through **Portable settings** in V2.3. Personal vocabulary remains a separate language-aware dictionary export. Clearing host application/profile storage can remove all of these local values.
+Include:
 
-If saved data disappears unexpectedly, follow [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) before filing an issue.
-
-## V2.3 portable settings reports
-
-For review-preset issues, include the preset name/ID, selected language, synthetic review text, and whether a search/category/automatic-fix filter was also active. For portable-settings issues, include a minimized synthetic JSON document with any private vocabulary/text removed, whether the failure happened during validation or persistence, the selected platform, and whether existing language/rule/suggestion preferences were restored. Do not post real documents, personal dictionaries, credentials, or sensitive clipboard content.
-
-## V2.4 custom ranker reports
-
-For custom-ranker issues, include the ranker policy in pseudocode, a small synthetic dictionary/input, active language ID, expected/actual ordered candidate words, and whether the behavior reproduces with `DefaultSpellSuggestionRanker`. Do not include private document text or sensitive personal dictionaries.
-
-# V2.5 large-document reports
-
-For a `200+` or bounded-analysis bug, use synthetic text and include:
-
-- Whether the report/UI showed `200+`.
-- The configured/API `maxIssues` when using the library directly.
-- Captured issue count.
-- `truncated`, `complete`, and `scannedTokenCount` for API reports when relevant.
-- Whether Replace all was incorrectly visible/hidden.
-- Selected language and suggestion count.
-
-Do not attach a private large document. A repeated synthetic token sequence is sufficient for limit-state bugs.
-
-## V2.6 spacing-rule reports
-
-For punctuation-spacing/trailing-whitespace bugs, provide a minimal synthetic sample and say whether it involves interior repeated spaces, whitespace immediately before punctuation, LF/CRLF line endings, or document-end whitespace. Include the selected English pack and whether rule choices were unset/default or explicitly saved. Do not attach a private document when a short synthetic string can reproduce the issue.
-
-## V2.7 limited Writing insights reports
-
-When reporting a V2.7 Writing insights problem, include whether the dialog displayed a limited-result notice, the selected language, active review preset/filter state, and whether the issue reproduced after editing/reopening Writing insights. Do not include private document text unless it is necessary and safe to share; a small synthetic reproduction is preferred.
-
-A `200+`-style state means the built-in dialog captured its first 200 findings in review order and observed at least one more. Filters and batch actions then operate on the captured prefix only.
-
-## V2.8 exact diagnostics reports
-
-For a Writing insights count/diagnostics bug, use a minimal synthetic sample and include:
-
-- selected language ID;
+- selected language;
+- synthetic text;
 - enabled writing-rule IDs;
-- configured `maxIssues` when using the public analyzer API;
-- retained/captured finding count;
-- exact overall total when present;
-- exact per-rule totals when present;
-- complete/truncated state;
-- active review preset/search/category/fix-only filters;
-- whether editor text, language, or rule settings changed after the analysis.
+- current review preset;
+- search/category/Automatic fixes only filters;
+- captured finding count;
+- exact total when shown;
+- whether result is complete/limited;
+- whether the finding is advisory or automatically fixable;
+- whether the text changed after analysis;
+- expected/actual source range and replacement when relevant.
 
-For analyzer-produced results, exact per-rule totals should sum to the exact overall total, and an exact truncated result should report at least one uncaptured finding.
+If filters or source text changed, reopen Writing insights before comparing a fresh result.
 
-Do not attach a private large document simply to prove a count mismatch. Repeated synthetic text or a small custom synthetic rule is preferred.
+## Writing batch correction problem
 
-The `captured/total` badge describes one current local analysis snapshot. Reopen Writing insights after editing or switching languages before comparing totals.
+Include:
 
-## V2.9 diagnostic-summary support reports
+- synthetic text before correction;
+- exact findings involved (rule IDs and source ranges, not private excerpts);
+- which findings had replacements;
+- applied/skipped counts;
+- resulting text;
+- whether one-step Undo correction restored the pre-batch value.
 
-For writing-analysis count/ordering problems, maintainers can ask for the deterministic `WritingAnalysisDiagnosticSummary.toPlainText()` output plus the SpellChecker version and a synthetic reproduction. The summary is designed to contain counts and stable rule/language metadata without editor text or finding excerpts. If exact totals show `unavailable`, record whether the result was directly constructed for compatibility rather than returned by `WritingAnalyzer.analyze()`. Do not ask users to post private documents, personal dictionaries, raw correction history, or sensitive finding excerpts in public issues.
+Remember that advisory, stale, invalid, and later-overlapping findings are deliberately skipped.
 
-## V2.10 benchmark support
+## Diagnostic summary
 
-For V2.10 benchmark questions, include the exact benchmark command, selected built-in language, Flutter/Dart versions, scenario repetition/limit values, and the metadata-only report output when safe. Use the built-in synthetic corpus; do not attach private documents to reproduce performance observations. Timing differences are meaningful only when the compared environment/toolchain and command are controlled. Malformed options, unsupported language IDs, changing analysis outcomes across measured iterations, or benchmark command crashes are correctness/support issues; a slower number on unrelated hardware by itself is not.
+For writing-analysis count/ordering issues, copy the built-in metadata-only diagnostic summary when safe.
 
-## V2.11 keyboard/accessibility support
+It includes counts/rule/language metadata and excludes editor text, source excerpts, messages, replacements, and offsets.
 
-For V2.11 Writing insights keyboard or semantics problems, report the exact synthetic text, platform/Flutter version, which control had focus, whether Ctrl/Command+F moved to review search, whether the first Escape cleared an active transient query, and whether the second Escape closed. For count announcements, include captured/total metadata and active synthetic filters rather than private document excerpts.
+If exact totals are unavailable, note whether the `WritingAnalysisResult` was manually/directly constructed rather than returned by `WritingAnalyzer.analyze()`.
 
-If a widget regression involves an apparently missing off-screen control, remember that Writing insights is intentionally lazy; reproduce by scrolling the real dialog rather than assuming every item is mounted simultaneously.
+## Large-document / first-200 reports
+
+For spelling:
+
+- captured issue count;
+- `SpellCheckReport.truncated`/`scannedTokenCount` when using API;
+- configured `maxIssues` when applicable;
+- suggestion count.
+
+For writing:
+
+- captured count;
+- exact total;
+- uncaptured count;
+- `maxIssues`;
+- enabled rules;
+- active filters;
+- whether the action operated only on captured findings.
+
+Use repeated synthetic text instead of attaching a private large document.
+
+## Keyboard/accessibility problem report
+
+Include:
+
+- platform/browser;
+- assistive technology/version if used;
+- control with focus;
+- key combination;
+- whether browser/OS intercepted it;
+- expected/actual focus/result;
+- wide/narrow layout;
+- text scale/zoom if relevant.
+
+For Writing insights, specify whether the first Escape was expected to clear an active query and whether a subsequent Escape closed.
+
+See [Accessibility](docs/ACCESSIBILITY.md).
+
+## Storage problem report
+
+Include:
+
+- browser/platform;
+- private/incognito mode or enterprise policy if relevant;
+- operation being saved/loaded;
+- exact displayed storage warning;
+- whether current session behavior still worked;
+- whether previous durable state returned after restart.
+
+Do not attach raw host preference files containing sensitive vocabulary unless absolutely necessary and safe.
+
+## Benchmark/performance report
+
+Include:
+
+- exact benchmark command;
+- commit SHA;
+- Flutter/Dart versions;
+- OS/hardware;
+- repeats/warmup/iterations;
+- spelling/writing capture limits;
+- suggestion count;
+- language;
+- JSON report when appropriate.
+
+Use the built-in synthetic scenario. Raw timings from unrelated machines are not directly comparable.
+
+See [Performance](docs/PERFORMANCE.md).
+
+## Build/CI problem report
+
+Include:
+
+- failing command/step;
+- Flutter/Dart versions;
+- exact analyzer/test/build error;
+- whether the failure reproduces locally after `flutter pub get`;
+- changed files/area.
+
+Canonical local gate:
+
+```bash
+dart format --output=none --set-exit-if-changed lib test tool
+flutter analyze
+flutter test --reporter expanded
+```
+
+Release issues should also include the `flutter build web --release` result.
+
+## Feature requests
+
+A useful feature request explains:
+
+- user/developer problem;
+- desired behavior;
+- why current behavior/workaround is insufficient;
+- privacy/security impact;
+- API/persistence/platform impact;
+- deterministic/local feasibility where relevant;
+- scope/non-goals.
+
+The roadmap lists optional future directions but is not a guarantee. See [Roadmap](docs/ROADMAP.md).
+
+## Documentation problems
+
+For missing/stale/incorrect docs, identify:
+
+- page/section;
+- current code behavior/source when known;
+- expected correction;
+- whether the statement is evergreen or intentionally historical.
+
+Historical release files may correctly describe old rule counts/version behavior; use [Release history](docs/RELEASE_HISTORY.md) to distinguish them from current docs.
+
+## Response expectations
+
+This open-source project does not guarantee a specific response time. Clear, reproducible, privacy-safe reports are easier to investigate.
+
+Do not repeatedly post the same issue across multiple threads to seek priority.
+
+## Optional funding
+
+If you want to support continued development, use [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN).
+
+Funding is not required for support, issue triage, security handling, roadmap consideration, or contribution review.
