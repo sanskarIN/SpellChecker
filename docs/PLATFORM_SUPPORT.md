@@ -2,6 +2,8 @@
 
 This page distinguishes **portable Flutter source**, **committed platform runners**, **automated validation**, and **published build artifacts**. Those are different levels of support and should not be conflated.
 
+For complete build commands, native-runner generation, packaging, signing boundaries, artifact verification, troubleshooting, and the machine-checked repository file inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
 ## Current repository state
 
 The repository currently commits:
@@ -40,6 +42,8 @@ benchmark CLI smoke
 
 Those checks validate Dart/Flutter source behavior and tests. They do not build Android APK/AAB, iOS app bundles, Windows executables, macOS apps, or Linux desktop bundles.
 
+The documentation test also verifies that the tracked-file inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md) matches `git ls-files`, so newly committed files cannot be silently omitted from executable/release documentation.
+
 ## What the release workflow validates
 
 On `v*` tags or manual workflow dispatch, the release workflow performs the same dependency/format/analyze/test/benchmark-smoke gates and then runs:
@@ -66,6 +70,8 @@ To build the same target used by release automation:
 flutter build web --release
 ```
 
+For the complete preflight and artifact verification procedure, use [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
 ## Using an additional Flutter target locally
 
 The application source avoids target-specific business logic and is organized as portable Flutter code, but a target still needs the platform files and toolchain expected by Flutter.
@@ -77,7 +83,8 @@ If you choose to generate additional runner files locally:
 - review every generated file before committing it;
 - avoid committing local signing credentials, provisioning profiles, keystores, secrets, or machine-specific paths;
 - run the platform's relevant Flutter doctor checks;
-- add target-specific tests/build CI before advertising the target as a repository-supported release platform.
+- add target-specific tests/build CI before advertising the target as a repository-supported release platform;
+- follow the target-specific generation/build/package procedure in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 The project does not currently define a canonical generated native runner configuration, so generated native files should not be presented as official release support until they are reviewed and added intentionally.
 
@@ -137,7 +144,8 @@ A future native-support change should include, at minimum:
 6. keyboard/accessibility review where relevant;
 7. target build CI;
 8. release artifact/signing policy;
-9. updates to README, this page, release docs, security/privacy docs, and the repository description if needed.
+9. updates to README, this page, [Executable builds and packaging](EXECUTABLE_BUILDS.md), release docs, security/privacy docs, and the repository description if needed;
+10. updates to the machine-checked tracked-file inventory for every new committed runner file.
 
 Signing secrets must never be committed to the repository.
 
@@ -146,6 +154,7 @@ Signing secrets must never be committed to the repository.
 - [Getting started](GETTING_STARTED.md)
 - [Development](DEVELOPMENT.md)
 - [Testing](TESTING.md)
+- [Executable builds and packaging](EXECUTABLE_BUILDS.md)
 - [Releasing](RELEASING.md)
 - [Privacy](PRIVACY.md)
 - [Security](../SECURITY.md)
