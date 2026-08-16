@@ -1,75 +1,42 @@
 # Writing Rules
 
-## V2.16 final stabilization
-The built-in/default writing catalogue remains exactly ten rules. V2.16 is a stabilization release, not a catalogue migration: existing explicit rule sets remain authoritative, unset/reset preferences continue to resolve to the current ten-rule registry, and Portable Settings remains format version 1.
+This is the evergreen current-state contract for SpellChecker's deterministic local writing subsystem. Release-specific design and validation records are indexed in [Release history](RELEASE_HISTORY.md).
 
+SpellChecker `2.16.0+21` has exactly **ten** built-in writing rules. All current built-ins declare English (`en`) support, so they are eligible for both built-in language packs, `en-US` and `en-GB`.
 
-## V2.15 current catalogue
-The current built-in/default catalogue contains ten stable rule IDs:
+## Goals
 
-- `repeated-word`
-- `sentence-capitalization`
-- `repeated-space`
-- `punctuation-spacing`
-- `missing-punctuation-space`
-- `trailing-whitespace`
-- `repeated-punctuation`
-- `unmatched-parenthesis`
-- `unmatched-square-bracket`
-- `unmatched-curly-brace`
-
-`unmatched-curly-brace` is advisory-only, warning-level, and owns exactly one `{` or `}` UTF-16 source character. Parentheses, square brackets, and curly braces remain independent structural families. Unset/reset preferences follow this ten-rule catalogue; explicit V2.14 nine-rule sets remain exact.
-
-
-
-## V2.14 ninth built-in rule
-
-The current built-in catalogue contains nine rules. `UnmatchedSquareBracketRule` (`unmatched-square-bracket`) is an English Mechanics warning that iteratively balances literal `[` and `]`, owns exactly one unmatched bracket in UTF-16 source coordinates, and never supplies an automatic replacement. It is independent from `unmatched-parenthesis`; both structural rules reuse the existing analyzer, bounded totals, review filters, diagnostics, preference model, and correction-skip behavior.
-
-## V2.13 advisory structural rule
-
-V2.13 adds `UnmatchedParenthesisRule` (`unmatched-parenthesis`) as the eighth built-in rule. It balances literal parentheses iteratively, owns exactly the unmatched parenthesis character, emits warning-level findings in source order, and deliberately provides no automatic replacement. This is an example of the plugin contract's advisory path: deterministic detection does not imply deterministic mutation.
-
-Unset/reset preferences adopt the eight-rule registry. Explicit stored sets remain authoritative, including V2.12 seven-rule overrides and explicit empty sets. The rule is Mechanics by the source-compatible category default, is searchable by its metadata, and is hidden by **Automatic fixes only** because `hasAutomaticFix` is false.
-
-See `docs/V2_13_UNMATCHED_PARENTHESIS.md` for exact balancing, source-range, compatibility, and parser-limit details.
-
-SpellChecker 2.x includes an optional local writing-rules subsystem. It is designed for deterministic, explainable checks that can run entirely in memory without transmitting editor text to a remote grammar or rewriting service.
-
-This document is the contributor and integration contract for that subsystem.
-
-## Design goals
-
-The writing-rules layer is designed to:
-
-1. Keep writing analysis independent from Flutter widgets.
-2. Keep rules deterministic and testable.
-3. Make language eligibility explicit.
-4. Keep every finding tied to an exact source range.
-5. Distinguish advisory findings from automatic fixes.
-6. Refuse stale automatic corrections.
-7. Resolve batch-fix overlaps deterministically.
-8. Reuse the editor's bounded correction undo history.
-9. Keep editor text and analysis results memory-only.
-10. Allow users to choose which local rules are enabled for each language.
+The writing subsystem is designed to keep analysis local, deterministic, source-range-safe, language-aware, reviewable, and independent from Flutter widgets. A finding may be advisory without being automatically fixable; detection and mutation are intentionally separate decisions.
 
 ## Public imports
 
-Reusable writing APIs are exported through:
-
 ```dart
+import 'package:spellchecker/language.dart';
 import 'package:spellchecker/writing.dart';
 ```
 
-Language packs are available through:
+`package:spellchecker/writing.dart` exports all ten built-in rule classes plus the analyzer, issue/correction types, review query/presets, categories, diagnostic summaries, and the `WritingRule` plugin contract.
 
-```dart
-import 'package:spellchecker/language.dart';
-```
+## Current built-in catalogue
 
-## `WritingRule`
+| Rule ID | Display purpose | Category | Severity | Automatic replacement |
+| --- | --- | --- | --- | --- |
+| `repeated-word` | consecutive repeated word | Clarity | warning | yes |
+| `sentence-capitalization` | lowercase sentence start | Mechanics | suggestion | yes |
+| `repeated-space` | repeated interior spaces | Mechanics | info | yes |
+| `punctuation-spacing` | horizontal whitespace before common punctuation | Mechanics | info | yes |
+| `missing-punctuation-space` | missing following space after `, ; ! ?` between words | Mechanics | info | yes |
+| `trailing-whitespace` | horizontal whitespace at line/document end | Mechanics | info | yes |
+| `repeated-punctuation` | repeated identical `! ? . ,` runs | Mechanics | info | yes |
+| `unmatched-parenthesis` | unpaired literal parenthesis | Mechanics | warning | no; advisory |
+| `unmatched-square-bracket` | unpaired literal square bracket | Mechanics | warning | no; advisory |
+| `unmatched-curly-brace` | unpaired literal curly brace | Mechanics | warning | no; advisory |
 
-A writing rule implements the public plugin contract:
+`WritingRuleRegistry.builtIns` contains these rules in registry order. `WritingRuleRegistry.defaultEnabledRuleIds` is the set of all current built-in IDs.
+
+## `WritingRule` plugin contract
+
+A custom rule extends `WritingRule`:
 
 ```dart
 abstract class WritingRule {
@@ -77,6 +44,9 @@ abstract class WritingRule {
   String get displayName;
   String get description;
   Set<String> get supportedLanguageIds;
+  WritingRuleCategory get category;
+
+  bool supports(SpellLanguagePack languagePack);
 
   Iterable<WritingIssue> analyze(
     String text,
@@ -85,49 +55,31 @@ abstract class WritingRule {
 }
 ```
 
-### Stable rule IDs
+`category` has a concrete default of `WritingRuleCategory.mechanics`, preserving source compatibility with external rules created before categories existed.
 
-`id` is a persistent identifier, not only a display label. V2.1 stores enabled rule IDs locally, so changing an existing ID silently would make old preferences stop matching the rule.
+### Rule ID requirements
 
-Requirements:
+A rule ID is persistent machine-facing metadata used by preferences, Portable settings, diagnostics, review filtering, and registry lookup. A built-in/custom rule ID should:
 
-- Use a short lowercase hyphenated identifier.
-- Keep IDs unique across the built-in registry.
-- Do not reuse an old ID for unrelated behavior.
-- Treat an ID rename as a preference migration problem.
-- Add persistence/migration tests if an ID must change.
+- be stable;
+- be unique within a `WritingAnalyzer` configuration;
+- use a short lowercase identifier such as `example-rule`;
+- not be reused for unrelated behavior;
+- be treated as a migration problem if it must be renamed.
 
-Current built-in IDs are:
+`WritingAnalyzer` rejects duplicate configured IDs at construction.
 
-```text
-repeated-word
-sentence-capitalization
-repeated-space
-punctuation-spacing
-missing-punctuation-space
-trailing-whitespace
-repeated-punctuation
-unmatched-parenthesis
-```
+### Language eligibility
 
-## Language eligibility
+`supportedLanguageIds` can contain a full pack ID such as `en-US` or a language code such as `en`. `WritingRule.supports(pack)` accepts a rule when either the full ID or the pack's language code is present.
 
-Rules declare supported language identifiers through `supportedLanguageIds`.
-
-A rule can target:
-
-- A full pack ID such as `en-US`.
-- A language code such as `en`, when the implementation is valid for all registered variants of that language.
-
-`WritingRule.supports(pack)` is the authority for eligibility. UI code should not duplicate language matching logic.
-
-The current built-in English rules use `en`, so they support both built-in `en-US` and `en-GB` packs.
+Do not duplicate this matching logic in UI integrations.
 
 ## `WritingIssue`
 
-A rule returns immutable findings containing:
+A finding contains:
 
-```dart
+```text
 ruleId
 ruleName
 message
@@ -139,141 +91,185 @@ languageId
 severity
 ```
 
-### Source range contract
+`WritingIssueSeverity` values are:
 
-For a current finding:
+```dart
+info
+suggestion
+warning
+```
+
+A finding has an automatic fix when `replacement != null`. An empty replacement is valid and represents deletion.
+
+### Source ownership
+
+`start` and `end` are zero-based UTF-16 offsets suitable for Dart `String.substring`/`replaceRange` and Flutter text-editing APIs. `start` is inclusive and `end` is exclusive.
+
+For the source snapshot that produced a finding:
 
 ```dart
 text.substring(issue.start, issue.end) == issue.originalText
 ```
 
-when the source text has not changed since analysis.
+Rules must not report an empty source range. Non-BMP characters can occupy two UTF-16 code units, so source offsets are **not** rune/scalar or grapheme-cluster indexes.
 
-Rules must return:
+### Advisory versus automatic
 
-- Zero-based inclusive `start`.
-- Zero-based exclusive `end`.
-- A non-empty source range.
-- `originalText` copied from exactly that range.
-- The language ID of the pack that produced the finding.
+Use `replacement: null` when a rule can prove a finding but cannot prove the correct mutation. The structural delimiter rules intentionally follow this path: an unmatched delimiter might need insertion, deletion, movement, or a larger rewrite.
 
-Do not make a rule depend on the UI mutating source offsets after analysis.
-
-## Advisory findings versus automatic fixes
-
-A finding is advisory when `replacement == null`.
-
-An automatic fix is available when a deterministic replacement string is present. An empty string is a valid replacement and can represent deletion, such as removing a repeated word suffix.
-
-Rules should provide automatic replacements only when the transformation is sufficiently deterministic for the rule's documented scope.
-
-The UI exposes **Apply safe fix** only for findings with automatic replacements.
+The bundled UI exposes individual safe-fix actions only when a replacement is available. **Automatic fixes only** hides advisory findings.
 
 ## `WritingAnalyzer`
 
-The analyzer owns rule selection and deterministic result ordering:
+Default analysis:
 
 ```dart
 final analyzer = WritingAnalyzer();
 final result = analyzer.analyze(
   text,
   languagePack: SpellLanguageRegistry.englishUs,
-  enabledRuleIds: enabledIds,
 );
 ```
 
-If `enabledRuleIds` is `null`, the analyzer runs every supported rule in its configured registry. If a set is supplied, only supported rules whose IDs are present are analysed.
+Select a subset:
 
-Findings are sorted by:
-
-1. Source start.
-2. Severity ordering used by the implementation when starts match.
-3. Rule ID as a deterministic final tie-breaker.
-
-`WritingAnalysisResult` also exposes the set of rule IDs that actually ran and per-rule finding counts.
-
-## Registry defaults
-
-`WritingRuleRegistry.builtIns` contains the built-in rules.
-
-`WritingRuleRegistry.defaultEnabledRuleIds` is the default enablement set for users who have never configured writing rules for the active language.
-
-Changing this default affects only the **unset** preference state. It must not overwrite an explicit stored user choice.
-
-## Per-language rule preferences
-
-V2.1 stores enabled writing-rule IDs through `DictionaryPreferences` using a versioned language-specific key:
-
-```text
-spellchecker.writing_rule_ids.v1.<language-id>
+```dart
+final result = analyzer.analyze(
+  text,
+  languagePack: SpellLanguageRegistry.englishUs,
+  enabledRuleIds: <String>{
+    'repeated-word',
+    'sentence-capitalization',
+  },
+);
 ```
 
-For example:
+`enabledRuleIds == null` means run all configured rules that support the selected pack. An empty set means run none.
 
-```text
-spellchecker.writing_rule_ids.v1.en-US
-spellchecker.writing_rule_ids.v1.en-GB
+### Deterministic result ordering
+
+Unbounded results are sorted by:
+
+1. source `start` ascending;
+2. severity ordering when starts are equal;
+3. `ruleId` as a stable final tie-breaker.
+
+Analyzer-produced results include `analyzedRuleIds`, retained `issues`, exact total finding count, and exact per-rule totals.
+
+### Bounded analysis
+
+`maxIssues` must be positive when supplied:
+
+```dart
+final result = analyzer.analyze(
+  text,
+  languagePack: SpellLanguageRegistry.englishUs,
+  maxIssues: 200,
+);
 ```
 
-The storage contract deliberately distinguishes:
+The bounded collector retains the globally earliest `maxIssues` findings in the same review ordering as an unbounded result. It can displace a retained finding when a later-executed rule yields an earlier source finding.
+
+The analyzer still executes every enabled/supported rule across the supplied text so it can compute exact totals. Therefore `maxIssues` bounds retained finding objects, not total rule runtime or source length.
+
+`isTruncated` becomes true only when at least one finding exists beyond the capture limit; merely reaching the numerical limit is not enough.
+
+Analyzer-produced `WritingAnalysisResult` values provide:
+
+```text
+issues
+analyzedRuleIds
+languageId
+issueLimit
+isTruncated
+isComplete
+capturedIssueCount
+totalIssueCount
+totalIssueCountByRule
+hasExactIssueTotals
+uncapturedIssueCount
+issueCountByRule
+```
+
+Exact totals are informational. They do not create correction authority for uncaptured source ranges.
+
+## Bundled Writing insights policy
+
+The application opens Writing insights with a capture limit of 200 findings. When the result is truncated:
+
+- the dialog identifies the limited/captured state;
+- exact totals can still be displayed when available;
+- search, presets, categories, and automatic-fix filtering operate on captured findings only;
+- individual and batch corrections operate on captured findings only;
+- the UI does not reconstruct or mutate uncaptured findings from count metadata.
+
+## Rule categories
+
+Public categories are:
+
+```dart
+enum WritingRuleCategory {
+  mechanics,
+  clarity,
+}
+```
+
+Category is review organization, not severity. The built-in `repeated-word` rule is Clarity; every other current built-in uses Mechanics.
+
+## Review presets
+
+`WritingReviewPreset` defines stable reusable filtering modes:
+
+| ID | Display name | Query meaning |
+| --- | --- | --- |
+| `all-findings` | All findings | no category/fix-only restriction |
+| `mechanics` | Mechanics | Mechanics category |
+| `clarity` | Clarity | Clarity category |
+| `automatic-fixes` | Automatic fixes | `automaticFixesOnly = true` |
+
+Presets define review scope only. Free-text search remains transient and can be layered onto a preset through `toQuery(search: ...)`.
+
+## `WritingReviewQuery`
+
+A query contains:
+
+```text
+search
+categories
+automaticFixesOnly
+```
+
+It can filter both rules and findings. Search is trimmed/lowercased and can match rule IDs/names/descriptions/categories plus finding rule metadata, messages, source text, and replacement text.
+
+`automaticFixesOnly` filters findings, not rule-management switches.
+
+The bundled application keeps search, categories, preset choice, and automatic-fix filter state in memory only for the open dialog. Closing the dialog discards that review query.
+
+## Per-language enabled-rule preferences
+
+The bundled application persists explicit writing-rule IDs separately for each language. There are three distinct states.
 
 ### Unset
 
-No key exists.
-
-`loadWritingRuleIds()` returns `null`, and the editor uses `WritingRuleRegistry.defaultEnabledRuleIds` filtered to rules supported by the current language pack.
-
-This is the backward-compatible state for users upgrading from V2.0.
+No key exists. Current registry defaults are used, filtered to rules that support the selected pack.
 
 ### Explicit non-empty set
 
-The key contains one or more rule IDs.
-
-The editor restores those IDs, intersected with rules that still exist and support the selected language.
-
-Unknown/stale IDs are ignored by the effective-rule calculation rather than causing analysis failure.
+Only the stored supported IDs are enabled. Adding a new built-in rule in a future release does not silently expand that explicit set.
 
 ### Explicit empty set
 
-The key exists with an empty string list.
+The stored list is empty and intentionally means “all writing rules disabled for this language.” It must not be treated as unset.
 
-This is a real user preference meaning **all writing rules disabled for that language**. It must not be collapsed into the unset/default state.
+### Reset rules to defaults
 
-### Normalization
+**Reset rules to defaults** removes the selected language's explicit override. The language then follows current/future registry defaults rather than storing a snapshot of today's default IDs.
 
-Stored rule IDs are:
+Unknown/stale stored IDs are ignored by the effective-rule calculation instead of causing analysis failure.
 
-- Trimmed.
-- Empty IDs removed.
-- Deduplicated.
-- Alphabetically sorted before persistence.
+See [Configuration and local data](CONFIGURATION.md) for persistence and Portable settings semantics.
 
-## Language switching
-
-When the editor changes from one language pack to another, it restores:
-
-- That language's personal dictionary.
-- That language's writing-rule preference set.
-- A new language-specific spelling engine/session state.
-
-A writing rule disabled in `en-US` does not become disabled in `en-GB` unless it was separately disabled there.
-
-## Persistence failure behavior
-
-Writing-rule switches change the active in-memory session immediately.
-
-If the local preference write fails:
-
-- The current session choice remains active.
-- The application marks local storage unavailable.
-- The user receives a readable persistence warning.
-- The UI does not falsely claim the choice was durably saved.
-
-Editor text and writing findings are never written to the preference store.
-
-## Individual safe correction
-
-Use:
+## Safe individual correction
 
 ```dart
 final result = WritingCorrection.apply(text, issue);
@@ -281,24 +277,35 @@ final result = WritingCorrection.apply(text, issue);
 
 The correction is applied only when:
 
-- The issue has a replacement.
-- `start` and `end` are valid for the current text.
-- The source range is non-empty.
-- The current substring still equals `originalText` exactly.
+- `issue.replacement` is non-null;
+- the source range is valid/non-empty;
+- the current substring still equals `issue.originalText` exactly.
 
-Otherwise `applied` is false and the original text is returned unchanged.
+Otherwise the original text is returned with `applied == false`.
 
-## Batch safe correction
-
-V2.1 adds:
+## Safe batch correction
 
 ```dart
 final result = WritingCorrection.applyAll(text, issues);
 ```
 
-The result is a `WritingBatchCorrectionResult` containing:
+Batch candidates are sorted by:
 
-```dart
+1. `start` ascending;
+2. `end` ascending;
+3. `ruleId` ascending.
+
+The batch skips:
+
+- advisory issues;
+- stale/invalid source ranges;
+- a later candidate that overlaps an already accepted candidate.
+
+Accepted edits are applied from the end of the document toward the beginning so replacement length changes do not invalidate source offsets to the left.
+
+`WritingBatchCorrectionResult` reports:
+
+```text
 text
 caretOffset
 appliedCount
@@ -306,426 +313,189 @@ skippedCount
 applied
 ```
 
-### Batch candidate ordering
+The bundled editor records one pre-batch editing value, so one accepted writing batch is one undoable correction.
 
-Candidates are sorted by:
+When review filters are active, the UI sends only currently visible automatic findings to the same `applyAll` algorithm. There is no separate less-safe filtered correction path.
 
-1. `start` ascending.
-2. `end` ascending.
-3. `ruleId` ascending.
+## Diagnostic summaries
 
-This ordering defines deterministic overlap resolution.
-
-### Findings that are skipped
-
-A finding is skipped when:
-
-- It has no automatic replacement.
-- Its source range is invalid.
-- Its current source text no longer equals `originalText`.
-- It overlaps a previously accepted automatic fix.
-
-Skipped findings increment `skippedCount`.
-
-### Overlap policy
-
-If two automatic fixes overlap, the earlier deterministic candidate wins. A later overlapping finding is skipped rather than merging transformations or applying an ambiguous order.
-
-This is intentionally conservative. A future richer conflict-resolution system must be explicit and separately tested rather than changing the meaning of V2.1 batch correction silently.
-
-### Application order
-
-Accepted edits are applied from the end of the document toward the beginning. This prevents a replacement with a different length from invalidating the still-to-be-applied source offsets to its left.
-
-### Caret
-
-The returned caret is adjusted to point immediately after the last accepted source occurrence in the resulting text and is clamped to a valid offset.
-
-## Editor batch workflow
-
-Writing insights displays **Apply all safe fixes (N)** when at least one current finding has an automatic replacement.
-
-Selecting it:
-
-1. Returns the current automatic findings to the editor.
-2. Runs `WritingCorrection.applyAll` against the current editor text.
-3. Refuses the operation when no safe non-overlapping fix remains.
-4. Pushes the pre-batch `TextEditingValue` once onto the bounded correction stack.
-5. Replaces the editor text with the single final batch result.
-6. Refreshes spelling state.
-7. Reports the applied and skipped counts.
-
-The whole batch is therefore **one undoable correction**.
-
-## Correction history
-
-Spelling fixes and writing fixes share the editor's bounded in-memory correction history.
-
-The history is not a document persistence system. It is cleared when manual editing starts a new correction history and disappears when the application session ends.
-
-## Keyboard workflow
-
-V2.1 adds:
-
-```text
-Ctrl+Shift+Enter     Open Writing insights on Windows/Linux/web keyboards
-Command+Shift+Enter  Open Writing insights on macOS keyboards
-```
-
-These shortcuts complement the existing spelling-check and F7 navigation shortcuts. The app-bar Writing insights control remains available for pointer/touch and assistive-technology users.
-
-## Built-in rules
-
-### Repeated word
-
-ID: `repeated-word`
-
-Finds the same normalized word repeated consecutively when only whitespace separates the two token matches.
-
-The replacement removes the separator plus the second occurrence represented by the issue range.
-
-### Sentence capitalization
-
-ID: `sentence-capitalization`
-
-Finds supported sentence-start words that begin with a lowercase letter and proposes a deterministic capitalization replacement.
-
-It is intentionally lightweight and not a complete sentence parser.
-
-### Repeated spaces
-
-ID: `repeated-space`
-
-Finds runs of repeated horizontal spaces and proposes a single space. Newline handling remains outside this rule's scope.
-
-### Repeated punctuation
-
-ID: `repeated-punctuation`
-
-Finds supported repeated identical punctuation runs and proposes one punctuation mark.
-
-It does not attempt stylistic interpretation of every punctuation sequence.
-
-## V2.12 missing punctuation spacing
-
-`MissingPunctuationSpaceRule` is the seventh built-in rule and uses stable ID `missing-punctuation-space`. It supports language code `en`, so both built-in English packs are eligible.
-
-The rule detects selected punctuation (``,``, `;`, `!`, `?`) between Unicode letter boundaries when no following space exists. Its predecessor accepts a Unicode letter plus zero or more combining marks, which keeps decomposed accented text eligible. A lookahead checks the following Unicode letter without consuming it.
-
-The issue owns only the punctuation mark and proposes that punctuation plus one trailing space. Optional horizontal whitespace before the mark belongs to `punctuation-spacing`; this makes the two edits adjacent and lets the existing batch-correction algorithm apply both safely. Repeated punctuation, periods, colons, numeric-only boundaries, and symbol-only boundaries remain outside this rule's deterministic scope.
-
-Unset/reset rule preferences include this rule through the current registry defaults. Explicit saved rule sets remain explicit and are not automatically expanded during upgrade.
-
-Focused coverage lives in `test/missing_punctuation_space_rule_test.dart`, `test/missing_punctuation_space_unicode_test.dart`, and `test/v212_missing_punctuation_space_widget_test.dart`. See `docs/V2_12_MISSING_PUNCTUATION_SPACING.md` for the full release contract.
-
-## Adding a new rule
-
-A new built-in rule should include all of the following:
-
-1. A stable unique rule ID.
-2. User-readable display name and description.
-3. Explicit language eligibility.
-4. Deterministic source ranges.
-5. Exact `originalText` values.
-6. Automatic replacement only when safe for the documented scope.
-7. Unit tests for positive cases.
-8. Unit tests for non-matching/edge cases.
-9. Analyzer/ordering tests when interaction with other rules matters.
-10. Batch-overlap tests when its ranges can overlap another automatic rule.
-11. User documentation.
-12. Changelog/release notes when shipped.
-
-## Rule interaction review
-
-Before adding a rule, test interaction with every built-in automatic rule on representative synthetic text.
-
-Pay particular attention to:
-
-- Identical start offsets.
-- Nested ranges.
-- Partially overlapping ranges.
-- Replacements that change text length.
-- Empty-string replacements.
-- Unicode source text.
-- Language-pack normalization.
-
-## V2.2 rule categories
-
-`WritingRuleCategory` is public review metadata:
+`WritingAnalysisDiagnosticSummary.fromResult(...)` converts a result into deterministic metadata suitable for support/benchmark discussion:
 
 ```dart
-enum WritingRuleCategory {
-  mechanics('Mechanics'),
-  clarity('Clarity');
+final summary = WritingAnalysisDiagnosticSummary.fromResult(
+  result,
+  rules: analyzer.rules,
+);
+
+print(summary.toPlainText());
+```
+
+The summary includes language, complete/limited state, capture limit, captured/exact/uncaptured counts when available, and per-rule metadata/counts. It deliberately excludes editor text, source excerpts, messages, replacements, and source offsets.
+
+## Built-in rule details
+
+### `repeated-word`
+
+Finds two consecutive tokens whose normalized words are equal and whose gap contains whitespace only. The finding owns the separator plus second occurrence and uses an empty replacement to remove the duplicate. Category: Clarity. Severity: warning.
+
+### `sentence-capitalization`
+
+Finds a lowercase first word at the beginning of the text or after a lightweight English sentence boundary and proposes a Unicode-scalar-safe capitalization of the first scalar. It recognizes common closing punctuation after a sentence terminator and opening quote/bracket characters before the next word. It is intentionally not a full sentence parser. Severity: suggestion.
+
+### `repeated-space`
+
+Finds runs of two or more literal spaces in interior prose and replaces them with one space. It deliberately avoids ranges immediately before common punctuation or line/document endings because those ranges are owned by specialized spacing rules. Severity: info.
+
+### `punctuation-spacing`
+
+Finds horizontal spaces/tabs immediately before `, . ; : ! ?`. The finding owns only the whitespace run and replaces it with an empty string. Severity: info.
+
+### `missing-punctuation-space`
+
+Finds `,`, `;`, `!`, or `?` between Unicode letter boundaries when the following word begins immediately without horizontal whitespace. The predecessor pattern supports a Unicode letter followed by combining marks. The finding owns only the punctuation mark and replaces it with the same mark plus one space. Periods and colons are intentionally outside this automatic rule. Severity: info.
+
+This source ownership composes safely with `punctuation-spacing`: in `Hello ,world`, the whitespace before the comma and the comma itself are adjacent, non-overlapping findings.
+
+### `trailing-whitespace`
+
+Finds horizontal spaces/tabs immediately before LF/CRLF line endings or the end of the document. Newline characters are not included in the finding range. The replacement removes the trailing horizontal whitespace. Severity: info.
+
+### `repeated-punctuation`
+
+Finds runs of the same `!`, `?`, `.`, or `,` character repeated two or more times and proposes the first mark only. It does not interpret every intentional stylistic punctuation sequence. Severity: info.
+
+### `unmatched-parenthesis`
+
+Balances literal `(` and `)` iteratively, supports nesting, and reports each unmatched parenthesis as a one-character UTF-16 source range. It is warning-level and advisory only.
+
+### `unmatched-square-bracket`
+
+Balances literal `[` and `]` iteratively, supports nesting, and reports each unmatched bracket as a one-character UTF-16 source range. It is warning-level and advisory only.
+
+### `unmatched-curly-brace`
+
+Balances literal `{` and `}` iteratively, supports nesting, and reports each unmatched brace as a one-character UTF-16 source range. It is warning-level and advisory only.
+
+The three structural rules are literal character-balancing checks. They do not parse programming-language syntax, Markdown, template languages, strings/comments, URLs, or other domain-specific grammars.
+
+## Adding a custom rule
+
+Example:
+
+```dart
+class ExampleRule extends WritingRule {
+  const ExampleRule();
+
+  @override
+  String get id => 'example-rule';
+
+  @override
+  String get displayName => 'Example rule';
+
+  @override
+  String get description => 'Finds TODO placeholders.';
+
+  @override
+  Set<String> get supportedLanguageIds => const <String>{'en'};
+
+  @override
+  Iterable<WritingIssue> analyze(
+    String text,
+    SpellLanguagePack languagePack,
+  ) sync* {
+    for (final match in RegExp(r'\bTODO\b').allMatches(text)) {
+      yield WritingIssue(
+        ruleId: id,
+        ruleName: displayName,
+        message: 'Review this placeholder.',
+        start: match.start,
+        end: match.end,
+        originalText: match.group(0)!,
+        languageId: languagePack.id,
+        replacement: null,
+        severity: WritingIssueSeverity.info,
+      );
+    }
+  }
 }
 ```
 
-`WritingRule.category` has a concrete default of `WritingRuleCategory.mechanics`. This is intentionally source-compatible with 2.0/2.1 external rule implementations that implemented the original abstract contract before categories existed.
-
-Rules should override the getter only when another category is a clearer user-facing fit. The built-in `repeated-word` rule is categorized as **Clarity**; the other current built-ins inherit **Mechanics**.
-
-Category names are review organization, not severity. `WritingIssueSeverity` remains a separate finding property.
-
-## V2.2 reusable review query
-
-`WritingReviewQuery` keeps review filtering outside Flutter widgets:
+Configure an analyzer with custom rules:
 
 ```dart
-final query = WritingReviewQuery(
-  search: 'clarity',
-  categories: <WritingRuleCategory>{WritingRuleCategory.clarity},
-  automaticFixesOnly: true,
-);
-
-final visibleRules = query.filterRules(analyzer.rules);
-final visibleIssues = query.filterIssues(
-  analysis.issues,
-  rules: analyzer.rules,
+final analyzer = WritingAnalyzer(
+  rules: const <WritingRule>[ExampleRule()],
 );
 ```
 
-Search is trimmed/lowercased and can match rule ID/name/description/category plus finding rule metadata, message, exact finding source text, and suggested replacement.
+## Built-in rule change checklist
 
-When a category filter is active, a finding whose rule is unavailable in the supplied rule collection is excluded instead of being guessed into a category. Writing insights passes its actual analyzer's supported rule set so custom analyzers retain their own category metadata.
+A new or modified built-in rule should be reviewed for:
 
-`automaticFixesOnly` filters findings only; it does not hide rule switches. Users can still manage rule enablement while reviewing only automatically fixable findings.
+- stable/unique rule ID;
+- user-facing name and description;
+- category and severity;
+- explicit language eligibility;
+- exact UTF-16 source ownership;
+- Unicode scalar/combining-mark behavior where relevant;
+- advisory versus deterministic replacement choice;
+- interaction with every automatic built-in rule;
+- stale-source behavior;
+- deterministic batch overlap behavior;
+- bounded-result exact totals;
+- preference/default compatibility;
+- Portable settings compatibility;
+- review search/category/fix-only behavior;
+- diagnostic-summary totals;
+- widget workflow and one-step undo;
+- stress coverage for structural/iterative algorithms;
+- benchmark identity/load implications.
 
-## V2.2 transient review state
+Do not add a replacement merely to make a rule “fixable” when the correct edit is ambiguous.
 
-Writing insights review filters are intentionally not application preferences:
+## Privacy and security boundary
 
-```text
-search text                memory-only dialog state
-selected categories        memory-only dialog state
-automatic-fixes-only       memory-only dialog state
-visible counts/results     derived memory-only state
-```
+Writing rules receive source text in memory from the caller. The built-in application does not persist editor text or writing findings to preference storage and does not require a cloud grammar API, generative rewriting service, analytics SDK, telemetry pipeline, remote logger, or account system.
 
-Closing Writing insights discards these filters. Only enabled writing-rule IDs remain persisted per language.
-
-## Filtered batch correction
-
-When review filters are inactive, Writing insights displays **Apply all safe fixes (N)**. When any review filter is active it displays **Apply visible safe fixes (N)** and sends only visible automatic findings to `WritingCorrection.applyAll`.
-
-This does not create a second correction algorithm. V2.1 batch invariants remain authoritative: current-source validation, advisory skipping, deterministic overlap handling, end-to-start accepted mutation, applied/skipped counts, and one-step undo.
-
-A hidden finding is simply not part of that user-requested filtered batch. Reopen/clear filters to review or apply other findings.
-
-## Reset rules to defaults — V2.2
-
-Writing insights can return `resetRulePreferences: true`. The page then:
-
-1. Resolves current registry defaults for the selected language.
-2. Activates those defaults for the current session.
-3. Calls `DictionaryPreferences.clearWritingRuleIds(languageId: ...)`.
-4. Leaves the language in the **missing key / registry defaults** state after a successful clear.
-5. Does not apply an individual/batch finding as part of the reset action.
-
-This is deliberately different from storing today's default rule IDs. A future release can evolve `WritingRuleRegistry.defaultEnabledRuleIds`, and a user who chose Reset will receive that new default because no explicit override remains.
-
-If clearing fails, the current-session defaults remain active but the application reports that the saved override could not be removed; the old override may return on restart.
-
-## V2.3 review presets
-
-`WritingReviewPreset` is public review-organization metadata layered on `WritingReviewQuery`. Stable built-ins are:
-
-```text
-all-findings      -> no category/fix-only filter
-mechanics         -> Mechanics category
-clarity           -> Clarity category
-automatic-fixes   -> automaticFixesOnly = true
-```
-
-Preset IDs are stable public metadata and require compatibility/release review before renaming or semantic reuse. A preset does not persist search text or rule choices. `toQuery(search: ...)` accepts the current transient search so preset changes can retain the user's local search context.
-
-Writing insights can still create custom combinations by using the category chips and automatic-fix switch directly. That custom transient state does not require or synthesize a new preset ID.
-
-Preset changes select review scope only. Individual/batch correction authority remains `WritingCorrection.apply`/`applyAll`, including stale-range validation, overlap handling, end-to-start application, applied/skipped counts, and one-step undo.
-
-
-## Tests
-
-Relevant test files include:
-
-```text
-test/writing_review_preset_test.dart
-test/writing_review_query_test.dart
-test/writing_rules_test.dart
-test/missing_punctuation_space_rule_test.dart
-test/missing_punctuation_space_unicode_test.dart
-test/v212_missing_punctuation_space_widget_test.dart
-test/writing_correction_test.dart
-test/writing_preferences_test.dart
-test/writing_widget_test.dart
-```
-
-V2.1 regression coverage includes:
-
-- Built-in rule behavior.
-- Analyzer enable/disable filtering.
-- Language eligibility.
-- Individual current/stale corrections.
-- Multiple safe batch fixes.
-- Advisory/stale batch skipping.
-- Deterministic overlap handling.
-- All-unsafe batch input.
-- Unset/default rule preference semantics.
-- Explicit empty rule preference semantics.
-- Per-language preference isolation.
-- Startup restoration.
-- Dialog switch persistence.
-- Batch apply plus one-step undo.
-- Writing insights keyboard shortcut.
-
-## Privacy boundary
-
-Writing analysis receives the current editor text in memory only when invoked by the application workflow.
-
-SpellChecker does not persist:
-
-- Editor documents.
-- Writing findings.
-- Rule messages.
-- Finding source snippets.
-- Batch correction plans.
-- Correction undo snapshots.
-
-V2.1 newly persists only **writing-rule identifiers**, namespaced by language.
-
-No cloud grammar API, AI rewriting service, analytics SDK, advertising SDK, telemetry pipeline, remote logger, or account system is required by the writing-rules subsystem.
-
-## Security boundary
-
-The current built-in registry contains source-controlled Dart rules. V2.1 does not dynamically download or execute third-party rule code.
-
-Any future external plugin-loading design must define trusted code boundaries, signing/origin expectations, update behavior, permission scope, and privacy implications before implementation.
+The built-in registry contains source-controlled Dart rules. SpellChecker does not dynamically download or execute third-party rule code. Any future external plugin-loading system would need an explicit trust/signing/update/permission/privacy design before implementation.
 
 ## Non-goals
 
-The current subsystem does not claim to provide:
+The current writing subsystem does not claim:
 
-- Full grammar parsing.
-- Automatic semantic rewriting.
-- Style scoring.
-- AI-generated prose.
-- Remote model inference.
-- Automatic language detection.
-- Untrusted dynamic plugin execution.
-- Background document monitoring.
+- full grammar parsing;
+- semantic correctness checking;
+- generative rewriting;
+- style scoring;
+- automatic language detection;
+- syntax-aware source-code/template parsing;
+- untrusted dynamic plugin execution;
+- background document monitoring.
 
-The intended foundation is deterministic, local, inspectable rule execution that can be extended without weakening correction safety or privacy.
+Its purpose is deterministic, explainable, local rule execution with conservative correction safety.
 
-## V2.6 deterministic spacing rules
+## Historical design records
 
-V2.6 expands `WritingRuleRegistry.builtIns` with two English Mechanics rules:
+Detailed release records remain available for the major writing-system milestones:
 
-```text
-punctuation-spacing
-trailing-whitespace
-```
+- [V2.9 diagnostic summary](V2_9_DIAGNOSTIC_SUMMARY.md)
+- [V2.11 accessibility](V2_11_ACCESSIBILITY.md)
+- [V2.12 missing punctuation spacing](V2_12_MISSING_PUNCTUATION_SPACING.md)
+- [V2.13 unmatched parenthesis](V2_13_UNMATCHED_PARENTHESIS.md)
+- [V2.14 unmatched square bracket](V2_14_UNMATCHED_SQUARE_BRACKET.md)
+- [V2.15 unmatched curly brace](V2_15_UNMATCHED_CURLY_BRACE.md)
+- [V2.16 bug audit](V2_16_BUG_AUDIT.md)
+- [Post-V2.16 audit](POST_V216_AUDIT_2026_08_16.md)
 
-### Punctuation spacing
+Use those files for historical migration/validation context and this page for current behavior.
 
-`PunctuationSpacingRule` matches one or more horizontal spaces/tabs immediately before `, . ; : ! ?`. Its `originalText` is exactly the whitespace run and its deterministic automatic replacement is the empty string. It does not rewrite the punctuation itself.
+## Related documentation
 
-### Trailing whitespace
-
-`TrailingWhitespaceRule` matches horizontal spaces/tabs immediately before LF/CRLF line endings or at the document end. Newline characters are not part of the issue range; the automatic replacement removes only the trailing horizontal whitespace.
-
-### Non-overlapping ownership
-
-`RepeatedSpaceRule` now matches repeated **interior** spaces only. It deliberately excludes repeated runs immediately before common punctuation and before line/document endings. Those source ranges belong to the V2.6 specialized rules. The separation prevents a batch from receiving both “collapse to one space” and “remove all whitespace” candidates for the same range.
-
-This does not change `WritingCorrection.applyAll` overlap semantics. Start/end/rule-ID ordering and conservative overlap skipping remain the global safety contract for genuinely overlapping findings from independent rules.
-
-### Preference compatibility
-
-The two new IDs are members of `WritingRuleRegistry.defaultEnabledRuleIds`. Therefore:
-
-```text
-unset preference      -> current six-rule defaults, including V2.6 rules
-explicit non-empty    -> exactly the stored supported IDs; no silent expansion
-explicit empty list   -> all rules disabled; no silent expansion
-Reset rules           -> clears override -> current six-rule defaults
-```
-
-The existing `spellchecker.writing_rule_ids.v1.<language-id>` key meaning and storage format do not change. Both rules declare `en`, so they support the built-in `en-US` and `en-GB` packs.
-
-### V2.6 regression requirements
-
-Changes to either spacing rule must keep tests for exact source ranges, LF/CRLF/document-end handling, punctuation adjacency, interior-space ownership, English pack support, default registry membership, safe batch composition, Writing insights visibility, and one-step undo.
-
-## V2.7 bounded writing analysis
-
-`WritingAnalyzer.analyze()` accepts an optional positive `maxIssues` argument. Omitting it preserves the historical unbounded contract.
-
-A bounded `WritingAnalysisResult` exposes `issueLimit`, `isTruncated`, `isComplete`, and `capturedIssueCount`. Reaching the numerical limit alone does not make a result truncated: truncation is reported only after an additional finding is observed.
-
-The bounded collector keeps at most `maxIssues` finding objects while preserving the same globally sorted prefix produced by unbounded analysis. Rules may yield findings in arbitrary source order, and later rules may yield an earlier source range, so the collector can displace a worse retained finding rather than simply stopping after the first N yielded values.
-
-The analyzer still invokes every enabled and supported rule across the supplied text. This is a finding-retention bound, not a rule-runtime, character-count, or document-length bound.
-
-The built-in Writing insights dialog requests at most 200 captured findings. When overflow is proven, filters operate on captured findings only, and batch actions use **Apply captured safe fixes** or **Apply visible captured safe fixes** wording. Existing stale-source, advisory-skip, overlap-resolution, end-to-start mutation, and one-step undo contracts remain unchanged.
-
-## V2.8 exact finding diagnostics
-
-Writing rules still implement the same `WritingRule.analyze()` contract. V2.8 does not add a required rule member or change a shipped rule ID.
-
-The analyzer now counts every `WritingIssue` yielded by each enabled/supported rule while building the retained result. This creates two distinct per-rule views:
-
-- retained count — how many findings from that rule are present in `WritingAnalysisResult.issues`;
-- exact total count — how many findings that rule yielded during the whole analyzer pass when V2.8 diagnostics are available.
-
-A truncated result may therefore report, for example:
-
-```text
-repeated-space retained findings: 31
-repeated-space total findings:    420
-```
-
-The retained list still contains the globally earliest findings across all rules, not the first N matches from each rule independently.
-
-### Custom rule requirements remain unchanged
-
-A custom rule should continue to:
-
-- be deterministic for a given text/language/configuration;
-- yield exact source ranges and `originalText`;
-- declare stable ID/display metadata;
-- avoid side effects;
-- provide automatic replacements only when deterministic;
-- document expensive behavior if it scans or allocates unusually large structures.
-
-V2.8 exact counters assume each yielded finding represents one logical finding. Rules should not intentionally yield duplicate equivalent findings merely to communicate metadata.
-
-### Diagnostics and correction scope
-
-Exact total counts are informational. They do not authorize correction of uncaptured findings. In a truncated Writing insights result, search, review presets/categories, individual fixes, and batch fixes continue to operate only on retained findings.
-
-A future feature that wants to mutate uncaptured ranges must obtain a complete/current correction-safe issue set rather than reconstructing edits from count metadata.
-
-### Language and preference behavior
-
-Exact per-rule totals are computed only for rules that are enabled and support the active language pack. Per-language persisted rule preferences therefore continue to determine which rules participate. V2.8 adds no preference key and does not persist diagnostic counts.
-
-## V2.9 analyzer/result hardening and diagnostic summaries
-
-`WritingAnalyzer` now rejects duplicate configured rule IDs at construction. A stable rule ID identifies persistence, filtering, totals, and diagnostic rows; allowing two configured rules to share it would make those contracts ambiguous.
-
-`WritingAnalysisResult` additionally validates that every captured issue belongs to an analyzed rule and uses the result language, and that exact per-rule total keys belong to analyzed rules. These are runtime public-value invariants, not debug-only assertions.
-
-V2.9 also exports `WritingAnalysisDiagnosticSummary` / `WritingRuleDiagnosticSummary`. The summary derives deterministic count/rule metadata from a result, sorts rows by stable rule ID, represents missing V2.8 exact totals as unavailable, and deliberately omits document text, excerpts, messages, replacements, and source offsets. See [V2_9_DIAGNOSTIC_SUMMARY.md](V2_9_DIAGNOSTIC_SUMMARY.md).
-
-## V2.10 benchmark interaction with writing rules
-
-The V2.10 benchmark constructs the normal `WritingAnalyzer()` and therefore exercises the current built-in deterministic registry against generated synthetic text. It does not add, remove, rename, enable, persist, or dynamically load a writing rule. All six existing stable IDs/defaults and their source-range/correction contracts remain unchanged.
-
-The benchmark records only captured/exact-total/truncated writing outcome metadata and elapsed time. It does not serialize `WritingIssue` source text/messages into the benchmark report and does not convert writing `maxIssues` into a CPU-time guarantee.
-
-## V2.11 review interaction hardening
-
-V2.11 changes how users navigate/filter Writing insights, not how writing rules match text. Rule IDs, categories, language support, source ranges, replacement metadata, analyzer ordering, bounded capture, and correction safety are unchanged.
-
-The dialog's Ctrl/Command+F shortcut focuses the existing `WritingReviewQuery.search` input. Escape clears the complete transient query projection (search, categories, automatic-fixes-only) before closing on a subsequent empty-query Escape. This does not mutate `_enabledRuleIds`; per-language enabled-rule preferences remain the established persistent model.
-
-Visible rule/finding counts are live semantics derived from the current query. In limited results, exact overall/per-rule diagnostics remain informational while filtering and automatic fixes stay scoped to retained `WritingIssue` objects.
+- [Feature reference](FEATURES.md)
+- [User guide](USER_GUIDE.md)
+- [Examples](EXAMPLES.md)
+- [Public API](API.md)
+- [Configuration](CONFIGURATION.md)
+- [Performance](PERFORMANCE.md)
+- [Testing](TESTING.md)
+- [Glossary](GLOSSARY.md)
