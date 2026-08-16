@@ -1,0 +1,108 @@
+# SpellChecker Documentation
+
+<p align="center">
+  <a href="https://buymeacoffee.com/sanskarIN">
+    <img alt="Buy Me a Coffee — Support SpellChecker" src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20SpellChecker-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=000000">
+  </a>
+</p>
+
+This directory is the documentation home for SpellChecker `2.16.0+21`. SpellChecker is a privacy-first Flutter spelling utility and deterministic writing assistant. The current repository commits the web host plus portable Flutter/Dart source, ships two built-in English language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.
+
+## Choose your path
+
+### I want to use the application
+
+Start with:
+
+1. [Getting started](GETTING_STARTED.md) — install prerequisites, run the app, perform the first spelling and writing checks, and build the web target.
+2. [User guide](USER_GUIDE.md) — complete editor, spelling, Writing insights, dictionary, settings, keyboard, undo, and large-document workflows.
+3. [Feature reference](FEATURES.md) — current capabilities, limits, and intentionally unsupported behavior.
+4. [Configuration and local data](CONFIGURATION.md) — languages, suggestion limits, personal dictionaries, ignored words, writing-rule preferences, Portable settings, and persistence behavior.
+5. [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md) — compact keyboard reference.
+6. [FAQ](FAQ.md) — common usage, privacy, platform, language, import/export, and troubleshooting questions.
+7. [Troubleshooting](TROUBLESHOOTING.md) — recovery guidance for startup, storage, imports, analysis, and build problems.
+8. [Accessibility](ACCESSIBILITY.md) — keyboard, focus, semantics, contrast, responsive layout, and assistive-technology contract.
+9. [Privacy](PRIVACY.md) — data-flow and local-storage boundaries.
+
+### I want to use SpellChecker as Dart/Flutter code
+
+Start with:
+
+1. [Library examples](EXAMPLES.md) — copyable examples for spelling, bounded analysis, language packs, dictionaries, writing analysis, diagnostics, corrections, and custom rules.
+2. [Public API](API.md) — detailed contract for exported classes and functions.
+3. [Language packs](LANGUAGE_PACKS.md) — built-ins and extension model.
+4. [Writing rules](WRITING_RULES.md) — rule catalogue, IDs, categories, severities, automatic/advisory behavior, and plugin contract.
+5. [Architecture](ARCHITECTURE.md) — package boundaries and application data flow.
+6. [Performance](PERFORMANCE.md) — bounded-analysis behavior and deterministic benchmark tooling.
+
+Public import barrels:
+
+```dart
+import 'package:spellchecker/spell_checker.dart';
+import 'package:spellchecker/language.dart';
+import 'package:spellchecker/writing.dart';
+```
+
+Application widgets and persistence adapters are implementation details unless they are exported from one of those barrels.
+
+### I want to contribute or maintain the project
+
+Use:
+
+1. [Development guide](DEVELOPMENT.md) — prerequisites, repository layout, development commands, and implementation expectations.
+2. [Testing guide](TESTING.md) — test structure, focused suites, CI gates, Unicode/UTF-16 coverage, and benchmark smoke.
+3. [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md) — documentation source-of-truth rules, link policy, versioning, and review checklist.
+4. [Release guide](RELEASING.md) — tagged web-release workflow and release validation.
+5. [Platform support](PLATFORM_SUPPORT.md) — what is committed, built, validated, and still optional for native runners.
+6. [Roadmap](ROADMAP.md) — completed release scope and optional future directions.
+7. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x design/audit/validation records.
+8. [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md), [support policy](../SUPPORT.md), [governance](../GOVERNANCE.md), and [code of conduct](../CODE_OF_CONDUCT.md).
+
+## Current product contract
+
+| Area | Current contract |
+| --- | --- |
+| Package version | `2.16.0+21` |
+| Dart SDK | `>=3.8.0 <4.0.0` |
+| Runtime dependencies | Flutter SDK and `shared_preferences` |
+| Built-in language packs | `en-US` and `en-GB` |
+| Default language | `en-US` |
+| Built-in writing rules | 10 |
+| Suggestion limit | 1–10; default 5 |
+| Spelling UI capture | first 200 issues, with explicit truncated state |
+| Writing UI capture | first 200 findings, with exact analyzer totals and captured-only review/fix semantics |
+| Editor text persistence | none |
+| Personal dictionary persistence | local, per language |
+| Writing-rule persistence | local, per language |
+| Portable settings format | `spellchecker-settings`, version 1 |
+| Personal dictionary format | version 2 for language-aware export; legacy version 1 remains readable |
+| Network spelling/grammar | none |
+| Telemetry/account/cloud sync | none |
+| Committed host runner | web |
+| Automated release artifact | Flutter web build |
+
+## Evergreen docs versus historical docs
+
+The files linked under the user, library, contributor, and maintainer paths above are **evergreen**: they describe the current `main` behavior and should be updated when the code contract changes.
+
+Files named for a specific release, such as `V2_15_*` or `V2_16_*`, are **historical records**. They document what a particular release introduced, audited, or validated. Historical files should not be rewritten merely because a later release changed the product. If a historical statement conflicts with an evergreen current-state page, use the evergreen page for current behavior and the historical page only for release context.
+
+The post-release audit is recorded in [POST_V216_AUDIT_2026_08_16.md](POST_V216_AUDIT_2026_08_16.md).
+
+## Documentation quality expectations
+
+Every current-state document should distinguish between:
+
+- behavior guaranteed by public APIs;
+- behavior implemented by the bundled application UI;
+- internal persistence details that may change;
+- historical compatibility behavior;
+- optional future work that is not currently shipped.
+
+Examples must use synthetic/non-sensitive text. Privacy documentation must never imply that editor text, personal vocabulary, ignored session words, correction history, or finding excerpts are uploaded by the application.
+
+## Support and funding
+
+SpellChecker is free and open source. Bug reports, feature requests, security reports, and contribution review are not conditioned on funding. Optional financial support is available through [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN).
+
+For help, read [SUPPORT.md](../SUPPORT.md) and [Troubleshooting](TROUBLESHOOTING.md) before opening a public issue. Never attach private documents when a synthetic reproducer is sufficient.
