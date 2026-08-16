@@ -113,10 +113,7 @@ void main() {
     expect(end, greaterThan(start));
 
     final inventory = guide.substring(start + startMarker.length, end);
-    final inventoryPathPattern = RegExp(
-      r'^- `([^`]+)`$',
-      multiLine: true,
-    );
+    final inventoryPathPattern = RegExp(r'^- `([^`]+)`$', multiLine: true);
     final documentedPaths = <String>{};
     for (final match in inventoryPathPattern.allMatches(inventory)) {
       documentedPaths.add(match.group(1)!);
