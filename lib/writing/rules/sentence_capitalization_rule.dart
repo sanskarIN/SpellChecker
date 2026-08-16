@@ -36,7 +36,9 @@ class SentenceCapitalizationRule extends WritingRule {
           _endsSentence(text.substring(previous.end, match.start));
 
       if (atSentenceStart && _startsWithLowercaseLetter(word)) {
-        final replacement = '${word[0].toUpperCase()}${word.substring(1)}';
+        final firstScalar = _firstScalar(word);
+        final replacement = '${firstScalar.toUpperCase()}'
+            '${word.substring(firstScalar.length)}';
         yield WritingIssue(
           ruleId: id,
           ruleName: displayName,
@@ -61,7 +63,11 @@ class SentenceCapitalizationRule extends WritingRule {
     if (word.isEmpty) {
       return false;
     }
-    final first = word.substring(0, 1);
+    final first = _firstScalar(word);
     return first.toLowerCase() == first && first.toUpperCase() != first;
+  }
+
+  static String _firstScalar(String value) {
+    return String.fromCharCode(value.runes.first);
   }
 }
