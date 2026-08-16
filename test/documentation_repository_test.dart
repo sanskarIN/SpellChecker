@@ -113,10 +113,14 @@ void main() {
     expect(end, greaterThan(start));
 
     final inventory = guide.substring(start + startMarker.length, end);
-    final documentedPaths = RegExp(
+    final inventoryPathPattern = RegExp(
       r'^- `([^`]+)`$',
       multiLine: true,
-    ).allMatches(inventory).map((match) => match.group(1)!).toSet();
+    );
+    final documentedPaths = <String>{};
+    for (final match in inventoryPathPattern.allMatches(inventory)) {
+      documentedPaths.add(match.group(1)!);
+    }
 
     final gitResult = Process.runSync(
       'git',
@@ -129,10 +133,13 @@ void main() {
       reason: 'git ls-files must succeed for repository documentation checks.',
     );
 
-    final trackedPaths = (gitResult.stdout as String)
-        .split(RegExp(r'\r?\n'))
-        .where((path) => path.isNotEmpty)
-        .toSet();
+    final trackedOutput = gitResult.stdout as String;
+    final trackedPaths = <String>{};
+    for (final path in trackedOutput.split(RegExp(r'\r?\n'))) {
+      if (path.isNotEmpty) {
+        trackedPaths.add(path);
+      }
+    }
 
     final missing = trackedPaths.difference(documentedPaths).toList()..sort();
     final stale = documentedPaths.difference(trackedPaths).toList()..sort();
