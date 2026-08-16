@@ -1,346 +1,255 @@
 # Roadmap
 
-## V2.16 final stabilization
-V2.16 closes the planned project implementation sequence with a repository-wide bug/error audit rather than another catalogue expansion. The milestone fixes all reproducible defects found in that audit and leaves future ideas—additional language packs, rule/plugin work, or publication automation—as optional follow-up directions rather than unfinished V2.16 requirements.
-
-
-## V2.15 — Unmatched Curly Brace Diagnostics — implemented
-V2.15 completes the next deterministic structural-rule increment: public advisory `unmatched-curly-brace`, a ten-rule default catalogue, exact one-character UTF-16 ownership, explicit V2.14 nine-rule preference compatibility, Portable-settings compatibility, bounded/private diagnostics, benchmark/stress coverage, and expansion-safe Writing insights widget regressions.
-
-The roadmap describes intended direction, not guaranteed delivery dates.
-
-
-## V2.14 — Unmatched Square Bracket Diagnostics — Implemented
-
-V2.14 completes the next deterministic 2.x catalogue increment: a ninth built-in, advisory-only `unmatched-square-bracket` rule with nested literal balancing, exact one-character UTF-16 ownership, V2.13 explicit-override compatibility, Portable-settings preservation, bounded/private diagnostics, benchmark identity, stress coverage, and editor/review integration. It intentionally does not introduce syntax-aware parsing or automatic bracket mutation.
-
-## 1.0 — Local spelling workflow
-
-Status: implemented.
-
-- [x] Flutter application shell.
-- [x] Responsive editor UI.
-- [x] Local spelling engine.
-- [x] Starter English dictionary.
-- [x] Ranked spelling suggestions.
-- [x] Damerau-Levenshtein edit distance.
-- [x] Case-preserving replacement.
-- [x] Session personal dictionary.
-- [x] Session ignore list.
-- [x] Text statistics.
-- [x] Web host.
-- [x] Unit and widget tests.
-- [x] Continuous integration.
-- [x] Complete project documentation.
-
-## 1.1 — Dictionary quality and persistence
-
-Status: implemented.
-
-- [x] Persistent device-local personal dictionary.
-- [x] Import/export personal words.
-- [x] Versioned JSON dictionary format.
-- [x] Import from JSON arrays and plain word lists.
-- [x] Larger curated English dictionary.
-- [x] Frequency-aware suggestion ranking.
-- [x] Better regular possessive and contraction handling.
-- [x] Suffix-preserving correction suggestions.
-- [x] User preference for 1–10 suggestions per issue.
-- [x] Personal-dictionary management UI.
-- [x] Separate persistent saved words from session-only ignored words.
-- [x] Persistence, codec, engine, and widget regression tests.
-
-## 1.2 — Editor experience
-
-Status: implemented.
-
-- [x] Inline issue highlighting in the editable text.
-- [x] Stronger active-issue highlighting.
-- [x] Keyboard-first issue navigation with F7 and Shift+F7.
-- [x] Keyboard spelling check with Ctrl/Command+Enter.
-- [x] Previous/next issue controls.
-- [x] Active issue synchronization between editor selection and Results.
-- [x] Results auto-scroll toward the active issue.
-- [x] Replace-all for repeated checked occurrences.
-- [x] Validated reusable text-correction API.
-- [x] Undo-friendly single and replace-all corrections.
-- [x] Stale source-offset protection.
-- [x] Improved accessibility semantics and live-region states.
-- [x] Dedicated blank-input and storage-warning states.
-- [x] Unit/controller/widget regression coverage for editor behavior.
-
-## 1.3 — Language architecture
-
-Status: implemented.
-
-- [x] Language-pack abstraction.
-- [x] Unicode-aware tokenization.
-- [x] Built-in English (US) and English (UK) dictionaries.
-- [x] Explicit persisted language selection.
-- [x] Language-specific normalization and suffix rules.
-- [x] Language-specific suggestion metadata.
-- [x] Language-tagged spelling issues.
-- [x] Per-language personal dictionary persistence.
-- [x] Legacy V1 personal-word migration into the default pack.
-- [x] Version-2 language-aware dictionary transfer format.
-- [x] Cross-language import protection.
-- [x] Unicode/variant/isolation/persistence/widget tests.
-- [x] Complete language-pack documentation.
-
-## 2.0 — Advanced writing foundation
-
-Status: implemented.
-
-- [x] Public local `WritingRule` plugin contract.
-- [x] Language-aware `WritingAnalyzer` and rule registry.
-- [x] Rule enable/disable filtering.
-- [x] Repeated-word rule.
-- [x] Sentence-capitalization rule.
-- [x] Repeated-space rule.
-- [x] Repeated-punctuation rule.
-- [x] Deterministic writing issue model and severity metadata.
-- [x] Stale-range-safe writing correction API.
-- [x] Optional Writing insights editor UI.
-- [x] Individual writing fixes integrated with bounded correction undo.
-- [x] Rule/analyzer/correction/widget regression tests.
-- [x] Complete writing-rules documentation foundation.
-
-## 2.1 — Writing workflow quality
-
-Status: implemented.
-
-- [x] Per-language persisted writing-rule preferences.
-- [x] Backward-compatible unset/default rule semantics.
-- [x] Explicit persisted empty rule set for “disable all”.
-- [x] Language switching restores language-specific rule choices.
-- [x] `WritingBatchCorrectionResult` public result model.
-- [x] Safe `WritingCorrection.applyAll` batch API.
-- [x] Stale and advisory finding skipping during batch correction.
-- [x] Deterministic overlap resolution for automatic writing fixes.
-- [x] End-to-start batch replacement for source-offset safety.
-- [x] **Apply all safe fixes (N)** Writing insights action.
-- [x] One-step undo for a complete writing-fix batch.
-- [x] `Ctrl/Command+Shift+Enter` Writing insights shortcut.
-- [x] Persistent rule-choice, batch-correction, startup, undo, and keyboard regression tests.
-- [x] Full V2.1 documentation and release metadata.
-
-## 2.2 — Writing review and rule management
-
-Status: implemented.
-
-- [x] Public writing-rule categories.
-- [x] Source-compatible category default for existing V2 rule implementations.
-- [x] Clarity classification for repeated-word review.
-- [x] Public reusable `WritingReviewQuery`.
-- [x] Rule/finding text search.
-- [x] Mechanics/Clarity category filters.
-- [x] Automatic-fixes-only finding filter.
-- [x] Clear-review-filters workflow.
-- [x] Visible/total rule and finding counts.
-- [x] Category labels in Writing insights findings and rule metadata.
-- [x] Apply-visible-safe-fixes workflow using V2.1 batch safety and one-step undo.
-- [x] True reset-to-defaults that clears the per-language stored override.
-- [x] Transient/non-persisted review-filter privacy boundary.
-- [x] Query/filter/reset/filtered-batch regression tests.
-- [x] Complete V2.2 documentation and release metadata.
-
-## 2.3 — Review presets and preference portability
-
-Status: implemented.
-
-- [x] Public stable review-preset metadata and IDs.
-- [x] All findings, Mechanics, Clarity, and Automatic fixes presets.
-- [x] Presets reuse `WritingReviewQuery` and retain transient free-text search.
-- [x] Versioned deterministic non-document settings codec.
-- [x] Portable selected language and 1–10 suggestion-count preference.
-- [x] Portable complete explicit per-language writing-rule override map.
-- [x] Preservation of unset/default versus explicit-empty/disable-all semantics.
-- [x] Forward-compatible preservation of well-formed unknown rule IDs.
-- [x] Dedicated Portable settings copy/import dialog.
-- [x] Persistence-first import with best-effort rollback on write failure.
-- [x] Personal-vocabulary and editor-text exclusion/preservation guarantees.
-- [x] Focused codec/persistence/dialog/widget regression coverage.
-- [x] Complete V2.3 documentation, privacy, release, and repository metadata.
-
-## 2.4 — Suggestion ranking extensibility and determinism
-
-Status: implemented.
-
-- [x] Public eligible-candidate ranking metadata.
-- [x] Public normalized target/language ranking context.
-- [x] Injectable `SpellSuggestionRanker` engine strategy.
-- [x] Source-compatible default ranker preserving the pre-V2.4 order.
-- [x] Engine-owned lexical tie-break for deterministic custom-ranker ties.
-- [x] Candidate eligibility/edit-distance filtering remains authoritative before ranking.
-- [x] Existing suffix reattachment, personal-dictionary candidates, detailed suggestion metadata, caching, and suggestion limits remain compatible.
-- [x] Focused custom/default/tie/context/eligibility regression coverage.
-- [x] API/architecture/development/testing/privacy/security/release documentation.
-
-## 2.5 — Bounded analysis and large-document safety
-
-Status: implemented.
-
-- [x] Public immutable `SpellCheckReport` analysis metadata.
-- [x] Backward-compatible unbounded `check()` behavior.
-- [x] Optional positive `maxIssues` capture bound on `analyze()`.
-- [x] Truncation reported only after an additional unknown token is proven.
-- [x] No suggestion generation for the proven overflow issue.
-- [x] Built-in editor cap of 200 captured spelling issues.
-- [x] `200+` result badge and accessible limited-result notice.
-- [x] Captured-occurrence wording for limited results.
-- [x] Bulk Replace all suppression for incomplete checked occurrence sets.
-- [x] Focused core and widget regression coverage.
-- [x] Dedicated performance/profiling documentation.
-- [x] No persistence/network/runtime-dependency expansion.
-
-## 2.6 — Deterministic writing rule expansion
-
-Status: implemented.
-
-- [x] Built-in English punctuation-spacing rule with stable public ID.
-- [x] Built-in English trailing-whitespace rule with stable public ID.
-- [x] Exact source-range and deterministic empty-string replacement contracts.
-- [x] Six-rule built-in registry/default set for unset preferences.
-- [x] Explicit persisted non-empty/empty rule preferences remain unchanged.
-- [x] Interior repeated-space ownership separated from punctuation/trailing whitespace ownership.
-- [x] Safe batch composition with repeated punctuation and one-step undo.
-- [x] Writing insights exposes both new rule switches.
-- [x] Focused rule/analyzer/interaction/widget regression coverage.
-- [x] Complete V2.6 documentation, privacy/security, release, and web metadata updates.
-- [x] No persistence/network/runtime-dependency expansion.
-
-## 2.7 — Bounded writing analysis and large-document review safety
-
-Status: implemented.
-
-- [x] Optional positive `maxIssues` bound on `WritingAnalyzer.analyze()`.
-- [x] Backward-compatible unbounded analysis when no limit is supplied.
-- [x] Immutable writing result metadata for issue limit, truncation, completeness, and captured count.
-- [x] Globally ordered bounded collector preserving the unbounded review-order prefix.
-- [x] Exactly-at-limit results remain complete unless another finding exists.
-- [x] Full enabled-rule/full-document scanning retained for global ordering correctness.
-- [x] Built-in Writing insights cap of 200 captured findings.
-- [x] Accessible limited-analysis notice and truthful captured-finding counts.
-- [x] Captured-only review filter and batch-fix wording for incomplete result sets.
-- [x] Core and widget regression coverage for bounds, ordering, filtering, fixes, and immutability.
-- [x] No persistence/network/runtime-dependency expansion.
-
-## 2.8 — Writing analysis diagnostics and exact limited counts
-
-Status: implemented.
-
-- [x] Exact analyzer-produced overall finding totals.
-- [x] Exact immutable per-rule finding totals for enabled/supported rules.
-- [x] Exact uncaptured finding count derived from total and retained findings.
-- [x] Backward-compatible direct `WritingAnalysisResult` construction without diagnostics.
-- [x] Consistency validation for overall totals, per-rule totals, captured counts, completeness, and truncation.
-- [x] Bounded analysis still retains only the globally earliest `maxIssues` findings.
-- [x] No extra uncaptured `WritingIssue` retention solely to calculate diagnostics.
-- [x] Writing insights exact `captured/total` badge for limited results.
-- [x] Exact first-N-of-total limited-analysis notice and omitted-count explanation.
-- [x] Exact enabled-rule finding totals in rule metadata.
-- [x] Exact filtered-empty uncaptured count with singular/plural wording.
-- [x] Stable diagnostics widget key and lazy-list-safe widget regression coverage.
-- [x] No elapsed-time telemetry, persistence, network, or runtime-dependency expansion.
-
-## 2.9 — Shareable writing-analysis diagnostics
-
-Status: implemented.
-
-- [x] Public deterministic `WritingAnalysisDiagnosticSummary` metadata model.
-- [x] Public per-rule `WritingRuleDiagnosticSummary` rows.
-- [x] Stable lexical ordering by writing-rule ID.
-- [x] Exact captured/total/uncaptured diagnostics when V2.8 totals are available.
-- [x] Explicit `unavailable` compatibility output when older directly constructed results omit exact totals.
-- [x] Plain-text format version for reproducible support and bug-report comparisons.
-- [x] Formatter excludes editor text, source excerpts, finding messages, replacements, and source offsets.
-- [x] Explicit Writing insights **Copy diagnostic summary** action.
-- [x] Copy action leaves rule preferences, filters, corrections, and dialog state unchanged.
-- [x] Focused core coverage for deterministic output, limited totals, compatibility results, and empty analysis.
-- [x] Widget regression coverage for exact limited diagnostics and the copy control.
-- [x] Package version advances to `2.9.0+14` with dedicated V2.9 documentation.
-- [x] No persistence-format, telemetry, runtime-dependency, or application-network expansion.
-
-## 2.10 — Deterministic large-document benchmarking
-
-Status: implemented.
-
-- [x] Source-controlled deterministic synthetic large-document corpus generator.
-- [x] Positive configurable spelling and writing capture bounds plus non-negative suggestion limit.
-- [x] Fixed benchmark dictionary/frequency metadata independent from bundled dictionary growth.
-- [x] Configurable warmup and measured iteration counts.
-- [x] Fresh spelling engine and writing analyzer state for every benchmark sample.
-- [x] Immutable per-iteration timing/outcome samples.
-- [x] Summary-level min/median/max timing aggregates.
-- [x] Deterministic analysis-outcome consistency validation across measured samples.
-- [x] Versioned JSON benchmark report with no corpus-text serialization.
-- [x] Human-readable report with the same privacy boundary.
-- [x] Strict command-line parsing and usage diagnostics.
-- [x] Built-in `en-US` and `en-GB` benchmark selection.
-- [x] Focused benchmark scenario/result/runner/options/reporter/command regression coverage.
-- [x] CI/release formatting coverage for `tool/` and a threshold-free synthetic benchmark smoke run.
-- [x] No public runtime API, persistence-format, telemetry, application-network, or runtime-dependency expansion.
-
-## 2.11 — Keyboard-first Writing insights accessibility
-
-Status: implemented.
-
-- [x] Direct `Ctrl+F` / `Command+F` focus for the existing Writing insights review search.
-- [x] Focus anchor inside the modal shortcut scope so bindings remain available during keyboard traversal.
-- [x] Two-stage Escape behavior that clears transient review filters before closing.
-- [x] Search-focus restoration after transient filters are cleared.
-- [x] Live semantic visible/total rule-count state.
-- [x] Live complete/limited finding-count semantics with exact captured/total relationships when available.
-- [x] Release-mode positive `WritingInsightsDialog.maxIssues` validation.
-- [x] Lazy-list-safe keyboard and semantics regression coverage.
-- [x] Benchmark exact per-rule totals cover every analyzed rule, including explicit zero-count rules.
-- [x] Package/About release identity advances to `2.11.0+16` / `2.11.0`.
-- [x] Complete V2.11 accessibility, user, developer, testing, privacy/security, support, release, and repository metadata documentation.
-- [x] No persistence-format, telemetry, application-network, or runtime-dependency expansion.
-
-## Version 2.12 — Missing punctuation spacing and Unicode boundaries
-
-Status: implemented.
-
-- Add public `MissingPunctuationSpaceRule` with stable ID `missing-punctuation-space`.
-- Expand the default built-in writing-rule catalogue from six to seven rules.
-- Detect missing following whitespace after `,`, `;`, `!`, and `?` only when Unicode letters bound the punctuation.
-- Accept decomposed Unicode predecessors using a letter plus zero-or-more combining marks.
-- Preserve punctuation-only issue ownership so the new fix remains adjacent to, not overlapping with, `punctuation-spacing` cleanup.
-- Keep periods and colons outside the deterministic automatic scope.
-- Preserve explicit per-language rule selections while allowing unset/reset preferences to adopt the new seven-rule defaults.
-- Extend benchmark workload identity and zero-total metadata to the seventh rule.
-- Add baseline, Unicode, non-BMP-offset, batch-composition, persistence, registry, benchmark, and widget regressions.
-- Advance package/About identity to `2.12.0+17` / `2.12.0` and synchronize the public release documentation.
-
-## Version 2.13 — Unmatched parenthesis diagnostics
-
-Status: implemented.
-
-- [x] Add public `UnmatchedParenthesisRule` with stable ID `unmatched-parenthesis`.
-- [x] Expand the default built-in writing-rule catalogue from seven to eight rules.
-- [x] Balance literal `(` and `)` deterministically with nested-pair support and source-ordered unmatched findings.
-- [x] Preserve one-character UTF-16 source ownership, including non-BMP predecessor offsets.
-- [x] Keep the rule advisory-only with no guessed replacement and warning severity.
-- [x] Integrate Mechanics search/category review while **Automatic fixes only** excludes the advisory finding.
-- [x] Preserve explicit V2.12 seven-rule overrides and let unset/reset preferences adopt eight-rule defaults.
-- [x] Preserve Portable settings format version while round-tripping old and new explicit rule sets.
-- [x] Extend exact bounded diagnostics, privacy-safe diagnostic summaries, and benchmark workload identity to the eighth rule.
-- [x] Add 5,000-level iterative stress coverage plus rule/analyzer/widget/preference/transfer/diagnostic/benchmark regressions.
-- [x] Advance package/About identity to `2.13.0+18` / `2.13.0` and synchronize public release documentation.
-- [x] Add no runtime dependency, telemetry, account, cloud service, document upload, new preference key, or transfer-format change.
-
-## Future 2.x direction
-
-Possible future work includes:
-
-- Richer deterministic writing-rule catalogues with explicit source-range ownership tests.
-- Additional language-specific writing rules and language-pack coverage beyond the two built-in English variants.
-- Additional review presets/categories driven by demonstrated workflows.
-- Additional portable non-document preferences with explicit compatibility/version review.
-- Additional built-in ranker implementations driven by demonstrated ranking needs.
-- Trusted plugin-loading designs with explicit security boundaries.
-- Cross-platform desktop/mobile packaging, signing, and release automation.
-- Future 2.x milestones should continue to be selected from demonstrated user/contributor workflows rather than adding network behavior by default.
-
-Privacy-first local behavior remains a design requirement unless a future optional network feature is explicitly documented, reviewed, and user-controlled.
+SpellChecker `2.16.0+21` represents the completed V2.16 stabilization line. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
+
+## Current status
+
+The current project already ships:
+
+- local deterministic spelling analysis;
+- English (US) and English (UK) built-in language packs;
+- Unicode-aware tokenization/normalization and scalar edit distance;
+- ranked spelling suggestions with injectable ranker strategy;
+- per-language personal dictionaries;
+- session ignored words;
+- occurrence-safe single/replace-all spelling correction;
+- first-200 spelling UI capture with explicit truncation semantics;
+- deterministic local Writing insights subsystem;
+- ten built-in writing rules;
+- per-language writing-rule persistence with unset/explicit/empty semantics;
+- Writing insights presets/search/categories/fix-only filtering;
+- first-200 writing capture with exact analyzer totals;
+- metadata-only diagnostic summary;
+- stale-safe individual and deterministic batch writing correction;
+- shared bounded correction undo;
+- Portable settings format version 1;
+- language-aware personal-dictionary format version 2 plus legacy readers;
+- privacy/local-storage/accessibility/testing/release documentation;
+- deterministic synthetic benchmark tooling;
+- GitHub Actions CI;
+- validated Flutter web release build artifact.
+
+No unchecked V2.16 release requirement remains in the current roadmap.
+
+## Post-V2.16 hardening already completed
+
+The August 16, 2026 post-release audit additionally fixed:
+
+- trailing unfinished sentence undercounting;
+- terminal punctuation followed by common closing quote/bracket statistics;
+- non-BMP sentence-capitalization first-scalar handling;
+- sentence starts inside opening quotes/brackets after a completed sentence.
+
+It also strengthened Buy Me a Coffee visibility and repository regression protection.
+
+See [Post-V2.16 audit](POST_V216_AUDIT_2026_08_16.md).
+
+# Optional future directions
+
+The items below are opportunities, not committed release dates.
+
+## Additional built-in languages
+
+Potential work:
+
+- additional `SpellLanguagePack` implementations;
+- dictionary/frequency data with compatible licensing;
+- language-specific tokenization/normalization;
+- personal-dictionary validation;
+- language selector/persistence integration;
+- writing-rule eligibility review;
+- benchmark/test coverage.
+
+A new official language should meet the completeness checklist in [Language packs](LANGUAGE_PACKS.md).
+
+## Additional deterministic writing rules
+
+Potential rules should remain explainable and source-range-safe. Candidate categories could expand beyond the current Mechanics/Clarity set only with explicit public API/review design.
+
+Every new rule needs an advisory-versus-automatic decision, compatibility review for defaults/preferences/Portable settings, interaction tests, and docs.
+
+The project should avoid expanding the catalogue merely to increase rule count; each rule should have a precise deterministic scope.
+
+## Third-party rule examples / plugin integration guidance
+
+The public `WritingRule` contract already supports caller-supplied rule implementations through custom `WritingAnalyzer` configurations.
+
+Optional work could include:
+
+- standalone example packages/snippets;
+- stronger plugin author guidance;
+- rule metadata conventions;
+- compatibility/testing templates.
+
+Dynamic downloading/execution of untrusted third-party rule code is **not** current scope and would require a separate security/trust architecture.
+
+## Additional suggestion ranking examples
+
+`SpellSuggestionRanker` is injectable. Optional developer-facing work could provide more documented strategies or benchmark examples while preserving deterministic tie behavior.
+
+No cloud ranking/model is required for this extension path.
+
+## Native platform runners and CI
+
+Current repository support is web-only at the runner/release-artifact level.
+
+Official native expansion could add reviewed:
+
+- Android runner/build CI;
+- iOS runner/build CI;
+- Windows runner/build CI;
+- macOS runner/build CI;
+- Linux desktop runner/build CI;
+- platform metadata/icons;
+- signing/provisioning policy;
+- platform storage/clipboard/accessibility validation;
+- release artifacts.
+
+Do not advertise a native target as officially released before those support requirements exist. See [Platform support](PLATFORM_SUPPORT.md).
+
+## Web deployment/public hosting automation
+
+The current release workflow uploads a web artifact but does not deploy it.
+
+Optional work could add an intentional deployment destination such as GitHub Pages or another host, with:
+
+- build provenance;
+- environment/secret handling;
+- rollback policy;
+- custom-domain/security headers if relevant;
+- deployment documentation.
+
+## GitHub Release automation
+
+The current workflow does not automatically create a GitHub Release record or permanent release asset.
+
+Optional work could add:
+
+- release-note generation policy;
+- tag/version validation;
+- GitHub Release creation;
+- web artifact attachment;
+- provenance/signing/checksum strategy.
+
+## Documentation CI
+
+The repository now has a documentation hub and repository test protecting key documentation contracts. Optional further automation could validate:
+
+- relative Markdown links;
+- Markdown style/lint;
+- current package version references;
+- language/rule registry references;
+- duplicate/missing docs-index links.
+
+Any added documentation tooling should remain deterministic and lightweight.
+
+## Localization of application UI/documentation
+
+Language packs currently control spelling data, not UI localization. Optional future work could localize labels/messages/documentation separately from spelling language packs.
+
+This would require a Flutter localization architecture rather than overloading `SpellLanguagePack` with UI strings.
+
+## More advanced writing analysis
+
+Future deterministic improvements could include new local rules with carefully bounded grammar/mechanics scopes.
+
+The project should preserve non-goals unless intentionally redesigned:
+
+- no claim of exhaustive grammar understanding;
+- no implicit generative rewriting;
+- no silent semantic changes;
+- no unsafe guessed mutation for ambiguous findings.
+
+## Performance work
+
+Potential work:
+
+- controlled profiling of suggestion candidate loops;
+- cache/memory profiling;
+- writing-rule scan optimization;
+- larger synthetic benchmark scenario variants;
+- stable environment benchmark reporting.
+
+Performance optimization must preserve Unicode/source-range/correction correctness.
+
+## Data structure/dictionary improvements
+
+Possible improvements include more efficient local lookup/candidate indexing, provided they preserve deterministic ranking results and current public behavior or explicitly document an API change.
+
+Dictionary data changes also require language/variant/regression review.
+
+## Accessibility expansion
+
+Current web UI has keyboard, semantics, responsive, and theme coverage. Optional expansion could include broader manual screen-reader/browser matrices, text-scale audits, automated accessibility tooling, and native-platform accessibility review when native runners become supported.
+
+## Import/export usability
+
+Potential improvements could include explicit file-based import/export in addition to clipboard workflows, but that would introduce file picker/storage/permission/privacy/platform considerations and must be designed deliberately.
+
+## Document persistence
+
+SpellChecker currently does not persist editor documents. Adding file/document saving would be a major product/privacy/security/platform feature rather than a small settings change.
+
+Any future design would need explicit storage location, file format, overwrite/version/recovery behavior, permissions, and privacy documentation.
+
+## What is intentionally not on the current committed roadmap
+
+There is no committed plan requiring:
+
+- cloud spelling/grammar;
+- generative AI rewriting;
+- user accounts;
+- telemetry/advertising;
+- background document upload/monitoring;
+- untrusted dynamic plugin execution;
+- automatic language detection;
+- native release support without runners/CI/signing.
+
+Any of those could only become project scope through an explicit future design/review, not by implication.
+
+# Prioritization criteria
+
+When choosing optional work, prefer changes that improve:
+
+1. correctness and bug prevention;
+2. privacy/security truthfulness;
+3. accessibility/usability;
+4. language/writing coverage with clear deterministic scope;
+5. testability/maintainability;
+6. performance under controlled evidence;
+7. documentation/release clarity.
+
+Avoid feature growth that weakens source ownership, deterministic behavior, backward compatibility, or local privacy without a compelling explicit redesign.
+
+# How proposals become roadmap work
+
+A significant proposal should identify:
+
+- user/developer problem;
+- exact scope/non-goals;
+- public API impact;
+- persistence/format impact;
+- privacy/security impact;
+- platform impact;
+- accessibility impact;
+- performance implications;
+- migration compatibility;
+- test plan;
+- documentation updates.
+
+Feature requests can be opened through the repository's GitHub issue templates. Funding is optional and does not determine whether proposals can be submitted/reviewed.
+
+# Historical roadmap context
+
+Release-specific design/validation files are indexed in [Release history](RELEASE_HISTORY.md). They preserve the sequence by which the current rule catalogue, bounded analysis, diagnostics, accessibility, benchmark, Unicode hardening, and stabilization behavior were added.
+
+Use this page for future/current planning and historical records for what was planned/validated at a specific release point.
+
+## Related documentation
+
+- [Feature reference](FEATURES.md)
+- [Release history](RELEASE_HISTORY.md)
+- [Platform support](PLATFORM_SUPPORT.md)
+- [Writing rules](WRITING_RULES.md)
+- [Language packs](LANGUAGE_PACKS.md)
+- [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md)
