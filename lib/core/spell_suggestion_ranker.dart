@@ -47,7 +47,7 @@ abstract interface class SpellSuggestionRanker {
 /// The ranking used by SpellChecker before the strategy became injectable.
 ///
 /// Order is: edit distance, first-character/prefix penalty, frequency rank,
-/// word length, then the engine's final lexical tie-break.
+/// Unicode scalar length, then the engine's final lexical tie-break.
 class DefaultSpellSuggestionRanker implements SpellSuggestionRanker {
   const DefaultSpellSuggestionRanker();
 
@@ -72,6 +72,6 @@ class DefaultSpellSuggestionRanker implements SpellSuggestionRanker {
       return byFrequency;
     }
 
-    return a.word.length.compareTo(b.word.length);
+    return a.word.runes.length.compareTo(b.word.runes.length);
   }
 }
