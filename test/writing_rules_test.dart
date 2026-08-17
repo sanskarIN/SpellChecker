@@ -106,13 +106,23 @@ void main() {
       expect(rule.analyze('  indented\nword\tinside', pack), isEmpty);
     });
 
-    test('repeated punctuation rule collapses identical punctuation runs', () {
+    test('repeated punctuation rule collapses accidental identical runs', () {
       const rule = RepeatedPunctuationRule();
 
-      final issues = rule.analyze('Really?? Yes!! Wait...', pack).toList();
+      final issues = rule.analyze('Really?? Yes!! Wait... Typo..', pack).toList();
 
       expect(issues, hasLength(3));
+      expect(
+        issues.map((issue) => issue.originalText),
+        <String>['??', '!!', '..'],
+      );
       expect(issues.map((issue) => issue.replacement), <String>['?', '!', '.']);
+    });
+
+    test('repeated punctuation rule preserves a standard ellipsis', () {
+      const rule = RepeatedPunctuationRule();
+
+      expect(rule.analyze('Wait... then continue.', pack), isEmpty);
     });
   });
 
