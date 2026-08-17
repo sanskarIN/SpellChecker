@@ -68,7 +68,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Hindi (India)'), findsOneWidget);
-    await tester.enterText(find.byType(TextField).first, 'नमस्ते दुनिया धन्यवाद');
+    await tester.enterText(
+      find.byType(TextField).first,
+      'नमस्ते दुनिया धन्यवाद',
+    );
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 

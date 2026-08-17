@@ -13,11 +13,12 @@ class SpellCheckerSettingsDocument {
     required this.suggestionLimit,
     Map<String, Iterable<String>> writingRuleOverrides =
         const <String, Iterable<String>>{},
-  }) : writingRuleOverrides =
-           Map<String, Set<String>>.unmodifiable(<String, Set<String>>{
-             for (final entry in writingRuleOverrides.entries)
-               entry.key: Set<String>.unmodifiable(entry.value),
-           });
+  }) : writingRuleOverrides = Map<String, Set<String>>.unmodifiable(
+         <String, Set<String>>{
+           for (final entry in writingRuleOverrides.entries)
+             entry.key: Set<String>.unmodifiable(entry.value),
+         },
+       );
 
   final String languageId;
   final int suggestionLimit;

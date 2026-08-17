@@ -53,9 +53,8 @@ void main() {
       isTruncated: true,
     );
 
-    final summary = WritingAnalysisDiagnosticSummary.fromResult(
-      result,
-    ).toPlainText();
+    final summary = WritingAnalysisDiagnosticSummary.fromResult(result)
+        .toPlainText();
 
     expect(summary, contains('Total findings: unavailable'));
     expect(summary, contains('Uncaptured findings: unavailable'));
@@ -65,13 +64,11 @@ void main() {
   });
 
   test('empty analysis exports an explicit empty rule section', () {
-    final result = WritingAnalyzer(
-      rules: const <WritingRule>[],
-    ).analyze('', languagePack: pack, maxIssues: 10);
+    final result = WritingAnalyzer(rules: const <WritingRule>[])
+        .analyze('', languagePack: pack, maxIssues: 10);
 
-    final summary = WritingAnalysisDiagnosticSummary.fromResult(
-      result,
-    ).toPlainText();
+    final summary = WritingAnalysisDiagnosticSummary.fromResult(result)
+        .toPlainText();
 
     expect(summary, contains('Analysis status: complete'));
     expect(summary, contains('Total findings: 0'));

@@ -103,32 +103,38 @@ void main() {
       );
     });
 
-    test('recognizes French elision prefixes and preserves them in suggestions', () {
-      final engine = SpellCheckerEngine(
-        languagePack: SpellLanguageRegistry.frenchFrance,
-      );
+    test(
+      'recognizes French elision prefixes and preserves them in suggestions',
+      () {
+        final engine = SpellCheckerEngine(
+          languagePack: SpellLanguageRegistry.frenchFrance,
+        );
 
-      expect(engine.isCorrect('l’amour'), isTrue);
-      expect(engine.suggestionsFor('l’amor'), contains("l'amour"));
-    });
+        expect(engine.isCorrect('l’amour'), isTrue);
+        expect(engine.suggestionsFor('l’amor'), contains("l'amour"));
+      },
+    );
 
-    test('recognizes Italian elision prefixes and preserves them in suggestions', () {
-      final engine = SpellCheckerEngine(
-        languagePack: SpellLanguageRegistry.italianItaly,
-      );
+    test(
+      'recognizes Italian elision prefixes and preserves them in suggestions',
+      () {
+        final engine = SpellCheckerEngine(
+          languagePack: SpellLanguageRegistry.italianItaly,
+        );
 
-      expect(engine.isCorrect('l’amore'), isTrue);
-      expect(engine.suggestionsFor('l’amor'), contains("l'amore"));
-    });
+        expect(engine.isCorrect('l’amore'), isTrue);
+        expect(engine.suggestionsFor('l’amor'), contains("l'amore"));
+      },
+    );
 
     test('keeps detailed suggestion metadata language-specific', () {
       final engine = SpellCheckerEngine(
         languagePack: SpellLanguageRegistry.spanishSpain,
       );
 
-      final suggestion = engine.suggestionDetailsFor('holaa').firstWhere(
-        (detail) => detail.word == 'hola',
-      );
+      final suggestion = engine
+          .suggestionDetailsFor('holaa')
+          .firstWhere((detail) => detail.word == 'hola');
 
       expect(suggestion.languageId, 'es-ES');
       expect(suggestion.languageDisplayName, 'Spanish (Spain)');

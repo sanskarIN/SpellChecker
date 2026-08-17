@@ -35,31 +35,29 @@ void main() {
       'ProyectoX',
     }, languageId: 'es-ES');
 
-    expect(
-      await preferences.loadPersonalWords(languageId: 'hi-IN'),
-      <String>{'sanskar'},
-    );
-    expect(
-      await preferences.loadPersonalWords(languageId: 'es-ES'),
-      <String>{'proyectox'},
-    );
-    expect(
-      await preferences.loadPersonalWords(languageId: 'fr-FR'),
-      isEmpty,
-    );
+    expect(await preferences.loadPersonalWords(languageId: 'hi-IN'), <String>{
+      'sanskar',
+    });
+    expect(await preferences.loadPersonalWords(languageId: 'es-ES'), <String>{
+      'proyectox',
+    });
+    expect(await preferences.loadPersonalWords(languageId: 'fr-FR'), isEmpty);
   });
 
-  test('normalizes accented personal words with the selected language pack', () async {
-    final preferences = DictionaryPreferences();
+  test(
+    'normalizes accented personal words with the selected language pack',
+    () async {
+      final preferences = DictionaryPreferences();
 
-    await preferences.savePersonalWords(<String>{
-      'E\u0301cole',
-      'MAN\u0303ANA',
-    }, languageId: 'fr-FR');
+      await preferences.savePersonalWords(<String>{
+        'E\u0301cole',
+        'MAN\u0303ANA',
+      }, languageId: 'fr-FR');
 
-    expect(
-      await preferences.loadPersonalWords(languageId: 'fr-FR'),
-      <String>{'mañana', 'école'},
-    );
-  });
+      expect(await preferences.loadPersonalWords(languageId: 'fr-FR'), <String>{
+        'mañana',
+        'école',
+      });
+    },
+  );
 }
