@@ -1,3 +1,4 @@
+import '../data/bengali_dictionary.dart';
 import '../data/english_dictionary.dart';
 import '../data/english_dictionary_extension.dart';
 import '../data/english_gb_dictionary.dart';
@@ -6,8 +7,12 @@ import '../data/french_dictionary.dart';
 import '../data/german_dictionary.dart';
 import '../data/hindi_dictionary.dart';
 import '../data/italian_dictionary.dart';
+import '../data/marathi_dictionary.dart';
 import '../data/portuguese_br_dictionary.dart';
+import '../data/russian_dictionary.dart';
 import '../data/spanish_dictionary.dart';
+import '../data/tamil_dictionary.dart';
+import '../data/telugu_dictionary.dart';
 
 typedef SpellWordNormalizer = String Function(String word);
 
@@ -228,6 +233,71 @@ class SpellLanguageRegistry {
     suggestionSource: 'bundled Italian (Italy)',
   );
 
+  static final SpellLanguagePack bengaliIndia = SpellLanguagePack(
+    id: 'bn-IN',
+    languageCode: 'bn',
+    regionCode: 'IN',
+    displayName: 'Bengali (India)',
+    dictionary: BengaliDictionary.words,
+    wordFrequencies: BengaliDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Bengali (India)',
+  );
+
+  static final SpellLanguagePack marathiIndia = SpellLanguagePack(
+    id: 'mr-IN',
+    languageCode: 'mr',
+    regionCode: 'IN',
+    displayName: 'Marathi (India)',
+    dictionary: MarathiDictionary.words,
+    wordFrequencies: MarathiDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Marathi (India)',
+  );
+
+  static final SpellLanguagePack tamilIndia = SpellLanguagePack(
+    id: 'ta-IN',
+    languageCode: 'ta',
+    regionCode: 'IN',
+    displayName: 'Tamil (India)',
+    dictionary: TamilDictionary.words,
+    wordFrequencies: TamilDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Tamil (India)',
+  );
+
+  static final SpellLanguagePack teluguIndia = SpellLanguagePack(
+    id: 'te-IN',
+    languageCode: 'te',
+    regionCode: 'IN',
+    displayName: 'Telugu (India)',
+    dictionary: TeluguDictionary.words,
+    wordFrequencies: TeluguDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Telugu (India)',
+  );
+
+  static final SpellLanguagePack russianRussia = SpellLanguagePack(
+    id: 'ru-RU',
+    languageCode: 'ru',
+    regionCode: 'RU',
+    displayName: 'Russian (Russia)',
+    dictionary: RussianDictionary.words,
+    wordFrequencies: RussianDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Russian (Russia)',
+  );
+
   static List<SpellLanguagePack> get builtIns => <SpellLanguagePack>[
     englishUs,
     englishGb,
@@ -237,6 +307,11 @@ class SpellLanguageRegistry {
     germanGermany,
     portugueseBrazil,
     italianItaly,
+    bengaliIndia,
+    marathiIndia,
+    tamilIndia,
+    teluguIndia,
+    russianRussia,
   ];
 
   static SpellLanguagePack get defaultPack => englishUs;
