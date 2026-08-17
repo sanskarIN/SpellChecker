@@ -4,9 +4,13 @@ This page indexes release-specific documentation without turning historical reco
 
 ## Current package release
 
-Current package version: `3.0.0+22`.
+Current package version: `3.1.0+23`.
 
-V3.0 is the cross-platform foundation release line. It retains the V2.16 spelling/writing behavior while adding committed Flutter runners and automated release-mode build validation for Android, iOS, Linux, macOS, Web, and Windows.
+V3.1 is the multilingual spelling foundation release line. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling from two English variants to eight language packs.
+
+## V3.1
+
+- [V3.1 multilingual foundation](V3_1_MULTILINGUAL_FOUNDATION.md) — six new offline spelling packs, Unicode/affix behavior, persistence isolation, writing-rule boundary, lexicon scope, and validation requirements.
 
 ## V3.0
 

@@ -1,10 +1,10 @@
 # Feature Reference
 
-This page describes the **current** SpellChecker `2.16.0+21` product surface. It is an evergreen reference; release-specific V2.x documents describe historical milestones and may contain older registry sizes or compatibility context.
+This page describes the **current** SpellChecker `3.1.0+23` product surface. It is an evergreen reference; release-specific V2.x documents describe historical milestones and may contain older registry sizes or compatibility context.
 
 ## Product summary
 
-SpellChecker combines a Flutter editor workflow with reusable Dart spelling and writing-analysis APIs. Analysis is deterministic and local. The bundled application is designed for explicit English language selection, personal vocabulary, explainable writing rules, safe source-range corrections, and bounded review of large inputs.
+SpellChecker combines a Flutter editor workflow with reusable Dart spelling and writing-analysis APIs. Analysis is deterministic and local. The bundled application is designed for explicit multilingual spelling-language selection, personal vocabulary, explainable writing rules, safe source-range corrections, and bounded review of large inputs.
 
 ## Spelling
 
@@ -16,7 +16,7 @@ Spelling is performed by `SpellCheckerEngine` using the selected `SpellLanguageP
 - a bundled base dictionary;
 - per-engine personal dictionary words;
 - per-engine session ignored words;
-- regular English suffix/contraction acceptance from known stems;
+- language-specific recognized prefix/suffix handling from known stems;
 - occurrence-specific `SpellIssue` source ranges;
 - deterministic ranked suggestions;
 - detailed suggestion metadata;
@@ -52,10 +52,16 @@ Manual text edits invalidate the previous spelling snapshot instead of reusing o
 | --- | --- | --- |
 | `en-US` | English (US) | built in, default |
 | `en-GB` | English (UK) | built in |
+| `hi-IN` | Hindi (India) | built in |
+| `es-ES` | Spanish (Spain) | built in |
+| `fr-FR` | French (France) | built in |
+| `de-DE` | German (Germany) | built in |
+| `pt-BR` | Portuguese (Brazil) | built in |
+| `it-IT` | Italian (Italy) | built in |
 
 SpellChecker does not auto-detect language. Language selection is explicit. Personal vocabulary and writing-rule choices are stored separately for each built-in language.
 
-Additional languages require a `SpellLanguagePack` implementation and associated dictionary/tokenization/normalization behavior. See [Language packs](LANGUAGE_PACKS.md).
+The six V3.1 non-English packs are curated offline starter lexicons rather than exhaustive linguistic dictionaries. Further languages or deeper vocabulary require reviewed `SpellLanguagePack` data, normalization/affix behavior, tests, and licensing review. See [Language packs](LANGUAGE_PACKS.md).
 
 ## Writing insights
 
@@ -76,7 +82,7 @@ The writing subsystem is separate from spelling. It uses `WritingRule`, `Writing
 | `unmatched-square-bracket` | unpaired literal `[` or `]` | Mechanics | no; advisory |
 | `unmatched-curly-brace` | unpaired literal `{` or `}` | Mechanics | no; advisory |
 
-All current built-ins declare English (`en`) eligibility, so they run for both built-in English packs. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.
+All current built-in writing rules declare English (`en`) eligibility, so they run for the two built-in English packs only. The six non-English V3.1 packs provide spelling and suggestions without applying English-specific writing rules. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.
 
 See [Writing rules](WRITING_RULES.md) for precise source ownership, severities, rule IDs, compatibility behavior, and plugin requirements.
 

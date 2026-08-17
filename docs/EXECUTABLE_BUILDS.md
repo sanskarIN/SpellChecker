@@ -11,7 +11,7 @@ It deliberately distinguishes between:
 - the metadata, documentation, CI, and release files that must be reviewed even when they are not compiled into the binary;
 - target-specific signing, packaging, and distribution work that must never be confused with the cross-platform CI build contract.
 
-SpellChecker is currently version `3.0.0+22` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
+SpellChecker is currently version `3.1.0+23` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
 
 > **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Production mobile/desktop signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
 
@@ -354,7 +354,7 @@ The repository release workflow uses release mode for web.
 Current package version:
 
 ```text
-3.0.0+22
+3.1.0+23
 ```
 
 The version in `pubspec.yaml` is the project source of truth. Before producing an official release artifact:
@@ -567,6 +567,12 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `lib/data/english_dictionary_extension.dart`
 - `lib/data/english_gb_dictionary.dart`
 - `lib/data/english_word_frequencies.dart`
+- `lib/data/french_dictionary.dart`
+- `lib/data/german_dictionary.dart`
+- `lib/data/hindi_dictionary.dart`
+- `lib/data/italian_dictionary.dart`
+- `lib/data/portuguese_br_dictionary.dart`
+- `lib/data/spanish_dictionary.dart`
 - `lib/features/editor/dictionary_manager_dialog.dart`
 - `lib/features/editor/settings_transfer_dialog.dart`
 - `lib/features/editor/spell_check_editing_controller.dart`
@@ -616,6 +622,9 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/language_pack_test.dart`
 - `test/language_preferences_test.dart`
 - `test/language_widget_test.dart`
+- `test/multilingual_language_pack_test.dart`
+- `test/multilingual_preferences_test.dart`
+- `test/multilingual_widget_test.dart`
 - `test/missing_punctuation_space_rule_test.dart`
 - `test/missing_punctuation_space_unicode_test.dart`
 - `test/personal_dictionary_codec_test.dart`
@@ -690,6 +699,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `tool/benchmark_large_document.dart`
 
 - `docs/V3_0_CROSS_PLATFORM_FOUNDATION.md`
+- `docs/V3_1_MULTILINGUAL_FOUNDATION.md`
 
 <!-- tracked-file-inventory:end -->
 

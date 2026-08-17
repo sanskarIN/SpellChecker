@@ -3,8 +3,17 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const currentVersion = '3.0.0+22';
-  const builtInLanguageIds = <String>['en-US', 'en-GB'];
+  const currentVersion = '3.1.0+23';
+  const builtInLanguageIds = <String>[
+    'en-US',
+    'en-GB',
+    'hi-IN',
+    'es-ES',
+    'fr-FR',
+    'de-DE',
+    'pt-BR',
+    'it-IT',
+  ];
   const builtInRuleIds = <String>[
     'repeated-word',
     'sentence-capitalization',

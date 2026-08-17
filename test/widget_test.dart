@@ -140,7 +140,7 @@ void main() {
     expect(find.text('flutter'), findsOneWidget);
   });
 
-  testWidgets('About dialog reports the final V2.16 release', (
+  testWidgets('About dialog reports the V3.1 multilingual release', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const SpellCheckerApp());
@@ -149,6 +149,6 @@ void main() {
     await tester.tap(find.byTooltip('About SpellChecker'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('3.0.0'), findsOneWidget);
+    expect(find.textContaining('3.1.0'), findsOneWidget);
   });
 }

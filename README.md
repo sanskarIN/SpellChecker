@@ -4,10 +4,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-sanskarIN-FFDD00?logo=buymeacoffee&logoColor=000000)](https://buymeacoffee.com/sanskarIN)
 
-SpellChecker is a privacy-first, open-source Flutter spelling utility and deterministic writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports explicit English language packs, keeps personal vocabulary and writing-rule choices local, offers keyboard-first review, applies source-range-safe corrections, and exposes reusable Dart APIs.
+SpellChecker is a privacy-first, open-source Flutter spelling utility and deterministic writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports eight explicit offline language packs, keeps personal vocabulary and writing-rule choices local, offers keyboard-first review, applies source-range-safe corrections, and exposes reusable Dart APIs.
 
-**Current package:** `3.0.0+22`  
-**Built-in languages:** English (US) `en-US`, English (UK) `en-GB`  
+**Current package:** `3.1.0+23`  
+**Built-in languages:** English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, Italian `it-IT`  
 **Built-in writing rules:** 10  
 **Runtime dependencies:** Flutter SDK and `shared_preferences`  
 **Committed targets:** Android, iOS, Linux, macOS, Windows, Web  
@@ -24,7 +24,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and determ
 - **Local by design.** The bundled application does not send editor text to a remote spelling/grammar service and does not add accounts, telemetry, cloud writing, or document upload.
 - **Deterministic corrections.** Spelling and writing fixes verify current source ranges before mutation, and batch writing fixes use a deterministic conservative overlap policy.
 - **Unicode-aware.** Tokenization supports Unicode letters/combining marks, edit distance works over Unicode scalar values, and source offsets stay compatible with Dart/Flutter UTF-16 text editing.
-- **Language explicit.** Built-in `en-US` and `en-GB` packs keep regional dictionaries, personal vocabulary, and writing-rule choices separate.
+- **Language explicit and offline.** Eight built-in packs cover English, Hindi, Spanish, French, German, Brazilian Portuguese, and Italian spelling while keeping personal vocabulary separate by language. English writing rules remain limited to the English packs.
 - **Explainable writing review.** Ten built-in local rules cover repeated words, capitalization, spacing, punctuation, trailing whitespace, repeated punctuation, and advisory unmatched delimiters.
 - **Large-document aware.** The bundled UI captures the first 200 spelling issues and first 200 writing findings with explicit limited-result semantics; writing analysis can still report exact totals.
 - **Reusable.** Public Dart barrels expose spelling, language-pack, correction, suggestion-ranking, writing-rule, diagnostics, and transfer-codec APIs.
@@ -74,7 +74,7 @@ The repository commits official Flutter runners for Android, iOS, Linux, macOS, 
 ## Application workflow
 
 1. Enter or paste text in the editor.
-2. Choose English (US) or English (UK).
+2. Choose one of the eight built-in offline spelling language packs.
 3. Select **Check spelling** or press `Ctrl+Enter` / `Command+Enter`.
 4. Review underlined issues and ranked suggestions.
 5. Use `F7` / `Shift+F7` to move between spelling issues.
@@ -100,7 +100,7 @@ Manual typing invalidates the previous spelling snapshot so stale offsets are no
 | `unmatched-square-bracket` | unpaired literal square bracket | advisory |
 | `unmatched-curly-brace` | unpaired literal curly brace | advisory |
 
-All current built-ins support language code `en`, making both registered English packs eligible. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.
+All current built-in writing rules support language code `en`, so they run for the two registered English packs. The six new non-English packs provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.
 
 See [Writing rules](docs/WRITING_RULES.md) for source ownership, severities, categories, bounded analysis, preferences, safe batch correction, diagnostics, and custom-rule guidance.
 
