@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "in.sanskar" "\0"
-            VALUE "FileDescription", "spellchecker" "\0"
+            VALUE "CompanyName", "Sanskar" "\0"
+            VALUE "FileDescription", "SpellChecker" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "spellchecker" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 in.sanskar. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Sanskar. All rights reserved." "\0"
             VALUE "OriginalFilename", "spellchecker.exe" "\0"
-            VALUE "ProductName", "spellchecker" "\0"
+            VALUE "ProductName", "SpellChecker" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
