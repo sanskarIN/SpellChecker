@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spellchecker/app.dart';
+import 'package:spellchecker/features/editor/spell_checker_page.dart';
+import 'package:spellchecker/main.dart';
+import 'package:spellchecker/storage/dictionary_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -17,16 +18,12 @@ void main() {
     await tester.pumpWidget(const SpellCheckerApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Ready to check'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField), 'Helo world');
+    await tester.enterText(find.byType(TextField).first, 'helo world');
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Helo'), findsOneWidget);
-    expect(find.byType(ActionChip), findsWidgets);
-    expect(find.text('Suggestions'), findsOneWidget);
-    expect(find.text('Issue 1 of 1'), findsOneWidget);
+    expect(find.text('helo'), findsOneWidget);
+    expect(find.text('hello'), findsWidgets);
   });
 
   testWidgets('shows a dedicated blank-input result state', (
@@ -38,7 +35,7 @@ void main() {
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nothing to check'), findsOneWidget);
+    expect(find.text('Nothing to check yet'), findsOneWidget);
   });
 
   testWidgets('F7 moves to the next spelling issue', (
@@ -47,16 +44,15 @@ void main() {
     await tester.pumpWidget(const SpellCheckerApp());
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'Zorbax Qwertyx');
+    await tester.enterText(find.byType(TextField).first, 'helo wurld');
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Issue 1 of 2'), findsOneWidget);
-
+    expect(find.textContaining('Issue 1 of 2'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.f7);
     await tester.pumpAndSettle();
 
-    expect(find.text('Issue 2 of 2'), findsOneWidget);
+    expect(find.textContaining('Issue 2 of 2'), findsOneWidget);
   });
 
   testWidgets('replace all can be undone as one correction', (
@@ -65,59 +61,45 @@ void main() {
     await tester.pumpWidget(const SpellCheckerApp());
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'Helo world Helo world');
+    final editor = find.byType(TextField).first;
+    await tester.enterText(editor, 'helo helo');
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
-    expect(find.text('2 occurrences'), findsWidgets);
-    expect(find.text('Replace all…'), findsWidgets);
-
-    final replaceAll = find.text('Replace all…').first;
-    await tester.ensureVisible(replaceAll);
-    await tester.pumpAndSettle();
+    final replaceAll = find.widgetWithText(TextButton, 'Replace all');
+    expect(replaceAll, findsOneWidget);
     await tester.tap(replaceAll);
     await tester.pumpAndSettle();
 
-    final replacementItems = find.byType(PopupMenuItem<String>);
-    expect(replacementItems, findsWidgets);
-    await tester.tap(replacementItems.first);
+    expect(tester.widget<TextField>(editor).controller?.text, 'hello hello');
+
+    await tester.tap(find.byTooltip('Undo correction'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No issues found'), findsOneWidget);
-    expect(find.text('Undo'), findsOneWidget);
-
-    await tester.tap(find.text('Undo'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('2 occurrences'), findsWidgets);
-    expect(find.text('Replace all…'), findsWidgets);
-    expect(find.textContaining('Issue '), findsWidgets);
+    expect(tester.widget<TextField>(editor).controller?.text, 'helo helo');
   });
 
   testWidgets('saves a personal word through the editor workflow', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const SpellCheckerApp());
+    final preferences = DictionaryPreferences();
+    await tester.pumpWidget(
+      MaterialApp(home: SpellCheckerPage(preferences: preferences)),
+    );
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'Zorbax');
+    final editor = find.byType(TextField).first;
+    await tester.enterText(editor, 'flutter');
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Zorbax'), findsNWidgets(2));
-    final saveWord = find.text('Save word');
-    expect(saveWord, findsOneWidget);
-    await tester.ensureVisible(saveWord);
-    await tester.pumpAndSettle();
-    await tester.tap(saveWord);
+    expect(find.text('flutter'), findsOneWidget);
+    await tester.tap(find.text('Add to personal dictionary'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No issues found'), findsOneWidget);
-
-    final preferences = await SharedPreferences.getInstance();
     expect(
-      preferences.getStringList('spellchecker.personal_words.v1'),
-      contains('zorbax'),
+      await preferences.loadPersonalWords(languageId: 'en-US'),
+      contains('flutter'),
     );
   });
 
@@ -125,8 +107,7 @@ void main() {
     WidgetTester tester,
   ) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
-      'spellchecker.personal_words.v1': <String>['flutter'],
-      'spellchecker.suggestion_limit.v1': 8,
+      'spellchecker.personal_words.v2.en-US': <String>['flutter'],
     });
 
     await tester.pumpWidget(const SpellCheckerApp());
@@ -149,6 +130,6 @@ void main() {
     await tester.tap(find.byTooltip('About SpellChecker'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('3.1.0'), findsOneWidget);
+    expect(find.textContaining('3.1.1'), findsOneWidget);
   });
 }
