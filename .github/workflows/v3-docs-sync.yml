@@ -56,4 +56,4 @@ jobs:
           test -f docs/V3_1_MULTILINGUAL_FOUNDATION.md
           grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md
           grep -F 'Cross-platform CI' docs/V3_0_CROSS_PLATFORM_FOUNDATION.md
-          grep -F 'eight language packs' docs/V3_1_MULTILINGUAL_FOUNDATION.md
+          grep -F 'eight explicit offline spelling packs' docs/V3_1_MULTILINGUAL_FOUNDATION.md
