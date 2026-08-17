@@ -4,7 +4,7 @@ import 'package:spellchecker/core/spell_language_pack.dart';
 
 void main() {
   group('multilingual registry', () {
-    test('exposes eight built-in language packs', () {
+    test('exposes thirteen built-in language packs', () {
       expect(
         SpellLanguageRegistry.builtIns.map((pack) => pack.id).toList(),
         <String>[
@@ -16,19 +16,17 @@ void main() {
           'de-DE',
           'pt-BR',
           'it-IT',
+          'bn-IN',
+          'mr-IN',
+          'ta-IN',
+          'te-IN',
+          'ru-RU',
         ],
       );
     });
 
-    test('resolves every new pack by stable language id', () {
-      for (final id in <String>[
-        'hi-IN',
-        'es-ES',
-        'fr-FR',
-        'de-DE',
-        'pt-BR',
-        'it-IT',
-      ]) {
+    test('resolves every V3.2 pack by stable language id', () {
+      for (final id in <String>['bn-IN', 'mr-IN', 'ta-IN', 'te-IN', 'ru-RU']) {
         expect(SpellLanguageRegistry.contains(id), isTrue);
         expect(SpellLanguageRegistry.byId(id).id, id);
       }
@@ -44,6 +42,11 @@ void main() {
         SpellLanguageRegistry.germanGermany: 'hallo welt danke',
         SpellLanguageRegistry.portugueseBrazil: 'olá mundo obrigado',
         SpellLanguageRegistry.italianItaly: 'ciao mondo grazie',
+        SpellLanguageRegistry.bengaliIndia: 'নমস্কার বিশ্ব ধন্যবাদ',
+        SpellLanguageRegistry.marathiIndia: 'नमस्कार जग धन्यवाद',
+        SpellLanguageRegistry.tamilIndia: 'வணக்கம் உலகம் நன்றி',
+        SpellLanguageRegistry.teluguIndia: 'నమస్కారం ప్రపంచం ధన్యవాదాలు',
+        SpellLanguageRegistry.russianRussia: 'привет мир спасибо',
       };
 
       for (final entry in samples.entries) {
@@ -56,7 +59,7 @@ void main() {
       }
     });
 
-    test('suggests corrections inside every new language pack', () {
+    test('suggests corrections inside every multilingual pack', () {
       final cases = <SpellLanguagePack, (String, String)>{
         SpellLanguageRegistry.hindiIndia: ('नमसते', 'नमस्ते'),
         SpellLanguageRegistry.spanishSpain: ('holaa', 'hola'),
@@ -64,6 +67,11 @@ void main() {
         SpellLanguageRegistry.germanGermany: ('haloo', 'hallo'),
         SpellLanguageRegistry.portugueseBrazil: ('obrigdo', 'obrigado'),
         SpellLanguageRegistry.italianItaly: ('graze', 'grazie'),
+        SpellLanguageRegistry.bengaliIndia: ('ধন্যবদ', 'ধন্যবাদ'),
+        SpellLanguageRegistry.marathiIndia: ('नमसकार', 'नमस्कार'),
+        SpellLanguageRegistry.tamilIndia: ('நன்ற', 'நன்றி'),
+        SpellLanguageRegistry.teluguIndia: ('నమస్కార', 'నమస్కారం'),
+        SpellLanguageRegistry.russianRussia: ('превет', 'привет'),
       };
 
       for (final entry in cases.entries) {
@@ -103,6 +111,19 @@ void main() {
       );
     });
 
+    test('keeps Unicode join controls inside a single Indic word', () {
+      const joinedWord = 'क्\u200Dष';
+      final pack = SpellLanguageRegistry.hindiIndia;
+      final matches = pack.tokenize('अब $joinedWord शब्द').toList();
+
+      expect(matches.map((match) => match.group(0)).toList(), <String>[
+        'अब',
+        joinedWord,
+        'शब्द',
+      ]);
+      expect(pack.isValidWord(joinedWord), isTrue);
+    });
+
     test(
       'recognizes French elision prefixes and preserves them in suggestions',
       () {
@@ -129,16 +150,16 @@ void main() {
 
     test('keeps detailed suggestion metadata language-specific', () {
       final engine = SpellCheckerEngine(
-        languagePack: SpellLanguageRegistry.spanishSpain,
+        languagePack: SpellLanguageRegistry.russianRussia,
       );
 
       final suggestion = engine
-          .suggestionDetailsFor('holaa')
-          .firstWhere((detail) => detail.word == 'hola');
+          .suggestionDetailsFor('превет')
+          .firstWhere((detail) => detail.word == 'привет');
 
-      expect(suggestion.languageId, 'es-ES');
-      expect(suggestion.languageDisplayName, 'Spanish (Spain)');
-      expect(suggestion.source, contains('Spanish (Spain)'));
+      expect(suggestion.languageId, 'ru-RU');
+      expect(suggestion.languageDisplayName, 'Russian (Russia)');
+      expect(suggestion.source, contains('Russian (Russia)'));
     });
   });
 }

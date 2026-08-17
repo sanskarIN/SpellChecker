@@ -4,9 +4,13 @@ This page indexes release-specific documentation without turning historical reco
 
 ## Current package release
 
-Current package version: `3.1.1+24`.
+Current package version: `3.2.0+25`.
 
-V3.1 is the multilingual spelling foundation release line. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling from two English variants to eight language packs. V3.1.1 is a hardening patch for strict language-namespace persistence, Unicode-scalar ranking consistency, and evergreen documentation truthfulness.
+V3.2 is the current multilingual expansion release. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling to thirteen language packs and hardening in-word Unicode join-control tokenization. V3.1.1 remains the namespace/ranking/documentation hardening patch immediately before V3.2.
+
+## V3.2
+
+- [V3.2 language expansion](V3_2_LANGUAGE_EXPANSION.md) — Bengali, Marathi, Tamil, Telugu, and Russian starter packs, Unicode join-control hardening, compatibility boundaries, and validation requirements.
 
 ## V3.1
 
