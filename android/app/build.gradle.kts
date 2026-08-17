@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "`in`.sanskar.spellchecker"
+    namespace = "in.sanskar.spellchecker"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,8 +15,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "`in`.sanskar.spellchecker"
+        // Stable SpellChecker application ID. Keep this aligned with release/store identity.
+        applicationId = "in.sanskar.spellchecker"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -31,8 +31,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // CI validates release-mode compilation with the generated debug signing
+            // configuration. Production distribution must use a private release key.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
