@@ -16,6 +16,33 @@ void main() {
       },
     );
 
+    test('default ranker compares candidate length by Unicode scalars', () {
+      const ranker = DefaultSpellSuggestionRanker();
+      final context = SpellSuggestionRankingContext(
+        target: 'test',
+        languagePack: SpellLanguageRegistry.defaultPack,
+      );
+      const shorterByScalars = SpellSuggestionCandidate(
+        word: '𐐀a',
+        distance: 1,
+        prefixPenalty: 0,
+        frequencyRank: 10,
+        source: 'test',
+      );
+      const longerByScalars = SpellSuggestionCandidate(
+        word: 'abc',
+        distance: 1,
+        prefixPenalty: 0,
+        frequencyRank: 10,
+        source: 'test',
+      );
+
+      expect(shorterByScalars.word.length, longerByScalars.word.length);
+      expect(shorterByScalars.word.runes.length, 2);
+      expect(longerByScalars.word.runes.length, 3);
+      expect(ranker.compare(context, shorterByScalars, longerByScalars), lessThan(0));
+    });
+
     test('custom ranker can replace the default ordering policy', () {
       final engine = SpellCheckerEngine(
         dictionary: <String>{'cat', 'cut'},
