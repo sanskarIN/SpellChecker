@@ -76,12 +76,12 @@ class SpellLanguageRegistry {
   const SpellLanguageRegistry._();
 
   static final RegExp _unicodeTokenPattern = RegExp(
-    r"(?:\p{L}\p{M}*)+(?:['’\-‐‑](?:\p{L}\p{M}*)+)*",
+    r"(?:\p{L}\p{M}*)(?:[\u200C\u200D]?(?:\p{L}\p{M}*))*(?:['’\-‐‑](?:\p{L}\p{M}*)(?:[\u200C\u200D]?(?:\p{L}\p{M}*))*)*",
     unicode: true,
   );
 
   static final RegExp _unicodeValidWordPattern = RegExp(
-    r"^(?:\p{L}\p{M}*)+(?:['\-](?:\p{L}\p{M}*)+)*$",
+    r"^(?:\p{L}\p{M}*)(?:[\u200C\u200D]?(?:\p{L}\p{M}*))*(?:['\-](?:\p{L}\p{M}*)(?:[\u200C\u200D]?(?:\p{L}\p{M}*))*)*$",
     unicode: true,
   );
 
