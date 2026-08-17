@@ -1,153 +1,197 @@
 # Platform Support
 
-This page distinguishes **portable Flutter source**, **committed platform runners**, **automated validation**, and **published build artifacts**. Those are different levels of support and should not be conflated.
+This page distinguishes **portable Flutter source**, **committed platform runners**, **automated target builds**, and **distribution-ready signed artifacts**. Those are different support levels and should not be conflated.
 
-For complete build commands, native-runner generation, packaging, signing boundaries, artifact verification, troubleshooting, and the machine-checked repository file inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+For build commands, packaging, signing boundaries, artifact verification, troubleshooting, and release procedures, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
-## Current repository state
+## Current V3 repository state
 
-The repository currently commits:
+The `v3/cross-platform-foundation` line commits official Flutter runners for:
 
-- portable Flutter/Dart application and library source under `lib/`;
-- a Flutter web host under `web/`;
-- tests under `test/`;
-- deterministic benchmark tooling under `tool/`.
+- Android;
+- iOS;
+- Linux desktop;
+- macOS;
+- Web;
+- Windows.
 
-It does **not** currently commit platform-runner directories for Android, iOS, Windows, macOS, or Linux.
+The application package/bundle identity is based on `in.sanskar.spellchecker` where the platform uses reverse-domain application identifiers. User-facing application branding is `SpellChecker`.
+
+The runners were generated with Flutter stable and are tracked by the repository `.metadata` file so future Flutter migrations can reason about their template origin.
 
 ## Support matrix
 
-| Target | Portable Flutter source | Runner committed | Automated native/target build | Release artifact |
-| --- | --- | --- | --- | --- |
-| Web | yes | yes (`web/`) | yes, release workflow runs `flutter build web --release` | yes, uploaded web artifact |
-| Android | source may be adapted with Flutter tooling | no | no | no |
-| iOS | source may be adapted with Flutter tooling | no | no | no |
-| Windows | source may be adapted with Flutter tooling | no | no | no |
-| macOS | source may be adapted with Flutter tooling | no | no | no |
-| Linux desktop | source may be adapted with Flutter tooling | no | no native desktop build | no |
+| Target | Portable source | Runner committed | Automated release-mode build | CI artifact | Store/distribution signing |
+| --- | --- | --- | --- | --- | --- |
+| Web | yes | yes | yes | yes | not applicable |
+| Android | yes | yes | yes, APK | yes | external signing still required for production distribution |
+| iOS | yes | yes | yes, `--no-codesign` | yes | Apple signing/provisioning still required |
+| Linux desktop | yes | yes | yes | yes | packaging policy remains distribution-specific |
+| macOS | yes | yes | yes | yes | signing/notarization still required for public distribution |
+| Windows | yes | yes | yes | yes | optional/required code signing depends on distribution channel |
 
-This matrix documents what the repository validates today. It does not claim that Flutter itself cannot target the native platforms listed above.
+The cross-platform CI workflow is `.github/workflows/cross-platform.yml`. It runs source quality gates once and then builds every target on the operating system required by Flutter.
 
-## What CI validates
+## What cross-platform CI validates
 
-The primary CI workflow runs on `ubuntu-latest` and performs:
+The workflow first runs on Ubuntu:
 
 ```text
 flutter pub get
-dart format --output=none --set-exit-if-changed lib test tool
+dart format lib test tool + clean-diff check
 flutter analyze
 flutter test --reporter expanded
 benchmark CLI smoke
 ```
 
-Those checks validate Dart/Flutter source behavior and tests. They do not build Android APK/AAB, iOS app bundles, Windows executables, macOS apps, or Linux desktop bundles.
+After the common quality job succeeds, target jobs run in parallel:
 
-The documentation test also verifies that the tracked-file inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md) matches `git ls-files`, so newly committed files cannot be silently omitted from executable/release documentation.
-
-## What the release workflow validates
-
-On `v*` tags or manual workflow dispatch, the release workflow performs the same dependency/format/analyze/test/benchmark-smoke gates and then runs:
-
-```bash
-flutter build web --release
+```text
+Web      ubuntu-latest   flutter build web --release
+Android  ubuntu-latest   flutter build apk --release
+Linux    ubuntu-latest   flutter build linux --release
+Windows  windows-latest  flutter build windows --release
+macOS    macos-latest    flutter build macos --release
+iOS      macos-latest    flutter build ios --release --no-codesign
 ```
 
-It uploads `build/web` as a workflow artifact named from the tag/ref and retains that artifact according to the workflow configuration.
+Each build uploads a short-lived GitHub Actions artifact so build output can be inspected. These CI artifacts prove buildability; they are not automatically permanent GitHub Releases or store-ready signed packages.
 
-Therefore, the repository's automated release contract is currently **web release build**, not a native multi-platform release pipeline.
+## Local run/build commands
 
-## Running the committed target locally
+Resolve dependencies first:
 
-After cloning and resolving dependencies:
+```bash
+flutter pub get
+```
+
+Then use the target supported by the current development machine.
+
+### Web
 
 ```bash
 flutter run -d chrome
-```
-
-To build the same target used by release automation:
-
-```bash
 flutter build web --release
 ```
 
-For the complete preflight and artifact verification procedure, use [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+### Android
 
-## Using an additional Flutter target locally
+```bash
+flutter run -d <android-device-id>
+flutter build apk --release
+```
 
-The application source avoids target-specific business logic and is organized as portable Flutter code, but a target still needs the platform files and toolchain expected by Flutter.
+### iOS
 
-If you choose to generate additional runner files locally:
+Requires macOS/Xcode:
 
-- use the Flutter tooling version supported by your environment;
-- work on a dedicated branch;
-- review every generated file before committing it;
-- avoid committing local signing credentials, provisioning profiles, keystores, secrets, or machine-specific paths;
-- run the platform's relevant Flutter doctor checks;
-- add target-specific tests/build CI before advertising the target as a repository-supported release platform;
-- follow the target-specific generation/build/package procedure in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+```bash
+flutter run -d <ios-device-or-simulator-id>
+flutter build ios --release --no-codesign
+```
 
-The project does not currently define a canonical generated native runner configuration, so generated native files should not be presented as official release support until they are reviewed and added intentionally.
+A distributable iOS package requires Apple signing/provisioning outside the repository.
+
+### Linux
+
+```bash
+flutter run -d linux
+flutter build linux --release
+```
+
+### macOS
+
+```bash
+flutter run -d macos
+flutter build macos --release
+```
+
+### Windows
+
+```powershell
+flutter run -d windows
+flutter build windows --release
+```
+
+Use `flutter doctor -v` to verify the platform toolchain before diagnosing project code.
+
+## Application identity
+
+The native foundation intentionally separates stable machine identity from presentation branding.
+
+- Reverse-domain application identity: `in.sanskar.spellchecker` where applicable.
+- Android launcher label: `SpellChecker`.
+- iOS display/bundle name: `SpellChecker`.
+- Linux window title: `SpellChecker`.
+- macOS product name: `SpellChecker`.
+- Windows product/file description: `SpellChecker` while the executable filename remains stable as `spellchecker.exe`.
+
+Changing package/bundle identifiers later can break upgrades, preference continuity, store identity, deep links, or signing configuration. Treat such changes as migrations rather than cosmetic edits.
 
 ## Storage behavior by platform
 
-The application uses `shared_preferences` as its local preference abstraction. The exact backing store is platform/plugin-specific. SpellChecker treats it as local preference storage for selected language, suggestion count, per-language personal words, and per-language writing-rule overrides.
+The application uses `shared_preferences` as its local preference abstraction. Its physical backing store is platform/plugin-specific. SpellChecker treats it as local preference storage for selected language, suggestion count, per-language personal words, and per-language writing-rule overrides.
 
-Do not rely on the physical storage file/location as part of the public SpellChecker API.
+Do not rely on physical preference file/registry locations as part of the public SpellChecker API.
 
 Before clearing browser/site/app data, export personal vocabulary and copy Portable settings if they are important.
 
 ## Clipboard behavior
 
-The application uses Flutter clipboard APIs for explicit user actions such as:
+The application uses Flutter clipboard APIs only for explicit user actions such as:
 
 - copying personal-dictionary export JSON;
 - copying Portable settings JSON;
 - copying the privacy-safe Writing insights diagnostic summary.
 
-Clipboard behavior depends on the host platform/browser and its permissions/policies. SpellChecker does not automatically copy editor text.
+Clipboard access can be affected by host platform, browser, sandbox, enterprise, or permission policies. SpellChecker does not automatically copy editor text.
 
-## Keyboard differences
+## Keyboard behavior
 
-SpellChecker registers both Control and Meta variants for primary editor actions where appropriate:
+SpellChecker registers Control and Meta variants for primary editor actions where appropriate:
 
 - `Ctrl+Enter` / `Command+Enter` — spelling check;
 - `Ctrl+Shift+Enter` / `Command+Shift+Enter` — Writing insights;
 - `Ctrl+F` / `Command+F` inside Writing insights — focus search.
 
-`F7`, `Shift+F7`, and Escape behavior may also depend on browser/OS-level shortcut interception. See [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
+`F7`, `Shift+F7`, and Escape may also be intercepted by browser/OS/window-manager shortcuts. See [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
 
-## Browser considerations
+## Accessibility
 
-The committed web target relies on Flutter web and browser-provided storage/clipboard behavior. Browser private/incognito modes, storage policies, site-data clearing, enterprise policies, or clipboard restrictions can affect persistence and copy actions.
+The shared Flutter UI uses the same semantic and keyboard contracts across targets, but native accessibility stacks differ. Automated build success does not replace manual checks with TalkBack, VoiceOver, Narrator, Orca, browser screen readers, high-contrast modes, large text, keyboard-only operation, and platform focus conventions.
 
-SpellChecker surfaces storage failures when the preference layer reports them, but it cannot override browser storage policies.
+See [Accessibility](ACCESSIBILITY.md) for the project-wide contract.
 
-## What “cross-platform” should mean in project communication
+## Signing and distribution boundary
 
-Use precise language:
+Cross-platform source and CI builds do **not** mean private signing credentials belong in Git.
 
-- **Portable Flutter source** means the application logic is written with Flutter/Dart abstractions and can be adapted to Flutter-supported targets.
-- **Repository-supported target** means required runner files, build instructions, and relevant validation exist in the repository.
-- **Release-supported target** means automated/manual release procedures produce a tested artifact for that target.
+Never commit:
 
-Today, only the web target satisfies all three levels in this repository.
+- Android keystores or passwords;
+- Apple signing certificates/private keys;
+- Apple provisioning profiles containing sensitive distribution data;
+- store API secrets;
+- Windows/macOS code-signing private keys;
+- notarization credentials.
 
-## Adding official native support
+Unsigned/no-codesign CI is intentional where production credentials are unnecessary to prove that source compiles.
 
-A future native-support change should include, at minimum:
+## Release support versus repository support
 
-1. reviewed runner files generated from an agreed Flutter version;
-2. package identifiers/application metadata;
-3. platform icons/metadata where required;
-4. documented local build/run commands;
-5. storage/clipboard behavior validation;
-6. keyboard/accessibility review where relevant;
-7. target build CI;
-8. release artifact/signing policy;
-9. updates to README, this page, [Executable builds and packaging](EXECUTABLE_BUILDS.md), release docs, security/privacy docs, and the repository description if needed;
-10. updates to the machine-checked tracked-file inventory for every new committed runner file.
+Use these terms precisely:
 
-Signing secrets must never be committed to the repository.
+- **Repository-supported target** — runner files, build instructions, and automated build validation exist.
+- **CI-artifact target** — CI uploads a successful build output for inspection.
+- **Distribution-supported target** — signing, packaging, permanent release assets, and distribution procedures have also been completed for that channel.
+
+V3 establishes repository-supported and CI-artifact coverage across Android, iOS, Linux, macOS, Web, and Windows. Store/notarized/signed distribution remains a separate release-engineering phase.
+
+## Regression protection
+
+`test/documentation_repository_test.dart` now positively requires all six Flutter target directories and representative runner files to remain committed. It also verifies that `.metadata` tracks every supported platform.
+
+Generated native runner trees are treated as Flutter-managed platform roots by the executable-documentation inventory check, while project-owned source, tests, workflows, and documentation remain explicitly controlled.
 
 ## Related documentation
 
@@ -157,4 +201,5 @@ Signing secrets must never be committed to the repository.
 - [Executable builds and packaging](EXECUTABLE_BUILDS.md)
 - [Releasing](RELEASING.md)
 - [Privacy](PRIVACY.md)
+- [Accessibility](ACCESSIBILITY.md)
 - [Security](../SECURITY.md)
