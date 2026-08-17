@@ -133,6 +133,25 @@ void main() {
       }
     });
 
+    test('keeps Hindi ZWJ and ZWNJ conjuncts in one spelling token', () {
+      final pack = SpellLanguageRegistry.hindiIndia;
+      const withZwj = 'क्\u200Dष';
+      const withZwnj = 'क्\u200Cष';
+
+      expect(
+        pack.tokenize(withZwj).map((match) => match.group(0)).toList(),
+        <String>[withZwj],
+      );
+      expect(
+        pack.tokenize(withZwnj).map((match) => match.group(0)).toList(),
+        <String>[withZwnj],
+      );
+      expect(pack.normalizeWord(withZwj), 'क्ष');
+      expect(pack.normalizeWord(withZwnj), 'क्ष');
+      expect(pack.isValidWord(withZwj), isTrue);
+      expect(pack.isValidWord(withZwnj), isTrue);
+    });
+
     test(
       'recognizes French elision prefixes and preserves them in suggestions',
       () {
