@@ -29,25 +29,16 @@ void main() {
     });
 
     test('round-trips every built-in language id', () {
-      for (final languageId in <String>[
-        'en-US',
-        'en-GB',
-        'hi-IN',
-        'es-ES',
-        'fr-FR',
-        'de-DE',
-        'pt-BR',
-        'it-IT',
-      ]) {
+      for (final pack in SpellLanguageRegistry.builtIns) {
         final encoded = SpellCheckerSettingsCodec.encode(
           SpellCheckerSettingsDocument(
-            languageId: languageId,
+            languageId: pack.id,
             suggestionLimit: 5,
           ),
         );
         final decoded = SpellCheckerSettingsCodec.decode(encoded);
 
-        expect(decoded.languageId, languageId);
+        expect(decoded.languageId, pack.id);
       }
     });
 
