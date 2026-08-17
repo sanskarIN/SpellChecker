@@ -149,6 +149,6 @@ void main() {
     await tester.tap(find.byTooltip('About SpellChecker'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('2.16.0'), findsOneWidget);
+    expect(find.textContaining('3.0.0'), findsOneWidget);
   });
 }

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const currentVersion = '2.16.0+21';
+  const currentVersion = '3.0.0+22';
   const builtInLanguageIds = <String>['en-US', 'en-GB'];
   const builtInRuleIds = <String>[
     'repeated-word',
