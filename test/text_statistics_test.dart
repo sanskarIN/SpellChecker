@@ -48,6 +48,16 @@ void main() {
     expect(statistics.sentences, 1);
   });
 
+  test('TextStatistics keeps Indic joiner conjuncts in one word', () {
+    const text = 'क्\u200Dष क्\u200Cष शब्द.';
+
+    final statistics = TextStatistics.fromText(text);
+
+    expect(statistics.characters, text.length);
+    expect(statistics.words, 3);
+    expect(statistics.sentences, 1);
+  });
+
   test('TextStatistics returns zero sentences for blank text', () {
     final statistics = TextStatistics.fromText('   ');
 
