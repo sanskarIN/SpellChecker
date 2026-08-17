@@ -286,11 +286,29 @@ class SpellLanguageRegistry {
         .replaceAll('’', "'")
         .replaceAll('‐', '-')
         .replaceAll('‑', '-');
+    for (final entry in _devanagariCanonicalDecompositions.entries) {
+      normalized = normalized.replaceAll(entry.key, entry.value);
+    }
     for (final entry in _commonLatinCompositions.entries) {
       normalized = normalized.replaceAll(entry.key, entry.value);
     }
     return normalized;
   }
+
+  static const Map<String, String> _devanagariCanonicalDecompositions =
+      <String, String>{
+        'ऩ': 'ऩ',
+        'ऱ': 'ऱ',
+        'ऴ': 'ऴ',
+        'क़': 'क़',
+        'ख़': 'ख़',
+        'ग़': 'ग़',
+        'ज़': 'ज़',
+        'ड़': 'ड़',
+        'ढ़': 'ढ़',
+        'फ़': 'फ़',
+        'य़': 'य़',
+      };
 
   static const Map<String, String> _commonLatinCompositions = <String, String>{
     'a\u0300': 'à',
