@@ -37,7 +37,7 @@ class DictionaryPreferences {
 
   Future<void> saveLanguageId(String languageId) async {
     final preferences = await _instance;
-    final pack = SpellLanguageRegistry.byId(languageId);
+    final pack = _packFor(languageId);
     await _requireSuccessfulWrite(
       preferences.setString(_languageIdKey, pack.id),
       'save the selected language',
@@ -172,6 +172,13 @@ class DictionaryPreferences {
   static SpellLanguagePack _packFor(String? languageId) {
     if (languageId == null) {
       return SpellLanguageRegistry.defaultPack;
+    }
+    if (!SpellLanguageRegistry.contains(languageId)) {
+      throw ArgumentError.value(
+        languageId,
+        'languageId',
+        'must be a supported language id',
+      );
     }
     return SpellLanguageRegistry.byId(languageId);
   }
