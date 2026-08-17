@@ -1,0 +1,51 @@
+class ItalianDictionary {
+  const ItalianDictionary._();
+
+  static const Set<String> words = <String>{
+    'a', 'adesso', 'al', 'alla', 'anche', 'ancora', 'anno', 'avere', 'bene',
+    'buona', 'buono', 'casa', 'che', 'chi', 'ci', 'come', 'con', 'contro',
+    'cosa', 'da', 'dal', 'dalla', 'dare', 'dei', 'del', 'della', 'delle',
+    'di', 'dire', 'dopo', 'due', 'dove', 'e', 'è', 'era', 'essere', 'fare',
+    'famiglia', 'fine', 'fra', 'grande', 'grazie', 'ha', 'hai', 'hanno', 'ho',
+    'i', 'il', 'in', 'io', 'la', 'le', 'lei', 'lo', 'loro', 'lui', 'ma',
+    'mai', 'me', 'meglio', 'meno', 'mia', 'mio', 'molto', 'mondo', 'nei',
+    'nel', 'nella', 'no', 'noi', 'non', 'nostra', 'nostro', 'nuova', 'nuovo',
+    'o', 'oggi', 'ogni', 'ora', 'per', 'perché', 'persona', 'più', 'poco',
+    'poi', 'prima', 'può', 'quando', 'quello', 'questa', 'questo', 'qui',
+    'senza', 'si', 'sì', 'sempre', 'sono', 'sopra', 'sua', 'suo', 'tempo',
+    'tra', 'tre', 'tu', 'tua', 'tuo', 'tutto', 'un', 'una', 'uno', 'va',
+    'vedere', 'vita', 'voi', 'volta', 'amico', 'amore', 'aiuto', 'aprire',
+    'cambiare', 'città', 'cominciare', 'conoscere', 'creare', 'domani',
+    'donna', 'facile', 'felice', 'gente', 'giorno', 'gruppo', 'idea',
+    'importante', 'lavorare', 'lavoro', 'leggere', 'libro', 'mano', 'mangiare',
+    'mattina', 'nome', 'numero', 'paese', 'parola', 'pensare', 'problema',
+    'programma', 'progetto', 'domanda', 'risposta', 'sapere', 'scuola',
+    'scrivere', 'settimana', 'sistema', 'storia', 'studiare', 'tecnologia',
+    'testo', 'uomo', 'usare', 'verità', 'ciao', 'italia', 'italiano', 'team',
+    'lavoratore', 'studio', 'stato', 'ora', 'insieme', 'possibile',
+  };
+
+  static const Map<String, int> ranks = <String, int>{
+    'di': 1,
+    'e': 2,
+    'il': 3,
+    'la': 4,
+    'che': 5,
+    'a': 6,
+    'per': 7,
+    'un': 8,
+    'in': 9,
+    'è': 10,
+    'una': 11,
+    'sono': 12,
+    'con': 13,
+    'non': 14,
+    'ciao': 30,
+    'grazie': 31,
+    'mondo': 32,
+    'tempo': 40,
+    'persona': 41,
+    'lavoro': 42,
+    'vita': 43,
+  };
+}
