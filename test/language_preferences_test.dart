@@ -29,44 +29,44 @@ void main() {
   test('rejects unsupported explicit language writes', () async {
     final preferences = DictionaryPreferences();
 
-    await expectLater(
-      preferences.saveLanguageId('xx-ZZ'),
-      throwsArgumentError,
-    );
+    await expectLater(preferences.saveLanguageId('xx-ZZ'), throwsArgumentError);
 
     final storage = await SharedPreferences.getInstance();
     expect(storage.getString('spellchecker.language_id.v1'), isNull);
   });
 
-  test('unsupported ids cannot write into the default personal namespace', () async {
-    final preferences = DictionaryPreferences();
+  test(
+    'unsupported ids cannot write into the default personal namespace',
+    () async {
+      final preferences = DictionaryPreferences();
 
-    await expectLater(
-      preferences.savePersonalWords(
-        <String>{'must-not-leak'},
-        languageId: 'xx-ZZ',
-      ),
-      throwsArgumentError,
-    );
+      await expectLater(
+        preferences.savePersonalWords(<String>{
+          'must-not-leak',
+        }, languageId: 'xx-ZZ'),
+        throwsArgumentError,
+      );
 
-    expect(await preferences.loadPersonalWords(languageId: 'en-US'), isEmpty);
-    final storage = await SharedPreferences.getInstance();
-    expect(storage.getStringList('spellchecker.personal_words.v2.en-US'), isNull);
-    expect(storage.getStringList('spellchecker.personal_words.v1'), isNull);
-  });
+      expect(await preferences.loadPersonalWords(languageId: 'en-US'), isEmpty);
+      final storage = await SharedPreferences.getInstance();
+      expect(
+        storage.getStringList('spellchecker.personal_words.v2.en-US'),
+        isNull,
+      );
+      expect(storage.getStringList('spellchecker.personal_words.v1'), isNull);
+    },
+  );
 
   test('unsupported ids cannot mutate writing-rule namespaces', () async {
     final preferences = DictionaryPreferences();
-    await preferences.saveWritingRuleIds(
-      <String>{'repeated-word'},
-      languageId: 'en-US',
-    );
+    await preferences.saveWritingRuleIds(<String>{
+      'repeated-word',
+    }, languageId: 'en-US');
 
     await expectLater(
-      preferences.saveWritingRuleIds(
-        <String>{'trailing-whitespace'},
-        languageId: 'xx-ZZ',
-      ),
+      preferences.saveWritingRuleIds(<String>{
+        'trailing-whitespace',
+      }, languageId: 'xx-ZZ'),
       throwsArgumentError,
     );
     await expectLater(
@@ -74,10 +74,9 @@ void main() {
       throwsArgumentError,
     );
 
-    expect(
-      await preferences.loadWritingRuleIds(languageId: 'en-US'),
-      <String>{'repeated-word'},
-    );
+    expect(await preferences.loadWritingRuleIds(languageId: 'en-US'), <String>{
+      'repeated-word',
+    });
   });
 
   test('isolates saved personal words by language', () async {
