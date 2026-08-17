@@ -1,0 +1,183 @@
+name: Synchronize V3 cross-platform documentation
+
+on:
+  push:
+    branches:
+      - v3/cross-platform-foundation
+    paths:
+      - .github/workflows/v3-docs-sync.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out V3 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v3/cross-platform-foundation
+
+      - name: Synchronize cross-platform documentation
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f"Expected text not found in {path}: {old[:120]!r}")
+              p.write_text(text.replace(old, new))
+
+          def replace_section(path, start_heading, end_heading, replacement):
+              p = Path(path)
+              text = p.read_text()
+              start = text.index(start_heading)
+              end = text.index(end_heading, start)
+              p.write_text(text[:start] + replacement.rstrip() + "\n\n" + text[end:])
+
+          replace(
+              'README.md',
+              '**Committed/release-built target:** Flutter web',
+              '**Committed targets:** Android, iOS, Linux, macOS, Windows, Web  \n**Cross-platform validation:** release-mode builds for all six targets',
+          )
+          replace(
+              'README.md',
+              'The repository commits the web host. Additional Android/iOS/Windows/macOS/Linux runners are not currently committed; see [Platform support](docs/PLATFORM_SUPPORT.md) and [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) before generating native runners or making cross-platform release claims.',
+              'The repository commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. See [Platform support](docs/PLATFORM_SUPPORT.md) and [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) for target toolchains, build artifacts, signing boundaries, and distribution requirements.',
+          )
+          replace(
+              'README.md',
+              'The release workflow repeats the gates, then runs:\n\n```bash\nflutter build web --release\n```\n\nand uploads `build/web` as the release workflow artifact.',
+              'Cross-platform CI repeats the gates and then builds Android, iOS (no-codesign), Linux, macOS, Web, and Windows on appropriate GitHub-hosted operating systems. The release workflow mirrors that target coverage and uploads per-platform build artifacts while keeping production signing credentials outside the repository.',
+          )
+          replace(
+              'README.md',
+              'web/           committed Flutter web host',
+              'android/       committed Android Flutter runner\nios/           committed iOS Flutter runner\nlinux/         committed Linux Flutter runner\nmacos/         committed macOS Flutter runner\nweb/           committed Flutter web host\nwindows/       committed Windows Flutter runner',
+          )
+
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              '- the **currently committed and release-validated Flutter web target**;\n- **native Flutter targets that are not yet committed to this repository**;',
+              '- the **committed Android, iOS, Linux, macOS, Web, and Windows Flutter runners**;\n- the difference between CI-buildable artifacts and production-signed/store-ready distribution artifacts;',
+          )
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              '> **Current support boundary:** the repository commits `web/` and the portable Flutter/Dart source, but it does **not** commit `android/`, `ios/`, `windows/`, `macos/`, or `linux/` runner directories. The existing release workflow therefore produces only `build/web`.',
+              '> **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Production mobile/desktop signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.',
+          )
+          replace('docs/EXECUTABLE_BUILDS.md', '| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner not committed |', '| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner committed; CI builds release APK |')
+          replace('docs/EXECUTABLE_BUILDS.md', '| iOS | `.ipa` plus Xcode archive/signing metadata | Runner not committed |', '| iOS | `.ipa` plus Xcode archive/signing metadata | Runner committed; CI builds release app without codesign |')
+          replace('docs/EXECUTABLE_BUILDS.md', '| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner not committed |', '| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner committed; CI builds release bundle |')
+          replace('docs/EXECUTABLE_BUILDS.md', '| macOS | `.app` application bundle, normally signed/notarized for distribution | Runner not committed |', '| macOS | `.app` application bundle, normally signed/notarized for distribution | Runner committed; CI builds release app |')
+          replace('docs/EXECUTABLE_BUILDS.md', '| Linux | Executable plus `lib/` and `data/` bundle contents | Runner not committed |', '| Linux | Executable plus `lib/` and `data/` bundle contents | Runner committed; CI builds release bundle |')
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              'The current release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, builds web in release mode, and uploads `build/web`.',
+              'The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners.',
+          )
+          replace('docs/EXECUTABLE_BUILDS.md', '## 5. Current official release artifact: web', '## 5. Cross-platform release build coverage')
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              'The web runner is already committed, so no platform generation step is required.',
+              'All six Flutter target runners are committed. No platform generation step is required for normal builds; regeneration should occur only as an intentional Flutter migration and every generated diff must be reviewed.',
+          )
+          replace('docs/EXECUTABLE_BUILDS.md', '## 6. Adding native runners before native executables can exist', '## 6. Native runner regeneration and migration policy')
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              'Native release commands cannot work from the current repository until the corresponding runner directory exists.\n\nFlutter can generate missing platform files for an existing project. Generate only targets you are intentionally reviewing. Examples:',
+              'The native runner directories now exist and are tracked by `.metadata`. Use `flutter create` for these targets only when intentionally regenerating/migrating runner templates. Generate only targets you are intentionally reviewing. Examples:',
+          )
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              'Generating runners locally does **not** by itself make those runners official SpellChecker release files.',
+              'Regenerating runners locally does **not** by itself authorize template changes. Review the diff, preserve stable package/bundle identity, rerun cross-platform CI, and update platform documentation before merging migration changes.',
+          )
+          replace('docs/EXECUTABLE_BUILDS.md', '## 7. Android release artifacts (after `android/` is intentionally added)', '## 7. Android release artifacts')
+          replace('docs/EXECUTABLE_BUILDS.md', 'The current repository does not yet satisfy these requirements.', 'The Android runner is committed and CI builds a release APK. Production store signing and channel-specific distribution remain separate release work.')
+          replace('docs/EXECUTABLE_BUILDS.md', '## 8. iOS release artifacts (after `ios/` is intentionally added)', '## 8. iOS release artifacts')
+          replace('docs/EXECUTABLE_BUILDS.md', 'The current repository does not yet commit or release an iOS runner.', 'The iOS runner is committed and CI builds it in release mode with `--no-codesign`. Apple signing/provisioning is required for device/store distribution.')
+          replace('docs/EXECUTABLE_BUILDS.md', '## 9. Windows executable bundle (after `windows/` is intentionally added)', '## 9. Windows executable bundle')
+          replace('docs/EXECUTABLE_BUILDS.md', 'The current repository does not yet commit or release a Windows runner.', 'The Windows runner is committed and CI builds the complete release bundle on `windows-latest`.')
+          replace('docs/EXECUTABLE_BUILDS.md', '## 10. macOS application bundle (after `macos/` is intentionally added)', '## 10. macOS application bundle')
+          replace('docs/EXECUTABLE_BUILDS.md', 'The current repository does not yet commit or release a macOS runner.', 'The macOS runner is committed and CI builds the release `.app`; public distribution still requires the intended signing/notarization policy.')
+          replace('docs/EXECUTABLE_BUILDS.md', '## 11. Linux executable bundle (after `linux/` is intentionally added)', '## 11. Linux executable bundle')
+          replace('docs/EXECUTABLE_BUILDS.md', 'The current repository does not yet commit or release a Linux desktop runner.', 'The Linux runner is committed and CI builds the complete release bundle on Ubuntu with the required desktop development packages.')
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              'For native desktop/mobile, first confirm the corresponding runner exists. In the current repository, only `web/` is committed.',
+              'For native desktop/mobile, first confirm the corresponding host toolchain is available. All supported runner directories are committed in the V3 cross-platform foundation.',
+          )
+          replace('docs/EXECUTABLE_BUILDS.md', '## 17. CI/CD extension requirements for future native releases', '## 17. CI/CD requirements for signed/distribution releases')
+          replace(
+              'docs/EXECUTABLE_BUILDS.md',
+              'The marked list is also machine-checked by `test/documentation_repository_test.dart` against `git ls-files`.',
+              'The marked list remains machine-checked for project-controlled files. Flutter-generated native runner trees are treated as managed platform roots, while `.metadata` and cross-platform workflow files are separately protected by repository tests.',
+          )
+
+          replace_section(
+              'docs/ROADMAP.md',
+              '## Native platform runners and CI',
+              '## Web deployment/public hosting automation',
+              '''## Cross-platform foundation completed\n\nThe V3 cross-platform foundation now commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. Cross-platform CI validates release-mode builds on target-appropriate GitHub-hosted operating systems, and the release workflow mirrors those build targets.\n\nRemaining platform work is distribution engineering rather than runner creation:\n\n- Android production keystore/signing and Play-style packaging policy;\n- Apple signing/provisioning for iOS;\n- macOS signing/notarization;\n- Windows signing/installer packaging if selected;\n- Linux package format/distribution policy;\n- platform-specific icons/store metadata polish;\n- broader manual accessibility/device matrices.\n\nPrivate signing material must remain outside the repository.''',
+          )
+
+          replace(
+              'docs/RELEASING.md',
+              "This page documents the current SpellChecker release process. The repository's automated release contract is a validated **Flutter web build artifact**; it does not currently build/publish native Android/iOS/Windows/macOS/Linux artifacts or automatically create a GitHub Release entry.",
+              "This page documents the current SpellChecker release process. The V3 automated release contract validates source once and produces release-mode build artifacts for **Android, iOS, Linux, macOS, Web, and Windows**. It still does not automatically create a permanent GitHub Release entry or inject private production signing credentials.",
+          )
+          replace(
+              'docs/RELEASING.md',
+              'For the complete local build/package procedure, future native-runner generation, target-specific artifact expectations, signing boundaries, release verification, troubleshooting, and the machine-checked tracked-file build inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).',
+              'For the complete local build/package procedure, target-specific artifact expectations, runner migration policy, signing boundaries, release verification, troubleshooting, and repository build inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).',
+          )
+          replace_section(
+              'docs/RELEASING.md',
+              '## Release workflow trigger',
+              '## Pre-release checklist',
+              '''## Release workflow trigger\n\n`.github/workflows/release.yml` runs when a Git tag matching `v*` is pushed or when a maintainer manually dispatches the workflow.\n\nWorkflow name: `Cross-platform release build`. Repository contents permission remains read-only.\n\n## What the workflow validates\n\nThe `quality` job runs once on Ubuntu and performs Flutter/Dart version reporting, dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke.\n\nAfter quality succeeds, target jobs build in parallel:\n\n```text\nWeb      ubuntu-latest   flutter build web --release\nAndroid  ubuntu-latest   flutter build apk --release\nLinux    ubuntu-latest   flutter build linux --release\nWindows  windows-latest  flutter build windows --release\nmacOS    macos-latest    flutter build macos --release\niOS      macos-latest    flutter build ios --release --no-codesign\n```\n\nEach job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.\n\n## Release artifacts\n\nThe workflow uploads target-specific artifacts named from `${{ github.ref_name }}`. Web/Linux/Windows are complete runtime bundles/directories; Android is a validation release APK; macOS is an unsigned app build; iOS is a no-codesign app build.\n\nActions artifacts are not permanent GitHub Release assets and are not app-store publication.''',
+          )
+          replace('docs/RELEASING.md', '- web release build succeeds;', '- all configured cross-platform release-mode build jobs succeed;')
+          replace(
+              'docs/RELEASING.md',
+              'For any future native release, also complete the target-specific checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md) before advertising or distributing that artifact.',
+              'Before signed/store distribution, also complete the target-specific signing, packaging, accessibility, privacy/security, and clean-environment verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md).',
+          )
+          replace('docs/RELEASING.md', '- web build result;', '- Android/iOS/Linux/macOS/Web/Windows build results;')
+          replace_section(
+              'docs/RELEASING.md',
+              '## Platform support release review',
+              '## Release artifact verification',
+              '''## Platform support release review\n\nAll six Flutter runners are committed and cross-platform CI/release builds validate them. Before describing an artifact as production-distribution-ready, verify the relevant signing/notarization/store/installer policy rather than equating a successful CI build with channel approval.\n\nSee [Platform support](PLATFORM_SUPPORT.md) for the current matrix and [Executable builds and packaging](EXECUTABLE_BUILDS.md) for target-specific requirements.''',
+          )
+          replace_section(
+              'docs/RELEASING.md',
+              '## Release artifact verification',
+              '## Publishing/deployment',
+              '''## Release artifact verification\n\nAfter workflow success:\n\n1. confirm the common quality job succeeded;\n2. confirm every intended platform build job succeeded;\n3. confirm each uploaded artifact exists and uses the expected ref/tag suffix;\n4. inspect or extract the complete bundle rather than only a single executable from desktop targets;\n5. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);\n6. keep the workflow run/tag/commit reference in release evidence.\n\nThe workflow artifacts are retained for 30 days and should not be treated as permanent archival storage.''',
+          )
+          replace(
+              'docs/RELEASING.md',
+              'The current repository workflow stops at artifact upload. Deployment to a web host, GitHub Pages, package registry, app store, or GitHub Release is outside the automated release workflow.',
+              'The current repository workflow stops at cross-platform artifact upload. Deployment to a web host, GitHub Pages, package registry, app store, installer channel, notarization service, or permanent GitHub Release remains outside the automated release workflow.',
+          )
+          PY
+
+      - name: Commit synchronized documentation
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No documentation changes to commit."
+            exit 0
+          fi
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+          git add README.md docs/EXECUTABLE_BUILDS.md docs/ROADMAP.md docs/RELEASING.md
+          git commit -m "docs: align project with cross-platform foundation"
+          git push origin HEAD:v3/cross-platform-foundation
