@@ -26,6 +26,9 @@ class RepeatedPunctuationRule extends WritingRule {
     final pattern = RegExp(r'([!?.,])\1+');
     for (final match in pattern.allMatches(text)) {
       final original = match.group(0)!;
+      if (original == '...') {
+        continue;
+      }
       yield WritingIssue(
         ruleId: id,
         ruleName: displayName,
