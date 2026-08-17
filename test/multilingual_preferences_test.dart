@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:spellchecker/core/spell_language_pack.dart';
 import 'package:spellchecker/storage/dictionary_preferences.dart';
 
 void main() {
@@ -9,19 +10,12 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  test('persists every new built-in language id', () async {
+  test('persists every built-in language id', () async {
     final preferences = DictionaryPreferences();
 
-    for (final id in <String>[
-      'hi-IN',
-      'es-ES',
-      'fr-FR',
-      'de-DE',
-      'pt-BR',
-      'it-IT',
-    ]) {
-      await preferences.saveLanguageId(id);
-      expect(await preferences.loadLanguageId(), id);
+    for (final pack in SpellLanguageRegistry.builtIns) {
+      await preferences.saveLanguageId(pack.id);
+      expect(await preferences.loadLanguageId(), pack.id);
     }
   });
 
@@ -29,19 +23,19 @@ void main() {
     final preferences = DictionaryPreferences();
 
     await preferences.savePersonalWords(<String>{
-      'Sanskar',
-    }, languageId: 'hi-IN');
+      'ব্যক্তিগত',
+    }, languageId: 'bn-IN');
     await preferences.savePersonalWords(<String>{
-      'ProyectoX',
-    }, languageId: 'es-ES');
+      'Личное',
+    }, languageId: 'ru-RU');
 
-    expect(await preferences.loadPersonalWords(languageId: 'hi-IN'), <String>{
-      'sanskar',
+    expect(await preferences.loadPersonalWords(languageId: 'bn-IN'), <String>{
+      'ব্যক্তিগত',
     });
-    expect(await preferences.loadPersonalWords(languageId: 'es-ES'), <String>{
-      'proyectox',
+    expect(await preferences.loadPersonalWords(languageId: 'ru-RU'), <String>{
+      'личное',
     });
-    expect(await preferences.loadPersonalWords(languageId: 'fr-FR'), isEmpty);
+    expect(await preferences.loadPersonalWords(languageId: 'ta-IN'), isEmpty);
   });
 
   test(
