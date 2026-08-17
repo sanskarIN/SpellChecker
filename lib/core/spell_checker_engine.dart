@@ -132,7 +132,7 @@ class SpellCheckerEngine {
       return true;
     }
 
-    final parts = _splitRecognizedSuffix(normalized);
+    final parts = _splitRecognizedAffixes(normalized);
     return parts != null && _isKnownWord(parts.stem);
   }
 
@@ -157,8 +157,9 @@ class SpellCheckerEngine {
       return cached.take(limit).toList(growable: false);
     }
 
-    final parts = _splitRecognizedSuffix(normalized);
+    final parts = _splitRecognizedAffixes(normalized);
     final target = parts?.stem ?? normalized;
+    final prefix = parts?.prefix ?? '';
     final suffix = parts?.suffix ?? '';
     final targetRuneLength = target.runes.length;
     final maxDistance = languagePack.maximumSuggestionDistance(
@@ -206,7 +207,7 @@ class SpellCheckerEngine {
     final result = candidates
         .map(
           (SpellSuggestionCandidate candidate) => SpellSuggestion(
-            word: '${candidate.word}$suffix',
+            word: '$prefix${candidate.word}$suffix',
             distance: candidate.distance,
             frequencyRank: candidate.frequencyRank,
             languageId: languagePack.id,
@@ -323,17 +324,41 @@ class SpellCheckerEngine {
         _ignoredWords.contains(word);
   }
 
-  _WordParts? _splitRecognizedSuffix(String word) {
-    for (final suffix in languagePack.recognizedSuffixes) {
-      if (word.length <= suffix.length || !word.endsWith(suffix)) {
+  _WordParts? _splitRecognizedAffixes(String word) {
+    var prefix = '';
+    var stemAndSuffix = word;
+    for (final candidatePrefix in languagePack.recognizedPrefixes) {
+      if (word.length <= candidatePrefix.length ||
+          !word.startsWith(candidatePrefix)) {
         continue;
       }
-      final stem = word.substring(0, word.length - suffix.length);
-      if (stem.isNotEmpty) {
-        return _WordParts(stem: stem, suffix: suffix);
-      }
+      prefix = candidatePrefix;
+      stemAndSuffix = word.substring(candidatePrefix.length);
+      break;
     }
-    return null;
+
+    var suffix = '';
+    var stem = stemAndSuffix;
+    for (final candidateSuffix in languagePack.recognizedSuffixes) {
+      if (stemAndSuffix.length <= candidateSuffix.length ||
+          !stemAndSuffix.endsWith(candidateSuffix)) {
+        continue;
+      }
+      suffix = candidateSuffix;
+      stem = stemAndSuffix.substring(
+        0,
+        stemAndSuffix.length - candidateSuffix.length,
+      );
+      break;
+    }
+
+    if (prefix.isEmpty && suffix.isEmpty) {
+      return null;
+    }
+    if (stem.isEmpty) {
+      return null;
+    }
+    return _WordParts(prefix: prefix, stem: stem, suffix: suffix);
   }
 
   String _normalize(String word) => languagePack.normalizeWord(word);
@@ -358,8 +383,13 @@ Map<String, int> _normalizeWordFrequencies(
 }
 
 class _WordParts {
-  const _WordParts({required this.stem, required this.suffix});
+  const _WordParts({
+    required this.prefix,
+    required this.stem,
+    required this.suffix,
+  });
 
+  final String prefix;
   final String stem;
   final String suffix;
 }
