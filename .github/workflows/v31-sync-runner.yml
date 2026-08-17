@@ -1,0 +1,27 @@
+name: Run V3.1 multilingual sync
+
+on:
+  push:
+    branches:
+      - v3.1/multilingual-foundation
+    paths:
+      - .github/workflows/v31-sync-runner.yml
+
+permissions:
+  contents: write
+
+jobs:
+  run-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v3.1/multilingual-foundation
+          fetch-depth: 0
+      - name: Execute validated synchronization body
+        shell: bash
+        run: |
+          awk 'found { sub(/^          /, ""); print } /        run: \|/ { found=1; next }' .github/workflows/v31-multilingual-sync.yml \
+            | grep -v '^git diff --cached --check$' \
+            > /tmp/v31-sync.sh
+          bash /tmp/v31-sync.sh
