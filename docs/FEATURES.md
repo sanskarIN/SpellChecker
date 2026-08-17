@@ -1,6 +1,6 @@
 # Feature Reference
 
-This page describes the **current** SpellChecker `3.1.0+23` product surface. It is an evergreen reference; release-specific V2.x documents describe historical milestones and may contain older registry sizes or compatibility context.
+This page describes the **current** SpellChecker `3.1.1+24` product surface. It is an evergreen reference; release-specific V2.x documents describe historical milestones and may contain older registry sizes or compatibility context.
 
 ## Product summary
 

@@ -1,6 +1,6 @@
 # Roadmap
 
-SpellChecker `3.1.0+23` is the current V3 multilingual cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
+SpellChecker `3.1.1+24` is the current V3 multilingual cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
 
 ## Current status
 
@@ -27,7 +27,7 @@ The current project already ships:
 - privacy/local-storage/accessibility/testing/release documentation;
 - deterministic synthetic benchmark tooling;
 - GitHub Actions CI;
-- validated Flutter web release build artifact.
+- validated release-mode build artifacts for Android, iOS, Linux, macOS, Web, and Windows.
 
 No unchecked V2.16 release requirement remains in the current roadmap.
 
@@ -170,7 +170,7 @@ Dictionary data changes also require language/variant/regression review.
 
 ## Accessibility expansion
 
-Current web UI has keyboard, semantics, responsive, and theme coverage. Optional expansion could include broader manual screen-reader/browser matrices, text-scale audits, automated accessibility tooling, and native-platform accessibility review when native runners become supported.
+Current UI has keyboard, semantics, responsive, and theme coverage. Optional expansion could include broader manual screen-reader/browser matrices, text-scale audits, automated accessibility tooling, and deeper native-platform accessibility review.
 
 ## Import/export usability
 

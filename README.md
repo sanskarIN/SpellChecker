@@ -6,7 +6,7 @@
 
 SpellChecker is a privacy-first, open-source Flutter spelling utility and deterministic writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports eight explicit offline language packs, keeps personal vocabulary and writing-rule choices local, offers keyboard-first review, applies source-range-safe corrections, and exposes reusable Dart APIs.
 
-**Current package:** `3.1.0+23`  
+**Current package:** `3.1.1+24`  
 **Built-in languages:** English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, Italian `it-IT`  
 **Built-in writing rules:** 10  
 **Runtime dependencies:** Flutter SDK and `shared_preferences`  
@@ -259,7 +259,7 @@ windows/       committed Windows Flutter runner
 
 ## Version and historical records
 
-The current package version is `3.0.0+22`. V3.0 establishes the cross-platform foundation with committed Android, iOS, Linux, macOS, Web, and Windows runners plus multi-OS release-mode CI. V2.16 remains the completed stabilization line immediately before this platform expansion.
+The current package version is `3.1.1+24`. V3.1 is the multilingual cross-platform release line with eight built-in offline spelling packs on the V3.0 six-target platform foundation. V3.1.1 hardens strict language-namespace writes, Unicode-scalar suggestion ranking, and current-state documentation consistency. V2.16 remains the completed stabilization line immediately before the V3 platform expansion.
 
 Current behavior belongs in evergreen documentation. Release-specific files under `docs/V2_*` and dated audit records preserve historical design/validation context and can contain older registry sizes that were correct for those releases.
 
