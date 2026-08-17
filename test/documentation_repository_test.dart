@@ -133,6 +133,7 @@ void main() {
       '.metadata',
       '.github/workflows/platform-bootstrap.yml',
       '.github/workflows/cross-platform.yml',
+      '.github/workflows/v3-docs-sync.yml',
     };
 
     final guide = File('docs/EXECUTABLE_BUILDS.md').readAsStringSync();
