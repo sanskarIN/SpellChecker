@@ -16,32 +16,35 @@ void main() {
       },
     );
 
-    test('default ranker compares Unicode scalar length, not UTF-16 length', () {
-      const ranker = DefaultSpellSuggestionRanker();
-      final context = SpellSuggestionRankingContext(
-        target: 'test',
-        languagePack: SpellLanguageRegistry.englishUs,
-      );
-      const supplementary = SpellSuggestionCandidate(
-        word: '\u{10400}b',
-        distance: 1,
-        prefixPenalty: 0,
-        frequencyRank: 100,
-        source: 'test',
-      );
-      const bmp = SpellSuggestionCandidate(
-        word: 'abc',
-        distance: 1,
-        prefixPenalty: 0,
-        frequencyRank: 100,
-        source: 'test',
-      );
+    test(
+      'default ranker compares Unicode scalar length, not UTF-16 length',
+      () {
+        const ranker = DefaultSpellSuggestionRanker();
+        final context = SpellSuggestionRankingContext(
+          target: 'test',
+          languagePack: SpellLanguageRegistry.englishUs,
+        );
+        const supplementary = SpellSuggestionCandidate(
+          word: '\u{10400}b',
+          distance: 1,
+          prefixPenalty: 0,
+          frequencyRank: 100,
+          source: 'test',
+        );
+        const bmp = SpellSuggestionCandidate(
+          word: 'abc',
+          distance: 1,
+          prefixPenalty: 0,
+          frequencyRank: 100,
+          source: 'test',
+        );
 
-      expect(supplementary.word.runes.length, 2);
-      expect(supplementary.word.length, 3);
-      expect(bmp.word.runes.length, 3);
-      expect(ranker.compare(context, supplementary, bmp), lessThan(0));
-    });
+        expect(supplementary.word.runes.length, 2);
+        expect(supplementary.word.length, 3);
+        expect(bmp.word.runes.length, 3);
+        expect(ranker.compare(context, supplementary, bmp), lessThan(0));
+      },
+    );
 
     test('custom ranker can replace the default ordering policy', () {
       final engine = SpellCheckerEngine(
