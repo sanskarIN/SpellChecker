@@ -100,7 +100,8 @@ void main() {
       expect(
         Directory(entry.key).existsSync(),
         isTrue,
-        reason: '${entry.key}/ must be committed for official platform support.',
+        reason:
+            '${entry.key}/ must be committed for official platform support.',
       );
       expect(
         File(entry.value).existsSync(),
@@ -171,15 +172,16 @@ void main() {
       return generatedPlatformRoots.any(path.startsWith);
     }
 
-    final missing = trackedPaths
-        .where(
-          (path) =>
-              !documentedPaths.contains(path) &&
-              !isGeneratedPlatformFile(path) &&
-              !crossPlatformControlFiles.contains(path),
-        )
-        .toList()
-      ..sort();
+    final missing =
+        trackedPaths
+            .where(
+              (path) =>
+                  !documentedPaths.contains(path) &&
+                  !isGeneratedPlatformFile(path) &&
+                  !crossPlatformControlFiles.contains(path),
+            )
+            .toList()
+          ..sort();
     final stale = documentedPaths.difference(trackedPaths).toList()..sort();
 
     expect(
