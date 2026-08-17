@@ -8,7 +8,7 @@ For complete executable/release-artifact creation—including Android/iOS/Window
 
 SpellChecker is a Flutter application and reusable Dart codebase for local spelling and deterministic writing analysis. The bundled application does not send editor text to a remote spelling or grammar service. It supports English (US) and English (UK), per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic built-in writing rules.
 
-Current package version: `2.16.0+21`.
+Current package version: `3.0.0+22`.
 
 ## Supported Flutter targets
 

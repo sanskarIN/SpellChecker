@@ -6,7 +6,7 @@
 
 SpellChecker is a privacy-first, open-source Flutter spelling utility and deterministic writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports explicit English language packs, keeps personal vocabulary and writing-rule choices local, offers keyboard-first review, applies source-range-safe corrections, and exposes reusable Dart APIs.
 
-**Current package:** `2.16.0+21`  
+**Current package:** `3.0.0+22`  
 **Built-in languages:** English (US) `en-US`, English (UK) `en-GB`  
 **Built-in writing rules:** 10  
 **Runtime dependencies:** Flutter SDK and `shared_preferences`  
@@ -49,7 +49,7 @@ The authoritative documentation hub is **[docs/README.md](docs/README.md)**.
 | Extend writing analysis | [Writing rules](docs/WRITING_RULES.md) |
 | Understand internals | [Architecture](docs/ARCHITECTURE.md) |
 | Understand target/build support | [Platform support](docs/PLATFORM_SUPPORT.md) |
-| Build/package release artifacts and future native executables | [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) |
+| Build/package cross-platform release artifacts | [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) |
 | Understand privacy | [Privacy](docs/PRIVACY.md) |
 | Understand accessibility | [Accessibility](docs/ACCESSIBILITY.md) |
 | Troubleshoot | [Troubleshooting](docs/TROUBLESHOOTING.md) |
@@ -259,7 +259,7 @@ windows/       committed Windows Flutter runner
 
 ## Version and historical records
 
-The current package version is `2.16.0+21`. V2.16 is the final-stabilization release line in package metadata. A post-V2.16 repository audit on August 16, 2026 fixed additional sentence-statistics and sentence-capitalization edge cases without changing the package version.
+The current package version is `3.0.0+22`. V3.0 establishes the cross-platform foundation with committed Android, iOS, Linux, macOS, Web, and Windows runners plus multi-OS release-mode CI. V2.16 remains the completed stabilization line immediately before this platform expansion.
 
 Current behavior belongs in evergreen documentation. Release-specific files under `docs/V2_*` and dated audit records preserve historical design/validation context and can contain older registry sizes that were correct for those releases.
 

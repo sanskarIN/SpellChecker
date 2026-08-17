@@ -8,7 +8,7 @@ For the complete local build/package procedure, target-specific artifact expecta
 
 ```text
 name: spellchecker
-version: 2.16.0+21
+version: 3.0.0+22
 Dart SDK: >=3.8.0 <4.0.0
 ```
 
@@ -39,7 +39,7 @@ Each job fails if its expected output is missing and uploads a 30-day GitHub Act
 
 ## Release artifacts
 
-The workflow uploads target-specific artifacts named from `v3/cross-platform-foundation`. Web/Linux/Windows are complete runtime bundles/directories; Android is a validation release APK; macOS is an unsigned app build; iOS is a no-codesign app build.
+The workflow uploads target-specific artifacts named from the triggering ref or release tag. Web/Linux/Windows are complete runtime bundles/directories; Android is a validation release APK; macOS is an unsigned app build; iOS is a no-codesign app build.
 
 Actions artifacts are not permanent GitHub Release assets and are not app-store publication.
 
@@ -75,7 +75,7 @@ MAJOR.MINOR.PATCH+BUILD
 Example:
 
 ```text
-2.16.0+21
+3.0.0+22
 ```
 
 When incrementing the version:
@@ -94,8 +94,8 @@ Do not rewrite historical files' old versions merely because the current version
 The workflow accepts any tag beginning with `v`. Use a tag that clearly corresponds to the intended package release, for example:
 
 ```bash
-git tag v2.16.0
-git push origin v2.16.0
+git tag v3.0.0
+git push origin v3.0.0
 ```
 
 Before pushing a tag, make sure it points to the reviewed/green release commit. Replacing/moving public release tags damages reproducibility and should be avoided.

@@ -1,6 +1,6 @@
 # Roadmap
 
-SpellChecker `2.16.0+21` represents the completed V2.16 stabilization line. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
+SpellChecker `3.0.0+22` is the current V3 cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
 
 ## Current status
 

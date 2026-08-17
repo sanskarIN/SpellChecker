@@ -9,9 +9,9 @@ It deliberately distinguishes between:
 - the files that feed compilation;
 - the files that validate the build before release;
 - the metadata, documentation, CI, and release files that must be reviewed even when they are not compiled into the binary;
-- target-specific signing, packaging, and distribution work that must never be confused with the current web-only release contract.
+- target-specific signing, packaging, and distribution work that must never be confused with the cross-platform CI build contract.
 
-SpellChecker is currently version `2.16.0+21` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
+SpellChecker is currently version `3.0.0+22` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
 
 > **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Production mobile/desktop signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
 
@@ -110,57 +110,43 @@ Then rerun the gates and the target build.
 
 ## 5. Cross-platform release build coverage
 
-All six Flutter target runners are committed. No platform generation step is required for normal builds; regeneration should occur only as an intentional Flutter migration and every generated diff must be reviewed.
+All six Flutter target runners are committed. Normal builds do not require runner generation.
 
-### Development run
+| Target | Host used by CI | Release-mode command | CI output |
+| --- | --- | --- | --- |
+| Web | Ubuntu | `flutter build web --release` | complete `build/web` directory |
+| Android | Ubuntu | `flutter build apk --release` | release APK validation artifact |
+| Linux | Ubuntu | `flutter build linux --release` | complete desktop bundle |
+| Windows | Windows | `flutter build windows --release` | complete Release runtime directory |
+| macOS | macOS | `flutter build macos --release` | `.app` bundle |
+| iOS | macOS | `flutter build ios --release --no-codesign` | no-codesign `.app` validation bundle |
 
-```bash
-flutter run -d chrome
-```
+`.github/workflows/cross-platform.yml` runs these builds for normal V3 validation after shared format/analyze/test/benchmark gates succeed. `.github/workflows/release.yml` mirrors the same six-target build coverage for release tags or manual release-candidate dispatch.
 
-### Release build
+Build success proves that the committed source and runner compile together. It does not replace production signing, notarization, store review, or installer/package-channel policy.
 
-```bash
-flutter build web --release
-```
+### Local target commands
 
-Output:
-
-```text
-build/web/
-```
-
-The **entire directory** is the deployable web artifact. Do not publish only one generated JavaScript/Wasm file.
-
-A release-validation server can be started from the output directory with any suitable static HTTP server. Do not validate a production web build only by opening `index.html` through a local `file://` URL because browser behavior differs from HTTP hosting.
-
-### Optional WebAssembly build
-
-Flutter also supports a WebAssembly web build:
-
-```bash
-flutter build web --release --wasm
-```
-
-This is **not** what `.github/workflows/release.yml` currently runs. Changing the official release mode to Wasm requires an intentional workflow change, browser compatibility validation, documentation updates, and a release review.
-
-### Current automated release
-
-`.github/workflows/release.yml` runs on `v*` tags or manual dispatch and currently executes:
+Run only commands supported by the current machine/toolchain:
 
 ```bash
 flutter build web --release
+flutter build apk --release
+flutter build linux --release
+flutter build macos --release
+flutter build windows --release
+flutter build ios --release --no-codesign
 ```
 
-It uploads:
+The operating-system restrictions described in the target sections below still apply. In particular, Apple targets require macOS/Xcode and Windows builds require Windows/Visual Studio desktop tooling.
 
-```text
-build/web
-```
+### Web deployment boundary
 
-under an artifact name based on `spellchecker-web-${{ github.ref_name }}`.
+The complete `build/web/` directory is deployable static output. The release workflow uploads it as an artifact but does not currently deploy a hosted website. Optional Wasm mode (`flutter build web --release --wasm`) is not the official automated build mode and requires separate compatibility review.
 
-The GitHub Actions artifact is temporary workflow storage; it is not automatically a GitHub Release, permanent download page, package registry publication, or hosted website.
+### Artifact retention boundary
+
+GitHub Actions artifacts are temporary workflow storage. They are not automatically permanent GitHub Releases, app-store packages, notarized applications, or hosted websites.
 
 ## 6. Native runner regeneration and migration policy
 
@@ -368,7 +354,7 @@ The repository release workflow uses release mode for web.
 Current package version:
 
 ```text
-2.16.0+21
+3.0.0+22
 ```
 
 The version in `pubspec.yaml` is the project source of truth. Before producing an official release artifact:
@@ -702,6 +688,8 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `tool/benchmark/analysis_benchmark_runner.dart`
 - `tool/benchmark/analysis_benchmark_scenario.dart`
 - `tool/benchmark_large_document.dart`
+
+- `docs/V3_0_CROSS_PLATFORM_FOUNDATION.md`
 
 <!-- tracked-file-inventory:end -->
 
