@@ -1,0 +1,69 @@
+name: Bootstrap Flutter platform runners
+
+on:
+  push:
+    branches:
+      - v3/cross-platform-foundation
+    paths:
+      - .github/workflows/platform-bootstrap.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-platform-runners:
+    name: Generate official Flutter platform runners
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out V3 branch
+        uses: actions/checkout@v7
+        with:
+          ref: v3/cross-platform-foundation
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Show tool versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Generate supported platform runners
+        run: >-
+          flutter create .
+          --platforms=android,ios,linux,macos,windows,web
+          --project-name=spellchecker
+          --org=in.sanskar
+
+      - name: Restore project-owned web shell
+        run: git checkout HEAD -- web || true
+
+      - name: Verify generated platforms
+        run: |
+          test -d android
+          test -d ios
+          test -d linux
+          test -d macos
+          test -d windows
+          test -d web
+          test -f .metadata
+
+      - name: Commit generated runners
+        shell: bash
+        run: |
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "No platform changes to commit."
+            exit 0
+          fi
+
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+          git add .metadata android ios linux macos windows
+          git commit -m "feat: add official Flutter native platform runners"
+          git push origin HEAD:v3/cross-platform-foundation
