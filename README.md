@@ -6,11 +6,12 @@
 
 SpellChecker is a privacy-first, open-source Flutter spelling utility and deterministic writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports explicit English language packs, keeps personal vocabulary and writing-rule choices local, offers keyboard-first review, applies source-range-safe corrections, and exposes reusable Dart APIs.
 
-**Current package:** `2.16.0+21`  
+**Current package:** `3.0.0+22`  
 **Built-in languages:** English (US) `en-US`, English (UK) `en-GB`  
 **Built-in writing rules:** 10  
 **Runtime dependencies:** Flutter SDK and `shared_preferences`  
-**Committed/release-built target:** Flutter web
+**Committed targets:** Android, iOS, Linux, macOS, Windows, Web  
+**Cross-platform validation:** release-mode builds for all six targets
 
 <p align="center">
   <a href="https://buymeacoffee.com/sanskarIN">
@@ -48,7 +49,7 @@ The authoritative documentation hub is **[docs/README.md](docs/README.md)**.
 | Extend writing analysis | [Writing rules](docs/WRITING_RULES.md) |
 | Understand internals | [Architecture](docs/ARCHITECTURE.md) |
 | Understand target/build support | [Platform support](docs/PLATFORM_SUPPORT.md) |
-| Build/package release artifacts and future native executables | [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) |
+| Build/package cross-platform release artifacts | [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) |
 | Understand privacy | [Privacy](docs/PRIVACY.md) |
 | Understand accessibility | [Accessibility](docs/ACCESSIBILITY.md) |
 | Troubleshoot | [Troubleshooting](docs/TROUBLESHOOTING.md) |
@@ -68,7 +69,7 @@ flutter pub get
 flutter run -d chrome
 ```
 
-The repository commits the web host. Additional Android/iOS/Windows/macOS/Linux runners are not currently committed; see [Platform support](docs/PLATFORM_SUPPORT.md) and [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) before generating native runners or making cross-platform release claims.
+The repository commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. See [Platform support](docs/PLATFORM_SUPPORT.md) and [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) for target toolchains, build artifacts, signing boundaries, and distribution requirements.
 
 ## Application workflow
 
@@ -232,13 +233,7 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs the deterministic benchmark CLI smoke scenario. The release workflow repeats the gates, then runs:
-
-```bash
-flutter build web --release
-```
-
-and uploads `build/web` as the release workflow artifact.
+CI also runs the deterministic benchmark CLI smoke scenario. Cross-platform CI repeats the gates and then builds Android, iOS (no-codesign), Linux, macOS, Web, and Windows on appropriate GitHub-hosted operating systems. The release workflow mirrors that target coverage and uploads per-platform build artifacts while keeping production signing credentials outside the repository.
 
 See [Testing](docs/TESTING.md), [Performance](docs/PERFORMANCE.md), [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md), and [Releasing](docs/RELEASING.md).
 
@@ -254,12 +249,17 @@ lib/storage/   local application preference adapters
 docs/          evergreen documentation + historical release/audit records
 test/          unit, persistence, codec, Unicode, stress, accessibility, widget tests
 tool/          deterministic benchmark tooling
+android/       committed Android Flutter runner
+ios/           committed iOS Flutter runner
+linux/         committed Linux Flutter runner
+macos/         committed macOS Flutter runner
 web/           committed Flutter web host
+windows/       committed Windows Flutter runner
 ```
 
 ## Version and historical records
 
-The current package version is `2.16.0+21`. V2.16 is the final-stabilization release line in package metadata. A post-V2.16 repository audit on August 16, 2026 fixed additional sentence-statistics and sentence-capitalization edge cases without changing the package version.
+The current package version is `3.0.0+22`. V3.0 establishes the cross-platform foundation with committed Android, iOS, Linux, macOS, Web, and Windows runners plus multi-OS release-mode CI. V2.16 remains the completed stabilization line immediately before this platform expansion.
 
 Current behavior belongs in evergreen documentation. Release-specific files under `docs/V2_*` and dated audit records preserve historical design/validation context and can contain older registry sizes that were correct for those releases.
 

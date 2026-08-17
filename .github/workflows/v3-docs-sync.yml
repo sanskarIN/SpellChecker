@@ -1,0 +1,43 @@
+name: V3 metadata audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Verify V3 cross-platform metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Verify V3 package identity
+        shell: bash
+        run: |
+          grep -F 'version: 3.0.0+22' pubspec.yaml
+          grep -F "applicationVersion: '3.0.0'" lib/features/editor/spell_checker_page.dart
+          grep -F 'Current package version: `3.0.0+22`.' docs/RELEASE_HISTORY.md
+          grep -F '## [3.0.0] - 2026-08-17' CHANGELOG.md
+
+      - name: Verify cross-platform runner inventory
+        shell: bash
+        run: |
+          test -f .metadata
+          test -f android/app/src/main/AndroidManifest.xml
+          test -f ios/Runner.xcodeproj/project.pbxproj
+          test -f linux/CMakeLists.txt
+          test -f macos/Runner.xcodeproj/project.pbxproj
+          test -f web/index.html
+          test -f windows/CMakeLists.txt
+
+      - name: Verify V3 release documentation
+        shell: bash
+        run: |
+          test -f docs/V3_0_CROSS_PLATFORM_FOUNDATION.md
+          grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md
+          grep -F 'Cross-platform CI' docs/V3_0_CROSS_PLATFORM_FOUNDATION.md

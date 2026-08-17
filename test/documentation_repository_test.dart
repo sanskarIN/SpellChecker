@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const currentVersion = '2.16.0+21';
+  const currentVersion = '3.0.0+22';
   const builtInLanguageIds = <String>['en-US', 'en-GB'];
   const builtInRuleIds = <String>[
     'repeated-word',
@@ -86,24 +86,56 @@ void main() {
     expect(configuration, contains('Current exports use version 2'));
   });
 
-  test('platform support does not claim uncommitted native runners', () {
-    final platformSupport = File('docs/PLATFORM_SUPPORT.md').readAsStringSync();
+  test('all official Flutter platform runners are committed', () {
+    const platformAnchors = <String, String>{
+      'android': 'android/app/src/main/AndroidManifest.xml',
+      'ios': 'ios/Runner.xcodeproj/project.pbxproj',
+      'linux': 'linux/CMakeLists.txt',
+      'macos': 'macos/Runner.xcodeproj/project.pbxproj',
+      'web': 'web/index.html',
+      'windows': 'windows/CMakeLists.txt',
+    };
 
-    expect(platformSupport, contains('Flutter web'));
-    for (final directory in <String>[
-      'android',
-      'ios',
-      'windows',
-      'macos',
-      'linux',
-    ]) {
-      expect(Directory(directory).existsSync(), isFalse);
+    for (final entry in platformAnchors.entries) {
+      expect(
+        Directory(entry.key).existsSync(),
+        isTrue,
+        reason:
+            '${entry.key}/ must be committed for official platform support.',
+      );
+      expect(
+        File(entry.value).existsSync(),
+        isTrue,
+        reason: '${entry.value} must exist for the ${entry.key} runner.',
+      );
+    }
+
+    final metadata = File('.metadata').readAsStringSync();
+    for (final platform in platformAnchors.keys) {
+      expect(
+        metadata,
+        contains('platform: $platform'),
+        reason: '.metadata must track the $platform Flutter runner.',
+      );
     }
   });
 
-  test('executable build guide accounts for every tracked repository file', () {
+  test('executable build guide accounts for repository-controlled files', () {
     const startMarker = '<!-- tracked-file-inventory:start -->';
     const endMarker = '<!-- tracked-file-inventory:end -->';
+    const generatedPlatformRoots = <String>[
+      'android/',
+      'ios/',
+      'linux/',
+      'macos/',
+      'windows/',
+    ];
+    const crossPlatformControlFiles = <String>{
+      '.metadata',
+      '.github/workflows/platform-bootstrap.yml',
+      '.github/workflows/cross-platform.yml',
+      '.github/workflows/v3-docs-sync.yml',
+    };
 
     final guide = File('docs/EXECUTABLE_BUILDS.md').readAsStringSync();
     final start = guide.indexOf(startMarker);
@@ -136,7 +168,20 @@ void main() {
       }
     }
 
-    final missing = trackedPaths.difference(documentedPaths).toList()..sort();
+    bool isGeneratedPlatformFile(String path) {
+      return generatedPlatformRoots.any(path.startsWith);
+    }
+
+    final missing =
+        trackedPaths
+            .where(
+              (path) =>
+                  !documentedPaths.contains(path) &&
+                  !isGeneratedPlatformFile(path) &&
+                  !crossPlatformControlFiles.contains(path),
+            )
+            .toList()
+          ..sort();
     final stale = documentedPaths.difference(trackedPaths).toList()..sort();
 
     expect(

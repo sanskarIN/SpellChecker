@@ -4,6 +4,25 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [3.0.0] - 2026-08-17
+
+### Added
+- Committed official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web under stable native identity `in.sanskar.spellchecker` where applicable.
+- Added multi-OS cross-platform CI that runs shared source-quality gates and release-mode builds for all six targets.
+- Expanded the release workflow to build and upload Android, iOS no-codesign, Linux, macOS, Web, and Windows artifacts.
+- Added positive repository regression checks requiring every supported platform runner and Flutter `.metadata` registration.
+- Added V3 platform support, executable-build, release, getting-started, roadmap, and historical validation documentation.
+
+### Changed
+- Advanced package identity to `3.0.0+22` and About identity to `3.0.0`.
+- Branded Android, iOS, Linux, macOS, and Windows presentation metadata as `SpellChecker` while retaining stable machine identifiers/binary names.
+- Reframed platform support from web-only runner support to repository-supported and CI-artifact coverage across all Flutter desktop/mobile/web targets.
+
+### Compatibility, privacy, and distribution boundary
+- Deterministic spelling/writing algorithms, ten-rule catalogue, language packs, transfer formats, and local privacy model remain compatible with V2.16.
+- Runtime dependencies remain Flutter and `shared_preferences`; V3 adds no telemetry, cloud writing, accounts, document upload, or background network analysis.
+- Production Android/Apple/macOS/Windows signing, notarization, store credentials, and channel-specific installers/packages remain external release-engineering work; private signing material is never committed.
+
 ## [2.16.0] - 2026-08-15
 
 ### Fixed

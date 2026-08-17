@@ -4,9 +4,15 @@ This page indexes release-specific documentation without turning historical reco
 
 ## Current package release
 
-Current package version: `2.16.0+21`.
+Current package version: `3.0.0+22`.
 
-V2.16 is the final stabilization/bug-audit release line represented in the current package metadata. A later post-V2.16 repository audit found and fixed additional sentence-statistics and sentence-capitalization edge cases without changing the package version.
+V3.0 is the cross-platform foundation release line. It retains the V2.16 spelling/writing behavior while adding committed Flutter runners and automated release-mode build validation for Android, iOS, Linux, macOS, Web, and Windows.
+
+## V3.0
+
+- [V3.0 cross-platform foundation](V3_0_CROSS_PLATFORM_FOUNDATION.md) — platform runner generation, stable application identity, multi-OS CI/release builds, signing boundaries, documentation migration, and validation requirements.
+
+V3.0 changes the platform/release surface rather than the deterministic spelling/writing algorithms or local privacy model.
 
 ## V2.16
 

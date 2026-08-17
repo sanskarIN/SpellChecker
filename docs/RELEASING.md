@@ -1,14 +1,14 @@
 # Releasing
 
-This page documents the current SpellChecker release process. The repository's automated release contract is a validated **Flutter web build artifact**; it does not currently build/publish native Android/iOS/Windows/macOS/Linux artifacts or automatically create a GitHub Release entry.
+This page documents the current SpellChecker release process. The V3 automated release contract validates source once and produces release-mode build artifacts for **Android, iOS, Linux, macOS, Web, and Windows**. It still does not automatically create a permanent GitHub Release entry or inject private production signing credentials.
 
-For the complete local build/package procedure, future native-runner generation, target-specific artifact expectations, signing boundaries, release verification, troubleshooting, and the machine-checked tracked-file build inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+For the complete local build/package procedure, target-specific artifact expectations, runner migration policy, signing boundaries, release verification, troubleshooting, and repository build inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Current package
 
 ```text
 name: spellchecker
-version: 2.16.0+21
+version: 3.0.0+22
 Dart SDK: >=3.8.0 <4.0.0
 ```
 
@@ -16,81 +16,32 @@ Dart SDK: >=3.8.0 <4.0.0
 
 ## Release workflow trigger
 
-`.github/workflows/release.yml` runs when:
+`.github/workflows/release.yml` runs when a Git tag matching `v*` is pushed or when a maintainer manually dispatches the workflow.
 
-- a Git tag matching `v*` is pushed; or
-- a maintainer manually dispatches the workflow.
-
-Workflow name:
-
-```text
-Release build
-```
-
-Job:
-
-```text
-Validate benchmark tooling and build web release
-```
-
-Runner:
-
-```text
-ubuntu-latest
-```
-
-Timeout:
-
-```text
-25 minutes
-```
-
-Workflow permissions are read-only for repository contents.
+Workflow name: `Cross-platform release build`. Repository contents permission remains read-only.
 
 ## What the workflow validates
 
-In order:
+The `quality` job runs once on Ubuntu and performs Flutter/Dart version reporting, dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke.
 
-```bash
-flutter --version
-dart --version
-flutter pub get
-dart format --output=none --set-exit-if-changed lib test tool
-flutter analyze
-flutter test --reporter expanded
-dart run tool/benchmark_large_document.dart \
-  --repeats=4 \
-  --warmup=0 \
-  --iterations=1 \
-  --spelling-limit=2 \
-  --writing-limit=5 \
-  --suggestions=0 \
-  --language=en-US \
-  --json
-flutter build web --release
-```
-
-Any failed gate prevents artifact upload.
-
-The complete Flutter test suite includes the repository documentation checks. In particular, `test/documentation_repository_test.dart` requires the tracked-file inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md) to match `git ls-files`, so a newly committed file cannot be silently omitted from the executable/release documentation.
-
-## Artifact
-
-The workflow uploads:
+After quality succeeds, target jobs build in parallel:
 
 ```text
-build/web
+Web      ubuntu-latest   flutter build web --release
+Android  ubuntu-latest   flutter build apk --release
+Linux    ubuntu-latest   flutter build linux --release
+Windows  windows-latest  flutter build windows --release
+macOS    macos-latest    flutter build macos --release
+iOS      macos-latest    flutter build ios --release --no-codesign
 ```
 
-Artifact name:
+Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
 
-```text
-spellchecker-web-${github.ref_name}
-```
+## Release artifacts
 
-The workflow fails if the build directory is missing and retains the artifact for 14 days.
+The workflow uploads target-specific artifacts named from the triggering ref or release tag. Web/Linux/Windows are complete runtime bundles/directories; Android is a validation release APK; macOS is an unsigned app build; iOS is a no-codesign app build.
 
-This Actions artifact is not the same thing as a permanently published GitHub Release asset/site deployment.
+Actions artifacts are not permanent GitHub Release assets and are not app-store publication.
 
 ## Pre-release checklist
 
@@ -108,10 +59,10 @@ Before tagging/dispatching a release, verify:
 - privacy/security docs match runtime data flows;
 - full Flutter suite and benchmark smoke pass;
 - the executable-build tracked-file inventory matches the actual repository;
-- web release build succeeds;
+- all configured cross-platform release-mode build jobs succeed;
 - historical release/validation record is added when the release needs durable audit evidence.
 
-For any future native release, also complete the target-specific checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md) before advertising or distributing that artifact.
+Before signed/store distribution, also complete the target-specific signing, packaging, accessibility, privacy/security, and clean-environment verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Versioning
 
@@ -124,7 +75,7 @@ MAJOR.MINOR.PATCH+BUILD
 Example:
 
 ```text
-2.16.0+21
+3.0.0+22
 ```
 
 When incrementing the version:
@@ -143,8 +94,8 @@ Do not rewrite historical files' old versions merely because the current version
 The workflow accepts any tag beginning with `v`. Use a tag that clearly corresponds to the intended package release, for example:
 
 ```bash
-git tag v2.16.0
-git push origin v2.16.0
+git tag v3.0.0
+git push origin v3.0.0
 ```
 
 Before pushing a tag, make sure it points to the reviewed/green release commit. Replacing/moving public release tags damages reproducibility and should be avoided.
@@ -163,7 +114,7 @@ For a significant release, consider recording exact evidence:
 - Flutter/Dart versions;
 - format/analyzer/full test results;
 - benchmark smoke result;
-- web build result;
+- Android/iOS/Linux/macOS/Web/Windows build results;
 - executable/package verification result;
 - migration/compatibility checks;
 - known limitations;
@@ -267,27 +218,26 @@ Update [Privacy](PRIVACY.md) and [Security](../SECURITY.md) before release when 
 
 ## Platform support release review
 
-Current workflow builds only web. Do not call a release “Android/iOS/Windows/macOS/Linux release” unless the repository has intentionally added/validated those runners/builds/artifacts.
+All six Flutter runners are committed and cross-platform CI/release builds validate them. Before describing an artifact as production-distribution-ready, verify the relevant signing/notarization/store/installer policy rather than equating a successful CI build with channel approval.
 
-Official native release support would need target-specific runner files, CI builds, signing/credential policy, artifact process, platform privacy/security/accessibility review, and documentation. The complete native-support acceptance requirements and target build/package commands are in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
-
-See [Platform support](PLATFORM_SUPPORT.md) for the current support matrix.
+See [Platform support](PLATFORM_SUPPORT.md) for the current matrix and [Executable builds and packaging](EXECUTABLE_BUILDS.md) for target-specific requirements.
 
 ## Release artifact verification
 
 After workflow success:
 
-1. inspect job summary/logs for every gate success;
-2. confirm the uploaded artifact exists and uses the expected ref/tag suffix;
-3. download/extract if needed and verify the web build directory has expected Flutter web output;
-4. perform the release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
-5. keep the workflow run/tag/commit reference in any release announcement/validation record.
+1. confirm the common quality job succeeded;
+2. confirm every intended platform build job succeeded;
+3. confirm each uploaded artifact exists and uses the expected ref/tag suffix;
+4. inspect or extract the complete bundle rather than only a single executable from desktop targets;
+5. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+6. keep the workflow run/tag/commit reference in release evidence.
 
-Because artifact retention is currently 14 days, do not treat Actions artifacts as permanent archival storage.
+The workflow artifacts are retained for 30 days and should not be treated as permanent archival storage.
 
 ## Publishing/deployment
 
-The current repository workflow stops at artifact upload. Deployment to a web host, GitHub Pages, package registry, app store, or GitHub Release is outside the automated release workflow.
+The current repository workflow stops at cross-platform artifact upload. Deployment to a web host, GitHub Pages, package registry, app store, installer channel, notarization service, or permanent GitHub Release remains outside the automated release workflow.
 
 If a future deployment/publishing system is added, document:
 

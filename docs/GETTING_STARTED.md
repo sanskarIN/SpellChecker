@@ -2,13 +2,26 @@
 
 This guide takes a new user or contributor from a clean checkout to a running SpellChecker instance and a verified development environment.
 
-For complete executable/release-artifact creation—including native runner generation, Android/iOS/Windows/macOS/Linux packaging prerequisites, signing boundaries, verification, and troubleshooting—use [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+For complete executable/release-artifact creation—including Android/iOS/Windows/macOS/Linux/Web packaging prerequisites, signing boundaries, verification, and troubleshooting—use [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## What SpellChecker is
 
 SpellChecker is a Flutter application and reusable Dart codebase for local spelling and deterministic writing analysis. The bundled application does not send editor text to a remote spelling or grammar service. It supports English (US) and English (UK), per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic built-in writing rules.
 
-Current package version: `2.16.0+21`.
+Current package version: `3.0.0+22`.
+
+## Supported Flutter targets
+
+The V3 cross-platform foundation commits official Flutter runners for:
+
+- Android;
+- iOS;
+- Linux desktop;
+- macOS;
+- Web;
+- Windows.
+
+Use [Platform support](PLATFORM_SUPPORT.md) for the exact distinction between committed runners, CI-built artifacts, and store/distribution-ready signed packages.
 
 ## Prerequisites
 
@@ -17,18 +30,27 @@ Install:
 - Git.
 - Flutter stable.
 - A Dart SDK compatible with `>=3.8.0 <4.0.0` (Flutter supplies Dart).
-- A browser supported by Flutter when running the committed web host.
-- Platform-specific Flutter tooling only if you choose to generate/run an additional native target locally.
+- The platform toolchain for every target you plan to run or build.
+
+Typical platform requirements are:
+
+- Web: a Flutter-supported browser.
+- Android: Android SDK/toolchain.
+- iOS: macOS with Xcode; signing/provisioning is required only for signed/device/distribution flows.
+- Linux: Clang, CMake, Ninja, pkg-config, GTK development libraries, and related Flutter desktop prerequisites.
+- macOS: macOS with Xcode.
+- Windows: Windows with the Visual Studio C++ desktop toolchain required by Flutter.
 
 Verify your toolchain:
 
 ```bash
-flutter doctor
+flutter doctor -v
 flutter --version
 dart --version
+flutter devices
 ```
 
-Use `flutter doctor -v` when preparing a target-specific native build so the complete toolchain state is visible.
+A platform runner being committed does not install its operating-system toolchain for you. If one target is unavailable, `flutter doctor -v` is the first place to diagnose the local environment.
 
 ## Clone and install dependencies
 
@@ -47,13 +69,45 @@ No runtime package is used for telemetry, cloud grammar, remote document analysi
 
 ## Run the application
 
-The repository commits a Flutter web host, so the most direct development target is Chrome:
+Choose a target available on the current machine.
+
+### Web
 
 ```bash
 flutter run -d chrome
 ```
 
-If Flutter reports that Chrome is unavailable, use `flutter devices` to see available local targets. Additional native runners are not committed in the repository; see [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+### Android
+
+```bash
+flutter devices
+flutter run -d <android-device-id>
+```
+
+### iOS
+
+```bash
+flutter devices
+flutter run -d <ios-device-or-simulator-id>
+```
+
+### Linux
+
+```bash
+flutter run -d linux
+```
+
+### macOS
+
+```bash
+flutter run -d macos
+```
+
+### Windows
+
+```powershell
+flutter run -d windows
+```
 
 ## Perform your first spelling check
 
@@ -152,21 +206,31 @@ dart run tool/benchmark_large_document.dart \
 
 For broader benchmark guidance, see [Performance](PERFORMANCE.md).
 
-## Build the current web release target
+## Build release mode locally
+
+Run the command for a target whose toolchain is installed.
 
 ```bash
 flutter build web --release
+flutter build apk --release
+flutter build linux --release
+flutter build macos --release
+flutter build windows --release
 ```
 
-The generated output is written to `build/web`. The repository's release workflow performs formatting, analysis, the complete Flutter test suite, benchmark smoke, and a release web build before uploading the web artifact.
+For iOS compilation without distribution signing:
 
-Treat the complete `build/web/` directory as the web deliverable. For deployment validation, native runner generation, native executable/package commands, Windows/Linux bundle handling, mobile signing, and release verification, continue with [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+```bash
+flutter build ios --release --no-codesign
+```
 
-## Native executable builds
+The target-specific operating-system requirements still apply; macOS/iOS builds require macOS, Windows builds require Windows, and Linux builds require the Linux desktop toolchain.
 
-The repository does **not** currently commit `android/`, `ios/`, `windows/`, `macos/`, or `linux/` runner directories. Do not run native release commands and assume an official SpellChecker artifact exists until the target runner has been intentionally generated, reviewed, committed, tested, and added to release validation.
+## Cross-platform automation
 
-The complete step-by-step process is in [Executable builds and packaging](EXECUTABLE_BUILDS.md). [Platform support](PLATFORM_SUPPORT.md) remains the source of truth for which targets are currently repository-supported and release-supported.
+`.github/workflows/cross-platform.yml` runs the shared quality gates and then builds Android, iOS, Linux, macOS, Web, and Windows on appropriate GitHub-hosted operating systems.
+
+`.github/workflows/release.yml` mirrors the cross-platform packaging coverage on release tags/manual dispatch and uploads target build artifacts. Mobile/desktop signing and notarization credentials are intentionally not committed; see [Platform support](PLATFORM_SUPPORT.md) and [Releasing](RELEASING.md).
 
 ## Use the library APIs
 
