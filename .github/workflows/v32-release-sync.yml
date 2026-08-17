@@ -1,0 +1,125 @@
+name: V3.2 one-time release sync
+
+on:
+  push:
+    branches:
+      - v3.2/language-expansion-unicode-hardening
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: ${{ !contains(github.event.head_commit.message, '[v32-sync]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Synchronize V3.2 current-state metadata
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess
+
+          def replace(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'missing expected text in {path}: {old[:80]!r}')
+              p.write_text(text.replace(old, new))
+
+          replace('README.md', 'supports eight explicit offline language packs', 'supports thirteen explicit offline language packs')
+          replace('README.md', '**Current package:** `3.1.1+24`', '**Current package:** `3.2.0+25`')
+          replace('README.md', '**Built-in languages:** English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, Italian `it-IT`', '**Built-in languages:** English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, Italian `it-IT`, Bengali `bn-IN`, Marathi `mr-IN`, Tamil `ta-IN`, Telugu `te-IN`, Russian `ru-RU`')
+          replace('README.md', 'Tokenization supports Unicode letters/combining marks, edit distance works over Unicode scalar values', 'Tokenization supports Unicode letters/combining marks plus in-word ZWJ/ZWNJ join controls, edit distance works over Unicode scalar values')
+          replace('README.md', 'Eight built-in packs cover English, Hindi, Spanish, French, German, Brazilian Portuguese, and Italian spelling', 'Thirteen built-in packs cover English, Hindi, Spanish, French, German, Brazilian Portuguese, Italian, Bengali, Marathi, Tamil, Telugu, and Russian spelling')
+          replace('README.md', 'The current package version is `3.1.1+24`. V3.1 is the multilingual cross-platform release line with eight built-in offline spelling packs on the V3.0 six-target platform foundation. V3.1.1 hardens strict language-namespace writes, Unicode-scalar suggestion ranking, and current-state documentation consistency.', 'The current package version is `3.2.0+25`. V3.2 expands the multilingual cross-platform release line to thirteen built-in offline spelling packs on the V3.0 six-target platform foundation, while preserving V3.1.1 namespace/ranking hardening and adding Unicode join-control-safe tokenization.')
+
+          replace('docs/README.md', 'SpellChecker `3.1.1+24`', 'SpellChecker `3.2.0+25`')
+          replace('docs/README.md', 'ships eight built-in offline spelling language packs', 'ships thirteen built-in offline spelling language packs')
+          replace('docs/README.md', '| Package version | `3.1.1+24` |', '| Package version | `3.2.0+25` |')
+          replace('docs/README.md', '| Built-in language packs | `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, `it-IT` |', '| Built-in language packs | `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, `it-IT`, `bn-IN`, `mr-IN`, `ta-IN`, `te-IN`, `ru-RU` |')
+
+          replace('docs/FEATURES.md', 'SpellChecker `3.1.1+24`', 'SpellChecker `3.2.0+25`')
+          replace('docs/FEATURES.md', '| `it-IT` | Italian (Italy) | built in |', '| `it-IT` | Italian (Italy) | built in |\n| `bn-IN` | Bengali (India) | built in |\n| `mr-IN` | Marathi (India) | built in |\n| `ta-IN` | Tamil (India) | built in |\n| `te-IN` | Telugu (India) | built in |\n| `ru-RU` | Russian (Russia) | built in |')
+          replace('docs/FEATURES.md', 'The six V3.1 non-English packs are curated offline starter lexicons', 'The eleven non-English packs are curated offline starter lexicons')
+          replace('docs/FEATURES.md', 'The six non-English V3.1 packs provide spelling and suggestions without applying English-specific writing rules.', 'The eleven non-English V3.2 packs provide spelling and suggestions without applying English-specific writing rules.')
+
+          replace('docs/LANGUAGE_PACKS.md', 'current `3.1.1+24` language model', 'current `3.2.0+25` language model')
+          replace('docs/LANGUAGE_PACKS.md', '| `it-IT` | `it` | `IT` | Italian (Italy) | built in |', '| `it-IT` | `it` | `IT` | Italian (Italy) | built in |\n| `bn-IN` | `bn` | `IN` | Bengali (India) | built in |\n| `mr-IN` | `mr` | `IN` | Marathi (India) | built in |\n| `ta-IN` | `ta` | `IN` | Tamil (India) | built in |\n| `te-IN` | `te` | `IN` | Telugu (India) | built in |\n| `ru-RU` | `ru` | `RU` | Russian (Russia) | built in |')
+          replace('docs/LANGUAGE_PACKS.md', 'The built-in Unicode token pattern recognizes sequences of Unicode letters plus combining marks, with supported internal apostrophe/hyphen forms:', 'The built-in Unicode token pattern recognizes sequences of Unicode letters plus combining marks, preserves U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER between letter clusters, and supports internal apostrophe/hyphen forms:')
+          replace('docs/LANGUAGE_PACKS.md', 'The built-in valid-word pattern accepts normalized Unicode letter/combining-mark sequences with supported normalized apostrophe/hyphen separators.', 'The built-in valid-word pattern accepts normalized Unicode letter/combining-mark sequences, in-word U+200C/U+200D join controls, and supported normalized apostrophe/hyphen separators.')
+          replace('docs/LANGUAGE_PACKS.md', 'SpellLanguageRegistry.italianItaly\nSpellLanguageRegistry.builtIns', 'SpellLanguageRegistry.italianItaly\nSpellLanguageRegistry.bengaliIndia\nSpellLanguageRegistry.marathiIndia\nSpellLanguageRegistry.tamilIndia\nSpellLanguageRegistry.teluguIndia\nSpellLanguageRegistry.russianRussia\nSpellLanguageRegistry.builtIns')
+          replace('docs/LANGUAGE_PACKS.md', 'V3.1 adds six curated offline starter lexicons across Latin and Devanagari scripts. They cover representative common vocabulary and deterministic typo suggestions but are not exhaustive national dictionaries, grammar engines, or morphology analyzers. Current Writing insights rules remain English-only (`en`), so the six new packs provide spelling without applying English-specific writing rules.', 'V3.2 ships eleven non-English curated offline starter lexicons across Latin, Devanagari, Bengali, Tamil, Telugu, and Cyrillic scripts. They cover representative common vocabulary and deterministic typo suggestions but are not exhaustive national dictionaries, grammar engines, or morphology analyzers. Current Writing insights rules remain English-only (`en`), so non-English packs provide spelling without applying English-specific writing rules. Japanese/Korean/Chinese segmentation and Arabic normalization/diacritic policy remain intentionally deferred until dedicated architecture is reviewed.')
+
+          replace('docs/ROADMAP.md', 'SpellChecker `3.1.1+24` is the current V3 multilingual cross-platform foundation.', 'SpellChecker `3.2.0+25` is the current V3 multilingual cross-platform foundation.')
+          replace('docs/ROADMAP.md', '- eight built-in offline spelling packs: English (US/UK), Hindi, Spanish, French, German, Brazilian Portuguese, and Italian;', '- thirteen built-in offline spelling packs: English (US/UK), Hindi, Spanish, French, German, Brazilian Portuguese, Italian, Bengali, Marathi, Tamil, Telugu, and Russian;')
+          replace('docs/ROADMAP.md', 'V3.1 ships six new non-English starter packs. Future work can deepen those lexicons or add more languages', 'V3.2 ships eleven non-English starter packs, including Bengali, Marathi, Tamil, Telugu, and Russian. Future work can deepen those lexicons or add more languages')
+
+          replace('docs/RELEASE_HISTORY.md', 'Current package version: `3.1.1+24`.', 'Current package version: `3.2.0+25`.')
+          replace('docs/RELEASE_HISTORY.md', 'V3.1 is the multilingual spelling foundation release line. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling from two English variants to eight language packs. V3.1.1 is a hardening patch for strict language-namespace persistence, Unicode-scalar ranking consistency, and evergreen documentation truthfulness.', 'V3.2 is the current multilingual expansion release. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling to thirteen language packs and hardening in-word Unicode join-control tokenization. V3.1.1 remains the namespace/ranking/documentation hardening patch immediately before V3.2.')
+          replace('docs/RELEASE_HISTORY.md', '## V3.1\n', '## V3.2\n\n- [V3.2 language expansion](V3_2_LANGUAGE_EXPANSION.md) — Bengali, Marathi, Tamil, Telugu, and Russian starter packs, Unicode join-control hardening, compatibility boundaries, and validation requirements.\n\n## V3.1\n')
+
+          replace('docs/EXECUTABLE_BUILDS.md', 'SpellChecker is currently version `3.1.0+23`', 'SpellChecker is currently version `3.2.0+25`')
+          replace('docs/EXECUTABLE_BUILDS.md', '3.1.0+23', '3.2.0+25')
+
+          replace('lib/features/editor/spell_checker_page.dart', "applicationVersion: '3.1.1'", "applicationVersion: '3.2.0'")
+          replace('lib/features/editor/spell_checker_page.dart', 'in V3.1 with eight built-in offline language packs across Latin and Devanagari scripts', 'in V3.2 with thirteen built-in offline language packs across Latin, Devanagari, Bengali, Tamil, Telugu, and Cyrillic scripts')
+          replace('lib/features/editor/spell_checker_page.dart', 'decomposed-Unicode word handling', 'decomposed-Unicode and join-control word handling')
+
+          replace('test/widget_test.dart', "testWidgets('About dialog reports the V3.1 multilingual release'", "testWidgets('About dialog reports the V3.2 multilingual release'")
+          replace('test/widget_test.dart', "find.textContaining('3.1.1')", "find.textContaining('3.2.0')")
+
+          changelog = Path('CHANGELOG.md')
+          text = changelog.read_text()
+          marker = '## [3.1.1] - 2026-08-17'
+          if '## [3.2.0] - 2026-08-17' not in text:
+              entry = '''## [3.2.0] - 2026-08-17\n\n### Added\n- Added Bengali (India) `bn-IN`, Marathi (India) `mr-IN`, Tamil (India) `ta-IN`, Telugu (India) `te-IN`, and Russian (Russia) `ru-RU` offline starter spelling packs, expanding the built-in registry from eight to thirteen languages.\n- Added project-curated starter dictionaries and deterministic frequency-rank metadata for each V3.2 pack.\n- Added registry-driven persistence, Portable Settings, selector, native-text, and typo-suggestion coverage for the expanded language set.\n\n### Fixed\n- Preserved U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER inside Unicode letter/combining-mark tokens so legitimate Indic-script words are not split into separate spelling tokens.\n- Replaced stale fixed-language compatibility loops with registry-driven coverage so future official packs cannot silently bypass persistence/settings-transfer tests.\n- Corrected the executable-build guide and V3 metadata audit workflow, which still asserted obsolete V3.0/V3.1 release identities.\n\n### Compatibility and language boundary\n- English Writing Insights remains English-only; V3.2 does not run English grammar/mechanics rules on the new non-English packs.\n- Japanese/Korean/Chinese segmentation and Arabic normalization/diacritic policy remain intentionally deferred rather than being mislabeled as supported.\n- Runtime dependencies, transfer format versions, local privacy model, BMC visibility, and the six-target release-build contract are unchanged.\n\n'''
+              if marker not in text:
+                  raise SystemExit('CHANGELOG insertion marker missing')
+              changelog.write_text(text.replace(marker, entry + marker, 1))
+
+          audit = Path('.github/workflows/v3-docs-sync.yml')
+          text = audit.read_text()
+          text = text.replace("grep -F 'version: 3.0.0+22' pubspec.yaml", "grep -F 'version: 3.2.0+25' pubspec.yaml")
+          text = text.replace("grep -F \"applicationVersion: '3.0.0'\" lib/features/editor/spell_checker_page.dart", "grep -F \"applicationVersion: '3.2.0'\" lib/features/editor/spell_checker_page.dart")
+          text = text.replace("grep -F 'Current package version: `3.0.0+22`.' docs/RELEASE_HISTORY.md", "grep -F 'Current package version: `3.2.0+25`.' docs/RELEASE_HISTORY.md")
+          text = text.replace("grep -F '## [3.0.0] - 2026-08-17' CHANGELOG.md", "grep -F '## [3.2.0] - 2026-08-17' CHANGELOG.md")
+          text = text.replace("test -f docs/V3_0_CROSS_PLATFORM_FOUNDATION.md", "test -f docs/V3_2_LANGUAGE_EXPANSION.md")
+          text = text.replace("grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md\n          grep -F 'Cross-platform CI' docs/V3_0_CROSS_PLATFORM_FOUNDATION.md", "grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md\n          grep -F 'Built-in language packs: 13' docs/V3_2_LANGUAGE_EXPANSION.md")
+          audit.write_text(text)
+
+          guide = Path('docs/EXECUTABLE_BUILDS.md')
+          text = guide.read_text()
+          start_marker = '<!-- tracked-file-inventory:start -->'
+          end_marker = '<!-- tracked-file-inventory:end -->'
+          start = text.index(start_marker) + len(start_marker)
+          end = text.index(end_marker)
+          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          excluded_roots = ('android/', 'ios/', 'linux/', 'macos/', 'windows/')
+          excluded = {'.github/workflows/v32-release-sync.yml'}
+          paths = sorted(p for p in tracked if not p.startswith(excluded_roots) and p not in excluded)
+          inventory = '\n\n' + '\n'.join(f'- `{p}`' for p in paths) + '\n\n'
+          guide.write_text(text[:start] + inventory + text[end:])
+      - name: Canonical format
+        run: dart format lib test tool
+      - name: Commit synchronized release state
+        shell: bash
+        run: |
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+          git add README.md CHANGELOG.md docs lib test .github/workflows/v3-docs-sync.yml
+          if git diff --cached --quiet; then
+            echo "No synchronization changes."
+            exit 0
+          fi
+          git commit -m "docs: synchronize V3.2 release contract [v32-sync]"
+          git push origin HEAD:v3.2/language-expansion-unicode-hardening
