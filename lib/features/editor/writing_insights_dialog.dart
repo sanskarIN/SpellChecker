@@ -349,7 +349,14 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  if (visibleRules.isEmpty)
+                  if (supportedRules.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        'Writing Insights rules are not available for ${widget.languagePack.displayName} yet. Spelling and the personal dictionary still work for this language.',
+                      ),
+                    )
+                  else if (visibleRules.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
                       child: Text('No rules match the current review filters.'),
@@ -454,6 +461,13 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
                       message:
                           'Add editor text before running writing insights.',
                     )
+                  else if (supportedRules.isEmpty)
+                    _WritingEmptyState(
+                      icon: Icons.translate_outlined,
+                      title: 'Writing rules not available for this language',
+                      message:
+                          'Spell checking and personal dictionaries work for ${widget.languagePack.displayName}, but the current Writing Insights rules are English-only.',
+                    )
                   else if (analysis.issues.isEmpty)
                     const _WritingEmptyState(
                       icon: Icons.check_circle_outline,
@@ -495,7 +509,9 @@ class _WritingInsightsDialogState extends State<WritingInsightsDialog> {
           actions: <Widget>[
             TextButton.icon(
               key: const ValueKey<String>('reset-writing-rules'),
-              onPressed: () => _close(resetRulePreferences: true),
+              onPressed: supportedRules.isEmpty
+                  ? null
+                  : () => _close(resetRulePreferences: true),
               icon: const Icon(Icons.restart_alt),
               label: const Text('Reset rules to defaults'),
             ),
