@@ -80,6 +80,11 @@ class SpellLanguageRegistry {
     unicode: true,
   );
 
+  static final RegExp _indicTokenPattern = RegExp(
+    r"(?:\p{L}(?:\p{M}|[\u200C\u200D])*)+(?:['’\-‐‑](?:\p{L}(?:\p{M}|[\u200C\u200D])*)+)*",
+    unicode: true,
+  );
+
   static final RegExp _unicodeValidWordPattern = RegExp(
     r"^(?:\p{L}\p{M}*)+(?:['\-](?:\p{L}\p{M}*)+)*$",
     unicode: true,
@@ -155,9 +160,9 @@ class SpellLanguageRegistry {
     displayName: 'Hindi (India)',
     dictionary: HindiDictionary.words,
     wordFrequencies: HindiDictionary.ranks,
-    tokenPattern: _unicodeTokenPattern,
+    tokenPattern: _indicTokenPattern,
     validWordPattern: _unicodeValidWordPattern,
-    normalizer: _normalizeUnicodeWord,
+    normalizer: _normalizeHindiWord,
     suggestionSource: 'bundled Hindi (India)',
   );
 
@@ -277,6 +282,12 @@ class SpellLanguageRegistry {
       ..removeAll(EnglishGbDictionary.excludedUsVariants)
       ..addAll(EnglishGbDictionary.words);
     return words;
+  }
+
+  static String _normalizeHindiWord(String word) {
+    return _normalizeUnicodeWord(
+      word,
+    ).replaceAll('\u200C', '').replaceAll('\u200D', '');
   }
 
   static String _normalizeUnicodeWord(String word) {
