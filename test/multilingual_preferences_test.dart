@@ -60,4 +60,49 @@ void main() {
       });
     },
   );
+
+  test('rejects unsupported language ids instead of falling back to en-US', () async {
+    final preferences = DictionaryPreferences();
+    await preferences.savePersonalWords(<String>{'baseline'});
+    await preferences.saveWritingRuleIds(<String>{'repeated-space'});
+
+    await expectLater(
+      preferences.saveLanguageId('fr_FR'),
+      throwsArgumentError,
+    );
+    await expectLater(
+      preferences.savePersonalWords(<String>{'wrongbucket'}, languageId: 'fr_FR'),
+      throwsArgumentError,
+    );
+    await expectLater(
+      preferences.loadPersonalWords(languageId: 'fr_FR'),
+      throwsArgumentError,
+    );
+    await expectLater(
+      preferences.clearPersonalWords(languageId: 'fr_FR'),
+      throwsArgumentError,
+    );
+    await expectLater(
+      preferences.saveWritingRuleIds(
+        <String>{'trailing-whitespace'},
+        languageId: 'fr_FR',
+      ),
+      throwsArgumentError,
+    );
+    await expectLater(
+      preferences.loadWritingRuleIds(languageId: 'fr_FR'),
+      throwsArgumentError,
+    );
+    await expectLater(
+      preferences.clearWritingRuleIds(languageId: 'fr_FR'),
+      throwsArgumentError,
+    );
+
+    expect(await preferences.loadPersonalWords(), <String>{'baseline'});
+    expect(
+      await preferences.loadWritingRuleIds(),
+      <String>{'repeated-space'},
+    );
+    expect(await preferences.loadLanguageId(), 'en-US');
+  });
 }
