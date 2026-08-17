@@ -4,6 +4,23 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [3.2.0] - 2026-08-17
+
+### Added
+- Added Bengali (India) `bn-IN`, Marathi (India) `mr-IN`, Tamil (India) `ta-IN`, Telugu (India) `te-IN`, and Russian (Russia) `ru-RU` offline starter spelling packs, expanding the built-in registry from eight to thirteen languages.
+- Added project-curated starter dictionaries and deterministic frequency-rank metadata for each V3.2 pack.
+- Added registry-driven persistence, Portable Settings, selector, native-text, and typo-suggestion coverage for the expanded language set.
+
+### Fixed
+- Preserved U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER inside Unicode letter/combining-mark tokens so legitimate Indic-script words are not split into separate spelling tokens.
+- Replaced stale fixed-language compatibility loops with registry-driven coverage so future official packs cannot silently bypass persistence/settings-transfer tests.
+- Corrected the executable-build guide and V3 metadata audit workflow, which still asserted obsolete V3.0/V3.1 release identities.
+
+### Compatibility and language boundary
+- English Writing Insights remains English-only; V3.2 does not run English grammar/mechanics rules on the new non-English packs.
+- Japanese/Korean/Chinese segmentation and Arabic normalization/diacritic policy remain intentionally deferred rather than being mislabeled as supported.
+- Runtime dependencies, transfer format versions, local privacy model, BMC visibility, and the six-target release-build contract are unchanged.
+
 ## [3.1.1] - 2026-08-17
 
 ### Fixed

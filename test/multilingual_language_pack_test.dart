@@ -26,13 +26,7 @@ void main() {
     });
 
     test('resolves every V3.2 pack by stable language id', () {
-      for (final id in <String>[
-        'bn-IN',
-        'mr-IN',
-        'ta-IN',
-        'te-IN',
-        'ru-RU',
-      ]) {
+      for (final id in <String>['bn-IN', 'mr-IN', 'ta-IN', 'te-IN', 'ru-RU']) {
         expect(SpellLanguageRegistry.contains(id), isTrue);
         expect(SpellLanguageRegistry.byId(id).id, id);
       }

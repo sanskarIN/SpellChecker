@@ -11,7 +11,7 @@ It deliberately distinguishes between:
 - the metadata, documentation, CI, and release files that must be reviewed even when they are not compiled into the binary;
 - target-specific signing, packaging, and distribution work that must never be confused with the cross-platform CI build contract.
 
-SpellChecker is currently version `3.1.0+23` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
+SpellChecker is currently version `3.2.0+25` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
 
 > **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Production mobile/desktop signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
 
@@ -354,7 +354,7 @@ The repository release workflow uses release mode for web.
 Current package version:
 
 ```text
-3.1.0+23
+3.2.0+25
 ```
 
 The version in `pubspec.yaml` is the project source of truth. Before producing an official release artifact:
@@ -482,8 +482,6 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 
 <!-- tracked-file-inventory:start -->
 
-### Repository/release control and root files
-
 - `.github/CODEOWNERS`
 - `.github/FUNDING.yml`
 - `.github/ISSUE_TEMPLATE/bug_report.yml`
@@ -492,8 +490,12 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `.github/dependabot.yml`
 - `.github/pull_request_template.md`
 - `.github/workflows/ci.yml`
+- `.github/workflows/cross-platform.yml`
+- `.github/workflows/platform-bootstrap.yml`
 - `.github/workflows/release.yml`
+- `.github/workflows/v3-docs-sync.yml`
 - `.gitignore`
+- `.metadata`
 - `CHANGELOG.md`
 - `CODE_OF_CONDUCT.md`
 - `CONTRIBUTING.md`
@@ -503,20 +505,14 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `SECURITY.md`
 - `SUPPORT.md`
 - `analysis_options.yaml`
-- `pubspec.lock`
-- `pubspec.yaml`
-- `what_changed.md`
-
-### Documentation and release evidence
-
 - `docs/ACCESSIBILITY.md`
 - `docs/API.md`
 - `docs/ARCHITECTURE.md`
 - `docs/CONFIGURATION.md`
 - `docs/DEVELOPMENT.md`
 - `docs/DOCUMENTATION_MAINTENANCE.md`
-- `docs/EXECUTABLE_BUILDS.md`
 - `docs/EXAMPLES.md`
+- `docs/EXECUTABLE_BUILDS.md`
 - `docs/FAQ.md`
 - `docs/FEATURES.md`
 - `docs/GETTING_STARTED.md`
@@ -547,10 +543,10 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `docs/V2_16_BUG_AUDIT.md`
 - `docs/V2_16_FINAL_VALIDATION.md`
 - `docs/V2_9_DIAGNOSTIC_SUMMARY.md`
+- `docs/V3_0_CROSS_PLATFORM_FOUNDATION.md`
+- `docs/V3_1_MULTILINGUAL_FOUNDATION.md`
+- `docs/V3_2_LANGUAGE_EXPANSION.md`
 - `docs/WRITING_RULES.md`
-
-### Runtime/build source
-
 - `lib/app.dart`
 - `lib/core/edit_distance.dart`
 - `lib/core/personal_dictionary_codec.dart`
@@ -563,6 +559,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `lib/core/spell_suggestion_ranker.dart`
 - `lib/core/text_correction.dart`
 - `lib/core/text_statistics.dart`
+- `lib/data/bengali_dictionary.dart`
 - `lib/data/english_dictionary.dart`
 - `lib/data/english_dictionary_extension.dart`
 - `lib/data/english_gb_dictionary.dart`
@@ -571,8 +568,12 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `lib/data/german_dictionary.dart`
 - `lib/data/hindi_dictionary.dart`
 - `lib/data/italian_dictionary.dart`
+- `lib/data/marathi_dictionary.dart`
 - `lib/data/portuguese_br_dictionary.dart`
+- `lib/data/russian_dictionary.dart`
 - `lib/data/spanish_dictionary.dart`
+- `lib/data/tamil_dictionary.dart`
+- `lib/data/telugu_dictionary.dart`
 - `lib/features/editor/dictionary_manager_dialog.dart`
 - `lib/features/editor/settings_transfer_dialog.dart`
 - `lib/features/editor/spell_check_editing_controller.dart`
@@ -602,11 +603,8 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `lib/writing/writing_review_query.dart`
 - `lib/writing/writing_rule.dart`
 - `lib/writing/writing_rule_category.dart`
-- `web/index.html`
-- `web/manifest.json`
-
-### Validation source
-
+- `pubspec.lock`
+- `pubspec.yaml`
 - `test/analysis_benchmark_command_test.dart`
 - `test/analysis_benchmark_options_test.dart`
 - `test/analysis_benchmark_reporter_test.dart`
@@ -622,11 +620,11 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/language_pack_test.dart`
 - `test/language_preferences_test.dart`
 - `test/language_widget_test.dart`
+- `test/missing_punctuation_space_rule_test.dart`
+- `test/missing_punctuation_space_unicode_test.dart`
 - `test/multilingual_language_pack_test.dart`
 - `test/multilingual_preferences_test.dart`
 - `test/multilingual_widget_test.dart`
-- `test/missing_punctuation_space_rule_test.dart`
-- `test/missing_punctuation_space_unicode_test.dart`
 - `test/personal_dictionary_codec_test.dart`
 - `test/sentence_capitalization_quote_test.dart`
 - `test/sentence_capitalization_unicode_test.dart`
@@ -687,9 +685,6 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/writing_review_query_test.dart`
 - `test/writing_rules_test.dart`
 - `test/writing_widget_test.dart`
-
-### Developer tooling
-
 - `tool/benchmark/analysis_benchmark_command.dart`
 - `tool/benchmark/analysis_benchmark_options.dart`
 - `tool/benchmark/analysis_benchmark_reporter.dart`
@@ -697,9 +692,9 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `tool/benchmark/analysis_benchmark_runner.dart`
 - `tool/benchmark/analysis_benchmark_scenario.dart`
 - `tool/benchmark_large_document.dart`
-
-- `docs/V3_0_CROSS_PLATFORM_FOUNDATION.md`
-- `docs/V3_1_MULTILINGUAL_FOUNDATION.md`
+- `web/index.html`
+- `web/manifest.json`
+- `what_changed.md`
 
 <!-- tracked-file-inventory:end -->
 

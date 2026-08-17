@@ -1,6 +1,6 @@
 # Language Packs
 
-SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `3.1.1+24` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.
+SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `3.2.0+25` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.
 
 ## Public import
 
@@ -26,6 +26,11 @@ import 'package:spellchecker/spell_checker.dart';
 | `de-DE` | `de` | `DE` | German (Germany) | built in |
 | `pt-BR` | `pt` | `BR` | Portuguese (Brazil) | built in |
 | `it-IT` | `it` | `IT` | Italian (Italy) | built in |
+| `bn-IN` | `bn` | `IN` | Bengali (India) | built in |
+| `mr-IN` | `mr` | `IN` | Marathi (India) | built in |
+| `ta-IN` | `ta` | `IN` | Tamil (India) | built in |
+| `te-IN` | `te` | `IN` | Telugu (India) | built in |
+| `ru-RU` | `ru` | `RU` | Russian (Russia) | built in |
 
 SpellChecker does not auto-detect language. The bundled UI requires explicit selection.
 
@@ -70,7 +75,7 @@ Pack equality/hash code use `id`, so IDs should be stable and unique in any inte
 
 ### Token pattern
 
-The built-in Unicode token pattern recognizes sequences of Unicode letters plus combining marks, with supported internal apostrophe/hyphen forms:
+The built-in Unicode token pattern recognizes sequences of Unicode letters plus combining marks, preserves U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER between letter clusters, and supports internal apostrophe/hyphen forms:
 
 - straight apostrophe `'`;
 - curly apostrophe `’`;
@@ -81,7 +86,7 @@ A token match's offsets remain Dart UTF-16 code-unit offsets.
 
 ### Valid personal-word pattern
 
-The built-in valid-word pattern accepts normalized Unicode letter/combining-mark sequences with supported normalized apostrophe/hyphen separators. Input is normalized before validation.
+The built-in valid-word pattern accepts normalized Unicode letter/combining-mark sequences, in-word U+200C/U+200D join controls, and supported normalized apostrophe/hyphen separators. Input is normalized before validation.
 
 ### Normalizer
 
@@ -149,6 +154,11 @@ SpellLanguageRegistry.frenchFrance
 SpellLanguageRegistry.germanGermany
 SpellLanguageRegistry.portugueseBrazil
 SpellLanguageRegistry.italianItaly
+SpellLanguageRegistry.bengaliIndia
+SpellLanguageRegistry.marathiIndia
+SpellLanguageRegistry.tamilIndia
+SpellLanguageRegistry.teluguIndia
+SpellLanguageRegistry.russianRussia
 SpellLanguageRegistry.builtIns
 SpellLanguageRegistry.defaultPack
 SpellLanguageRegistry.byId(id)
@@ -174,7 +184,7 @@ The codebase includes additional explicit US/UK regional variants. Do not assume
 
 ## Multilingual coverage boundary
 
-V3.1 adds six curated offline starter lexicons across Latin and Devanagari scripts. They cover representative common vocabulary and deterministic typo suggestions but are not exhaustive national dictionaries, grammar engines, or morphology analyzers. Current Writing insights rules remain English-only (`en`), so the six new packs provide spelling without applying English-specific writing rules.
+V3.2 ships eleven non-English curated offline starter lexicons across Latin, Devanagari, Bengali, Tamil, Telugu, and Cyrillic scripts. They cover representative common vocabulary and deterministic typo suggestions but are not exhaustive national dictionaries, grammar engines, or morphology analyzers. Current Writing insights rules remain English-only (`en`), so non-English packs provide spelling without applying English-specific writing rules. Japanese/Korean/Chinese segmentation and Arabic normalization/diacritic policy remain intentionally deferred until dedicated architecture is reviewed.
 
 ## Use a built-in pack with the engine
 

@@ -34,7 +34,10 @@ void main() {
     await tester.pumpWidget(const SpellCheckerApp());
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField).first, 'নমস্কার বিশ্ব ধন্যবাদ');
+    await tester.enterText(
+      find.byType(TextField).first,
+      'নমস্কার বিশ্ব ধন্যবাদ',
+    );
     await tester.tap(find.text('Check spelling'));
     await tester.pumpAndSettle();
     expect(find.text('নমস্কার'), findsWidgets);

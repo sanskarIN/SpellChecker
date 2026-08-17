@@ -31,10 +31,7 @@ void main() {
     test('round-trips every built-in language id', () {
       for (final pack in SpellLanguageRegistry.builtIns) {
         final encoded = SpellCheckerSettingsCodec.encode(
-          SpellCheckerSettingsDocument(
-            languageId: pack.id,
-            suggestionLimit: 5,
-          ),
+          SpellCheckerSettingsDocument(languageId: pack.id, suggestionLimit: 5),
         );
         final decoded = SpellCheckerSettingsCodec.decode(encoded);
 

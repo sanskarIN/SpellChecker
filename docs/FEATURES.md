@@ -1,6 +1,6 @@
 # Feature Reference
 
-This page describes the **current** SpellChecker `3.1.1+24` product surface. It is an evergreen reference; release-specific V2.x documents describe historical milestones and may contain older registry sizes or compatibility context.
+This page describes the **current** SpellChecker `3.2.0+25` product surface. It is an evergreen reference; release-specific V2.x documents describe historical milestones and may contain older registry sizes or compatibility context.
 
 ## Product summary
 
@@ -58,10 +58,15 @@ Manual text edits invalidate the previous spelling snapshot instead of reusing o
 | `de-DE` | German (Germany) | built in |
 | `pt-BR` | Portuguese (Brazil) | built in |
 | `it-IT` | Italian (Italy) | built in |
+| `bn-IN` | Bengali (India) | built in |
+| `mr-IN` | Marathi (India) | built in |
+| `ta-IN` | Tamil (India) | built in |
+| `te-IN` | Telugu (India) | built in |
+| `ru-RU` | Russian (Russia) | built in |
 
 SpellChecker does not auto-detect language. Language selection is explicit. Personal vocabulary and writing-rule choices are stored separately for each built-in language.
 
-The six V3.1 non-English packs are curated offline starter lexicons rather than exhaustive linguistic dictionaries. Further languages or deeper vocabulary require reviewed `SpellLanguagePack` data, normalization/affix behavior, tests, and licensing review. See [Language packs](LANGUAGE_PACKS.md).
+The eleven non-English packs are curated offline starter lexicons rather than exhaustive linguistic dictionaries. Further languages or deeper vocabulary require reviewed `SpellLanguagePack` data, normalization/affix behavior, tests, and licensing review. See [Language packs](LANGUAGE_PACKS.md).
 
 ## Writing insights
 
@@ -82,7 +87,7 @@ The writing subsystem is separate from spelling. It uses `WritingRule`, `Writing
 | `unmatched-square-bracket` | unpaired literal `[` or `]` | Mechanics | no; advisory |
 | `unmatched-curly-brace` | unpaired literal `{` or `}` | Mechanics | no; advisory |
 
-All current built-in writing rules declare English (`en`) eligibility, so they run for the two built-in English packs only. The six non-English V3.1 packs provide spelling and suggestions without applying English-specific writing rules. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.
+All current built-in writing rules declare English (`en`) eligibility, so they run for the two built-in English packs only. The eleven non-English V3.2 packs provide spelling and suggestions without applying English-specific writing rules. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.
 
 See [Writing rules](WRITING_RULES.md) for precise source ownership, severities, rule IDs, compatibility behavior, and plugin requirements.
 

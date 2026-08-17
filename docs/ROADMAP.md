@@ -1,13 +1,13 @@
 # Roadmap
 
-SpellChecker `3.1.1+24` is the current V3 multilingual cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
+SpellChecker `3.2.0+25` is the current V3 multilingual cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
 
 ## Current status
 
 The current project already ships:
 
 - local deterministic spelling analysis;
-- eight built-in offline spelling packs: English (US/UK), Hindi, Spanish, French, German, Brazilian Portuguese, and Italian;
+- thirteen built-in offline spelling packs: English (US/UK), Hindi, Spanish, French, German, Brazilian Portuguese, Italian, Bengali, Marathi, Tamil, Telugu, and Russian;
 - Unicode-aware tokenization/normalization and scalar edit distance;
 - ranked spelling suggestions with injectable ranker strategy;
 - per-language personal dictionaries;
@@ -50,7 +50,7 @@ The items below are opportunities, not committed release dates.
 
 ## Further language depth and expansion
 
-V3.1 ships six new non-English starter packs. Future work can deepen those lexicons or add more languages, but should include compatible dictionary licensing/provenance, script-specific normalization and affix review, suggestion-quality/performance benchmarks, persistence/selector regressions, and an explicit writing-rule eligibility decision.
+V3.2 ships eleven non-English starter packs, including Bengali, Marathi, Tamil, Telugu, and Russian. Future work can deepen those lexicons or add more languages, but should include compatible dictionary licensing/provenance, script-specific normalization and affix review, suggestion-quality/performance benchmarks, persistence/selector regressions, and an explicit writing-rule eligibility decision.
 
 A deeper or new official language should meet the completeness checklist in [Language packs](LANGUAGE_PACKS.md).
 
