@@ -14,10 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out audit branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: v3.1.1/line-audit-hardening
           fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
       - name: Synchronize release identity and evergreen docs
         shell: python
