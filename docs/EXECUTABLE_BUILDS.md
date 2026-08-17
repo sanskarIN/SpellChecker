@@ -4,8 +4,8 @@ This document is the authoritative build-and-packaging guide for turning the Spe
 
 It deliberately distinguishes between:
 
-- the **currently committed and release-validated Flutter web target**;
-- **native Flutter targets that are not yet committed to this repository**;
+- the **committed Android, iOS, Linux, macOS, Web, and Windows Flutter runners**;
+- the difference between CI-buildable artifacts and production-signed/store-ready distribution artifacts;
 - the files that feed compilation;
 - the files that validate the build before release;
 - the metadata, documentation, CI, and release files that must be reviewed even when they are not compiled into the binary;
@@ -13,7 +13,7 @@ It deliberately distinguishes between:
 
 SpellChecker is currently version `2.16.0+21` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
 
-> **Current support boundary:** the repository commits `web/` and the portable Flutter/Dart source, but it does **not** commit `android/`, `ios/`, `windows/`, `macos/`, or `linux/` runner directories. The existing release workflow therefore produces only `build/web`.
+> **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Production mobile/desktop signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
 
 ## 1. What counts as an executable artifact
 
@@ -22,11 +22,11 @@ Flutter targets do not all produce the same kind of deliverable.
 | Target | Typical release deliverable | Current repository status |
 | --- | --- | --- |
 | Web | Complete `build/web/` directory | **Supported and release-built** |
-| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner not committed |
-| iOS | `.ipa` plus Xcode archive/signing metadata | Runner not committed |
-| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner not committed |
-| macOS | `.app` application bundle, normally signed/notarized for distribution | Runner not committed |
-| Linux | Executable plus `lib/` and `data/` bundle contents | Runner not committed |
+| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner committed; CI builds release APK |
+| iOS | `.ipa` plus Xcode archive/signing metadata | Runner committed; CI builds release app without codesign |
+| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner committed; CI builds release bundle |
+| macOS | `.app` application bundle, normally signed/notarized for distribution | Runner committed; CI builds release app |
+| Linux | Executable plus `lib/` and `data/` bundle contents | Runner committed; CI builds release bundle |
 
 For Windows and Linux especially, do **not** copy only the executable file and discard its neighboring runtime files. Flutter desktop release output is a bundle.
 
@@ -44,7 +44,7 @@ Before producing any artifact, use these repository files as the primary build c
 - `.github/workflows/ci.yml` — canonical source-validation gates.
 - `.github/workflows/release.yml` — current release-build automation and artifact contract.
 
-The current release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, builds web in release mode, and uploads `build/web`.
+The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners.
 
 ## 3. Required preflight on every build machine
 
@@ -108,9 +108,9 @@ flutter pub get
 
 Then rerun the gates and the target build.
 
-## 5. Current official release artifact: web
+## 5. Cross-platform release build coverage
 
-The web runner is already committed, so no platform generation step is required.
+All six Flutter target runners are committed. No platform generation step is required for normal builds; regeneration should occur only as an intentional Flutter migration and every generated diff must be reviewed.
 
 ### Development run
 
@@ -162,11 +162,9 @@ under an artifact name based on `spellchecker-web-${{ github.ref_name }}`.
 
 The GitHub Actions artifact is temporary workflow storage; it is not automatically a GitHub Release, permanent download page, package registry publication, or hosted website.
 
-## 6. Adding native runners before native executables can exist
+## 6. Native runner regeneration and migration policy
 
-Native release commands cannot work from the current repository until the corresponding runner directory exists.
-
-Flutter can generate missing platform files for an existing project. Generate only targets you are intentionally reviewing. Examples:
+The native runner directories now exist and are tracked by `.metadata`. Use `flutter create` for these targets only when intentionally regenerating/migrating runner templates. Generate only targets you are intentionally reviewing. Examples:
 
 ```bash
 flutter create --platforms=android .
@@ -194,9 +192,9 @@ After generation:
 8. update `docs/PLATFORM_SUPPORT.md`, `docs/RELEASING.md`, `README.md`, privacy/security documentation, and this file;
 9. only then describe the target as repository-supported or release-supported.
 
-Generating runners locally does **not** by itself make those runners official SpellChecker release files.
+Regenerating runners locally does **not** by itself authorize template changes. Review the diff, preserve stable package/bundle identity, rerun cross-platform CI, and update platform documentation before merging migration changes.
 
-## 7. Android release artifacts (after `android/` is intentionally added)
+## 7. Android release artifacts
 
 Android builds require a configured Android Flutter toolchain. Validate it with `flutter doctor -v`.
 
@@ -242,9 +240,9 @@ Before any official Android release:
 - add CI that actually builds the Android release artifact;
 - document artifact retention and distribution.
 
-The current repository does not yet satisfy these requirements.
+The Android runner is committed and CI builds a release APK. Production store signing and channel-specific distribution remain separate release work.
 
-## 8. iOS release artifacts (after `ios/` is intentionally added)
+## 8. iOS release artifacts
 
 An iOS release build requires macOS and Xcode.
 
@@ -276,9 +274,9 @@ Before an official iOS release:
 - define CI/CD on a macOS runner;
 - document TestFlight/App Store or other approved distribution procedure.
 
-The current repository does not yet commit or release an iOS runner.
+The iOS runner is committed and CI builds it in release mode with `--no-codesign`. Apple signing/provisioning is required for device/store distribution.
 
-## 9. Windows executable bundle (after `windows/` is intentionally added)
+## 9. Windows executable bundle
 
 Windows builds must be performed on a Windows development machine/runner with the required Visual Studio C++ desktop tooling configured for Flutter.
 
@@ -302,9 +300,9 @@ Before an official Windows release:
 - add Windows CI that builds and archives the complete runtime directory;
 - define signing policy if code signing is used.
 
-The current repository does not yet commit or release a Windows runner.
+The Windows runner is committed and CI builds the complete release bundle on `windows-latest`.
 
-## 10. macOS application bundle (after `macos/` is intentionally added)
+## 10. macOS application bundle
 
 macOS builds require macOS and Xcode.
 
@@ -325,9 +323,9 @@ Before an official macOS release:
 - add macOS CI that builds the actual `.app` artifact;
 - document packaging and distribution destination.
 
-The current repository does not yet commit or release a macOS runner.
+The macOS runner is committed and CI builds the release `.app`; public distribution still requires the intended signing/notarization policy.
 
-## 11. Linux executable bundle (after `linux/` is intentionally added)
+## 11. Linux executable bundle
 
 A Linux desktop build requires the Flutter Linux desktop toolchain. Common development requirements include Clang, CMake, Ninja, pkg-config, GTK development packages, and a supported C++ toolchain.
 
@@ -353,7 +351,7 @@ Before an official Linux release:
 - validate preferences, clipboard, keyboard, accessibility, font/rendering, and startup behavior;
 - add Linux desktop build CI and archive the complete bundle.
 
-The current repository does not yet commit or release a Linux desktop runner.
+The Linux runner is committed and CI builds the complete release bundle on Ubuntu with the required desktop development packages.
 
 ## 12. Build modes
 
@@ -435,7 +433,7 @@ flutter doctor -v
 flutter devices
 ```
 
-For native desktop/mobile, first confirm the corresponding runner exists. In the current repository, only `web/` is committed.
+For native desktop/mobile, first confirm the corresponding host toolchain is available. All supported runner directories are committed in the V3 cross-platform foundation.
 
 ### Dependency resolution differs unexpectedly
 
@@ -464,7 +462,7 @@ Use the complete generated release bundle. Flutter desktop applications depend o
 
 Treat signing as a platform/toolchain configuration problem. Do not solve it by committing private credentials to the repository.
 
-## 17. CI/CD extension requirements for future native releases
+## 17. CI/CD requirements for signed/distribution releases
 
 A target must not be called release-supported until automation or a documented equivalent release procedure verifies the actual target artifact.
 
@@ -494,7 +492,7 @@ Interpret the sections as follows:
 - **Developer tooling:** executable/check tooling used during validation.
 - **Documentation/evidence:** current contract or historical release evidence that must remain consistent with the code/release claims.
 
-The marked list is also machine-checked by `test/documentation_repository_test.dart` against `git ls-files`.
+The marked list remains machine-checked for project-controlled files. Flutter-generated native runner trees are treated as managed platform roots, while `.metadata` and cross-platform workflow files are separately protected by repository tests.
 
 <!-- tracked-file-inventory:start -->
 

@@ -89,23 +89,21 @@ Dynamic downloading/execution of untrusted third-party rule code is **not** curr
 
 No cloud ranking/model is required for this extension path.
 
-## Native platform runners and CI
+## Cross-platform foundation completed
 
-Current repository support is web-only at the runner/release-artifact level.
+The V3 cross-platform foundation now commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. Cross-platform CI validates release-mode builds on target-appropriate GitHub-hosted operating systems, and the release workflow mirrors those build targets.
 
-Official native expansion could add reviewed:
+Remaining platform work is distribution engineering rather than runner creation:
 
-- Android runner/build CI;
-- iOS runner/build CI;
-- Windows runner/build CI;
-- macOS runner/build CI;
-- Linux desktop runner/build CI;
-- platform metadata/icons;
-- signing/provisioning policy;
-- platform storage/clipboard/accessibility validation;
-- release artifacts.
+- Android production keystore/signing and Play-style packaging policy;
+- Apple signing/provisioning for iOS;
+- macOS signing/notarization;
+- Windows signing/installer packaging if selected;
+- Linux package format/distribution policy;
+- platform-specific icons/store metadata polish;
+- broader manual accessibility/device matrices.
 
-Do not advertise a native target as officially released before those support requirements exist. See [Platform support](PLATFORM_SUPPORT.md).
+Private signing material must remain outside the repository.
 
 ## Web deployment/public hosting automation
 

@@ -10,7 +10,8 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and determ
 **Built-in languages:** English (US) `en-US`, English (UK) `en-GB`  
 **Built-in writing rules:** 10  
 **Runtime dependencies:** Flutter SDK and `shared_preferences`  
-**Committed/release-built target:** Flutter web
+**Committed targets:** Android, iOS, Linux, macOS, Windows, Web  
+**Cross-platform validation:** release-mode builds for all six targets
 
 <p align="center">
   <a href="https://buymeacoffee.com/sanskarIN">
@@ -68,7 +69,7 @@ flutter pub get
 flutter run -d chrome
 ```
 
-The repository commits the web host. Additional Android/iOS/Windows/macOS/Linux runners are not currently committed; see [Platform support](docs/PLATFORM_SUPPORT.md) and [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) before generating native runners or making cross-platform release claims.
+The repository commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. See [Platform support](docs/PLATFORM_SUPPORT.md) and [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md) for target toolchains, build artifacts, signing boundaries, and distribution requirements.
 
 ## Application workflow
 
@@ -232,13 +233,7 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs the deterministic benchmark CLI smoke scenario. The release workflow repeats the gates, then runs:
-
-```bash
-flutter build web --release
-```
-
-and uploads `build/web` as the release workflow artifact.
+CI also runs the deterministic benchmark CLI smoke scenario. Cross-platform CI repeats the gates and then builds Android, iOS (no-codesign), Linux, macOS, Web, and Windows on appropriate GitHub-hosted operating systems. The release workflow mirrors that target coverage and uploads per-platform build artifacts while keeping production signing credentials outside the repository.
 
 See [Testing](docs/TESTING.md), [Performance](docs/PERFORMANCE.md), [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md), and [Releasing](docs/RELEASING.md).
 
@@ -254,7 +249,12 @@ lib/storage/   local application preference adapters
 docs/          evergreen documentation + historical release/audit records
 test/          unit, persistence, codec, Unicode, stress, accessibility, widget tests
 tool/          deterministic benchmark tooling
+android/       committed Android Flutter runner
+ios/           committed iOS Flutter runner
+linux/         committed Linux Flutter runner
+macos/         committed macOS Flutter runner
 web/           committed Flutter web host
+windows/       committed Windows Flutter runner
 ```
 
 ## Version and historical records
