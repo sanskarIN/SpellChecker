@@ -20,12 +20,17 @@ void main() {
     final selector = find.byKey(const ValueKey<String>('language-selector'));
     expect(selector, findsOneWidget);
 
-    await tester.tap(selector);
-    await tester.pumpAndSettle();
+    final dropdown = tester.widget<DropdownButton<String>>(selector);
+    final items = dropdown.items ?? const <DropdownMenuItem<String>>[];
 
-    for (final pack in SpellLanguageRegistry.builtIns) {
-      expect(find.text(pack.displayName), findsWidgets);
-    }
+    expect(
+      items.map((item) => item.value).toList(),
+      SpellLanguageRegistry.builtIns.map((pack) => pack.id).toList(),
+    );
+    expect(
+      items.map((item) => (item.child as Text).data).toList(),
+      SpellLanguageRegistry.builtIns.map((pack) => pack.displayName).toList(),
+    );
   });
 
   testWidgets('switching to Bengali rechecks the current text', (
