@@ -6,10 +6,11 @@ import 'analysis_benchmark_result.dart';
 import 'analysis_benchmark_runner.dart';
 
 typedef BenchmarkOutputWriter = void Function(String text);
-typedef BenchmarkExecutor = AnalysisBenchmarkSummary Function(
-  AnalysisBenchmarkOptions options,
-  SpellLanguagePack languagePack,
-);
+typedef BenchmarkExecutor =
+    AnalysisBenchmarkSummary Function(
+      AnalysisBenchmarkOptions options,
+      SpellLanguagePack languagePack,
+    );
 
 int runAnalysisBenchmarkCommand(
   List<String> arguments, {

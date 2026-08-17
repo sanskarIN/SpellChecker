@@ -15,9 +15,9 @@ class TextStatistics {
       unicode: true,
     ).allMatches(text);
     final trimmed = text.trim();
-    final sentenceBoundaryMatches = RegExp(r'''[.!?]+["'’”\)\]]*(?=\s|$)''')
-        .allMatches(trimmed)
-        .toList(growable: false);
+    final sentenceBoundaryMatches = RegExp(
+      r'''[.!?]+["'’”\)\]]*(?=\s|$)''',
+    ).allMatches(trimmed).toList(growable: false);
 
     var sentenceCount = 0;
     if (trimmed.isNotEmpty) {
