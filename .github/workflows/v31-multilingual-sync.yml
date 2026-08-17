@@ -1,0 +1,456 @@
+name: V3.1 multilingual metadata sync
+
+on:
+  push:
+    branches:
+      - v3.1/multilingual-foundation
+    paths:
+      - .github/workflows/v31-multilingual-sync.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v3.1/multilingual-foundation
+          fetch-depth: 0
+      - name: Synchronize V3.1 metadata and documentation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, count=-1):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f"expected text not found in {path}: {old[:100]!r}")
+              p.write_text(text.replace(old, new, count))
+
+          replace('pubspec.yaml', 'version: 3.0.0+22', 'version: 3.1.0+23')
+
+          replace(
+              'lib/features/editor/spell_checker_page.dart',
+              "applicationVersion: '3.0.0'",
+              "applicationVersion: '3.1.0'",
+          )
+          replace(
+              'lib/features/editor/spell_checker_page.dart',
+              'A privacy-first open-source cross-platform writing utility in V3.0 with official Android, iOS, Linux, macOS, Web, and Windows runners, plus Unicode-scalar unrestricted Damerau-Levenshtein distance,',
+              'A privacy-first open-source cross-platform writing utility in V3.1 with eight built-in offline language packs across Latin and Devanagari scripts, official Android, iOS, Linux, macOS, Web, and Windows runners, plus Unicode-scalar unrestricted Damerau-Levenshtein distance,',
+          )
+
+          replace(
+              'test/widget_test.dart',
+              "testWidgets('About dialog reports the final V2.16 release', (",
+              "testWidgets('About dialog reports the V3.1 multilingual release', (",
+          )
+          replace(
+              'test/widget_test.dart',
+              "expect(find.textContaining('3.0.0'), findsOneWidget);",
+              "expect(find.textContaining('3.1.0'), findsOneWidget);",
+          )
+
+          replace(
+              'test/documentation_repository_test.dart',
+              "const currentVersion = '3.0.0+22';",
+              "const currentVersion = '3.1.0+23';",
+          )
+          replace(
+              'test/documentation_repository_test.dart',
+              "const builtInLanguageIds = <String>['en-US', 'en-GB'];",
+              "const builtInLanguageIds = <String>[\n    'en-US',\n    'en-GB',\n    'hi-IN',\n    'es-ES',\n    'fr-FR',\n    'de-DE',\n    'pt-BR',\n    'it-IT',\n  ];",
+          )
+
+          replace(
+              'README.md',
+              'supports explicit English language packs,',
+              'supports eight explicit offline language packs,',
+          )
+          replace('README.md', '**Current package:** `3.0.0+22`', '**Current package:** `3.1.0+23`')
+          replace(
+              'README.md',
+              '**Built-in languages:** English (US) `en-US`, English (UK) `en-GB`  ',
+              '**Built-in languages:** English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, Italian `it-IT`  ',
+          )
+          replace(
+              'README.md',
+              '- **Language explicit.** Built-in `en-US` and `en-GB` packs keep regional dictionaries, personal vocabulary, and writing-rule choices separate.',
+              '- **Language explicit and offline.** Eight built-in packs cover English, Hindi, Spanish, French, German, Brazilian Portuguese, and Italian spelling while keeping personal vocabulary separate by language. English writing rules remain limited to the English packs.',
+          )
+          replace(
+              'README.md',
+              '2. Choose English (US) or English (UK).',
+              '2. Choose one of the eight built-in offline spelling language packs.',
+          )
+          replace(
+              'README.md',
+              'All current built-ins support language code `en`, making both registered English packs eligible. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.',
+              'All current built-in writing rules support language code `en`, so they run for the two registered English packs. The six new non-English packs provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.',
+          )
+
+          replace(
+              'docs/README.md',
+              'SpellChecker `3.0.0+22`',
+              'SpellChecker `3.1.0+23`',
+          )
+          replace(
+              'docs/README.md',
+              'ships two built-in English language packs',
+              'ships eight built-in offline spelling language packs',
+          )
+
+          replace(
+              'docs/FEATURES.md',
+              'SpellChecker `2.16.0+21`',
+              'SpellChecker `3.1.0+23`',
+          )
+          replace(
+              'docs/FEATURES.md',
+              'designed for explicit English language selection,',
+              'designed for explicit multilingual spelling-language selection,',
+          )
+          replace(
+              'docs/FEATURES.md',
+              '- regular English suffix/contraction acceptance from known stems;',
+              '- language-specific recognized prefix/suffix handling from known stems;',
+          )
+          old_table = """| `en-US` | English (US) | built in, default |
+| `en-GB` | English (UK) | built in |
+
+SpellChecker does not auto-detect language. Language selection is explicit. Personal vocabulary and writing-rule choices are stored separately for each built-in language.
+
+Additional languages require a `SpellLanguagePack` implementation and associated dictionary/tokenization/normalization behavior. See [Language packs](LANGUAGE_PACKS.md)."""
+          new_table = """| `en-US` | English (US) | built in, default |
+| `en-GB` | English (UK) | built in |
+| `hi-IN` | Hindi (India) | built in |
+| `es-ES` | Spanish (Spain) | built in |
+| `fr-FR` | French (France) | built in |
+| `de-DE` | German (Germany) | built in |
+| `pt-BR` | Portuguese (Brazil) | built in |
+| `it-IT` | Italian (Italy) | built in |
+
+SpellChecker does not auto-detect language. Language selection is explicit. Personal vocabulary and writing-rule choices are stored separately for each built-in language.
+
+The six V3.1 non-English packs are curated offline starter lexicons rather than exhaustive linguistic dictionaries. Further languages or deeper vocabulary require reviewed `SpellLanguagePack` data/normalization/affix behavior and tests. See [Language packs](LANGUAGE_PACKS.md)."""
+          replace('docs/FEATURES.md', old_table, new_table)
+          replace(
+              'docs/FEATURES.md',
+              'All current built-ins declare English (`en`) eligibility, so they run for both built-in English packs. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.',
+              'All current built-in writing rules declare English (`en`) eligibility, so they run for the two built-in English packs only. The six non-English V3.1 packs provide spelling and suggestions without applying English-specific writing rules. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.',
+          )
+
+          language_packs = r'''# Language Packs
+
+SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. V3.1 expands the bundled offline registry to eight packs while preserving explicit language selection, local processing, deterministic suggestions, and per-language personal dictionaries.
+
+## Public import
+
+```dart
+import 'package:spellchecker/language.dart';
+```
+
+Core spelling APIs remain available from `package:spellchecker/spell_checker.dart`.
+
+## Current built-ins
+
+| ID | Language | Region | Display name | Status |
+| --- | --- | --- | --- | --- |
+| `en-US` | `en` | `US` | English (US) | built in, default |
+| `en-GB` | `en` | `GB` | English (UK) | built in |
+| `hi-IN` | `hi` | `IN` | Hindi (India) | built in |
+| `es-ES` | `es` | `ES` | Spanish (Spain) | built in |
+| `fr-FR` | `fr` | `FR` | French (France) | built in |
+| `de-DE` | `de` | `DE` | German (Germany) | built in |
+| `pt-BR` | `pt` | `BR` | Portuguese (Brazil) | built in |
+| `it-IT` | `it` | `IT` | Italian (Italy) | built in |
+
+SpellChecker does **not** auto-detect language. The bundled UI requires explicit selection and persists the selected stable ID locally.
+
+## V3.1 coverage boundary
+
+The six new non-English packs are curated **offline starter lexicons** intended to establish correct multilingual architecture, common-word checking, typo suggestions, Unicode behavior, persistence isolation, and UI integration. They are not claimed to be exhaustive dictionaries, grammar engines, morphology analyzers, or substitutes for professional language-reference datasets.
+
+All current built-in Writing insights rules declare English (`en`) eligibility. Therefore `en-US` and `en-GB` receive spelling plus the existing deterministic writing rules; `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, and `it-IT` receive spelling/suggestions/personal dictionaries without running English-specific writing rules.
+
+No built-in language pack performs network access.
+
+## `SpellLanguagePack`
+
+A pack owns:
+
+```text
+id
+languageCode
+regionCode
+displayName
+dictionary
+wordFrequencies
+tokenPattern
+validWordPattern
+normalizer
+recognizedPrefixes
+recognizedSuffixes
+suggestionSource
+```
+
+Dictionary, frequency, prefix, and suffix collections are captured as immutable snapshots.
+
+### Stable IDs and persistence
+
+`id` is used by issues, selected-language persistence, per-language personal dictionaries, Portable settings validation, and the UI selector. Built-in IDs use language-region form. `defaultPack` remains `en-US`; unsupported IDs fall back to the default through `byId`.
+
+### Unicode tokenization
+
+The shared built-in token pattern accepts Unicode letters plus combining marks and supported internal apostrophe/hyphen forms. This supports Latin scripts and Devanagari without splitting combining-mark clusters. Public issue offsets remain Dart UTF-16 code-unit offsets.
+
+### Normalization
+
+Built-ins trim and lowercase, normalize curly apostrophes and supported Unicode hyphens, and compose an explicit set of common decomposed Latin accent sequences. Hindi text passes through the same Unicode-safe path without Latin-only assumptions.
+
+The composition table is explicit, not a complete Unicode normalization library; future scripts/languages should add reviewed normalization tests when needed.
+
+### Recognized affixes
+
+English retains contraction suffix support such as `n't`, `'re`, `'ve`, `'ll`, `'d`, `'m`, and `'s`.
+
+V3.1 also introduces recognized **prefixes** for common apostrophe elision. French includes forms such as `l'`, `d'`, and `qu'`; Italian includes forms such as `l'`, `d'`, `all'`, `dell'`, and `nell'`. The engine checks/ranks the underlying stem and reattaches recognized prefix/suffix text to suggestions.
+
+Example:
+
+```dart
+final french = SpellCheckerEngine(
+  languagePack: SpellLanguageRegistry.frenchFrance,
+);
+
+french.isCorrect('l’amour'); // true when "amour" is known
+```
+
+### Suggestion ranking
+
+Each pack provides a small frequency-rank map for common vocabulary. The existing deterministic ranker still combines edit distance, prefix/first-character agreement, approximate frequency rank, length, and lexical fallback ordering. Detailed suggestions carry the producing language ID/display name and source label.
+
+## Registry API
+
+```dart
+SpellLanguageRegistry.englishUs
+SpellLanguageRegistry.englishGb
+SpellLanguageRegistry.hindiIndia
+SpellLanguageRegistry.spanishSpain
+SpellLanguageRegistry.frenchFrance
+SpellLanguageRegistry.germanGermany
+SpellLanguageRegistry.portugueseBrazil
+SpellLanguageRegistry.italianItaly
+SpellLanguageRegistry.builtIns
+SpellLanguageRegistry.defaultPack
+SpellLanguageRegistry.byId(id)
+SpellLanguageRegistry.contains(id)
+```
+
+## Per-language personal dictionaries
+
+Saved personal words remain namespaced by full language ID. Adding a word under Spanish does not make it accepted under French, English, Hindi, or another pack. Import/normalization uses the target pack before storage.
+
+## Custom pack example
+
+```dart
+final customPack = SpellLanguagePack(
+  id: 'example-EX',
+  languageCode: 'example',
+  regionCode: 'EX',
+  displayName: 'Example',
+  dictionary: <String>{'hello', 'world'},
+  wordFrequencies: <String, int>{'hello': 1, 'world': 2},
+  tokenPattern: RegExp(r'[A-Za-z]+'),
+  validWordPattern: RegExp(r'^[a-z]+$'),
+  normalizer: (word) => word.trim().toLowerCase(),
+  recognizedPrefixes: const <String>[],
+  recognizedSuffixes: const <String>[],
+  suggestionSource: 'example dictionary',
+);
+```
+
+Constructing a custom pack does not automatically register it with the bundled application. First-class application support requires registry/data/persistence/UI/tests/docs changes.
+
+## Adding or deepening an official language
+
+Review all of the following:
+
+1. stable language-region ID and display metadata;
+2. dictionary content, provenance, and compatible licensing;
+3. frequency/ranking metadata;
+4. tokenization and script boundaries;
+5. personal-word validation;
+6. normalization/canonicalization;
+7. prefix/suffix/elision/morphology policy where applicable;
+8. representative correct/incorrect words and suggestion quality;
+9. persistence and transfer behavior;
+10. selector/application integration;
+11. writing-rule eligibility (do not apply English rules by default);
+12. benchmark and regression coverage;
+13. privacy/API/user documentation.
+
+Large lexicons should be benchmarked because suggestion generation iterates candidate dictionaries after length filtering. Do not trade correctness or source-range guarantees solely for benchmark numbers.
+
+## Dictionary source and licensing
+
+The V3.1 starter lexicons are project-curated common-word sets committed directly under `lib/data/`; no external dictionary package or runtime download is introduced. Before importing larger third-party dictionaries, verify license compatibility and document attribution/redistribution obligations.
+
+## Privacy
+
+Built-in packs are local static data/configuration. They do not transmit editor text or download language data. A future network-backed dictionary or service would be a separate privacy/security architecture and must be reviewed/documented explicitly.
+
+## Related documentation
+
+- [Feature reference](FEATURES.md)
+- [Public API](API.md)
+- [Configuration](CONFIGURATION.md)
+- [Writing rules](WRITING_RULES.md)
+- [Testing](TESTING.md)
+- [V3.1 multilingual foundation](V3_1_MULTILINGUAL_FOUNDATION.md)
+'''
+          Path('docs/LANGUAGE_PACKS.md').write_text(language_packs)
+
+          v31_doc = '''# V3.1 Multilingual Foundation
+
+SpellChecker V3.1 expands the offline spelling registry from two English variants to eight built-in packs while keeping the V3 cross-platform, privacy, persistence, and deterministic-analysis contracts intact.
+
+## Version
+
+- package: `3.1.0+23`
+- About: `3.1.0`
+- default language remains: `en-US`
+
+## Added built-in spelling packs
+
+- `hi-IN` — Hindi (India)
+- `es-ES` — Spanish (Spain)
+- `fr-FR` — French (France)
+- `de-DE` — German (Germany)
+- `pt-BR` — Portuguese (Brazil)
+- `it-IT` — Italian (Italy)
+
+Together with `en-US` and `en-GB`, the application now exposes eight explicit offline spelling packs.
+
+## Engine changes
+
+- reused Unicode letter/combining-mark tokenization for Latin and Devanagari scripts;
+- generalized shared normalization beyond English-only naming;
+- added immutable `recognizedPrefixes` to `SpellLanguagePack`;
+- added prefix/suffix-aware stem checking and suggestion reconstruction;
+- covered French and Italian apostrophe elision without enumerating every elided token;
+- kept suggestion metadata language-specific and deterministic.
+
+## Persistence/UI changes
+
+The existing full-language-ID persistence model automatically isolates personal dictionaries for every new pack. The selector is registry-driven, so all eight built-ins appear without a separate hard-coded UI list. Unsupported persisted IDs still fall back to `en-US`.
+
+## Writing-rule boundary
+
+This release expands **spelling** language support. Current Writing insights rules still declare English (`en`) eligibility and therefore run only for `en-US` and `en-GB`. V3.1 intentionally does not pretend English mechanics/capitalization rules are linguistically correct for Hindi, Spanish, French, German, Portuguese, or Italian.
+
+## Lexicon boundary
+
+The new dictionaries are curated offline starter lexicons of common words with small deterministic frequency-rank maps. They validate architecture and useful common-text behavior but are not exhaustive national dictionaries, morphology engines, or grammar references. Larger lexicons can be added in later V3.x phases after licensing, size, performance, and suggestion-quality review.
+
+## Privacy/dependencies
+
+No runtime dependency, account, telemetry, cloud writing service, document upload, or background dictionary download is added. Language data is bundled source and remains local.
+
+## Validation requirements
+
+The release is considered ready only after:
+
+- canonical formatting;
+- `flutter analyze`;
+- complete Flutter tests;
+- multilingual registry/engine/persistence/widget regressions;
+- benchmark smoke;
+- cross-platform release builds for Android, iOS, Linux, macOS, Web, and Windows.
+'''
+          Path('docs/V3_1_MULTILINGUAL_FOUNDATION.md').write_text(v31_doc)
+
+          changelog = Path('CHANGELOG.md').read_text()
+          marker = '## [3.0.0] - 2026-08-17\n'
+          if '## [3.1.0] - 2026-08-17' not in changelog:
+              entry = '''## [3.1.0] - 2026-08-17
+
+### Added
+- Added offline built-in spelling packs for Hindi (India), Spanish (Spain), French (France), German (Germany), Portuguese (Brazil), and Italian (Italy), expanding the registry to eight packs.
+- Added curated common-word dictionaries and deterministic frequency-rank metadata for each new pack.
+- Added recognized-prefix support for French/Italian apostrophe elision while preserving existing English suffix/contraction handling.
+- Added multilingual engine, persistence-isolation, normalization, metadata, and language-selector regression tests.
+
+### Changed
+- Advanced package identity to `3.1.0+23` and About identity to `3.1.0`.
+- Generalized built-in Unicode normalization naming and affix handling for non-English packs.
+- Updated current documentation and release evidence for the eight-pack multilingual spelling surface.
+
+### Compatibility, privacy, and language boundary
+- `en-US` remains the default and unsupported stored language IDs still fall back safely.
+- Current Writing insights rules remain English-only; the six new packs provide spelling/suggestions/personal dictionaries without applying English-specific writing rules.
+- New lexicons are bundled project-curated starter vocabularies; no external dictionary package, runtime download, telemetry, account, or document-upload behavior was added.
+
+'''
+              if marker not in changelog:
+                  raise SystemExit('CHANGELOG 3.0 marker missing')
+              changelog = changelog.replace(marker, entry + marker, 1)
+              Path('CHANGELOG.md').write_text(changelog)
+
+          replace('docs/RELEASE_HISTORY.md', 'Current package version: `3.0.0+22`.', 'Current package version: `3.1.0+23`.')
+          replace(
+              'docs/RELEASE_HISTORY.md',
+              'V3.0 is the cross-platform foundation release line. It retains the V2.16 spelling/writing behavior while adding committed Flutter runners and automated release-mode build validation for Android, iOS, Linux, macOS, Web, and Windows.\n\n## V3.0',
+              'V3.1 is the multilingual spelling foundation release line. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling from two English variants to eight language packs.\n\n## V3.1\n\n- [V3.1 multilingual foundation](V3_1_MULTILINGUAL_FOUNDATION.md) — six new offline spelling packs, Unicode/affix behavior, persistence isolation, writing-rule boundary, lexicon scope, and validation requirements.\n\n## V3.0',
+          )
+
+          replace(
+              'docs/ROADMAP.md',
+              'SpellChecker `3.0.0+22` is the current V3 cross-platform foundation.',
+              'SpellChecker `3.1.0+23` is the current V3 multilingual cross-platform foundation.',
+          )
+          replace(
+              'docs/ROADMAP.md',
+              '- English (US) and English (UK) built-in language packs;',
+              '- eight built-in offline spelling packs: English (US/UK), Hindi, Spanish, French, German, Brazilian Portuguese, and Italian;',
+          )
+          replace(
+              'docs/ROADMAP.md',
+              '## Additional built-in languages\n\nPotential work:\n\n- additional `SpellLanguagePack` implementations;\n- dictionary/frequency data with compatible licensing;\n- language-specific tokenization/normalization;\n- personal-dictionary validation;\n- language selector/persistence integration;\n- writing-rule eligibility review;\n- benchmark/test coverage.\n\nA new official language should meet the completeness checklist in [Language packs](LANGUAGE_PACKS.md).',
+              '## Further language depth and expansion\n\nV3.1 ships six new non-English starter packs. Future work can deepen those lexicons or add more languages, but should include compatible dictionary licensing/provenance, script-specific normalization and affix review, suggestion-quality/performance benchmarks, persistence/selector regressions, and an explicit writing-rule eligibility decision.\n\nA deeper or new official language should meet the completeness checklist in [Language packs](LANGUAGE_PACKS.md).',
+          )
+
+          builds = Path('docs/EXECUTABLE_BUILDS.md').read_text()
+          builds = builds.replace('3.0.0+22', '3.1.0+23')
+          additions = {
+              '- `lib/data/english_word_frequencies.dart`': '''- `lib/data/english_word_frequencies.dart`
+- `lib/data/french_dictionary.dart`
+- `lib/data/german_dictionary.dart`
+- `lib/data/hindi_dictionary.dart`
+- `lib/data/italian_dictionary.dart`
+- `lib/data/portuguese_br_dictionary.dart`
+- `lib/data/spanish_dictionary.dart`''',
+              '- `test/language_widget_test.dart`': '''- `test/language_widget_test.dart`
+- `test/multilingual_language_pack_test.dart`
+- `test/multilingual_preferences_test.dart`
+- `test/multilingual_widget_test.dart`''',
+              '- `docs/V3_0_CROSS_PLATFORM_FOUNDATION.md`': '''- `docs/V3_0_CROSS_PLATFORM_FOUNDATION.md`
+- `docs/V3_1_MULTILINGUAL_FOUNDATION.md`''',
+          }
+          for old, new in additions.items():
+              if old not in builds:
+                  raise SystemExit(f'build inventory anchor missing: {old}')
+              builds = builds.replace(old, new, 1)
+          Path('docs/EXECUTABLE_BUILDS.md').write_text(builds)
+          PY
+
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+          git add pubspec.yaml lib/features/editor/spell_checker_page.dart test/widget_test.dart test/documentation_repository_test.dart README.md CHANGELOG.md docs
+          git diff --cached --check
+          git commit -m "docs: synchronize V3.1 multilingual release surface"
+          git push origin HEAD:v3.1/multilingual-foundation
