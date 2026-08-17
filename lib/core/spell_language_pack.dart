@@ -2,6 +2,12 @@ import '../data/english_dictionary.dart';
 import '../data/english_dictionary_extension.dart';
 import '../data/english_gb_dictionary.dart';
 import '../data/english_word_frequencies.dart';
+import '../data/french_dictionary.dart';
+import '../data/german_dictionary.dart';
+import '../data/hindi_dictionary.dart';
+import '../data/italian_dictionary.dart';
+import '../data/portuguese_br_dictionary.dart';
+import '../data/spanish_dictionary.dart';
 
 typedef SpellWordNormalizer = String Function(String word);
 
@@ -16,10 +22,12 @@ class SpellLanguagePack {
     required this.tokenPattern,
     required this.validWordPattern,
     required this.normalizer,
+    List<String> recognizedPrefixes = const <String>[],
     List<String> recognizedSuffixes = const <String>[],
     this.suggestionSource = 'bundled',
   }) : dictionary = Set<String>.unmodifiable(dictionary),
        wordFrequencies = Map<String, int>.unmodifiable(wordFrequencies),
+       recognizedPrefixes = List<String>.unmodifiable(recognizedPrefixes),
        recognizedSuffixes = List<String>.unmodifiable(recognizedSuffixes);
 
   final String id;
@@ -31,6 +39,7 @@ class SpellLanguagePack {
   final RegExp tokenPattern;
   final RegExp validWordPattern;
   final SpellWordNormalizer normalizer;
+  final List<String> recognizedPrefixes;
   final List<String> recognizedSuffixes;
 
   /// Human-readable source label carried into detailed suggestion metadata.
@@ -111,7 +120,7 @@ class SpellLanguageRegistry {
     wordFrequencies: EnglishWordFrequencies.ranks,
     tokenPattern: _unicodeTokenPattern,
     validWordPattern: _unicodeValidWordPattern,
-    normalizer: _normalizeEnglishWord,
+    normalizer: _normalizeUnicodeWord,
     recognizedSuffixes: _englishSuffixes,
     suggestionSource: 'bundled English (US)',
   );
@@ -134,14 +143,100 @@ class SpellLanguageRegistry {
     },
     tokenPattern: _unicodeTokenPattern,
     validWordPattern: _unicodeValidWordPattern,
-    normalizer: _normalizeEnglishWord,
+    normalizer: _normalizeUnicodeWord,
     recognizedSuffixes: _englishSuffixes,
     suggestionSource: 'bundled English (UK)',
+  );
+
+  static final SpellLanguagePack hindiIndia = SpellLanguagePack(
+    id: 'hi-IN',
+    languageCode: 'hi',
+    regionCode: 'IN',
+    displayName: 'Hindi (India)',
+    dictionary: HindiDictionary.words,
+    wordFrequencies: HindiDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Hindi (India)',
+  );
+
+  static final SpellLanguagePack spanishSpain = SpellLanguagePack(
+    id: 'es-ES',
+    languageCode: 'es',
+    regionCode: 'ES',
+    displayName: 'Spanish (Spain)',
+    dictionary: SpanishDictionary.words,
+    wordFrequencies: SpanishDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Spanish (Spain)',
+  );
+
+  static final SpellLanguagePack frenchFrance = SpellLanguagePack(
+    id: 'fr-FR',
+    languageCode: 'fr',
+    regionCode: 'FR',
+    displayName: 'French (France)',
+    dictionary: FrenchDictionary.words,
+    wordFrequencies: FrenchDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    recognizedPrefixes: _frenchPrefixes,
+    suggestionSource: 'bundled French (France)',
+  );
+
+  static final SpellLanguagePack germanGermany = SpellLanguagePack(
+    id: 'de-DE',
+    languageCode: 'de',
+    regionCode: 'DE',
+    displayName: 'German (Germany)',
+    dictionary: GermanDictionary.words,
+    wordFrequencies: GermanDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled German (Germany)',
+  );
+
+  static final SpellLanguagePack portugueseBrazil = SpellLanguagePack(
+    id: 'pt-BR',
+    languageCode: 'pt',
+    regionCode: 'BR',
+    displayName: 'Portuguese (Brazil)',
+    dictionary: PortugueseBrDictionary.words,
+    wordFrequencies: PortugueseBrDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    suggestionSource: 'bundled Portuguese (Brazil)',
+  );
+
+  static final SpellLanguagePack italianItaly = SpellLanguagePack(
+    id: 'it-IT',
+    languageCode: 'it',
+    regionCode: 'IT',
+    displayName: 'Italian (Italy)',
+    dictionary: ItalianDictionary.words,
+    wordFrequencies: ItalianDictionary.ranks,
+    tokenPattern: _unicodeTokenPattern,
+    validWordPattern: _unicodeValidWordPattern,
+    normalizer: _normalizeUnicodeWord,
+    recognizedPrefixes: _italianPrefixes,
+    suggestionSource: 'bundled Italian (Italy)',
   );
 
   static List<SpellLanguagePack> get builtIns => <SpellLanguagePack>[
     englishUs,
     englishGb,
+    hindiIndia,
+    spanishSpain,
+    frenchFrance,
+    germanGermany,
+    portugueseBrazil,
+    italianItaly,
   ];
 
   static SpellLanguagePack get defaultPack => englishUs;
@@ -184,7 +279,7 @@ class SpellLanguageRegistry {
     return words;
   }
 
-  static String _normalizeEnglishWord(String word) {
+  static String _normalizeUnicodeWord(String word) {
     var normalized = word
         .trim()
         .toLowerCase()
@@ -235,5 +330,28 @@ class SpellLanguageRegistry {
     "'d",
     "'m",
     "'s",
+  ];
+
+  static const List<String> _frenchPrefixes = <String>[
+    "qu'",
+    "l'",
+    "d'",
+    "j'",
+    "n'",
+    "s'",
+    "c'",
+    "m'",
+    "t'",
+  ];
+
+  static const List<String> _italianPrefixes = <String>[
+    "nell'",
+    "dall'",
+    "all'",
+    "dell'",
+    "sull'",
+    "un'",
+    "l'",
+    "d'",
   ];
 }

@@ -1,6 +1,6 @@
 # Language Packs
 
-SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `2.16.0+21` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.
+SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `3.1.0+23` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.
 
 ## Public import
 
@@ -20,6 +20,12 @@ import 'package:spellchecker/spell_checker.dart';
 | --- | --- | --- | --- | --- |
 | `en-US` | `en` | `US` | English (US) | built in, default |
 | `en-GB` | `en` | `GB` | English (UK) | built in |
+| `hi-IN` | `hi` | `IN` | Hindi (India) | built in |
+| `es-ES` | `es` | `ES` | Spanish (Spain) | built in |
+| `fr-FR` | `fr` | `FR` | French (France) | built in |
+| `de-DE` | `de` | `DE` | German (Germany) | built in |
+| `pt-BR` | `pt` | `BR` | Portuguese (Brazil) | built in |
+| `it-IT` | `it` | `IT` | Italian (Italy) | built in |
 
 SpellChecker does not auto-detect language. The bundled UI requires explicit selection.
 
@@ -37,11 +43,12 @@ wordFrequencies
 tokenPattern
 validWordPattern
 normalizer
+recognizedPrefixes
 recognizedSuffixes
 suggestionSource
 ```
 
-The constructor captures dictionary, frequency, and suffix collections as immutable snapshots.
+The constructor captures dictionary, frequency, prefix, and suffix collections as immutable snapshots.
 
 ### Stable ID
 
@@ -78,7 +85,7 @@ The built-in valid-word pattern accepts normalized Unicode letter/combining-mark
 
 ### Normalizer
 
-Built-in English normalization:
+Built-in Unicode normalization:
 
 1. trims outer whitespace;
 2. lowercases;
@@ -90,7 +97,7 @@ This lets common decomposed inputs such as an accented Latin letter normalize co
 
 The composition table is explicit rather than a general Unicode-normalization library. New language packs should define normalization appropriate to their dictionaries and tests.
 
-### Recognized suffixes
+### Recognized affixes
 
 Current built-in English packs recognize:
 
@@ -104,13 +111,13 @@ n't
 's
 ```
 
-The spelling engine accepts a suffixed token when the normalized stem is known. Suggestions are ranked on the stem and then the recognized suffix is reattached.
+The spelling engine accepts recognized affixes when the normalized stem is known. English keeps its contraction suffixes. V3.1 also adds apostrophe-elision prefixes for French (for example `l'`, `d'`, `qu'`) and Italian (for example `l'`, `d'`, `all'`, `dell'`, `nell'`). Suggestions are ranked on the stem and recognized prefix/suffix text is reattached.
 
 ### Suggestion source
 
 `suggestionSource` is a human-readable label copied into detailed `SpellSuggestion.source` metadata for base dictionary candidates.
 
-Current built-ins use labels describing bundled English (US)/(UK) sources.
+Each built-in uses a language-specific bundled source label in detailed suggestion metadata.
 
 ## Pack methods
 
@@ -136,6 +143,12 @@ The engine passes Unicode-scalar word length to this policy.
 ```dart
 SpellLanguageRegistry.englishUs
 SpellLanguageRegistry.englishGb
+SpellLanguageRegistry.hindiIndia
+SpellLanguageRegistry.spanishSpain
+SpellLanguageRegistry.frenchFrance
+SpellLanguageRegistry.germanGermany
+SpellLanguageRegistry.portugueseBrazil
+SpellLanguageRegistry.italianItaly
 SpellLanguageRegistry.builtIns
 SpellLanguageRegistry.defaultPack
 SpellLanguageRegistry.byId(id)
@@ -159,9 +172,9 @@ en-GB: colour
 
 The codebase includes additional explicit US/UK regional variants. Do not assume every spelling variant can be generated mechanically; the dictionaries are the authority.
 
-## Common Unicode loanwords
+## Multilingual coverage boundary
 
-Both built-in packs include a small explicit set of Unicode loanwords such as accented forms. Combined with normalization, this provides regression coverage for Unicode letter handling without claiming exhaustive multilingual dictionaries.
+V3.1 adds six curated offline starter lexicons across Latin and Devanagari scripts. They cover representative common vocabulary and deterministic typo suggestions but are not exhaustive national dictionaries, grammar engines, or morphology analyzers. Current Writing insights rules remain English-only (`en`), so the six new packs provide spelling without applying English-specific writing rules.
 
 ## Use a built-in pack with the engine
 
@@ -228,7 +241,7 @@ Therefore a third-party/custom pack can be used directly with reusable engine/an
 A production-quality new built-in pack should define/review:
 
 1. stable language-region ID and metadata;
-2. dictionary source/content/licensing;
+2. dictionary source/content/licensing and provenance;
 3. frequency/ranking metadata;
 4. tokenization regex with Unicode behavior;
 5. valid personal-word policy;
@@ -253,7 +266,7 @@ At minimum, add tests for:
 - normalization;
 - decomposed/non-BMP Unicode where applicable;
 - personal-word validation;
-- recognized suffix behavior;
+- recognized affix behavior;
 - suggestions/ranking metadata;
 - dictionary codec round trip and wrong-language handling;
 - per-language persistence isolation;

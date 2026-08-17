@@ -4,6 +4,24 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [3.1.0] - 2026-08-17
+
+### Added
+- Added offline built-in spelling packs for Hindi (India), Spanish (Spain), French (France), German (Germany), Portuguese (Brazil), and Italian (Italy), expanding the registry to eight packs.
+- Added curated common-word dictionaries and deterministic frequency-rank metadata for each new pack.
+- Added recognized-prefix support for French/Italian apostrophe elision while preserving English contraction suffixes.
+- Added multilingual engine, persistence-isolation, normalization, metadata, and selector regressions.
+
+### Changed
+- Advanced package identity to `3.1.0+23` and About identity to `3.1.0`.
+- Generalized built-in Unicode normalization naming and affix handling for non-English packs.
+- Updated current documentation and release evidence for the eight-pack spelling surface.
+
+### Compatibility, privacy, and language boundary
+- `en-US` remains the default and unsupported stored language IDs still fall back safely.
+- Current Writing insights rules remain English-only; the six new packs provide spelling/suggestions/personal dictionaries without applying English-specific rules.
+- New lexicons are bundled project-curated starter vocabularies; no external dictionary package, runtime download, telemetry, account, or document-upload behavior was added.
+
 ## [3.0.0] - 2026-08-17
 
 ### Added

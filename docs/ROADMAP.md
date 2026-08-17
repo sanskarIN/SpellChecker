@@ -1,13 +1,13 @@
 # Roadmap
 
-SpellChecker `3.0.0+22` is the current V3 cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
+SpellChecker `3.1.0+23` is the current V3 multilingual cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
 
 ## Current status
 
 The current project already ships:
 
 - local deterministic spelling analysis;
-- English (US) and English (UK) built-in language packs;
+- eight built-in offline spelling packs: English (US/UK), Hindi, Spanish, French, German, Brazilian Portuguese, and Italian;
 - Unicode-aware tokenization/normalization and scalar edit distance;
 - ranked spelling suggestions with injectable ranker strategy;
 - per-language personal dictionaries;
@@ -48,19 +48,11 @@ See [Post-V2.16 audit](POST_V216_AUDIT_2026_08_16.md).
 
 The items below are opportunities, not committed release dates.
 
-## Additional built-in languages
+## Further language depth and expansion
 
-Potential work:
+V3.1 ships six new non-English starter packs. Future work can deepen those lexicons or add more languages, but should include compatible dictionary licensing/provenance, script-specific normalization and affix review, suggestion-quality/performance benchmarks, persistence/selector regressions, and an explicit writing-rule eligibility decision.
 
-- additional `SpellLanguagePack` implementations;
-- dictionary/frequency data with compatible licensing;
-- language-specific tokenization/normalization;
-- personal-dictionary validation;
-- language selector/persistence integration;
-- writing-rule eligibility review;
-- benchmark/test coverage.
-
-A new official language should meet the completeness checklist in [Language packs](LANGUAGE_PACKS.md).
+A deeper or new official language should meet the completeness checklist in [Language packs](LANGUAGE_PACKS.md).
 
 ## Additional deterministic writing rules
 
