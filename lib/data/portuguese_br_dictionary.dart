@@ -1,0 +1,53 @@
+class PortugueseBrDictionary {
+  const PortugueseBrDictionary._();
+
+  static const Set<String> words = <String>{
+    'a', 'agora', 'ainda', 'algo', 'alguém', 'ano', 'antes', 'aqui', 'assim',
+    'até', 'bem', 'boa', 'bom', 'cada', 'casa', 'cidade', 'coisa', 'como',
+    'com', 'contra', 'da', 'das', 'de', 'depois', 'dia', 'do', 'dos', 'duas',
+    'e', 'ela', 'elas', 'ele', 'eles', 'em', 'então', 'entre', 'era', 'essa',
+    'esse', 'esta', 'está', 'estar', 'este', 'eu', 'família', 'fazer', 'fim',
+    'foi', 'forma', 'grande', 'há', 'hoje', 'isso', 'isto', 'já', 'lado',
+    'lugar', 'mais', 'mas', 'me', 'melhor', 'menos', 'mesmo', 'meu', 'minha',
+    'momento', 'muito', 'muita', 'mundo', 'na', 'nada', 'não', 'nas', 'nem',
+    'no', 'nos', 'nós', 'nossa', 'nosso', 'nova', 'novo', 'nunca', 'o', 'os',
+    'ou', 'outra', 'outro', 'para', 'parte', 'pela', 'pelo', 'pessoa', 'pode',
+    'por', 'porque', 'primeiro', 'quando', 'que', 'quem', 'se', 'sem', 'ser',
+    'seu', 'sua', 'sim', 'sobre', 'só', 'são', 'também', 'tem', 'tempo',
+    'ter', 'todo', 'toda', 'todos', 'trabalho', 'três', 'um', 'uma', 'vai',
+    'vamos', 'ver', 'vez', 'vida', 'você', 'vocês', 'água', 'abrir', 'ajuda',
+    'amanhã', 'amigo', 'amor', 'aprender', 'buscar', 'caminho', 'comer',
+    'começar', 'conhecer', 'criar', 'dar', 'deixar', 'dinheiro', 'dizer',
+    'escola', 'escrever', 'esperar', 'estado', 'estudo', 'fácil', 'feliz',
+    'gente', 'grupo', 'história', 'hora', 'importante', 'ler', 'livro', 'mãe',
+    'mão', 'mulher', 'nome', 'número', 'país', 'palavra', 'pergunta',
+    'problema', 'programa', 'projeto', 'resposta', 'saber', 'saúde', 'semana',
+    'sistema', 'tecnologia', 'texto', 'trabalhar', 'usar', 'verdade', 'olá',
+    'obrigado', 'obrigada', 'brasil', 'português', 'equipe', 'empresa',
+  };
+
+  static const Map<String, int> ranks = <String, int>{
+    'de': 1,
+    'a': 2,
+    'o': 3,
+    'que': 4,
+    'e': 5,
+    'do': 6,
+    'da': 7,
+    'em': 8,
+    'um': 9,
+    'para': 10,
+    'é': 11,
+    'com': 12,
+    'não': 13,
+    'uma': 14,
+    'os': 15,
+    'olá': 30,
+    'obrigado': 31,
+    'mundo': 32,
+    'tempo': 40,
+    'pessoa': 41,
+    'trabalho': 42,
+    'vida': 43,
+  };
+}
