@@ -21,10 +21,10 @@ class FrenchDictionary {
     'commencer', 'comprendre', 'créer', 'demain', 'demander', 'dernier',
     'donner', 'école', 'écrire', 'enfant', 'ensemble', 'état', 'étude',
     'facile', 'femme', 'heure', 'histoire', 'homme', 'important', 'lire',
-    'livre', 'main', 'manger', 'nom', 'nombre', 'nouveau', 'pays', 'petit',
-    'petite', 'possible', 'problème', 'programme', 'projet', 'question',
-    'réponse', 'savoir', 'semaine', 'système', 'technologie', 'texte',
-    'travailler', 'travail', 'utiliser', 'ville', 'équipe', 'français',
+    'livre', 'main', 'manger', 'nom', 'nombre', 'pays', 'petit', 'petite',
+    'possible', 'problème', 'programme', 'projet', 'question', 'réponse',
+    'savoir', 'semaine', 'système', 'technologie', 'texte', 'travailler',
+    'travail', 'utiliser', 'ville', 'équipe', 'français',
   };
 
   static const Map<String, int> ranks = <String, int>{
