@@ -4,9 +4,9 @@ This page indexes release-specific documentation without turning historical reco
 
 ## Current package release
 
-Current package version: `3.1.0+23`.
+Current package version: `3.1.1+24`.
 
-V3.1 is the multilingual spelling foundation release line. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling from two English variants to eight language packs.
+V3.1 is the multilingual spelling foundation release line. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling from two English variants to eight language packs. V3.1.1 is a hardening patch for strict language-namespace persistence, Unicode-scalar ranking consistency, and evergreen documentation truthfulness.
 
 ## V3.1
 

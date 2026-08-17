@@ -1,6 +1,6 @@
 # Language Packs
 
-SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `3.1.0+23` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.
+SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `3.1.1+24` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.
 
 ## Public import
 

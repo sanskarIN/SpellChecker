@@ -6,7 +6,7 @@
   </a>
 </p>
 
-This directory is the documentation home for SpellChecker `3.1.0+23`. SpellChecker is a privacy-first Flutter spelling utility and deterministic writing assistant. The current repository commits the web host plus portable Flutter/Dart source, ships eight built-in offline spelling language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.
+This directory is the documentation home for SpellChecker `3.1.1+24`. SpellChecker is a privacy-first Flutter spelling utility and deterministic writing assistant. The current repository commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web, ships eight built-in offline spelling language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.
 
 ## Choose your path
 
@@ -54,9 +54,9 @@ Use:
 1. [Development guide](DEVELOPMENT.md) — prerequisites, repository layout, development commands, and implementation expectations.
 2. [Testing guide](TESTING.md) — test structure, focused suites, CI gates, Unicode/UTF-16 coverage, and benchmark smoke.
 3. [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md) — documentation source-of-truth rules, link policy, versioning, and review checklist.
-4. [Release guide](RELEASING.md) — tagged web-release workflow and release validation.
+4. [Release guide](RELEASING.md) — tagged multi-platform release workflow and release validation.
 5. [Executable builds and packaging](EXECUTABLE_BUILDS.md) — complete build, packaging, signing-boundary, platform-generation, verification, troubleshooting, and tracked-file inventory for release artifacts.
-6. [Platform support](PLATFORM_SUPPORT.md) — what is committed, built, validated, and still optional for native runners.
+6. [Platform support](PLATFORM_SUPPORT.md) — what is committed, built, validated, and still external distribution/signing work.
 7. [Roadmap](ROADMAP.md) — completed release scope and optional future directions.
 8. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x design/audit/validation records.
 9. [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md), [support policy](../SUPPORT.md), [governance](../GOVERNANCE.md), and [code of conduct](../CODE_OF_CONDUCT.md).
@@ -65,10 +65,10 @@ Use:
 
 | Area | Current contract |
 | --- | --- |
-| Package version | `3.0.0+22` |
+| Package version | `3.1.1+24` |
 | Dart SDK | `>=3.8.0 <4.0.0` |
 | Runtime dependencies | Flutter SDK and `shared_preferences` |
-| Built-in language packs | `en-US` and `en-GB` |
+| Built-in language packs | `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, `it-IT` |
 | Default language | `en-US` |
 | Built-in writing rules | 10 |
 | Suggestion limit | 1–10; default 5 |
@@ -81,8 +81,8 @@ Use:
 | Personal dictionary format | version 2 for language-aware export; legacy version 1 remains readable |
 | Network spelling/grammar | none |
 | Telemetry/account/cloud sync | none |
-| Committed host runner | web |
-| Automated release artifact | Flutter web build |
+| Committed host runners | Android, iOS, Linux, macOS, Windows, Web |
+| Automated release artifacts | Android APK, iOS no-codesign app, Linux bundle, macOS app, Web bundle, Windows bundle |
 
 ## Evergreen docs versus historical docs
 

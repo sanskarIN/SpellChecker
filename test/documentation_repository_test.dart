@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const currentVersion = '3.1.0+23';
+  const currentVersion = '3.1.1+24';
   const builtInLanguageIds = <String>[
     'en-US',
     'en-GB',

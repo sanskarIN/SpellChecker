@@ -4,6 +4,17 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [3.1.1] - 2026-08-17
+
+### Fixed
+- Rejected unsupported explicit language IDs in preference save/load/clear namespace APIs instead of silently routing them into the default `en-US` namespace. Corrupt or obsolete stored selected-language values still fall back safely when read.
+- Made the default suggestion ranker compare Unicode scalar lengths consistently with engine candidate filtering instead of using UTF-16 code-unit length for its final length criterion.
+- Corrected stale evergreen README/documentation claims that still described the V3.0 web-only/two-language current contract after V3.1 shipped eight languages and six committed runners.
+
+### Changed
+- Advanced package identity to `3.1.1+24` and About identity to `3.1.1`.
+- Kept the eight-language registry, ten English writing rules, transfer formats, runtime dependencies, local privacy model, and six-target release-build contract unchanged.
+
 ## [3.1.0] - 2026-08-17
 
 ### Added
