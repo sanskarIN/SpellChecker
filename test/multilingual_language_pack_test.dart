@@ -103,6 +103,19 @@ void main() {
       );
     });
 
+    test('keeps Unicode join controls inside a single Indic word', () {
+      const joinedWord = 'क्\u200Dष';
+      final pack = SpellLanguageRegistry.hindiIndia;
+      final matches = pack.tokenize('अब $joinedWord शब्द').toList();
+
+      expect(matches.map((match) => match.group(0)).toList(), <String>[
+        'अब',
+        joinedWord,
+        'शब्द',
+      ]);
+      expect(pack.isValidWord(joinedWord), isTrue);
+    });
+
     test(
       'recognizes French elision prefixes and preserves them in suggestions',
       () {
