@@ -1,0 +1,146 @@
+name: One-time V3.1.1 release sync
+
+on:
+  push:
+    branches:
+      - v3.1.1/post-multilingual-audit
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: >-
+      !contains(github.event.head_commit.message, 'release: prepare 3.1.1') &&
+      !contains(github.event.head_commit.message, 'remove one-time 3.1.1 release sync')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          ref: v3.1.1/post-multilingual-audit
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Configure release identity
+        shell: bash
+        run: |
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+
+      - name: Synchronize 3.1.1 release metadata and current docs
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              file = Path(path)
+              text = file.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one occurrence of {old!r}, found {count}')
+              file.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once('pubspec.yaml', 'version: 3.1.0+23', 'version: 3.1.1+24')
+          replace_once(
+              'lib/features/editor/spell_checker_page.dart',
+              "applicationVersion: '3.1.0'",
+              "applicationVersion: '3.1.1'",
+          )
+          replace_once(
+              'lib/features/editor/spell_checker_page.dart',
+              'A privacy-first open-source cross-platform writing utility in V3.1 with eight built-in offline language packs',
+              'A privacy-first open-source cross-platform writing utility in V3.1.1 with eight built-in offline language packs',
+          )
+          replace_once(
+              'README.md',
+              '**Current package:** `3.1.0+23`',
+              '**Current package:** `3.1.1+24`',
+          )
+          replace_once(
+              'README.md',
+              '| `repeated-punctuation` | repeated identical punctuation | yes |',
+              '| `repeated-punctuation` | accidental repeated identical punctuation; standard `...` ellipsis preserved | yes |',
+          )
+
+          replace_once(
+              'docs/README.md',
+              'SpellChecker `3.1.0+23`',
+              'SpellChecker `3.1.1+24`',
+          )
+          replace_once(
+              'docs/README.md',
+              'The current repository commits the web host plus portable Flutter/Dart source, ships eight built-in offline spelling language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.',
+              'The current repository commits official Flutter runners for Android, iOS, Linux, macOS, Web, and Windows, ships eight built-in offline spelling language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.',
+          )
+          replace_once(
+              'docs/README.md',
+              '| Package version | `3.0.0+22` |',
+              '| Package version | `3.1.1+24` |',
+          )
+          replace_once(
+              'docs/README.md',
+              '| Built-in language packs | `en-US` and `en-GB` |',
+              '| Built-in language packs | `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, `it-IT` |',
+          )
+
+          release_history = Path('docs/RELEASE_HISTORY.md')
+          text = release_history.read_text(encoding='utf-8')
+          old = '''Current package version: `3.1.0+23`.\n\nV3.1 is the multilingual spelling foundation release line. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling from two English variants to eight language packs.\n\n## V3.1\n'''
+          new = '''Current package version: `3.1.1+24`.\n\nV3.1.1 is the post-multilingual correctness-hardening patch. It keeps the eight-pack V3.1 spelling surface and six-target V3.0 build contract while tightening language-ID persistence, Unicode ranking and Hindi normalization/tokenization, Writing Insights truthfulness, ellipsis handling, repository text auditing, and release-metadata synchronization.\n\n## V3.1\n'''
+          count = text.count(old)
+          if count != 1:
+              raise SystemExit(f'docs/RELEASE_HISTORY.md: expected one current-release block, found {count}')
+          release_history.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'test/documentation_repository_test.dart',
+              "const currentVersion = '3.1.0+23';",
+              "const currentVersion = '3.1.1+24';",
+          )
+          replace_once(
+              'test/documentation_repository_test.dart',
+              "    expect(index, contains(currentVersion));\n    for (final fileName in evergreenDocs) {",
+              "    expect(index, contains(currentVersion));\n    expect(index, contains('| Package version | `$currentVersion` |'));\n    for (final languageId in builtInLanguageIds) {\n      expect(\n        index,\n        contains('`$languageId`'),\n        reason: 'docs/README.md must name current language $languageId.',\n      );\n    }\n    for (final fileName in evergreenDocs) {",
+          )
+
+          changelog = Path('CHANGELOG.md')
+          text = changelog.read_text(encoding='utf-8')
+          marker = '## [3.1.0] - 2026-08-17\n'
+          if text.count(marker) != 1:
+              raise SystemExit('CHANGELOG.md: expected exactly one 3.1.0 marker')
+          section = '''## [3.1.1] - 2026-08-17\n\n### Fixed\n- Rejected unsupported language IDs in durable dictionary/writing-rule preference APIs instead of silently falling back to and potentially mutating the `en-US` storage bucket.\n- Aligned default suggestion length tie-breaking with Unicode-scalar edit-distance semantics for non-BMP candidates.\n- Normalized all canonically equivalent precomposed Devanagari nukta letters used by Unicode and kept Hindi ZWJ/ZWNJ-controlled conjuncts inside one spelling token.\n- Counted Indic joiner-controlled conjuncts as one word in document statistics.\n- Preserved the standard three-dot ellipsis (`...`) instead of reporting and destructively collapsing it as repeated punctuation.\n- Made non-English Writing Insights explicitly state that the current writing-rule catalogue is English-only rather than implying that zero findings means grammar/mechanics validation succeeded.\n- Corrected stale current-state documentation that still advertised V3.0 package metadata and only two built-in language packs.\n- Replaced the stale V3.0-only metadata audit with a version-derived release metadata check.\n\n### Validation and repository hardening\n- Added regression coverage for invalid multilingual persistence IDs, non-BMP ranking length, Devanagari canonical equivalence, Hindi joiners, ellipsis preservation, and non-English Writing Insights messaging.\n- Added a tracked-text audit that checks every repository-controlled non-binary file for valid UTF-8, NUL-byte contamination, and unresolved Git conflict markers line by line.\n- Advanced package identity to `3.1.1+24` and About identity to `3.1.1`.\n\n### Compatibility, privacy, and dependency boundary\n- The eight built-in offline spelling packs, ten English-only Writing Insights rules, transfer formats, six-platform runner contract, and local privacy model remain compatible with V3.1.\n- No runtime dependency, telemetry, account system, cloud writing service, document upload, or background language-data download was added.\n\n'''
+          changelog.write_text(text.replace(marker, section + marker, 1), encoding='utf-8')
+
+      - name: Install dependencies before formatting
+        run: flutter pub get
+
+      - name: Apply canonical Dart formatting
+        run: dart format lib test tool
+
+      - name: Verify formatter is stable
+        run: dart format --output=none --set-exit-if-changed lib test tool
+
+      - name: Show remaining 3.1.0+23 references
+        shell: bash
+        run: |
+          grep -R -n --exclude-dir=.git '3.1.0+23' README.md docs lib test pubspec.yaml || true
+
+      - name: Commit synchronized release state
+        shell: bash
+        run: |
+          git status --short
+          git add pubspec.yaml pubspec.lock README.md CHANGELOG.md docs/README.md docs/RELEASE_HISTORY.md lib/features/editor/spell_checker_page.dart test/documentation_repository_test.dart
+          if git diff --cached --quiet; then
+            echo 'No release synchronization changes were produced.' >&2
+            exit 1
+          fi
+          git commit -m 'release: prepare 3.1.1 post-multilingual hardening'
+          git push origin HEAD:v3.1.1/post-multilingual-audit
