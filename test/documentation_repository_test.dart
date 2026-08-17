@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const currentVersion = '3.1.0+23';
+  const currentVersion = '3.1.1+24';
   const builtInLanguageIds = <String>[
     'en-US',
     'en-GB',
@@ -59,6 +59,14 @@ void main() {
     final index = File('docs/README.md').readAsStringSync();
 
     expect(index, contains(currentVersion));
+    expect(index, contains('| Package version | `$currentVersion` |'));
+    for (final languageId in builtInLanguageIds) {
+      expect(
+        index,
+        contains('`$languageId`'),
+        reason: 'docs/README.md must name current language $languageId.',
+      );
+    }
     for (final fileName in evergreenDocs) {
       expect(
         File('docs/$fileName').existsSync(),
@@ -206,73 +214,76 @@ void main() {
     );
   });
 
-  test('tracked text files decode as UTF-8 and contain no conflict markers', () {
-    const binaryExtensions = <String>{
-      '.bin',
-      '.gif',
-      '.gz',
-      '.icns',
-      '.ico',
-      '.jar',
-      '.jpeg',
-      '.jpg',
-      '.otf',
-      '.pdf',
-      '.png',
-      '.ttf',
-      '.webp',
-      '.woff',
-      '.woff2',
-      '.zip',
-    };
+  test(
+    'tracked text files decode as UTF-8 and contain no conflict markers',
+    () {
+      const binaryExtensions = <String>{
+        '.bin',
+        '.gif',
+        '.gz',
+        '.icns',
+        '.ico',
+        '.jar',
+        '.jpeg',
+        '.jpg',
+        '.otf',
+        '.pdf',
+        '.png',
+        '.ttf',
+        '.webp',
+        '.woff',
+        '.woff2',
+        '.zip',
+      };
 
-    final gitResult = Process.runSync('git', const [
-      'ls-files',
-    ], runInShell: Platform.isWindows);
-    expect(
-      gitResult.exitCode,
-      0,
-      reason: 'git ls-files must succeed for repository text checks.',
-    );
-
-    final trackedPaths = (gitResult.stdout as String)
-        .split(RegExp(r'\r?\n'))
-        .where((String path) => path.isNotEmpty)
-        .toList(growable: false);
-
-    for (final path in trackedPaths) {
-      final lowerPath = path.toLowerCase();
-      if (binaryExtensions.any(lowerPath.endsWith)) {
-        continue;
-      }
-
-      final bytes = File(path).readAsBytesSync();
+      final gitResult = Process.runSync('git', const [
+        'ls-files',
+      ], runInShell: Platform.isWindows);
       expect(
-        bytes.contains(0),
-        isFalse,
-        reason: '$path contains a NUL byte but is expected to be text.',
+        gitResult.exitCode,
+        0,
+        reason: 'git ls-files must succeed for repository text checks.',
       );
 
-      late final String content;
-      try {
-        content = utf8.decode(bytes);
-      } on FormatException catch (error) {
-        fail('$path is not valid UTF-8 text: $error');
-      }
+      final trackedPaths = (gitResult.stdout as String)
+          .split(RegExp(r'\r?\n'))
+          .where((String path) => path.isNotEmpty)
+          .toList(growable: false);
 
-      var lineNumber = 0;
-      for (final line in const LineSplitter().convert(content)) {
-        lineNumber++;
-        final isConflictMarker =
-            line.startsWith('<<<<<<< ') ||
-            line == '=======' ||
-            line.startsWith('>>>>>>> ');
+      for (final path in trackedPaths) {
+        final lowerPath = path.toLowerCase();
+        if (binaryExtensions.any(lowerPath.endsWith)) {
+          continue;
+        }
+
+        final bytes = File(path).readAsBytesSync();
         expect(
-          isConflictMarker,
+          bytes.contains(0),
           isFalse,
-          reason: '$path:$lineNumber contains an unresolved merge marker.',
+          reason: '$path contains a NUL byte but is expected to be text.',
         );
+
+        late final String content;
+        try {
+          content = utf8.decode(bytes);
+        } on FormatException catch (error) {
+          fail('$path is not valid UTF-8 text: $error');
+        }
+
+        var lineNumber = 0;
+        for (final line in const LineSplitter().convert(content)) {
+          lineNumber++;
+          final isConflictMarker =
+              line.startsWith('<<<<<<< ') ||
+              line == '=======' ||
+              line.startsWith('>>>>>>> ');
+          expect(
+            isConflictMarker,
+            isFalse,
+            reason: '$path:$lineNumber contains an unresolved merge marker.',
+          );
+        }
       }
-    }
-  });
+    },
+  );
 }

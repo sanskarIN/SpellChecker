@@ -6,7 +6,7 @@
 
 SpellChecker is a privacy-first, open-source Flutter spelling utility and deterministic writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports eight explicit offline language packs, keeps personal vocabulary and writing-rule choices local, offers keyboard-first review, applies source-range-safe corrections, and exposes reusable Dart APIs.
 
-**Current package:** `3.1.0+23`  
+**Current package:** `3.1.1+24`  
 **Built-in languages:** English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, Italian `it-IT`  
 **Built-in writing rules:** 10  
 **Runtime dependencies:** Flutter SDK and `shared_preferences`  
@@ -95,7 +95,7 @@ Manual typing invalidates the previous spelling snapshot so stale offsets are no
 | `punctuation-spacing` | whitespace before common punctuation | yes |
 | `missing-punctuation-space` | missing space after selected punctuation between words | yes |
 | `trailing-whitespace` | trailing spaces/tabs | yes |
-| `repeated-punctuation` | repeated identical punctuation | yes |
+| `repeated-punctuation` | accidental repeated identical punctuation; standard `...` ellipsis preserved | yes |
 | `unmatched-parenthesis` | unpaired literal parenthesis | advisory |
 | `unmatched-square-bracket` | unpaired literal square bracket | advisory |
 | `unmatched-curly-brace` | unpaired literal curly brace | advisory |

@@ -4,6 +4,27 @@ All notable changes to SpellChecker are documented in this file.
 
 The project follows semantic versioning for public releases where practical.
 
+## [3.1.1] - 2026-08-17
+
+### Fixed
+- Rejected unsupported language IDs in durable dictionary/writing-rule preference APIs instead of silently falling back to and potentially mutating the `en-US` storage bucket.
+- Aligned default suggestion length tie-breaking with Unicode-scalar edit-distance semantics for non-BMP candidates.
+- Normalized all canonically equivalent precomposed Devanagari nukta letters used by Unicode and kept Hindi ZWJ/ZWNJ-controlled conjuncts inside one spelling token.
+- Counted Indic joiner-controlled conjuncts as one word in document statistics.
+- Preserved the standard three-dot ellipsis (`...`) instead of reporting and destructively collapsing it as repeated punctuation.
+- Made non-English Writing Insights explicitly state that the current writing-rule catalogue is English-only rather than implying that zero findings means grammar/mechanics validation succeeded.
+- Corrected stale current-state documentation that still advertised V3.0 package metadata and only two built-in language packs.
+- Replaced the stale V3.0-only metadata audit with a version-derived release metadata check.
+
+### Validation and repository hardening
+- Added regression coverage for invalid multilingual persistence IDs, non-BMP ranking length, Devanagari canonical equivalence, Hindi joiners, ellipsis preservation, and non-English Writing Insights messaging.
+- Added a tracked-text audit that checks every repository-controlled non-binary file for valid UTF-8, NUL-byte contamination, and unresolved Git conflict markers line by line.
+- Advanced package identity to `3.1.1+24` and About identity to `3.1.1`.
+
+### Compatibility, privacy, and dependency boundary
+- The eight built-in offline spelling packs, ten English-only Writing Insights rules, transfer formats, six-platform runner contract, and local privacy model remain compatible with V3.1.
+- No runtime dependency, telemetry, account system, cloud writing service, document upload, or background language-data download was added.
+
 ## [3.1.0] - 2026-08-17
 
 ### Added

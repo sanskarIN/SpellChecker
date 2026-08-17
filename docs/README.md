@@ -6,7 +6,7 @@
   </a>
 </p>
 
-This directory is the documentation home for SpellChecker `3.1.0+23`. SpellChecker is a privacy-first Flutter spelling utility and deterministic writing assistant. The current repository commits the web host plus portable Flutter/Dart source, ships eight built-in offline spelling language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.
+This directory is the documentation home for SpellChecker `3.1.1+24`. SpellChecker is a privacy-first Flutter spelling utility and deterministic writing assistant. The current repository commits official Flutter runners for Android, iOS, Linux, macOS, Web, and Windows, ships eight built-in offline spelling language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.
 
 ## Choose your path
 
@@ -65,10 +65,10 @@ Use:
 
 | Area | Current contract |
 | --- | --- |
-| Package version | `3.0.0+22` |
+| Package version | `3.1.1+24` |
 | Dart SDK | `>=3.8.0 <4.0.0` |
 | Runtime dependencies | Flutter SDK and `shared_preferences` |
-| Built-in language packs | `en-US` and `en-GB` |
+| Built-in language packs | `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, `it-IT` |
 | Default language | `en-US` |
 | Built-in writing rules | 10 |
 | Suggestion limit | 1–10; default 5 |
