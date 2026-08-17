@@ -1,58 +1,43 @@
-name: Finalize V3 cross-platform metadata
+name: V3 metadata audit
 
 on:
-  push:
-    branches:
-      - v3/cross-platform-foundation
-    paths:
-      - .github/workflows/v3-docs-sync.yml
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  finalize:
+  audit:
+    name: Verify V3 cross-platform metadata
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Check out V3 branch
+      - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: v3/cross-platform-foundation
-          fetch-depth: 0
 
-      - name: Apply V3 package, UI, and documentation metadata
+      - name: Verify V3 package identity
         shell: bash
         run: |
-          python3 -c "import base64,zlib;open('/tmp/finalize_v3.py','wb').write(zlib.decompress(base64.b64decode('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')));"
-          python3 /tmp/finalize_v3.py
+          grep -F 'version: 3.0.0+22' pubspec.yaml
+          grep -F "applicationVersion: '3.0.0'" lib/features/editor/spell_checker_page.dart
+          grep -F 'Current package version: `3.0.0+22`.' docs/RELEASE_HISTORY.md
+          grep -F '## [3.0.0] - 2026-08-17' CHANGELOG.md
 
-      - name: Commit package and runtime identity
+      - name: Verify cross-platform runner inventory
         shell: bash
         run: |
-          git config user.name "Sanskar"
-          git config user.email "sanskarin@outlook.in"
-          git add pubspec.yaml lib/features/editor/spell_checker_page.dart test
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: advance SpellChecker to 3.0.0"
-          fi
+          test -f .metadata
+          test -f android/app/src/main/AndroidManifest.xml
+          test -f ios/Runner.xcodeproj/project.pbxproj
+          test -f linux/CMakeLists.txt
+          test -f macos/Runner.xcodeproj/project.pbxproj
+          test -f web/index.html
+          test -f windows/CMakeLists.txt
 
-      - name: Commit V3 release history
+      - name: Verify V3 release documentation
         shell: bash
         run: |
-          git add CHANGELOG.md docs/V3_0_CROSS_PLATFORM_FOUNDATION.md docs/RELEASE_HISTORY.md
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: record V3 cross-platform foundation"
-          fi
-
-      - name: Commit evergreen V3 documentation
-        shell: bash
-        run: |
-          git add README.md docs
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: finalize V3 cross-platform release guidance"
-          fi
-
-      - name: Push finalized V3 commits
-        run: git push origin HEAD:v3/cross-platform-foundation
+          test -f docs/V3_0_CROSS_PLATFORM_FOUNDATION.md
+          grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md
+          grep -F 'Cross-platform CI' docs/V3_0_CROSS_PLATFORM_FOUNDATION.md
