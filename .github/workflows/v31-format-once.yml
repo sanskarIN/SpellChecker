@@ -1,0 +1,36 @@
+name: V3.1 formatter once
+
+on:
+  push:
+    branches:
+      - v3.1/multilingual-foundation
+    paths:
+      - .github/workflows/v31-format-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v3.1/multilingual-foundation
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Apply canonical Dart formatting
+        run: dart format lib test tool
+      - name: Commit formatter output
+        run: |
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+          git add lib test tool
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "style: apply multilingual dart formatter output"
+          git push origin HEAD:v3.1/multilingual-foundation
