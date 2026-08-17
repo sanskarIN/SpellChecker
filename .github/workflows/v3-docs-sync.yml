@@ -1,4 +1,4 @@
-name: V3 metadata audit
+name: Release metadata audit
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   audit:
-    name: Verify V3 cross-platform metadata
+    name: Verify release and cross-platform metadata
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -16,13 +16,27 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Verify V3 package identity
+      - name: Resolve package identity
+        id: version
         shell: bash
         run: |
-          grep -F 'version: 3.0.0+22' pubspec.yaml
-          grep -F "applicationVersion: '3.0.0'" lib/features/editor/spell_checker_page.dart
-          grep -F 'Current package version: `3.0.0+22`.' docs/RELEASE_HISTORY.md
-          grep -F '## [3.0.0] - 2026-08-17' CHANGELOG.md
+          package_version="$(awk '/^version: / { print $2; exit }' pubspec.yaml)"
+          test -n "$package_version"
+          semantic_version="${package_version%%+*}"
+          echo "package_version=$package_version" >> "$GITHUB_OUTPUT"
+          echo "semantic_version=$semantic_version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify package identity is synchronized
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.package_version }}
+          SEMANTIC_VERSION: ${{ steps.version.outputs.semantic_version }}
+        shell: bash
+        run: |
+          grep -F "applicationVersion: '$SEMANTIC_VERSION'" lib/features/editor/spell_checker_page.dart
+          grep -F "Current package version: \`$PACKAGE_VERSION\`." docs/RELEASE_HISTORY.md
+          grep -F "## [$SEMANTIC_VERSION] -" CHANGELOG.md
+          grep -F "Current package:** \`$PACKAGE_VERSION\`" README.md
+          grep -F "SpellChecker \`$PACKAGE_VERSION\`" docs/README.md
 
       - name: Verify cross-platform runner inventory
         shell: bash
@@ -35,9 +49,11 @@ jobs:
           test -f web/index.html
           test -f windows/CMakeLists.txt
 
-      - name: Verify V3 release documentation
+      - name: Verify release documentation foundations
         shell: bash
         run: |
           test -f docs/V3_0_CROSS_PLATFORM_FOUNDATION.md
+          test -f docs/V3_1_MULTILINGUAL_FOUNDATION.md
           grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md
           grep -F 'Cross-platform CI' docs/V3_0_CROSS_PLATFORM_FOUNDATION.md
+          grep -F 'eight language packs' docs/V3_1_MULTILINGUAL_FOUNDATION.md
