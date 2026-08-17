@@ -1,19 +1,14 @@
-name: Bootstrap Flutter platform runners
+name: Regenerate Flutter platform runners
 
 on:
-  push:
-    branches:
-      - v3/cross-platform-foundation
-    paths:
-      - .github/workflows/platform-bootstrap.yml
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  generate-platform-runners:
-    name: Generate official Flutter platform runners
+  regenerate-platform-runners:
+    name: Regenerate reviewed Flutter platform runners
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -34,7 +29,7 @@ jobs:
           flutter --version
           dart --version
 
-      - name: Generate supported platform runners
+      - name: Regenerate supported platform runners
         run: >-
           flutter create .
           --platforms=android,ios,linux,macos,windows,web
@@ -54,7 +49,7 @@ jobs:
           test -d web
           test -f .metadata
 
-      - name: Commit generated runners
+      - name: Commit reviewed runner-template changes
         shell: bash
         run: |
           if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
@@ -65,5 +60,5 @@ jobs:
           git config user.name "Sanskar"
           git config user.email "sanskarin@outlook.in"
           git add .metadata android ios linux macos windows
-          git commit -m "feat: add official Flutter native platform runners"
+          git commit -m "build: refresh Flutter platform runner templates"
           git push origin HEAD:v3/cross-platform-foundation
