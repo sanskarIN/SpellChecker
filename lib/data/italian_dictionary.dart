@@ -22,7 +22,7 @@ class ItalianDictionary {
     'programma', 'progetto', 'domanda', 'risposta', 'sapere', 'scuola',
     'scrivere', 'settimana', 'sistema', 'storia', 'studiare', 'tecnologia',
     'testo', 'uomo', 'usare', 'verità', 'ciao', 'italia', 'italiano', 'team',
-    'lavoratore', 'studio', 'stato', 'ora', 'insieme', 'possibile',
+    'lavoratore', 'studio', 'stato', 'insieme', 'possibile',
   };
 
   static const Map<String, int> ranks = <String, int>{
