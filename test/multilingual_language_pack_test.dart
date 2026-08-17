@@ -103,6 +103,36 @@ void main() {
       );
     });
 
+    test('normalizes canonically equivalent Devanagari nukta letters', () {
+      final pack = SpellLanguageRegistry.hindiIndia;
+      final engine = SpellCheckerEngine(languagePack: pack);
+
+      expect(pack.normalizeWord('ज़रूरी'), pack.normalizeWord('ज़रूरी'));
+      expect(engine.isCorrect('ज़रूरी'), isTrue);
+      expect(engine.isCorrect('ज़रूरी'), isTrue);
+
+      final equivalentPairs = <(String, String)>[
+        ('ऩ', 'ऩ'),
+        ('ऱ', 'ऱ'),
+        ('ऴ', 'ऴ'),
+        ('क़', 'क़'),
+        ('ख़', 'ख़'),
+        ('ग़', 'ग़'),
+        ('ज़', 'ज़'),
+        ('ड़', 'ड़'),
+        ('ढ़', 'ढ़'),
+        ('फ़', 'फ़'),
+        ('य़', 'य़'),
+      ];
+      for (final (precomposed, decomposed) in equivalentPairs) {
+        expect(
+          pack.normalizeWord(precomposed),
+          pack.normalizeWord(decomposed),
+          reason: '$precomposed and $decomposed must normalize identically',
+        );
+      }
+    });
+
     test(
       'recognizes French elision prefixes and preserves them in suggestions',
       () {
