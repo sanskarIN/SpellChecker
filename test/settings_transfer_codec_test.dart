@@ -28,6 +28,29 @@ void main() {
       expect(decoded.writingRuleIdsFor('en-GB'), isEmpty);
     });
 
+    test('round-trips every built-in language id', () {
+      for (final languageId in <String>[
+        'en-US',
+        'en-GB',
+        'hi-IN',
+        'es-ES',
+        'fr-FR',
+        'de-DE',
+        'pt-BR',
+        'it-IT',
+      ]) {
+        final encoded = SpellCheckerSettingsCodec.encode(
+          SpellCheckerSettingsDocument(
+            languageId: languageId,
+            suggestionLimit: 5,
+          ),
+        );
+        final decoded = SpellCheckerSettingsCodec.decode(encoded);
+
+        expect(decoded.languageId, languageId);
+      }
+    });
+
     test('absent language override remains unset after round-trip', () {
       final decoded = SpellCheckerSettingsCodec.decode(
         SpellCheckerSettingsCodec.encode(
@@ -156,13 +179,13 @@ void main() {
     test('rejects unsupported selected and override languages', () {
       expect(
         () => SpellCheckerSettingsCodec.decode(
-          _documentJson(languageId: 'fr-FR'),
+          _documentJson(languageId: 'ja-JP'),
         ),
         throwsA(isA<FormatException>()),
       );
       expect(
         () => SpellCheckerSettingsCodec.decode(
-          _documentJson(overrides: <String, Object?>{'fr-FR': <String>[]}),
+          _documentJson(overrides: <String, Object?>{'ja-JP': <String>[]}),
         ),
         throwsA(isA<FormatException>()),
       );
