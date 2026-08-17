@@ -1,0 +1,399 @@
+name: One-time V3.1.1 evergreen documentation sync
+
+on:
+  push:
+    branches:
+      - v3.1.1/post-multilingual-audit
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: >-
+      !contains(github.event.head_commit.message, 'docs: finish 3.1.1 evergreen contract audit') &&
+      !contains(github.event.head_commit.message, 'remove one-time evergreen documentation sync')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out audit branch
+        uses: actions/checkout@v7
+        with:
+          ref: v3.1.1/post-multilingual-audit
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Configure commit identity
+        shell: bash
+        run: |
+          git config user.name "Sanskar"
+          git config user.email "sanskarin@outlook.in"
+
+      - name: Fix platform maintenance workflow
+        shell: python
+        run: |
+          from pathlib import Path
+
+          p = Path('.github/workflows/platform-bootstrap.yml')
+          text = p.read_text(encoding='utf-8')
+          replacements = [
+              ('  regenerate-platform-runners:\n    name: Regenerate reviewed Flutter platform runners\n', '  regenerate-platform-runners:\n    if: github.ref_type == \'branch\'\n    name: Regenerate reviewed Flutter platform runners\n'),
+              ('      - name: Check out V3 branch\n        uses: actions/checkout@v7\n        with:\n          ref: v3/cross-platform-foundation\n', '      - name: Check out selected branch\n        uses: actions/checkout@v7\n        with:\n          ref: ${{ github.ref_name }}\n'),
+              ('          git push origin HEAD:v3/cross-platform-foundation\n', '          git push origin HEAD:${{ github.ref_name }}\n'),
+          ]
+          for old, new in replacements:
+              if text.count(old) != 1:
+                  raise SystemExit(f'platform-bootstrap: expected exactly one {old!r}')
+              text = text.replace(old, new, 1)
+          p.write_text(text, encoding='utf-8')
+
+      - name: Commit platform maintenance correction
+        shell: bash
+        run: |
+          git add .github/workflows/platform-bootstrap.yml
+          git commit -m 'fix(ci): regenerate runners on the selected branch'
+
+      - name: Synchronize language and writing references
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, found {text.count(old)}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'docs/CONFIGURATION.md',
+              'Current built-in language IDs are:\n\n```text\nen-US\nen-GB\n```',
+              'Current built-in language IDs are:\n\n```text\nen-US\nen-GB\nhi-IN\nes-ES\nfr-FR\nde-DE\npt-BR\nit-IT\n```',
+          )
+          replace_once(
+              'docs/CONFIGURATION.md',
+              '`en-US` is the default pack. When the application restores a saved language ID, an unsupported or missing value falls back to the default pack.',
+              '`en-US` is the default pack. When the application restores a saved language ID, an unsupported or missing stored value falls back to the default pack. Preference APIs that are explicitly passed a non-null language ID reject unsupported IDs instead of redirecting reads/writes/clears into the `en-US` storage bucket.',
+          )
+          replace_once(
+              'docs/CONFIGURATION.md',
+              '- a US personal word does not automatically appear in the UK personal dictionary.',
+              '- a personal word saved for one language pack does not automatically appear in another language pack.',
+          )
+
+          replace_once(
+              'docs/LANGUAGE_PACKS.md',
+              'SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `3.1.0+23` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.',
+              'SpellChecker keeps language-specific spelling behavior behind `SpellLanguagePack`. This page documents the current `3.1.1+24` language model, built-in packs, Unicode behavior, extension path, and application-integration limits.',
+          )
+          replace_once(
+              'docs/LANGUAGE_PACKS.md',
+              'The built-in Unicode token pattern recognizes sequences of Unicode letters plus combining marks, with supported internal apostrophe/hyphen forms:',
+              'The general built-in Unicode token pattern recognizes sequences of Unicode letters plus combining marks, with supported internal apostrophe/hyphen forms. The Hindi pack uses an Indic variant that additionally keeps ZWJ/ZWNJ-controlled conjunct sequences inside one spelling token:',
+          )
+          replace_once(
+              'docs/LANGUAGE_PACKS.md',
+              '5. composes a defined set of common decomposed Latin base+combining-mark sequences into their precomposed forms.\n\nThis lets common decomposed inputs such as an accented Latin letter normalize consistently with bundled vocabulary.\n\nThe composition table is explicit rather than a general Unicode-normalization library. New language packs should define normalization appropriate to their dictionaries and tests.',
+              '5. normalizes the canonical precomposed Devanagari+nukta letters to their decomposed equivalents;\n6. composes a defined set of common decomposed Latin base+combining-mark sequences into their precomposed forms.\n\nThe Hindi pack additionally removes ZWJ/ZWNJ from the normalized lookup form after tokenization, so presentation-controlled conjunct variants compare with the same bundled dictionary spelling. This lets canonically equivalent Devanagari nukta forms and common decomposed Latin accents normalize consistently with bundled vocabulary.\n\nThe tables/policies are explicit rather than a general Unicode-normalization library. New language packs should define normalization appropriate to their scripts, dictionaries, and tests.',
+          )
+
+          replace_once(
+              'docs/WRITING_RULES.md',
+              'SpellChecker `2.16.0+21` has exactly **ten** built-in writing rules. All current built-ins declare English (`en`) support, so they are eligible for both built-in language packs, `en-US` and `en-GB`.',
+              'SpellChecker `3.1.1+24` has exactly **ten** built-in writing rules. All current built-ins declare English (`en`) support, so they are eligible for the two built-in English packs, `en-US` and `en-GB`; the six non-English spelling packs intentionally have no built-in Writing Insights rules yet.',
+          )
+          replace_once(
+              'docs/WRITING_RULES.md',
+              '| `repeated-punctuation` | repeated identical `! ? . ,` runs | Mechanics | info | yes |',
+              '| `repeated-punctuation` | accidental repeated identical `! ? . ,` runs; standard `...` ellipsis preserved | Mechanics | info | yes |',
+          )
+          replace_once(
+              'docs/WRITING_RULES.md',
+              'Finds runs of the same `!`, `?`, `.`, or `,` character repeated two or more times and proposes the first mark only. It does not interpret every intentional stylistic punctuation sequence. Severity: info.',
+              'Finds runs of the same `!`, `?`, `.`, or `,` character repeated two or more times and proposes the first mark only, except the standard three-dot ellipsis `...`, which is preserved. Longer dot runs and other repeated punctuation remain in scope. Severity: info.',
+          )
+
+      - name: Commit language and writing documentation corrections
+        shell: bash
+        run: |
+          git add docs/CONFIGURATION.md docs/LANGUAGE_PACKS.md docs/WRITING_RULES.md
+          git commit -m 'docs(language): align multilingual and writing contracts'
+
+      - name: Synchronize user-facing evergreen docs
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, found {text.count(old)}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once('docs/GETTING_STARTED.md', 'It supports English (US) and English (UK), per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic built-in writing rules.', 'It supports eight explicit offline spelling packs (English US/UK, Hindi, Spanish, French, German, Brazilian Portuguese, and Italian), per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic English-only built-in Writing Insights rules.')
+          replace_once('docs/GETTING_STARTED.md', 'Current package version: `3.0.0+22`.', 'Current package version: `3.1.1+24`.')
+          replace_once('docs/GETTING_STARTED.md', '2. Keep **English (US)** selected or choose **English (UK)** from the language selector.\n3. Enter synthetic text such as `Helo world`.', '2. Choose the spelling language that matches the text. For this English example, keep **English (US)** selected or choose **English (UK)**.\n3. Enter synthetic text such as `Helo world`. The selector also exposes Hindi, Spanish, French, German, Brazilian Portuguese, and Italian spelling packs.')
+          replace_once('docs/GETTING_STARTED.md', 'Personal vocabulary is isolated by language. Saving a word in `en-US` does not automatically save it in `en-GB`.', 'Personal vocabulary is isolated by language. Saving a word in one built-in pack does not automatically save it in any other pack.')
+
+          replace_once('docs/USER_GUIDE.md', 'This guide describes the current SpellChecker `2.16.0+21` application workflow.', 'This guide describes the current SpellChecker `3.1.1+24` application workflow.')
+          replace_once('docs/USER_GUIDE.md', '- English (US) and English (UK) language selection;', '- explicit selection among eight offline spelling packs: English (US/UK), Hindi, Spanish, French, German, Brazilian Portuguese, and Italian;')
+          replace_once('docs/USER_GUIDE.md', '2. Choose **English (US)** or **English (UK)**.', '2. Choose the built-in spelling pack that matches the text.')
+          replace_once('docs/USER_GUIDE.md', 'Current built-ins are:\n\n```text\nEnglish (US) — en-US\nEnglish (UK) — en-GB\n```', 'Current built-ins are:\n\n```text\nEnglish (US) — en-US\nEnglish (UK) — en-GB\nHindi (India) — hi-IN\nSpanish (Spain) — es-ES\nFrench (France) — fr-FR\nGerman (Germany) — de-DE\nPortuguese (Brazil) — pt-BR\nItalian (Italy) — it-IT\n```')
+          replace_once('docs/USER_GUIDE.md', 'Change the language explicitly when the text uses another supported variant.', 'Change the language explicitly when the text uses another supported language or regional variant.')
+          replace_once('docs/USER_GUIDE.md', 'Personal vocabulary and writing-rule choices are isolated by language. Saving a word or disabling a rule in `en-US` does not automatically change `en-GB`.', 'Personal vocabulary and writing-rule choices are isolated by language. Saving a personal word in one pack does not change another pack. Current built-in Writing Insights rules are English-only, so only `en-US` and `en-GB` expose supported built-in rule switches.')
+          replace_once('docs/USER_GUIDE.md', 'Writing insights analyzes the current editor text with deterministic local rules for the selected language.', 'Writing insights analyzes the current editor text with deterministic local rules supported by the selected language. The current built-in rule catalogue is English-only; for the six non-English spelling packs the dialog explicitly explains that Writing Insights rules are not available yet.')
+          replace_once('docs/USER_GUIDE.md', 'Rule choices are separate for `en-US` and `en-GB`.', 'Rule choices are stored per language. The current built-in rule catalogue supports `en-US` and `en-GB`; non-English packs currently have no supported built-in rules to toggle.')
+
+          replace_once('docs/FAQ.md', 'The evergreen documentation describes `2.16.0+21` on the current repository `main` branch unless a page explicitly identifies itself as a historical release document.', 'The evergreen documentation describes `3.1.1+24` on the current repository `main` branch unless a page explicitly identifies itself as a historical release document.')
+          replace_once('docs/FAQ.md', 'English (US), `en-US`, and English (UK), `en-GB`.', 'Eight offline spelling packs are built in: English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, and Italian `it-IT`.')
+          replace_once('docs/FAQ.md', '### Are rule switches saved?\n\nYes. Enabled writing-rule IDs are persisted separately for each language when local storage succeeds.', '### Why are no Writing Insights rules shown for a non-English spelling pack?\n\nThe current ten built-in Writing Insights rules are English-only. Hindi, Spanish, French, German, Brazilian Portuguese, and Italian currently provide spelling/suggestions/personal dictionaries without applying English grammar/mechanics rules. The dialog states this boundary explicitly.\n\n### Are rule switches saved?\n\nYes. Enabled writing-rule IDs are persisted separately for each language when local storage succeeds. Current built-in switches are available for the two English packs because those are the packs supported by the built-in rules.')
+          replace_once('docs/FAQ.md', 'No. The current repository commits the web host and portable Flutter/Dart source. The automated release workflow builds and uploads a web artifact. Native runner directories and native release artifacts are not currently committed/produced.', 'The repository now commits Flutter runners and CI-builds release-mode artifacts for Android, iOS, Linux, macOS, Web, and Windows. Those artifacts prove repository build support, but production mobile/desktop signing, notarization, installers/store publication, and permanent GitHub Release assets remain separate distribution work.')
+          replace_once('docs/FAQ.md', 'CI also runs a deterministic benchmark command smoke test. The release workflow additionally runs `flutter build web --release`.', 'CI also runs a deterministic benchmark command smoke test. The release workflow additionally validates release-mode builds and uploads artifacts for Android, iOS, Linux, macOS, Web, and Windows.')
+
+          replace_once('docs/GLOSSARY.md', 'A `SpellLanguagePack` registered in `SpellLanguageRegistry.builtIns`. Current built-ins are English (US), `en-US`, and English (UK), `en-GB`.', 'A `SpellLanguagePack` registered in `SpellLanguageRegistry.builtIns`. Current built-ins are `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, and `it-IT`.')
+          replace_once('docs/GLOSSARY.md', 'A registered pack identifier such as `en-US` or `en-GB`. Persistence and transfer formats use these IDs.', 'A registered pack identifier such as `en-US`, `hi-IN`, or `fr-FR`. Persistence and transfer formats use these IDs.')
+          replace_once('docs/GLOSSARY.md', '`SpellLanguagePack`, the object defining language-specific dictionary data, tokenization, normalization, personal-word validation, frequency metadata, suffix behavior, and suggestion-distance policy.', '`SpellLanguagePack`, the object defining language-specific dictionary data, tokenization, normalization, personal-word validation, frequency metadata, recognized prefix/suffix behavior, and suggestion-distance policy.')
+
+      - name: Commit user-facing documentation corrections
+        shell: bash
+        run: |
+          git add docs/GETTING_STARTED.md docs/USER_GUIDE.md docs/FAQ.md docs/GLOSSARY.md
+          git commit -m 'docs(user): remove stale pre-multilingual guidance'
+
+      - name: Synchronize API and architecture docs
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, found {text.count(old)}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once('docs/API.md', 'This is the evergreen public Dart API reference for SpellChecker `2.16.0+21`.', 'This is the evergreen public Dart API reference for SpellChecker `3.1.1+24`.')
+          replace_once('docs/API.md', 'The pack controlling tokenization, normalization, dictionary behavior, suffix recognition, suggestion metadata, and suggestion-distance policy.', 'The pack controlling tokenization, normalization, dictionary behavior, recognized prefix/suffix handling, suggestion metadata, and suggestion-distance policy.')
+          replace_once('docs/API.md', 'Returns true when the normalized word is accepted by the base dictionary, personal dictionary, ignored-word set, or a recognized regular suffix whose stem is known.', 'Returns true when the normalized word is accepted by the base dictionary, personal dictionary, ignored-word set, or a recognized prefix/suffix whose stem is known.')
+          replace_once('docs/API.md', 'Returns detailed language/source/ranking metadata. Recognized suffixes are ranked on the stem and reattached to returned suggestions.', 'Returns detailed language/source/ranking metadata. Recognized prefixes/suffixes are ranked on the stem and reattached to returned suggestions.')
+          replace_once('docs/API.md', '`target` is the normalized stem being corrected. A recognized suffix is removed for ranking and reattached later.', '`target` is the normalized stem being corrected. A recognized prefix or suffix is removed for ranking and reattached later.')
+          replace_once('docs/API.md', '4. candidate string length;', '4. Unicode-scalar candidate length;')
+          replace_once('docs/API.md', '`characters` uses Dart string length (UTF-16 code units). Word counting uses the current Unicode letter/combining-mark/apostrophe/hyphen token pattern.', '`characters` uses Dart string length (UTF-16 code units). Word counting uses Unicode letter/combining-mark/apostrophe/hyphen tokenization and keeps Indic ZWJ/ZWNJ-controlled conjuncts inside one counted word.')
+          replace_once('docs/API.md', 'recognizedSuffixes\nsuggestionSource', 'recognizedPrefixes\nrecognizedSuffixes\nsuggestionSource')
+          replace_once('docs/API.md', 'Dictionary, frequency, and suffix collections are captured as immutable snapshots by the constructor.', 'Dictionary, frequency, prefix, and suffix collections are captured as immutable snapshots by the constructor.')
+          replace_once('docs/API.md', 'Current built-ins:\n\n```text\nen-US  English (US)\nen-GB  English (UK)\n```', 'Current built-ins:\n\n```text\nen-US  English (US)\nen-GB  English (UK)\nhi-IN  Hindi (India)\nes-ES  Spanish (Spain)\nfr-FR  French (France)\nde-DE  German (Germany)\npt-BR  Portuguese (Brazil)\nit-IT  Italian (Italy)\n```')
+          replace_once('docs/API.md', 'static final SpellLanguagePack englishUs\nstatic final SpellLanguagePack englishGb\nstatic List<SpellLanguagePack> get builtIns', 'static final SpellLanguagePack englishUs\nstatic final SpellLanguagePack englishGb\nstatic final SpellLanguagePack hindiIndia\nstatic final SpellLanguagePack spanishSpain\nstatic final SpellLanguagePack frenchFrance\nstatic final SpellLanguagePack germanGermany\nstatic final SpellLanguagePack portugueseBrazil\nstatic final SpellLanguagePack italianItaly\nstatic List<SpellLanguagePack> get builtIns')
+          replace_once('docs/API.md', 'The built-in English normalizer trims, lowercases, normalizes supported apostrophe/hyphen variants, and composes a defined set of common decomposed Latin sequences used by bundled vocabulary.', 'Built-in normalization trims/lowercases, normalizes supported apostrophe/hyphen variants, composes defined common decomposed Latin sequences, and canonicalizes Devanagari nukta letters. The Hindi pack also keeps ZWJ/ZWNJ-controlled conjuncts together during tokenization and removes the joiners from its normalized lookup form.')
+
+          replace_once('docs/ARCHITECTURE.md', 'This page describes the current SpellChecker `2.16.0+21` architecture:', 'This page describes the current SpellChecker `3.1.1+24` architecture:')
+          replace_once('docs/ARCHITECTURE.md', '- recognized suffixes;', '- recognized prefixes/suffixes;')
+          replace_once('docs/ARCHITECTURE.md', '    E->>P: normalize / validate / suffix policy', '    E->>P: normalize / validate / affix policy')
+          replace_once('docs/ARCHITECTURE.md', '1. split recognized suffix where applicable;', '1. split a recognized prefix/suffix where applicable;')
+          replace_once('docs/ARCHITECTURE.md', '10. reattach recognized suffix;', '10. reattach the recognized affix;')
+          replace_once('docs/ARCHITECTURE.md', 'Write/remove operations are considered durable only when `shared_preferences` reports success. Failures are surfaced to the UI rather than silently accepted.', 'Write/remove operations are considered durable only when `shared_preferences` reports success. Explicit preference operations reject unsupported non-null language IDs rather than falling back into the default language bucket. Failures are surfaced to the UI rather than silently accepted.')
+          replace_once('docs/ARCHITECTURE.md', 'Only the web host is committed and release-built. Portable application logic is written in Flutter, but native runner/build/signing behavior is outside the current repository release contract.', 'Official Flutter runners are committed for Android, iOS, Linux, macOS, Web, and Windows, and CI validates release-mode builds for all six targets. Production signing/notarization/store/installer distribution remains outside the repository build-validation contract.')
+
+      - name: Commit API and architecture corrections
+        shell: bash
+        run: |
+          git add docs/API.md docs/ARCHITECTURE.md
+          git commit -m 'docs(api): align Unicode affix and platform contracts'
+
+      - name: Synchronize development and testing docs
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, found {text.count(old)}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once('docs/DEVELOPMENT.md', 'This is the current development guide for SpellChecker `2.16.0+21`.', 'This is the current development guide for SpellChecker `3.1.1+24`.')
+          replace_once('docs/DEVELOPMENT.md', '- Chrome or another usable Flutter target for local application work;\n- platform tooling only when intentionally working on an additional generated Flutter target.', '- at least one usable Flutter target for local application work;\n- the platform toolchain for each committed target you intend to run, build, or regenerate.')
+          replace_once('docs/DEVELOPMENT.md', '## Run the committed target\n\n```bash\nflutter run -d chrome\n```\n\nThe repository commits the web host plus portable Flutter/Dart source. Native Android/iOS/Windows/macOS/Linux runner directories are not currently committed.', '## Run a committed target\n\nFor example, Web:\n\n```bash\nflutter run -d chrome\n```\n\nThe repository commits official Flutter runners for Android, iOS, Linux, macOS, Web, and Windows. Choose a target whose host toolchain is installed; see [Getting started](GETTING_STARTED.md) for target-specific run commands.')
+          replace_once('docs/DEVELOPMENT.md', 'web/                      committed Flutter web host\ndocs/                     current documentation and historical release records', 'android/                  committed Android runner\nios/                      committed iOS runner\nlinux/                    committed Linux runner\nmacos/                    committed macOS runner\nweb/                      committed Flutter web host\nwindows/                  committed Windows runner\ndocs/                     current documentation and historical release records')
+          replace_once('docs/DEVELOPMENT.md', 'Preference write APIs must treat an unsuccessful `shared_preferences` write/remove result as failure and must not falsely report durability.', 'Preference write APIs must treat an unsuccessful `shared_preferences` write/remove result as failure, reject explicitly supplied unsupported language IDs instead of falling back into `en-US`, and must not falsely report durability.')
+          replace_once('docs/DEVELOPMENT.md', '## Platform runner and executable changes\n\nThe current repository has no committed native runner directories. If work intentionally adds `android/`, `ios/`, `windows/`, `macos/`, or `linux/`:', '## Platform runner and executable changes\n\nThe current repository commits Android, iOS, Linux, macOS, Web, and Windows runners. When intentionally regenerating or modifying a runner:')
+          replace_once('docs/DEVELOPMENT.md', '7. update the tracked-file inventory for every new committed runner file;\n8. update [Platform support](PLATFORM_SUPPORT.md), [Releasing](RELEASING.md), privacy/security docs, README, and other affected current-state docs.\n\nA locally generated runner is not official release support by itself.', '7. review tracked-file inventory implications for project-owned files; generated platform roots remain governed by the executable-build inventory policy;\n8. update [Platform support](PLATFORM_SUPPORT.md), [Releasing](RELEASING.md), privacy/security docs, README, and other affected current-state docs.\n\nA regenerated runner diff is not automatically safe or distribution-ready: preserve stable application identity, review every generated change, and rerun cross-platform CI.')
+
+          replace_once('docs/TESTING.md', 'This page describes the current SpellChecker `2.16.0+21` test strategy', 'This page describes the current SpellChecker `3.1.1+24` test strategy')
+          replace_once('docs/TESTING.md', 'CI also runs deterministic benchmark command smoke. The release workflow repeats the gate and then builds the web release target.', 'CI also runs deterministic benchmark command smoke. The release workflow repeats the gate and then validates release-mode builds for Android, iOS, Linux, macOS, Web, and Windows.')
+          replace_once('docs/TESTING.md', '- settings import rollback/transaction behavior.', '- settings import rollback/transaction behavior;\n- rejection of explicitly supplied unsupported language IDs without cross-language bucket fallback.')
+          replace_once('docs/TESTING.md', '- quoted sentence boundaries/statistics.', '- quoted sentence boundaries/statistics;\n- canonical Devanagari nukta equivalence and Hindi ZWJ/ZWNJ-controlled conjunct tokenization;\n- non-BMP candidate-length ranking tie-breaks.')
+          replace_once('docs/TESTING.md', 'This check is intentionally repository-wide: files can affect release readiness even when they are not compiled into the runtime artifact.', 'This check is intentionally repository-wide: files can affect release readiness even when they are not compiled into the runtime artifact. The same repository test also UTF-8 decodes every tracked non-binary file, rejects NUL-byte contamination, and checks every decoded line for unresolved Git conflict markers.')
+          replace_once('docs/TESTING.md', '- recognized suffix/stem behavior;', '- recognized prefix/suffix stem behavior;')
+          replace_once('docs/TESTING.md', '- suffix reattachment;', '- recognized-affix reattachment;')
+          replace_once('docs/TESTING.md', '- character count as Dart UTF-16 string length.', '- character count as Dart UTF-16 string length;\n- Indic ZWJ/ZWNJ-controlled conjuncts counted as one word.')
+
+      - name: Commit development and testing corrections
+        shell: bash
+        run: |
+          git add docs/DEVELOPMENT.md docs/TESTING.md
+          git commit -m 'docs(dev): align current cross-platform regression guidance'
+
+      - name: Synchronize feature release platform and troubleshooting docs
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, found {text.count(old)}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once('docs/FEATURES.md', 'This page describes the **current** SpellChecker `3.1.0+23` product surface.', 'This page describes the **current** SpellChecker `3.1.1+24` product surface.')
+          replace_once('docs/FEATURES.md', '| `repeated-punctuation` | repeated punctuation sequences in documented scope | Mechanics | yes |', '| `repeated-punctuation` | accidental repeated punctuation in documented scope; standard `...` ellipsis preserved | Mechanics | yes |')
+          replace_once('docs/FEATURES.md', 'Statistics are lightweight local calculations. Sentence counting recognizes terminal punctuation with common closing quote/bracket characters and counts a remaining non-empty trailing sentence fragment.', 'Statistics are lightweight local calculations. Word counting keeps Indic ZWJ/ZWNJ-controlled conjuncts together; sentence counting recognizes terminal punctuation with common closing quote/bracket characters and counts a remaining non-empty trailing sentence fragment.')
+          replace_once('docs/FEATURES.md', '- a tagged/manual release workflow that additionally builds and uploads a Flutter web artifact.', '- a tagged/manual release workflow that additionally builds and uploads release-mode validation artifacts for Android, iOS, Linux, macOS, Web, and Windows.')
+          replace_once('docs/FEATURES.md', '- built-in languages other than English (US) and English (UK);', '- exhaustive dictionaries, morphology engines, or non-English built-in Writing Insights rule catalogues;')
+          replace_once('docs/FEATURES.md', '- committed Android/iOS/Windows/macOS/Linux runner directories;\n- automated native desktop/mobile release artifacts.', '- production-signed/notarized mobile or desktop distribution packages;\n- automatic app-store/installer publication or permanent GitHub Release assets.')
+
+          replace_once('docs/PLATFORM_SUPPORT.md', 'The `v3/cross-platform-foundation` line commits official Flutter runners for:', 'The current `main` branch commits official Flutter runners for:')
+
+          replace_once('docs/EXECUTABLE_BUILDS.md', 'SpellChecker is currently version `3.1.0+23`', 'SpellChecker is currently version `3.1.1+24`')
+
+          replace_once('docs/PERFORMANCE.md', '2. splitting recognized suffixes where applicable;', '2. splitting recognized prefixes/suffixes where applicable;')
+          replace_once('docs/PERFORMANCE.md', '--language=ID        Built-in language: en-US or en-GB (default: en-US)', '--language=ID        Registered built-in language ID (default: en-US; current registry has 8 packs)')
+
+          replace_once('docs/PRIVACY.md', 'This page documents the current `2.16.0+21` application/library privacy model.', 'This page documents the current `3.1.1+24` application/library privacy model.')
+
+          replace_once('docs/ACCESSIBILITY.md', 'This page documents the current `2.16.0+21` accessibility contract', 'This page documents the current `3.1.1+24` accessibility contract')
+          replace_once('docs/ACCESSIBILITY.md', 'Only the web host is committed/release-built. Official native runner accessibility validation is future work if native targets become repository-supported.', 'Android, iOS, Linux, macOS, Web, and Windows runners are committed and release-built in CI. Broader manual accessibility validation across TalkBack, VoiceOver, Narrator, Orca, browser screen readers, device classes, and platform-specific focus/text-scale behavior remains ongoing work; build success is not accessibility certification.')
+
+          replace_once('docs/TROUBLESHOOTING.md', 'This guide covers common SpellChecker `2.16.0+21` application', 'This guide covers common SpellChecker `3.1.1+24` application')
+          replace_once('docs/TROUBLESHOOTING.md', '- `languageId` is `en-US` or `en-GB`;', '- `languageId` is one of the registered built-ins: `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, or `it-IT`;')
+          replace_once('docs/TROUBLESHOOTING.md', 'They are not currently committed. The repository commits `web/` plus portable Flutter/Dart source.\n\nDo not assume a native release artifact exists because the application is written in Flutter.', 'They are committed at repository root as `android/`, `ios/`, `windows/`, `macos/`, and `linux/`, alongside `web/`. Cross-platform CI and the release workflow build all six targets.\n\nA successful CI artifact is still different from a production-signed/store-ready distribution package.')
+          replace_once('docs/TROUBLESHOOTING.md', 'The corresponding runner directory probably does not exist. That is expected for the current SpellChecker repository.\n\nFollow the target-generation procedure in [Executable builds and packaging](EXECUTABLE_BUILDS.md), review every generated file, configure target metadata/tooling, add target validation, and only then treat the native build as a candidate project artifact.', 'The corresponding official runner should exist in a complete current checkout. First verify the selected branch/commit and repository contents, then run `flutter doctor -v` to diagnose missing host tooling. Regenerate a runner only as an intentional reviewed template migration; do not use generation to mask an incomplete checkout.')
+
+          replace_once('docs/RELEASING.md', 'version: 3.0.0+22', 'version: 3.1.1+24')
+          replace_once('docs/RELEASING.md', '3.0.0+22\n```\n\nWhen incrementing the version:', '3.1.1+24\n```\n\nWhen incrementing the version:')
+          replace_once('docs/RELEASING.md', 'git tag v3.0.0\ngit push origin v3.0.0', 'git tag v3.1.1\ngit push origin v3.1.1')
+          replace_once('docs/RELEASING.md', '- storage write-failure truthfulness;', '- storage write-failure truthfulness;\n- rejection of explicitly supplied unsupported language IDs without default-language bucket fallback;')
+
+          replace_once('docs/ROADMAP.md', 'SpellChecker `3.1.0+23` is the current V3 multilingual cross-platform foundation.', 'SpellChecker `3.1.1+24` is the current post-multilingual correctness-hardening line on the V3 cross-platform foundation.')
+          replace_once('docs/ROADMAP.md', '- validated Flutter web release build artifact.', '- validated release-mode CI artifacts for Android, iOS, Linux, macOS, Web, and Windows.')
+          replace_once('docs/ROADMAP.md', '- web artifact attachment;', '- cross-platform artifact attachment;')
+          replace_once('docs/ROADMAP.md', 'Current web UI has keyboard, semantics, responsive, and theme coverage. Optional expansion could include broader manual screen-reader/browser matrices, text-scale audits, automated accessibility tooling, and native-platform accessibility review when native runners become supported.', 'The shared Flutter UI has keyboard, semantics, responsive, and theme coverage, and all six platform runners are CI-built. Optional expansion includes broader manual screen-reader/device/browser matrices, text-scale audits, automated accessibility tooling, and deeper platform-specific accessibility validation.')
+          replace_once('docs/ROADMAP.md', '- native release support without runners/CI/signing.', '- production native distribution claims without the required signing, packaging, channel validation, and accessibility/privacy review.')
+
+      - name: Commit release and platform documentation corrections
+        shell: bash
+        run: |
+          git add docs/FEATURES.md docs/PLATFORM_SUPPORT.md docs/EXECUTABLE_BUILDS.md docs/PERFORMANCE.md docs/PRIVACY.md docs/ACCESSIBILITY.md docs/TROUBLESHOOTING.md docs/RELEASING.md docs/ROADMAP.md
+          git commit -m 'docs(release): remove stale V2 and V3.0 support claims'
+
+      - name: Strengthen evergreen documentation regression checks
+        shell: python
+        run: |
+          from pathlib import Path
+
+          p = Path('test/documentation_repository_test.dart')
+          text = p.read_text(encoding='utf-8')
+          anchor = "  test('all official Flutter platform runners are committed', () {\n"
+          if text.count(anchor) != 1:
+              raise SystemExit('documentation_repository_test.dart: platform test anchor changed')
+          block = r'''  test('evergreen release-identity docs match the current package', () {
+    const versionedEvergreenDocs = <String>[
+      'README.md',
+      'GETTING_STARTED.md',
+      'FEATURES.md',
+      'USER_GUIDE.md',
+      'FAQ.md',
+      'API.md',
+      'LANGUAGE_PACKS.md',
+      'WRITING_RULES.md',
+      'ARCHITECTURE.md',
+      'EXECUTABLE_BUILDS.md',
+      'PRIVACY.md',
+      'ACCESSIBILITY.md',
+      'DEVELOPMENT.md',
+      'TESTING.md',
+      'TROUBLESHOOTING.md',
+      'RELEASING.md',
+      'ROADMAP.md',
+      'RELEASE_HISTORY.md',
+    ];
+
+    for (final fileName in versionedEvergreenDocs) {
+      final content = File('docs/$fileName').readAsStringSync();
+      expect(
+        content,
+        contains(currentVersion),
+        reason: 'docs/$fileName must name current package $currentVersion.',
+      );
+    }
+  });
+
+  test('evergreen docs do not reintroduce pre-cross-platform claims', () {
+    final features = File('docs/FEATURES.md').readAsStringSync();
+    final architecture = File('docs/ARCHITECTURE.md').readAsStringSync();
+    final development = File('docs/DEVELOPMENT.md').readAsStringSync();
+    final faq = File('docs/FAQ.md').readAsStringSync();
+    final troubleshooting = File('docs/TROUBLESHOOTING.md').readAsStringSync();
+
+    expect(
+      features,
+      isNot(contains('built-in languages other than English (US) and English (UK)')),
+    );
+    expect(architecture, isNot(contains('Only the web host is committed')));
+    expect(
+      development,
+      isNot(contains('Native Android/iOS/Windows/macOS/Linux runner directories are not currently committed')),
+    );
+    expect(
+      faq,
+      isNot(contains('The current repository commits the web host and portable Flutter/Dart source')),
+    );
+    expect(
+      troubleshooting,
+      isNot(contains('They are not currently committed. The repository commits `web/`')),
+    );
+  });
+
+'''
+          p.write_text(text.replace(anchor, block + anchor, 1), encoding='utf-8')
+
+      - name: Format documentation regression test
+        run: dart format test/documentation_repository_test.dart
+
+      - name: Verify evergreen version references and stale-claim removals
+        shell: bash
+        run: |
+          versioned_docs=(
+            docs/README.md docs/GETTING_STARTED.md docs/FEATURES.md docs/USER_GUIDE.md
+            docs/FAQ.md docs/API.md docs/LANGUAGE_PACKS.md docs/WRITING_RULES.md
+            docs/ARCHITECTURE.md docs/EXECUTABLE_BUILDS.md docs/PRIVACY.md docs/ACCESSIBILITY.md
+            docs/DEVELOPMENT.md docs/TESTING.md docs/TROUBLESHOOTING.md docs/RELEASING.md
+            docs/ROADMAP.md docs/RELEASE_HISTORY.md
+          )
+          for file in "${versioned_docs[@]}"; do
+            grep -F '3.1.1+24' "$file" >/dev/null || { echo "$file lacks current version"; exit 1; }
+          done
+          ! grep -F 'Only the web host is committed' docs/ARCHITECTURE.md
+          ! grep -F 'Native Android/iOS/Windows/macOS/Linux runner directories are not currently committed' docs/DEVELOPMENT.md
+          ! grep -F 'The current repository commits the web host and portable Flutter/Dart source' docs/FAQ.md
+          ! grep -F 'They are not currently committed. The repository commits `web/`' docs/TROUBLESHOOTING.md
+
+      - name: Commit evergreen regression protection
+        shell: bash
+        run: |
+          git add test/documentation_repository_test.dart
+          git commit -m 'test(docs): lock current multilingual platform contracts'
+
+      - name: Push audited documentation series
+        shell: bash
+        run: |
+          git commit --allow-empty -m 'docs: finish 3.1.1 evergreen contract audit'
+          git push origin HEAD:v3.1.1/post-multilingual-audit
