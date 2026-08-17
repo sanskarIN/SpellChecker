@@ -57,6 +57,38 @@ void main() {
     expect(find.text('No issues found'), findsOneWidget);
   });
 
+  testWidgets('non-English writing insights explain the English-only rule boundary', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    final selector = find.byKey(const ValueKey<String>('language-selector'));
+    await tester.tap(selector);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Spanish (Spain)').last);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, 'hola mundo gracias');
+    await tester.tap(
+      find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Writing rules not available for this language'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('current Writing Insights rules are English-only'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Spelling and the personal dictionary still work'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('restores Hindi as the persisted selected language', (
     WidgetTester tester,
   ) async {
