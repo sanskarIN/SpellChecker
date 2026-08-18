@@ -58,8 +58,12 @@ void main() {
     expect(summary, contains('Analysis status: limited'));
     expect(summary, contains('Captured findings: 2'));
     expect(summary, contains('Total findings: 3'));
-    expect(summary, contains('[missing-colon-space] Missing colon space'));
-    expect(summary, contains('2 captured; 3 total'));
+    expect(
+      summary,
+      contains(
+        'Missing colon space [missing-colon-space]: 2/3 captured/total',
+      ),
+    );
     expect(summary, isNot(contains(text)));
     expect(summary, isNot(contains('Private:example')));
   });
