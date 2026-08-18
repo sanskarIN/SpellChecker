@@ -6,9 +6,9 @@
 
 SpellChecker is a privacy-first, open-source Flutter spelling utility and deterministic writing assistant. It checks text locally, highlights spelling issues inside the editor, ranks correction suggestions, supports thirteen explicit offline language packs, keeps personal vocabulary and writing-rule choices local, offers keyboard-first review, applies source-range-safe corrections, and exposes reusable Dart APIs.
 
-**Current package:** `3.2.0+25`  
+**Current package:** `3.3.0+26`  
 **Built-in languages:** English (US) `en-US`, English (UK) `en-GB`, Hindi `hi-IN`, Spanish `es-ES`, French `fr-FR`, German `de-DE`, Portuguese (Brazil) `pt-BR`, Italian `it-IT`, Bengali `bn-IN`, Marathi `mr-IN`, Tamil `ta-IN`, Telugu `te-IN`, Russian `ru-RU`  
-**Built-in writing rules:** 10  
+**Built-in writing rules:** 11  
 **Runtime dependencies:** Flutter SDK and `shared_preferences`  
 **Committed targets:** Android, iOS, Linux, macOS, Windows, Web  
 **Cross-platform validation:** release-mode builds for all six targets
@@ -25,7 +25,7 @@ SpellChecker is a privacy-first, open-source Flutter spelling utility and determ
 - **Deterministic corrections.** Spelling and writing fixes verify current source ranges before mutation, and batch writing fixes use a deterministic conservative overlap policy.
 - **Unicode-aware.** Tokenization supports Unicode letters/combining marks plus in-word ZWJ/ZWNJ join controls, edit distance works over Unicode scalar values, and source offsets stay compatible with Dart/Flutter UTF-16 text editing.
 - **Language explicit and offline.** Thirteen built-in packs cover English, Hindi, Spanish, French, German, Brazilian Portuguese, Italian, Bengali, Marathi, Tamil, Telugu, and Russian spelling while keeping personal vocabulary separate by language. English writing rules remain limited to the English packs.
-- **Explainable writing review.** Ten built-in local rules cover repeated words, capitalization, spacing, punctuation, trailing whitespace, repeated punctuation, and advisory unmatched delimiters.
+- **Explainable writing review.** Eleven built-in local rules cover repeated words, capitalization, spacing, punctuation including missing colon spacing, trailing whitespace, repeated punctuation, and advisory unmatched delimiters.
 - **Large-document aware.** The bundled UI captures the first 200 spelling issues and first 200 writing findings with explicit limited-result semantics; writing analysis can still report exact totals.
 - **Reusable.** Public Dart barrels expose spelling, language-pack, correction, suggestion-ranking, writing-rule, diagnostics, and transfer-codec APIs.
 - **Tested.** CI runs canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke.
@@ -74,7 +74,7 @@ The repository commits official Flutter runners for Android, iOS, Linux, macOS, 
 ## Application workflow
 
 1. Enter or paste text in the editor.
-2. Choose one of the eight built-in offline spelling language packs.
+2. Choose one of the thirteen built-in offline spelling language packs.
 3. Select **Check spelling** or press `Ctrl+Enter` / `Command+Enter`.
 4. Review underlined issues and ranked suggestions.
 5. Use `F7` / `Shift+F7` to move between spelling issues.
@@ -94,13 +94,14 @@ Manual typing invalidates the previous spelling snapshot so stale offsets are no
 | `repeated-space` | repeated interior spaces | yes |
 | `punctuation-spacing` | whitespace before common punctuation | yes |
 | `missing-punctuation-space` | missing space after selected punctuation between words | yes |
+| `missing-colon-space` | missing space after a colon between words | yes |
 | `trailing-whitespace` | trailing spaces/tabs | yes |
 | `repeated-punctuation` | repeated identical punctuation | yes |
 | `unmatched-parenthesis` | unpaired literal parenthesis | advisory |
 | `unmatched-square-bracket` | unpaired literal square bracket | advisory |
 | `unmatched-curly-brace` | unpaired literal curly brace | advisory |
 
-All current built-in writing rules support language code `en`, so they run for the two registered English packs. The six new non-English packs provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.
+All current built-in writing rules support language code `en`, so they run for the two registered English packs. The eleven non-English packs provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.
 
 See [Writing rules](docs/WRITING_RULES.md) for source ownership, severities, categories, bounded analysis, preferences, safe batch correction, diagnostics, and custom-rule guidance.
 
@@ -259,11 +260,11 @@ windows/       committed Windows Flutter runner
 
 ## Version and historical records
 
-The current package version is `3.2.0+25`. V3.2 expands the multilingual cross-platform release line to thirteen built-in offline spelling packs on the V3.0 six-target platform foundation, while preserving V3.1.1 namespace/ranking hardening and adding Unicode join-control-safe tokenization. V2.16 remains the completed stabilization line immediately before the V3 platform expansion.
+The current package version is `3.3.0+26`. V3.3 adds source-range-safe missing-colon spacing, preserves explicit V3.2 writing-rule overrides, and adds executable documentation link/registry checks. V3.2 expanded the multilingual cross-platform release line to thirteen built-in offline spelling packs on the V3.0 six-target platform foundation while preserving V3.1.1 namespace/ranking hardening and adding Unicode join-control-safe tokenization. V2.16 remains the completed stabilization line immediately before the V3 platform expansion.
 
-Current behavior belongs in evergreen documentation. Release-specific files under `docs/V2_*` and dated audit records preserve historical design/validation context and can contain older registry sizes that were correct for those releases.
+Current behavior belongs in evergreen documentation. Release-specific files under `docs/V2_*`, `docs/V3_*`, and dated audit records preserve historical design/validation context and can contain older registry sizes that were correct for those releases.
 
-Use [Release history](docs/RELEASE_HISTORY.md), [CHANGELOG](CHANGELOG.md), and [Post-V2.16 audit](docs/POST_V216_AUDIT_2026_08_16.md) when historical context is needed.
+Use [Release history](docs/RELEASE_HISTORY.md), [CHANGELOG](CHANGELOG.md), [V3.3 writing hardening](docs/V3_3_WRITING_HARDENING.md), and [Post-V2.16 audit](docs/POST_V216_AUDIT_2026_08_16.md) when historical context is needed.
 
 ## Contributing
 
