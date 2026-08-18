@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:spellchecker/language.dart';
 
 import '../tool/benchmark/analysis_benchmark_options.dart';
 
@@ -50,6 +51,18 @@ void main() {
       final options = AnalysisBenchmarkOptions.parse(const <String>['--help']);
       expect(options.help, isTrue);
       expect(AnalysisBenchmarkOptions.usage, contains('--iterations=N'));
+    });
+
+    test('help names every built-in language from the live registry', () {
+      final usage = AnalysisBenchmarkOptions.usage;
+
+      for (final pack in SpellLanguageRegistry.builtIns) {
+        expect(
+          usage,
+          contains(pack.id),
+          reason: 'Benchmark help must name built-in language ${pack.id}.',
+        );
+      }
     });
 
     test('rejects malformed unknown duplicate and invalid values', () {
