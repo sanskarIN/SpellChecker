@@ -1,6 +1,6 @@
 # Public API
 
-This is the evergreen public Dart API reference for SpellChecker `2.16.0+21`. Historical API additions are indexed in [Release history](RELEASE_HISTORY.md).
+This is the evergreen public Dart API reference for SpellChecker `3.3.0+26`. Historical API additions are indexed in [Release history](RELEASE_HISTORY.md).
 
 ## Public libraries
 
@@ -84,7 +84,7 @@ Custom dictionary words and frequency keys are normalized through the selected l
 final SpellLanguagePack languagePack;
 ```
 
-The pack controlling tokenization, normalization, dictionary behavior, suffix recognition, suggestion metadata, and suggestion-distance policy.
+The pack controlling tokenization, normalization, dictionary behavior, recognized affixes, suggestion metadata, and suggestion-distance policy.
 
 ### `suggestionRanker`
 
@@ -141,7 +141,7 @@ After the issue limit is reached, the engine scans only until the source ends or
 bool isCorrect(String word)
 ```
 
-Returns true when the normalized word is accepted by the base dictionary, personal dictionary, ignored-word set, or a recognized regular suffix whose stem is known.
+Returns true when the normalized word is accepted by the base dictionary, personal dictionary, ignored-word set, or a recognized affix form whose stem is known.
 
 Current built-in English suffixes are:
 
@@ -154,6 +154,8 @@ n't
 'm
 's
 ```
+
+French and Italian packs also expose reviewed recognized-prefix handling for apostrophe elision. See [Language packs](LANGUAGE_PACKS.md) for current built-in pack details.
 
 ### `suggestionsFor`
 
@@ -175,7 +177,7 @@ List<SpellSuggestion> suggestionDetailsFor(
 })
 ```
 
-Returns detailed language/source/ranking metadata. Recognized suffixes are ranked on the stem and reattached to returned suggestions.
+Returns detailed language/source/ranking metadata. Recognized affixes are handled according to the active language pack when the engine resolves candidates.
 
 ### Personal dictionary mutation
 
@@ -282,7 +284,7 @@ class SpellSuggestionRankingContext {
 }
 ```
 
-`target` is the normalized stem being corrected. A recognized suffix is removed for ranking and reattached later.
+`target` is the normalized form being ranked after any supported affix handling used by the engine.
 
 ### `SpellSuggestionRanker`
 
@@ -305,7 +307,7 @@ The default comparator orders by:
 1. edit distance;
 2. prefix/first-character penalty;
 3. frequency rank;
-4. candidate string length;
+4. Unicode-scalar candidate length;
 5. engine lexical tie-break.
 
 ## `TextCorrection`
@@ -343,7 +345,7 @@ Applies the suggestion only to supplied current issues whose word matches `sourc
 static String matchCase(String original, String suggestion)
 ```
 
-Preserves common all-uppercase and initial-uppercase casing patterns. First-scalar handling is Unicode-scalar-safe.
+Preserves common all-uppercase and initial-uppercase casing patterns. First-scalar handling is Unicode-scalar-safe and uncased scripts are not forced into an uppercase interpretation.
 
 ## `TextCorrectionResult`
 
@@ -371,7 +373,7 @@ class TextStatistics {
 }
 ```
 
-`characters` uses Dart string length (UTF-16 code units). Word counting uses the current Unicode letter/combining-mark/apostrophe/hyphen token pattern. Sentence counting recognizes `. ! ?` runs with common closing quotes/brackets and counts a remaining non-empty trailing sentence fragment.
+`characters` uses Dart string length (UTF-16 code units). Word counting uses the current Unicode letter/combining-mark/apostrophe/hyphen/join-control token model. Sentence counting recognizes `. ! ?` runs with common closing quotes/brackets and counts a remaining non-empty trailing sentence fragment.
 
 # Language API
 
@@ -397,11 +399,12 @@ wordFrequencies
 tokenPattern
 validWordPattern
 normalizer
+recognizedPrefixes
 recognizedSuffixes
 suggestionSource
 ```
 
-Dictionary, frequency, and suffix collections are captured as immutable snapshots by the constructor.
+Dictionary, frequency, prefix, and suffix collections are captured as immutable snapshots by the constructor.
 
 ### Methods
 
@@ -420,7 +423,7 @@ length <= 8  -> 2
 otherwise    -> 3
 ```
 
-Callers can create custom `SpellLanguagePack` instances with a different token/validation/normalization/dictionary contract, but `maximumSuggestionDistance` is currently concrete rather than injectable/overridable through constructor data.
+Callers can create custom `SpellLanguagePack` instances with a different token/validation/normalization/dictionary/affix contract, but `maximumSuggestionDistance` is currently concrete rather than injectable through constructor data.
 
 Pack equality/hash code are based on stable `id`.
 
@@ -431,13 +434,35 @@ Current built-ins:
 ```text
 en-US  English (US)
 en-GB  English (UK)
+hi-IN  Hindi (India)
+es-ES  Spanish (Spain)
+fr-FR  French (France)
+de-DE  German (Germany)
+pt-BR  Portuguese (Brazil)
+it-IT  Italian (Italy)
+bn-IN  Bengali (India)
+mr-IN  Marathi (India)
+ta-IN  Tamil (India)
+te-IN  Telugu (India)
+ru-RU  Russian (Russia)
 ```
 
-Public members:
+Public named packs and helpers:
 
 ```dart
 static final SpellLanguagePack englishUs
 static final SpellLanguagePack englishGb
+static final SpellLanguagePack hindiIndia
+static final SpellLanguagePack spanishSpain
+static final SpellLanguagePack frenchFrance
+static final SpellLanguagePack germanGermany
+static final SpellLanguagePack portugueseBrazil
+static final SpellLanguagePack italianItaly
+static final SpellLanguagePack bengaliIndia
+static final SpellLanguagePack marathiIndia
+static final SpellLanguagePack tamilIndia
+static final SpellLanguagePack teluguIndia
+static final SpellLanguagePack russianRussia
 static List<SpellLanguagePack> get builtIns
 static SpellLanguagePack get defaultPack
 static SpellLanguagePack byId(String? id)
@@ -448,9 +473,9 @@ static bool contains(String id)
 
 `byId` is deliberately fallback-oriented: null, empty, or unsupported IDs resolve to the default pack. Use `contains(id)` when strict validation is required before resolution.
 
-The built-in English normalizer trims, lowercases, normalizes supported apostrophe/hyphen variants, and composes a defined set of common decomposed Latin sequences used by bundled vocabulary.
+The built-in Unicode normalizer trims, lowercases, normalizes supported apostrophe/hyphen variants, and composes a defined set of common decomposed Latin sequences used by bundled vocabulary. Tokenization keeps in-word U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER when they connect letter clusters.
 
-See [Language packs](LANGUAGE_PACKS.md) for extension guidance.
+See [Language packs](LANGUAGE_PACKS.md) for extension guidance and starter-lexicon boundaries.
 
 # Personal dictionary transfer API
 
@@ -548,7 +573,7 @@ class SpellCheckerSettingsDocument {
 
 `writingRuleOverrides` is an immutable map of immutable sets.
 
-An absent language key means “unset; use registry defaults.” A present empty set means “explicitly disable all writing rules.”
+An absent language key means “unset; use registry defaults.” A present empty set means “explicitly disable all writing rules.” An explicit older non-empty set remains explicit when a later release adds another built-in rule.
 
 ## `SpellCheckerSettingsCodec`
 
@@ -646,6 +671,7 @@ SentenceCapitalizationRule
 RepeatedSpaceRule
 PunctuationSpacingRule
 MissingPunctuationSpaceRule
+MissingColonSpaceRule
 TrailingWhitespaceRule
 RepeatedPunctuationRule
 UnmatchedParenthesisRule
@@ -663,7 +689,9 @@ static WritingRule? byId(String id)
 static Set<String> get defaultEnabledRuleIds
 ```
 
-The current built-in/default registry contains ten stable rule IDs. `byId` returns null for an unknown ID.
+The current built-in/default registry contains eleven stable rule IDs. `byId` returns null for an unknown ID.
+
+All current built-in writing rules declare English (`en`) support. They are therefore eligible for `en-US` and `en-GB`, not for the eleven non-English starter spelling packs.
 
 ## `WritingAnalyzer`
 
@@ -708,7 +736,7 @@ issueCountByRule
 
 `issues`, analyzed IDs, and exact-per-rule totals are immutable snapshots.
 
-The constructor enforces consistency between issue ranges' rule/language metadata, capture limits, complete/truncated state, exact totals, and per-rule totals.
+The constructor enforces consistency between issue rule/language metadata, capture limits, complete/truncated state, exact totals, and per-rule totals.
 
 `totalIssueCount`/`totalIssueCountByRule` remain nullable so callers that directly construct compatibility-style results can omit exact diagnostics. Results returned by `WritingAnalyzer.analyze()` provide them.
 
@@ -735,6 +763,8 @@ static WritingBatchCorrectionResult applyAll(
 ```
 
 Sorts candidates by start/end/rule ID, skips advisory/stale/overlapping candidates, accepts deterministic non-overlapping fixes, and mutates from end to start.
+
+The V3.3 `missing-colon-space` rule owns only the colon, allowing it to compose with `punctuation-spacing` for `Label :value` without overlapping ranges.
 
 ## `WritingCorrectionResult`
 
@@ -876,6 +906,8 @@ Public analysis/model types do not perform network requests. Clipboard and persi
 ## Source compatibility
 
 Several nullable/defaulted fields preserve compatibility with earlier API shapes, including optional `SpellIssue.languageId`, concrete default `WritingRule.category`, and nullable exact-total metadata on directly constructed `WritingAnalysisResult` values.
+
+Explicit writing-rule override sets are also preserved across registry growth: adding a built-in rule changes current defaults, not a user's previously stored explicit set.
 
 # Examples and integration guidance
 
