@@ -6,9 +6,9 @@ For complete executable/release-artifact creation—including Android/iOS/Window
 
 ## What SpellChecker is
 
-SpellChecker is a Flutter application and reusable Dart codebase for local spelling and deterministic writing analysis. The bundled application does not send editor text to a remote spelling or grammar service. It supports English (US) and English (UK), per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic built-in writing rules.
+SpellChecker is a Flutter application and reusable Dart codebase for local spelling and deterministic writing analysis. The bundled application does not send editor text to a remote spelling or grammar service. It supports thirteen built-in offline spelling language packs, per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and eleven deterministic built-in writing rules.
 
-Current package version: `3.0.0+22`.
+Current package version: `3.3.0+26`.
 
 ## Supported Flutter targets
 
@@ -112,7 +112,7 @@ flutter run -d windows
 ## Perform your first spelling check
 
 1. Open SpellChecker.
-2. Keep **English (US)** selected or choose **English (UK)** from the language selector.
+2. Keep **English (US)** selected or choose any of the thirteen built-in spelling packs from the language selector.
 3. Enter synthetic text such as `Helo world`.
 4. Select **Check spelling** or press `Ctrl+Enter` / `Command+Enter`.
 5. Review the inline underline and the Results panel.
@@ -128,12 +128,12 @@ Open **Writing insights** from the app bar or press `Ctrl+Shift+Enter` / `Comman
 Try text such as:
 
 ```text
-hello  world!! This is is a sample .
+hello  world!! This is is a sample . Label:value
 ```
 
-Depending on the text, Writing insights can report repeated words, capitalization, repeated spaces, punctuation spacing, missing punctuation spacing, trailing whitespace, repeated punctuation, and advisory unmatched delimiters.
+Depending on the English text, Writing insights can report repeated words, capitalization, repeated spaces, punctuation spacing, missing punctuation spacing, missing colon spacing, trailing whitespace, repeated punctuation, and advisory unmatched delimiters.
 
-The current built-in rule catalogue contains ten rules. Rules that have a deterministic replacement can expose **Apply safe fix** and participate in batch correction. Structural unmatched-parenthesis, square-bracket, and curly-brace findings are advisory and do not automatically rewrite the text.
+The current built-in rule catalogue contains eleven rules. The current built-in writing rules are English-only; non-English packs still provide local spelling and personal dictionaries without applying English-specific writing findings. Rules that have a deterministic replacement can expose **Apply safe fix** and participate in batch correction. Structural unmatched-parenthesis, square-bracket, and curly-brace findings are advisory and do not automatically rewrite the text.
 
 Inside Writing insights:
 
@@ -152,7 +152,7 @@ Use **Ignore once** to suppress a word only for the current application session.
 
 Open **Manage personal dictionary** from the app bar to review saved words and set the suggestion count. The current suggestion limit is 1–10, with a default of 5.
 
-Personal vocabulary is isolated by language. Saving a word in `en-US` does not automatically save it in `en-GB`.
+Personal vocabulary is isolated by language. Saving a word in `en-US` does not automatically save it in `en-GB`; the same isolation applies across the other built-in packs.
 
 ## Portable settings
 
@@ -253,7 +253,7 @@ import 'package:spellchecker/language.dart';
 import 'package:spellchecker/writing.dart';
 
 final result = WritingAnalyzer().analyze(
-  'hello  world',
+  'hello  world Label:value',
   languagePack: SpellLanguageRegistry.englishUs,
 );
 
