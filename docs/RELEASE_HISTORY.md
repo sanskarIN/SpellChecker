@@ -4,9 +4,13 @@ This page indexes release-specific documentation without turning historical reco
 
 ## Current package release
 
-Current package version: `3.2.0+25`.
+Current package version: `3.3.0+26`.
 
-V3.2 is the current multilingual expansion release. It keeps the V3.0 six-target cross-platform build contract while expanding built-in offline spelling to thirteen language packs and hardening in-word Unicode join-control tokenization. V3.1.1 remains the namespace/ranking/documentation hardening patch immediately before V3.2.
+V3.3 is the current deterministic writing-hardening release. It adds source-range-safe missing-colon spacing, preserves explicit V3.2 writing-rule overrides, and adds executable documentation link/registry checks without changing the local privacy model or persisted settings formats. V3.2 remains the multilingual expansion release that established thirteen built-in offline spelling packs on the V3.0 six-target cross-platform foundation.
+
+## V3.3
+
+- [V3.3 writing hardening](V3_3_WRITING_HARDENING.md) — missing-colon spacing, adjacent source ownership, bounded totals, compatibility boundaries, and documentation validation.
 
 ## V3.2
 
@@ -81,7 +85,7 @@ Those files are historical references. They should not be treated as the shortes
 
 ## How to read historical documents
 
-A release-specific file captures the project at a particular point in time. For example, a V2.13 document may correctly describe an eight-rule default registry because that was the release state then. The current registry has ten rules.
+A release-specific file captures the project at a particular point in time. For example, a V2.13 document may correctly describe an eight-rule default registry because that was the release state then. The current registry has eleven rules.
 
 When historical and evergreen documents differ:
 
