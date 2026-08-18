@@ -1,6 +1,6 @@
 # Feature Reference
 
-This page describes the **current** SpellChecker `3.2.0+25` product surface. It is an evergreen reference; release-specific V2.x documents describe historical milestones and may contain older registry sizes or compatibility context.
+This page describes the **current** SpellChecker `3.3.0+26` product surface. It is an evergreen reference; release-specific documents describe historical milestones and may contain older registry sizes or compatibility context.
 
 ## Product summary
 
@@ -81,13 +81,14 @@ The writing subsystem is separate from spelling. It uses `WritingRule`, `Writing
 | `repeated-space` | multiple interior horizontal spaces | Mechanics | yes |
 | `punctuation-spacing` | whitespace before punctuation | Mechanics | yes |
 | `missing-punctuation-space` | missing space after selected punctuation between words | Mechanics | yes |
+| `missing-colon-space` | missing space after a colon between words | Mechanics | yes |
 | `trailing-whitespace` | whitespace at line/document endings | Mechanics | yes |
 | `repeated-punctuation` | repeated punctuation sequences in documented scope | Mechanics | yes |
 | `unmatched-parenthesis` | unpaired literal `(` or `)` | Mechanics | no; advisory |
 | `unmatched-square-bracket` | unpaired literal `[` or `]` | Mechanics | no; advisory |
 | `unmatched-curly-brace` | unpaired literal `{` or `}` | Mechanics | no; advisory |
 
-All current built-in writing rules declare English (`en`) eligibility, so they run for the two built-in English packs only. The eleven non-English V3.2 packs provide spelling and suggestions without applying English-specific writing rules. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.
+All current built-in writing rules declare English (`en`) eligibility, so they run for the two built-in English packs only. The eleven non-English packs provide spelling and suggestions without applying English-specific writing rules. Structural delimiter checks are literal balancing rules; they are not syntax-aware parsers for source code, templates, Markdown, URLs, or quoted-domain grammars.
 
 See [Writing rules](WRITING_RULES.md) for precise source ownership, severities, rule IDs, compatibility behavior, and plugin requirements.
 
@@ -212,14 +213,13 @@ The repository includes:
 - unit, codec, persistence, controller, integration, accessibility, Unicode, stress, and widget tests;
 - deterministic large-document benchmark tooling under `tool/`;
 - GitHub Actions CI for formatting, analysis, tests, and benchmark smoke;
-- a tagged/manual release workflow that additionally builds and uploads a Flutter web artifact.
+- tagged/manual cross-platform release builds and uploaded workflow artifacts.
 
 ## Explicit non-features and boundaries
 
 Current SpellChecker does **not** provide:
 
 - automatic language detection;
-- built-in languages other than English (US) and English (UK);
 - a cloud grammar model or generative rewrite service;
 - user accounts or cloud synchronization;
 - remote telemetry from editor analysis;
@@ -228,7 +228,7 @@ Current SpellChecker does **not** provide:
 - syntax-aware programming-language parsing for structural delimiter rules;
 - a promise to find every grammar/style problem;
 - a promise that every finding has an automatic fix;
-- committed Android/iOS/Windows/macOS/Linux runner directories;
-- automated native desktop/mobile release artifacts.
+- production signing/notarization/store publishing credentials inside the repository;
+- untrusted dynamic plugin execution.
 
-The absence of those features is intentional current scope, not an implication that Flutter source cannot be adapted to additional targets. See [Platform support](PLATFORM_SUPPORT.md) and [Roadmap](ROADMAP.md).
+The absence of those features is intentional current scope. See [Platform support](PLATFORM_SUPPORT.md) and [Roadmap](ROADMAP.md).
