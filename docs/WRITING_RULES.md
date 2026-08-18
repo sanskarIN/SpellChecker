@@ -2,7 +2,7 @@
 
 This is the evergreen current-state contract for SpellChecker's deterministic local writing subsystem. Release-specific design and validation records are indexed in [Release history](RELEASE_HISTORY.md).
 
-SpellChecker `2.16.0+21` has exactly **ten** built-in writing rules. All current built-ins declare English (`en`) support, so they are eligible for both built-in language packs, `en-US` and `en-GB`.
+SpellChecker `3.3.0+26` has exactly **eleven** built-in writing rules. All current built-ins declare English (`en`) support, so they are eligible for both built-in English packs, `en-US` and `en-GB`.
 
 ## Goals
 
@@ -15,7 +15,7 @@ import 'package:spellchecker/language.dart';
 import 'package:spellchecker/writing.dart';
 ```
 
-`package:spellchecker/writing.dart` exports all ten built-in rule classes plus the analyzer, issue/correction types, review query/presets, categories, diagnostic summaries, and the `WritingRule` plugin contract.
+`package:spellchecker/writing.dart` exports all eleven built-in rule classes plus the analyzer, issue/correction types, review query/presets, categories, diagnostic summaries, and the `WritingRule` plugin contract.
 
 ## Current built-in catalogue
 
@@ -26,6 +26,7 @@ import 'package:spellchecker/writing.dart';
 | `repeated-space` | repeated interior spaces | Mechanics | info | yes |
 | `punctuation-spacing` | horizontal whitespace before common punctuation | Mechanics | info | yes |
 | `missing-punctuation-space` | missing following space after `, ; ! ?` between words | Mechanics | info | yes |
+| `missing-colon-space` | missing following space after `:` between words | Mechanics | info | yes |
 | `trailing-whitespace` | horizontal whitespace at line/document end | Mechanics | info | yes |
 | `repeated-punctuation` | repeated identical `! ? . ,` runs | Mechanics | info | yes |
 | `unmatched-parenthesis` | unpaired literal parenthesis | Mechanics | warning | no; advisory |
@@ -352,9 +353,15 @@ Finds horizontal spaces/tabs immediately before `, . ; : ! ?`. The finding owns 
 
 ### `missing-punctuation-space`
 
-Finds `,`, `;`, `!`, or `?` between Unicode letter boundaries when the following word begins immediately without horizontal whitespace. The predecessor pattern supports a Unicode letter followed by combining marks. The finding owns only the punctuation mark and replaces it with the same mark plus one space. Periods and colons are intentionally outside this automatic rule. Severity: info.
+Finds `,`, `;`, `!`, or `?` between Unicode letter boundaries when the following word begins immediately without horizontal whitespace. The predecessor pattern supports a Unicode letter followed by combining marks. The finding owns only the punctuation mark and replaces it with the same mark plus one space. Periods and colons are outside this rule. Severity: info.
 
 This source ownership composes safely with `punctuation-spacing`: in `Hello ,world`, the whitespace before the comma and the comma itself are adjacent, non-overlapping findings.
+
+### `missing-colon-space`
+
+Finds `:` between Unicode letter boundaries when the following word begins immediately without horizontal whitespace. It deliberately excludes numeric time-like colons, URL separators, double-colon structures, and already-spaced colons because the next source character must be a Unicode letter. The finding owns only the colon and replaces it with `: `. Severity: info.
+
+This source ownership also composes safely with `punctuation-spacing`: in `Label :value`, the whitespace before the colon and the colon itself are adjacent, non-overlapping findings, so deterministic batch correction yields `Label: value` without an overlap skip.
 
 ### `trailing-whitespace`
 
@@ -486,6 +493,7 @@ Detailed release records remain available for the major writing-system milestone
 - [V2.15 unmatched curly brace](V2_15_UNMATCHED_CURLY_BRACE.md)
 - [V2.16 bug audit](V2_16_BUG_AUDIT.md)
 - [Post-V2.16 audit](POST_V216_AUDIT_2026_08_16.md)
+- [V3.3 writing hardening](V3_3_WRITING_HARDENING.md)
 
 Use those files for historical migration/validation context and this page for current behavior.
 
