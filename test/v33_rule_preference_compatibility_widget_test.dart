@@ -24,6 +24,27 @@ void main() {
     matching: find.byType(ListView),
   );
 
+  Finder insightsScrollable() => find.descendant(
+    of: find.byType(AlertDialog),
+    matching: find.byWidgetPredicate(
+      (Widget widget) =>
+          widget is Scrollable &&
+          widget.axisDirection == AxisDirection.down &&
+          widget.physics is AlwaysScrollableScrollPhysics,
+    ),
+  );
+
+  Future<void> scrollTo(WidgetTester tester, Finder target) async {
+    expect(insightsList(), findsOneWidget);
+    expect(insightsScrollable(), findsOneWidget);
+    await tester.scrollUntilVisible(
+      target,
+      200,
+      scrollable: insightsScrollable(),
+    );
+    await tester.pumpAndSettle();
+  }
+
   Future<void> scrollToRule(WidgetTester tester, String label) async {
     final list = insightsList();
     expect(list, findsOneWidget);
@@ -101,5 +122,41 @@ void main() {
     final restored = find.widgetWithText(SwitchListTile, 'Missing colon space');
     expect(restored, findsOneWidget);
     expect(tester.widget<SwitchListTile>(restored).value, isTrue);
+  });
+
+  testWidgets('V3.3 default colon fix is batch-fixable and undoable', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    final editor = find.byType(TextField).first;
+    const original = 'Label :value';
+    await tester.enterText(editor, original);
+    await tester.tap(find.byTooltip('Writing insights (Ctrl/⌘+Shift+Enter)'));
+    await tester.pumpAndSettle();
+
+    final ruleSwitch = find.widgetWithText(
+      SwitchListTile,
+      'Missing colon space',
+    );
+    await scrollTo(tester, ruleSwitch);
+    expect(tester.widget<SwitchListTile>(ruleSwitch).value, isTrue);
+
+    final applyAll = find.byKey(
+      const ValueKey<String>('apply-all-writing-fixes'),
+    );
+    await scrollTo(tester, applyAll);
+    expect(applyAll, findsOneWidget);
+    await tester.tap(applyAll);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<TextField>(editor).controller!.text, 'Label: value');
+
+    await tester.tap(find.text('Undo correction'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(editor).controller!.text, original);
   });
 }
