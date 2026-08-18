@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const currentVersion = '3.2.0+25';
+  const currentVersion = '3.3.0+26';
   const builtInLanguageIds = <String>[
     'en-US',
     'en-GB',
@@ -25,6 +25,7 @@ void main() {
     'repeated-space',
     'punctuation-spacing',
     'missing-punctuation-space',
+    'missing-colon-space',
     'trailing-whitespace',
     'repeated-punctuation',
     'unmatched-parenthesis',
