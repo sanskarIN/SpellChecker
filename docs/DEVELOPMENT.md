@@ -1,8 +1,8 @@
 # Development Guide
 
-This is the current development guide for SpellChecker `2.16.0+21`. Historical release engineering notes are indexed in [Release history](RELEASE_HISTORY.md).
+This is the current development guide for SpellChecker `3.3.0+26`. Historical release engineering notes are indexed in [Release history](RELEASE_HISTORY.md).
 
-For complete executable/release-artifact instructions—including native-runner generation, platform build commands, packaging, signing boundaries, verification, and the machine-checked tracked-file inventory—see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+For complete executable/release-artifact instructions—including native-runner maintenance, platform build commands, packaging, signing boundaries, verification, and the machine-checked tracked-file inventory—see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Prerequisites
 
@@ -11,8 +11,7 @@ Install:
 - Git;
 - Flutter stable;
 - Dart compatible with `>=3.8.0 <4.0.0` (normally supplied by Flutter);
-- Chrome or another usable Flutter target for local application work;
-- platform tooling only when intentionally working on an additional generated Flutter target.
+- the platform toolchain for each Android, iOS, Linux, macOS, Web, or Windows target you intend to run or build.
 
 Verify:
 
@@ -22,7 +21,7 @@ flutter --version
 dart --version
 ```
 
-For platform/executable work, prefer `flutter doctor -v` and verify the specific target toolchain before generating or packaging runner files.
+For platform/executable work, prefer `flutter doctor -v` and verify the specific target toolchain before running or packaging a committed runner.
 
 ## Clone and resolve dependencies
 
@@ -39,13 +38,15 @@ Runtime dependencies are intentionally small:
 
 Do not add a runtime dependency when a small deterministic implementation is sufficient. Any dependency that introduces networking, telemetry, account identity, native permissions, or sensitive-data handling requires explicit architecture/privacy/security review.
 
-## Run the committed target
+## Run a committed target
+
+Choose a target whose host toolchain is available. For example:
 
 ```bash
 flutter run -d chrome
 ```
 
-The repository commits the web host plus portable Flutter/Dart source. Native Android/iOS/Windows/macOS/Linux runner directories are not currently committed. See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+The repository commits official Flutter runners for Android, iOS, Linux, macOS, Web, and Windows. See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md) for host requirements, build outputs, and distribution/signing boundaries.
 
 ## Repository layout
 
@@ -63,7 +64,12 @@ lib/storage/              application-local preference integration
 lib/writing/              writing analyzer, rules, corrections, review helpers
 test/                     regression/unit/widget/persistence/Unicode/stress tests
 tool/                     deterministic benchmark tooling
+android/                  committed Android Flutter runner
+ios/                      committed iOS Flutter runner
+linux/                    committed Linux Flutter runner
+macos/                    committed macOS Flutter runner
 web/                      committed Flutter web host
+windows/                  committed Windows Flutter runner
 docs/                     current documentation and historical release records
 ```
 
@@ -91,7 +97,7 @@ Keep reusable deterministic writing analysis here. This layer owns:
 
 - `WritingRule` plugin contract;
 - `WritingAnalyzer` and result diagnostics;
-- ten built-in rules;
+- eleven built-in rules;
 - writing correction;
 - review query/presets/categories;
 - metadata-only diagnostic summaries.
@@ -150,7 +156,7 @@ text.substring(issue.start, issue.end) == issue.word
 
 Edit distance, suggestion length filtering, and selected casing logic use Unicode scalar values (`String.runes`) to avoid splitting non-BMP characters.
 
-When changing Unicode-sensitive behavior, include non-BMP and/or decomposed combining-mark coverage as relevant.
+When changing Unicode-sensitive behavior, include non-BMP, decomposed combining-mark, and in-word join-control coverage as relevant.
 
 ## Spelling engine invariants
 
@@ -226,6 +232,8 @@ Batch correction:
 
 Filtered UI batch actions must reuse this same algorithm rather than implementing a second conflict policy.
 
+V3.3's `missing-colon-space` rule is an example of deliberate source ownership: the colon is owned by that rule while optional preceding whitespace is owned by `punctuation-spacing`, allowing `Label :value` to become `Label: value` without overlapping edits.
+
 ## Preference compatibility
 
 Per-language writing-rule persistence has three states:
@@ -237,6 +245,8 @@ Per-language writing-rule persistence has three states:
 Do not collapse an explicit empty set to defaults.
 
 **Reset rules to defaults** removes the override rather than saving today's default IDs.
+
+Registry growth must not silently expand explicit older sets. For example, an explicit V3.2 ten-rule override remains a ten-rule override after V3.3 adds the eleventh built-in rule.
 
 Personal vocabulary is also language-specific. `en-US` legacy personal-word migration/synchronization must remain covered when preference storage behavior changes.
 
@@ -288,24 +298,28 @@ Semantics/live-region changes should be tested using Flutter semantics/widget to
 
 ## Platform runner and executable changes
 
-The current repository has no committed native runner directories. If work intentionally adds `android/`, `ios/`, `windows/`, `macos/`, or `linux/`:
+The repository commits Android, iOS, Linux, macOS, Web, and Windows runners. Treat those runner trees as reviewed source, not disposable generated output.
 
-1. follow the generation and target prerequisites in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
-2. review every generated file rather than accepting generated output blindly;
-3. choose stable application identifiers/metadata;
+If work intentionally regenerates or migrates runner templates:
+
+1. follow the target prerequisites in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+2. review every generated diff rather than accepting template output blindly;
+3. preserve stable application identifiers/metadata unless an intentional migration is documented;
 4. keep signing credentials out of Git;
-5. add target build CI and artifact handling;
-6. validate target-specific storage, clipboard, accessibility, keyboard, and startup behavior;
-7. update the tracked-file inventory for every new committed runner file;
+5. rerun the existing cross-platform build CI;
+6. validate target-sensitive storage, clipboard, accessibility, keyboard, and startup behavior;
+7. update the tracked-file inventory for any new/deleted non-managed project file;
 8. update [Platform support](PLATFORM_SUPPORT.md), [Releasing](RELEASING.md), privacy/security docs, README, and other affected current-state docs.
 
-A locally generated runner is not official release support by itself.
+Build support and distribution support are different. Production signing, notarization, store credentials, and channel-specific installers remain explicit release-engineering work outside the committed source-secret boundary.
 
 ## Documentation changes
 
 Use [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md). Current-state behavior belongs in evergreen docs; version-specific design/audit evidence belongs in historical files linked from [Release history](RELEASE_HISTORY.md).
 
 Any tracked-file addition/deletion/rename must also update the machine-checked inventory in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
+V3.3 additionally protects relative Markdown links and current language/writing-rule references with executable repository tests. Registry changes should update those docs in the same commit series.
 
 ## Development quality gates
 
@@ -337,15 +351,20 @@ dart run tool/benchmark_large_document.dart \
   --json
 ```
 
-Build the committed release target:
+Build release mode for targets supported by the current host/toolchain:
 
 ```bash
 flutter build web --release
+flutter build apk --release
+flutter build linux --release
+flutter build macos --release
+flutter build windows --release
+flutter build ios --release --no-codesign
 ```
 
-The complete build/package verification procedure is in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+Do not expect every command to run on one operating system. The complete build/package verification procedure is in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
-CI runs dependency resolution, format check, analyzer, complete tests, and benchmark smoke. The release workflow repeats those gates and additionally builds/uploads the web artifact.
+CI runs dependency resolution, format check, analyzer, complete tests, and benchmark smoke. Cross-platform and release workflows then build Android, iOS (without codesign), Linux, macOS, Web, and Windows on appropriate GitHub-hosted operating systems.
 
 ## Focused testing
 
@@ -356,6 +375,7 @@ flutter test test/text_correction_test.dart
 flutter test test/spell_check_editing_controller_test.dart
 flutter test test/language_pack_test.dart
 flutter test test/writing_rules_test.dart
+flutter test test/v33_colon_spacing_integration_test.dart
 flutter test test/writing_correction_test.dart
 flutter test test/writing_preferences_test.dart
 flutter test test/widget_test.dart
@@ -363,11 +383,13 @@ flutter test test/widget_test.dart
 
 Exact focused files evolve with the project; [Testing](TESTING.md) is the current index.
 
-For documentation/build-inventory work, `test/documentation_repository_test.dart` is a useful focused check, but the full suite remains required before release.
+For documentation/build-inventory work, the focused repository checks include `test/documentation_links_test.dart`, `test/documentation_registry_contract_test.dart`, and `test/documentation_repository_test.dart`, but the full suite remains required before release.
 
 ## Benchmark development
 
 The benchmark under `tool/` uses generated synthetic text and deterministic scenario metadata. It is a developer measurement tool, not telemetry and not a user-data profiler.
+
+Benchmark language help is generated from `SpellLanguageRegistry.builtIns`, so adding a built-in language must keep the registry and benchmark tests aligned.
 
 Do not turn benchmark timings into universal pass/fail thresholds across unrelated hardware/toolchains. Correctness smoke should assert executable/report invariants, not a fixed speed.
 
