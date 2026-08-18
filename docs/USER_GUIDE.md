@@ -1,13 +1,13 @@
 # User Guide
 
-This guide describes the current SpellChecker `2.16.0+21` application workflow. Release-specific history is available through [Release history](RELEASE_HISTORY.md).
+This guide describes the current SpellChecker `3.3.0+26` application workflow. Release-specific history is available through [Release history](RELEASE_HISTORY.md).
 
 ## What the application does
 
 SpellChecker provides a local Flutter editor for:
 
 - spelling checks with ranked suggestions;
-- English (US) and English (UK) language selection;
+- explicit selection among thirteen built-in offline spelling language packs;
 - per-language personal dictionaries;
 - session-only ignored words;
 - deterministic Writing insights rules;
@@ -47,7 +47,7 @@ The editor area provides:
 ## Start a spelling review
 
 1. Enter or paste text.
-2. Choose **English (US)** or **English (UK)**.
+2. Choose the built-in spelling language pack that matches the text.
 3. Select **Check spelling**, press `Ctrl+Enter`, or press `Command+Enter`.
 4. Review inline underlines and the Results panel.
 
@@ -62,11 +62,22 @@ Current built-ins are:
 ```text
 English (US) — en-US
 English (UK) — en-GB
+Hindi (India) — hi-IN
+Spanish (Spain) — es-ES
+French (France) — fr-FR
+German (Germany) — de-DE
+Portuguese (Brazil) — pt-BR
+Italian (Italy) — it-IT
+Bengali (India) — bn-IN
+Marathi (India) — mr-IN
+Tamil (India) — ta-IN
+Telugu (India) — te-IN
+Russian (Russia) — ru-RU
 ```
 
 `en-US` is the default.
 
-SpellChecker does not auto-detect language. Change the language explicitly when the text uses another supported variant.
+SpellChecker does not auto-detect language. Change the language explicitly when the text uses another supported pack.
 
 Language switching restores that language's saved:
 
@@ -75,7 +86,7 @@ Language switching restores that language's saved:
 
 It also creates a fresh language-specific spelling engine, clears stale session/correction state, and rechecks non-blank editor text.
 
-Personal vocabulary and writing-rule choices are isolated by language. Saving a word or disabling a rule in `en-US` does not automatically change `en-GB`.
+Personal vocabulary and writing-rule choices are isolated by language. Saving a word or storing an explicit rule set in one pack does not automatically change another pack.
 
 ## Inline spelling highlighting
 
@@ -181,7 +192,7 @@ The dialog is language-specific and lets you:
 - copy a language-aware personal-dictionary export;
 - import supported personal-dictionary data.
 
-Valid personal words can contain supported apostrophes and hyphens according to the selected language pack.
+Valid personal words can contain supported apostrophes, hyphens, combining marks, and in-word join controls according to the selected language pack.
 
 ### Personal-dictionary export
 
@@ -214,11 +225,11 @@ Ctrl+Shift+Enter
 Command+Shift+Enter
 ```
 
-Writing insights analyzes the current editor text with deterministic local rules for the selected language.
+Writing insights analyzes the current editor text with deterministic local rules supported by the selected language. The current built-in writing rules are English-only, so non-English packs provide spelling and suggestions without applying English-specific writing findings.
 
 ## Current built-in rules
 
-The current default registry contains ten rules:
+The current default registry contains eleven rules:
 
 ```text
 repeated-word
@@ -226,6 +237,7 @@ sentence-capitalization
 repeated-space
 punctuation-spacing
 missing-punctuation-space
+missing-colon-space
 trailing-whitespace
 repeated-punctuation
 unmatched-parenthesis
@@ -233,7 +245,9 @@ unmatched-square-bracket
 unmatched-curly-brace
 ```
 
-The first seven can provide deterministic automatic replacements in their documented scope. The three unmatched-delimiter rules are advisory and never guess a mutation.
+The first eight can provide deterministic automatic replacements in their documented scope. The three unmatched-delimiter rules are advisory and never guess a mutation.
+
+`missing-colon-space` owns only the colon when a following space is missing between words. That lets `Label :value` compose with `punctuation-spacing` as two adjacent, non-overlapping edits and become `Label: value` in one deterministic batch.
 
 See [Writing rules](WRITING_RULES.md) for exact behavior.
 
@@ -241,7 +255,7 @@ See [Writing rules](WRITING_RULES.md) for exact behavior.
 
 Writing insights displays supported rule switches. Toggling a rule changes the current review immediately and, when local storage succeeds, saves the selected language's explicit enabled-rule set.
 
-Rule choices are separate for `en-US` and `en-GB`.
+Rule choices are separate per language pack. Current built-in writing rules are eligible only for the two English packs.
 
 An explicit “all rules off” state is durable and different from **Reset rules to defaults**.
 
@@ -255,6 +269,8 @@ This is intentionally different from manually switching every rule off:
 - reset -> no override, follow current registry defaults.
 
 If storage cannot clear the saved override, current-session defaults stay active but SpellChecker warns that the change may not survive restart.
+
+Existing explicit V3.2 ten-rule sets stay explicit after V3.3; they do not silently gain `missing-colon-space`. Resetting the override opts back into the current eleven-rule defaults.
 
 ## Review presets
 
@@ -389,7 +405,7 @@ The editor reports:
 - characters;
 - sentences.
 
-Character count uses Dart string length (UTF-16 code units). Word detection uses Unicode letter/combining-mark rules with supported apostrophe/hyphen forms. Sentence counting recognizes common terminal punctuation/closing quotes and counts a remaining non-empty trailing sentence fragment.
+Character count uses Dart string length (UTF-16 code units). Word detection uses Unicode letter/combining-mark rules with supported apostrophe/hyphen forms and in-word join controls. Sentence counting recognizes common terminal punctuation/closing quotes and counts a remaining non-empty trailing sentence fragment.
 
 # Storage and startup
 
