@@ -6,7 +6,7 @@
   </a>
 </p>
 
-This directory is the documentation home for SpellChecker `3.2.0+25`. SpellChecker is a privacy-first Flutter spelling utility and deterministic writing assistant. The current repository commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web, ships thirteen built-in offline spelling language packs, exposes three public Dart API barrels, and contains ten built-in local writing rules.
+This directory is the documentation home for SpellChecker `3.3.0+26`. SpellChecker is a privacy-first Flutter spelling utility and deterministic writing assistant. The current repository commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web, ships thirteen built-in offline spelling language packs, exposes three public Dart API barrels, and contains eleven built-in local writing rules.
 
 ## Choose your path
 
@@ -58,19 +58,19 @@ Use:
 5. [Executable builds and packaging](EXECUTABLE_BUILDS.md) — complete build, packaging, signing-boundary, platform-generation, verification, troubleshooting, and tracked-file inventory for release artifacts.
 6. [Platform support](PLATFORM_SUPPORT.md) — what is committed, built, validated, and still external distribution/signing work.
 7. [Roadmap](ROADMAP.md) — completed release scope and optional future directions.
-8. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x design/audit/validation records.
+8. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x/V3.x design, audit, and validation records.
 9. [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md), [support policy](../SUPPORT.md), [governance](../GOVERNANCE.md), and [code of conduct](../CODE_OF_CONDUCT.md).
 
 ## Current product contract
 
 | Area | Current contract |
 | --- | --- |
-| Package version | `3.2.0+25` |
+| Package version | `3.3.0+26` |
 | Dart SDK | `>=3.8.0 <4.0.0` |
 | Runtime dependencies | Flutter SDK and `shared_preferences` |
 | Built-in language packs | `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, `it-IT`, `bn-IN`, `mr-IN`, `ta-IN`, `te-IN`, `ru-RU` |
 | Default language | `en-US` |
-| Built-in writing rules | 10 |
+| Built-in writing rules | 11 |
 | Suggestion limit | 1–10; default 5 |
 | Spelling UI capture | first 200 issues, with explicit truncated state |
 | Writing UI capture | first 200 findings, with exact analyzer totals and captured-only review/fix semantics |
@@ -88,9 +88,9 @@ Use:
 
 The files linked under the user, library, contributor, and maintainer paths above are **evergreen**: they describe the current `main` behavior and should be updated when the code contract changes.
 
-Files named for a specific release, such as `V2_15_*` or `V2_16_*`, are **historical records**. They document what a particular release introduced, audited, or validated. Historical files should not be rewritten merely because a later release changed the product. If a historical statement conflicts with an evergreen current-state page, use the evergreen page for current behavior and the historical page only for release context.
+Files named for a specific release, such as `V2_15_*`, `V2_16_*`, or `V3_3_*`, are **historical records**. They document what a particular release introduced, audited, or validated. Historical files should not be rewritten merely because a later release changed the product. If a historical statement conflicts with an evergreen current-state page, use the evergreen page for current behavior and the historical page only for release context.
 
-The post-release audit is recorded in [POST_V216_AUDIT_2026_08_16.md](POST_V216_AUDIT_2026_08_16.md).
+The post-release V2.16 audit is recorded in [POST_V216_AUDIT_2026_08_16.md](POST_V216_AUDIT_2026_08_16.md). The current V3.3 writing hardening record is [V3_3_WRITING_HARDENING.md](V3_3_WRITING_HARDENING.md).
 
 ## Documentation quality expectations
 
