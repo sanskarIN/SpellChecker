@@ -11,7 +11,7 @@ It deliberately distinguishes between:
 - the metadata, documentation, CI, and release files that must be reviewed even when they are not compiled into the binary;
 - target-specific signing, packaging, and distribution work that must never be confused with the cross-platform CI build contract.
 
-SpellChecker is currently version `3.2.0+25` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
+SpellChecker is currently version `3.3.0+26` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
 
 > **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Production mobile/desktop signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
 
@@ -347,14 +347,14 @@ Use Flutter build modes deliberately:
 - **profile** — performance measurement; not the normal public release artifact;
 - **release** — optimized distribution build.
 
-The repository release workflow uses release mode for web.
+The repository release workflow uses release mode for all six automated target builds.
 
 ## 13. Versioning and artifact naming
 
 Current package version:
 
 ```text
-3.2.0+25
+3.3.0+26
 ```
 
 The version in `pubspec.yaml` is the project source of truth. Before producing an official release artifact:
@@ -381,7 +381,7 @@ Signing is target/distribution specific, but the repository policy is universal:
 - separate public build metadata from private signing material;
 - document who/what can perform a release without documenting the secret itself.
 
-The current web artifact does not use native application signing.
+The automated validation/release builds do not embed production signing credentials. Web does not require native signing; Android/Apple/desktop distribution signing remains an external release-engineering concern where applicable.
 
 ## 15. Release verification checklist
 
@@ -546,6 +546,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `docs/V3_0_CROSS_PLATFORM_FOUNDATION.md`
 - `docs/V3_1_MULTILINGUAL_FOUNDATION.md`
 - `docs/V3_2_LANGUAGE_EXPANSION.md`
+- `docs/V3_3_WRITING_HARDENING.md`
 - `docs/WRITING_RULES.md`
 - `lib/app.dart`
 - `lib/core/edit_distance.dart`
@@ -585,6 +586,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `lib/storage/dictionary_preferences.dart`
 - `lib/storage/settings_transfer_service.dart`
 - `lib/writing.dart`
+- `lib/writing/rules/missing_colon_space_rule.dart`
 - `lib/writing/rules/missing_punctuation_space_rule.dart`
 - `lib/writing/rules/punctuation_spacing_rule.dart`
 - `lib/writing/rules/repeated_punctuation_rule.dart`
@@ -614,12 +616,15 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/bmc_repository_metadata_test.dart`
 - `test/bounded_analysis_widget_test.dart`
 - `test/dictionary_preferences_test.dart`
+- `test/documentation_links_test.dart`
+- `test/documentation_registry_contract_test.dart`
 - `test/documentation_repository_test.dart`
 - `test/edit_distance_test.dart`
 - `test/language_dictionary_codec_test.dart`
 - `test/language_pack_test.dart`
 - `test/language_preferences_test.dart`
 - `test/language_widget_test.dart`
+- `test/missing_colon_space_rule_test.dart`
 - `test/missing_punctuation_space_rule_test.dart`
 - `test/missing_punctuation_space_unicode_test.dart`
 - `test/multilingual_language_pack_test.dart`
@@ -673,6 +678,11 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/v216_startup_preference_sync_widget_test.dart`
 - `test/v23_widget_test.dart`
 - `test/v26_writing_rules_test.dart`
+- `test/v33_bounded_colon_analysis_test.dart`
+- `test/v33_colon_spacing_integration_test.dart`
+- `test/v33_rule_preference_compatibility_widget_test.dart`
+- `test/v33_settings_transfer_rule_compatibility_test.dart`
+- `test/v33_writing_rule_preference_test.dart`
 - `test/widget_test.dart`
 - `test/writing_analysis_diagnostic_summary_test.dart`
 - `test/writing_analysis_diagnostics_test.dart`
@@ -702,15 +712,15 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 
 ### Repository/release control
 
-These files generally do not compile into the Dart application, but they define whether the release is reviewable, reproducible, secure, supported, and correctly automated. In particular, the two workflow files define the existing CI/release behavior, while `pubspec.yaml`, `pubspec.lock`, and `analysis_options.yaml` directly affect dependency/tooling behavior.
+These files generally do not compile into the Dart application, but they define whether the release is reviewable, reproducible, secure, supported, and correctly automated. In particular, the CI, cross-platform, bootstrap, docs-sync, and release workflows define validation/release behavior, while `pubspec.yaml`, `pubspec.lock`, and `analysis_options.yaml` directly affect dependency/tooling behavior.
 
 ### Documentation and release evidence
 
-These files are not runtime code, but executable claims must match them. A release that builds successfully while documentation falsely claims unsupported platforms is still an incorrect project release. Current-state docs should be updated with any platform/build change; historical V2.x records remain historical evidence and should not be rewritten simply to look current.
+These files are not runtime code, but executable claims must match them. A release that builds successfully while documentation falsely claims unsupported platforms is still an incorrect project release. Current-state docs should be updated with any platform/build change; historical release records remain historical evidence and should not be rewritten simply to look current.
 
 ### Runtime/build source
 
-These files contain the application/library implementation and committed web host. They are the primary source inputs for the current web artifact and the portable Dart/Flutter implementation that future native runners would host.
+These files contain the application/library implementation and committed host runners. They are the primary source inputs for the current Android, iOS, Linux, macOS, Web, and Windows build artifacts.
 
 ### Validation source
 
@@ -718,7 +728,7 @@ Every test file participates in the complete `flutter test --reporter expanded` 
 
 ### Developer tooling
 
-The benchmark files are run by CI/release smoke validation. They are not user telemetry and are not bundled because the release workflow executes them as development tooling before `flutter build web --release`.
+The benchmark files are run by CI/release smoke validation. They are not user telemetry and are not bundled as application runtime behavior; release workflows execute them before target builds.
 
 ## 20. Keeping this inventory complete
 
@@ -758,7 +768,3 @@ When upstream Flutter behavior changes, update this document and the build autom
 - [Platform support](PLATFORM_SUPPORT.md)
 - [Releasing](RELEASING.md)
 - [Troubleshooting](TROUBLESHOOTING.md)
-- [Architecture](ARCHITECTURE.md)
-- [Privacy](PRIVACY.md)
-- [Security](../SECURITY.md)
-- [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md)
