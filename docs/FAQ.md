@@ -8,7 +8,7 @@ SpellChecker is a privacy-first Flutter spelling utility and deterministic writi
 
 ### What version is documented here?
 
-The evergreen documentation describes `2.16.0+21` on the current repository `main` branch unless a page explicitly identifies itself as a historical release document.
+The evergreen documentation describes `3.3.0+26` on the current repository `main` branch unless a page explicitly identifies itself as a historical release document.
 
 ### Is SpellChecker open source?
 
@@ -38,7 +38,7 @@ See [Privacy](PRIVACY.md) for the complete data-flow contract.
 
 ### Which languages are built in?
 
-English (US), `en-US`, and English (UK), `en-GB`.
+Thirteen offline spelling packs are built in: `en-US`, `en-GB`, `hi-IN`, `es-ES`, `fr-FR`, `de-DE`, `pt-BR`, `it-IT`, `bn-IN`, `mr-IN`, `ta-IN`, `te-IN`, and `ru-RU`.
 
 ### Does SpellChecker detect the language automatically?
 
@@ -46,17 +46,17 @@ No. Language selection is explicit.
 
 ### Can I add another language?
 
-The library is designed around `SpellLanguagePack`, so additional packs can be implemented. A complete pack needs explicit dictionary, tokenization, normalization, valid-word, frequency/suggestion, suffix, and metadata behavior plus tests. See [Language packs](LANGUAGE_PACKS.md).
+The library is designed around `SpellLanguagePack`, so additional packs can be implemented. A complete pack needs explicit dictionary, tokenization, normalization, valid-word, frequency/suggestion, affix, and metadata behavior plus tests. See [Language packs](LANGUAGE_PACKS.md).
 
-### Are my personal words shared between US and UK English?
+### Are my personal words shared between language packs?
 
 No. Personal vocabulary is stored separately per language pack.
 
 ## Spelling
 
-### Why is a word marked unknown even though it is valid in another English variant?
+### Why is a word marked unknown even though it is valid in another language or regional variant?
 
-The selected language pack controls dictionary behavior. For example, a regional spelling can be accepted by one pack and unknown in the other. Switch the selected language if the text uses a different variant.
+The selected language pack controls dictionary behavior. For example, a regional spelling can be accepted by one English pack and unknown in the other, while vocabulary from a different built-in language requires selecting that language's pack.
 
 ### How many suggestions can I show?
 
@@ -82,7 +82,15 @@ No. It is a deterministic local rule system. It intentionally does not claim exh
 
 ### How many built-in writing rules are there?
 
-Ten in the current registry.
+Eleven in the current registry.
+
+### Which languages currently receive built-in writing findings?
+
+The current built-in writing rules declare English (`en`) support, so they are eligible for `en-US` and `en-GB`. The eleven non-English starter packs provide spelling and suggestions without applying English-specific writing rules.
+
+### What does the V3.3 colon rule do?
+
+`missing-colon-space` detects a colon between words when the following space is missing and the edit is deterministic. It owns only the colon source range, so `Label :value` can safely compose with the existing pre-punctuation-spacing fix and become `Label: value` in one batch.
 
 ### Why do some findings have no fix button?
 
@@ -166,13 +174,15 @@ It can. Export personal vocabulary and copy Portable settings before clearing ho
 
 ## Platforms
 
-### Is Android/iOS/Windows/macOS/Linux officially released from this repository?
+### Which Flutter runners are committed and release-built?
 
-No. The current repository commits the web host and portable Flutter/Dart source. The automated release workflow builds and uploads a web artifact. Native runner directories and native release artifacts are not currently committed/produced.
+The repository commits Android, iOS, Linux, macOS, Web, and Windows runners. Cross-platform validation and release workflows build all six targets on appropriate GitHub-hosted operating systems. Production signing, notarization, store credentials, and channel-specific installers remain external distribution work where required.
 
-### Can Flutter source be adapted to other targets?
+### Does a successful CI build mean every platform artifact is store-ready?
 
-Yes, but that is different from official repository/release support. Additional targets need reviewed runner files, platform tooling, build validation, and release policy. See [Platform support](PLATFORM_SUPPORT.md).
+No. Build validation proves that the committed source and runner compile together. Signed mobile/desktop distribution still needs the target's signing, provisioning, notarization, packaging, and store/channel policy.
+
+See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Keyboard and accessibility
 
@@ -204,13 +214,13 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs a deterministic benchmark command smoke test. The release workflow additionally runs `flutter build web --release`.
+CI also runs a deterministic benchmark command smoke test. Cross-platform and release workflows additionally build Android, iOS, Linux, macOS, Web, and Windows release-mode targets on appropriate hosts.
 
 ### Why do source ranges use UTF-16 offsets?
 
 Dart string slicing and Flutter text editing use UTF-16 code-unit offsets. SpellChecker's issue ranges therefore match those APIs. Edit-distance and some Unicode casing/length logic operate on Unicode scalar values; do not confuse those indexes with issue offsets.
 
-### Why are there many V2.x documents?
+### Why are there many V2.x and V3.x documents?
 
 They are historical design/audit/validation records. For current behavior, start from [docs/README.md](README.md) and evergreen topic pages. Use [Release history](RELEASE_HISTORY.md) to navigate historical records.
 
