@@ -1,6 +1,6 @@
 # Roadmap
 
-SpellChecker `3.2.0+25` is the current V3 multilingual cross-platform foundation. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
+SpellChecker `3.3.0+26` is the current V3 multilingual cross-platform foundation plus deterministic writing/documentation hardening. V2.16 remains the completed stabilization line that preceded native platform expansion. This roadmap distinguishes **shipped current behavior** from **optional future directions**. It is not a promise that every future idea will be implemented, nor a schedule.
 
 ## Current status
 
@@ -15,7 +15,7 @@ The current project already ships:
 - occurrence-safe single/replace-all spelling correction;
 - first-200 spelling UI capture with explicit truncation semantics;
 - deterministic local Writing insights subsystem;
-- ten built-in writing rules;
+- eleven built-in writing rules, including source-range-safe missing-colon spacing;
 - per-language writing-rule persistence with unset/explicit/empty semantics;
 - Writing insights presets/search/categories/fix-only filtering;
 - first-200 writing capture with exact analyzer totals;
@@ -26,6 +26,7 @@ The current project already ships:
 - language-aware personal-dictionary format version 2 plus legacy readers;
 - privacy/local-storage/accessibility/testing/release documentation;
 - deterministic synthetic benchmark tooling;
+- executable documentation link and live-registry contract checks;
 - GitHub Actions CI;
 - validated release-mode build artifacts for Android, iOS, Linux, macOS, Web, and Windows.
 
@@ -43,6 +44,14 @@ The August 16, 2026 post-release audit additionally fixed:
 It also strengthened Buy Me a Coffee visibility and repository regression protection.
 
 See [Post-V2.16 audit](POST_V216_AUDIT_2026_08_16.md).
+
+## V3.3 hardening completed
+
+V3.3 adds the eleventh built-in writing rule, `missing-colon-space`, while preserving explicit older writing-rule overrides and the existing preference/Portable settings formats. The rule owns only the colon source range so it can compose safely with pre-punctuation whitespace cleanup.
+
+V3.3 also adds executable checks for relative Markdown documentation links and for keeping language/rule reference pages synchronized with the live registries.
+
+See [V3.3 writing hardening](V3_3_WRITING_HARDENING.md).
 
 # Optional future directions
 
@@ -83,7 +92,7 @@ No cloud ranking/model is required for this extension path.
 
 ## Cross-platform foundation completed
 
-The V3 cross-platform foundation now commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. Cross-platform CI validates release-mode builds on target-appropriate GitHub-hosted operating systems, and the release workflow mirrors those build targets.
+The V3 cross-platform foundation commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. Cross-platform CI validates release-mode builds on target-appropriate GitHub-hosted operating systems, and the release workflow mirrors those build targets.
 
 Remaining platform work is distribution engineering rather than runner creation:
 
@@ -123,13 +132,14 @@ Optional work could add:
 
 ## Documentation CI
 
-The repository now has a documentation hub and repository test protecting key documentation contracts. Optional further automation could validate:
+V3.3 now validates relative Markdown file links and compares current language/rule documentation against the live registries.
 
-- relative Markdown links;
+Optional further automation could validate:
+
 - Markdown style/lint;
-- current package version references;
-- language/rule registry references;
-- duplicate/missing docs-index links.
+- current package version references across a broader evergreen-document set;
+- duplicate/missing documentation-index links;
+- Markdown heading fragments when internal anchors are used.
 
 Any added documentation tooling should remain deterministic and lightweight.
 
@@ -231,7 +241,7 @@ Feature requests can be opened through the repository's GitHub issue templates. 
 
 # Historical roadmap context
 
-Release-specific design/validation files are indexed in [Release history](RELEASE_HISTORY.md). They preserve the sequence by which the current rule catalogue, bounded analysis, diagnostics, accessibility, benchmark, Unicode hardening, and stabilization behavior were added.
+Release-specific design/validation files are indexed in [Release history](RELEASE_HISTORY.md). They preserve the sequence by which the current rule catalogue, bounded analysis, diagnostics, accessibility, benchmark, Unicode hardening, multilingual expansion, cross-platform support, and stabilization behavior were added.
 
 Use this page for future/current planning and historical records for what was planned/validated at a specific release point.
 
