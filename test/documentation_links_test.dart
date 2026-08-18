@@ -26,13 +26,9 @@ void main() {
           continue;
         }
 
+        destination = destination.split(RegExp(r'\s+')).first;
         if (destination.startsWith('<') && destination.endsWith('>')) {
           destination = destination.substring(1, destination.length - 1);
-        }
-
-        final titleSeparator = destination.indexOf(RegExp(r'\s+["\']'));
-        if (titleSeparator >= 0) {
-          destination = destination.substring(0, titleSeparator);
         }
 
         final fragmentIndex = destination.indexOf('#');
