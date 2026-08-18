@@ -19,10 +19,18 @@ jobs:
       - name: Verify V3 package identity
         shell: bash
         run: |
-          grep -F 'version: 3.2.0+25' pubspec.yaml
-          grep -F "applicationVersion: '3.2.0'" lib/features/editor/spell_checker_page.dart
-          grep -F 'Current package version: `3.2.0+25`.' docs/RELEASE_HISTORY.md
-          grep -F '## [3.2.0] - 2026-08-17' CHANGELOG.md
+          grep -F 'version: 3.3.0+26' pubspec.yaml
+          grep -F "applicationVersion: '3.3.0'" lib/features/editor/spell_checker_page.dart
+          grep -F 'Current package version: `3.3.0+26`.' docs/RELEASE_HISTORY.md
+          grep -F '## [3.3.0] - 2026-08-18' CHANGELOG.md
+
+      - name: Verify V3.3 writing metadata
+        shell: bash
+        run: |
+          grep -F "String get id => 'missing-colon-space';" lib/writing/rules/missing_colon_space_rule.dart
+          grep -F 'missing-colon-space' docs/WRITING_RULES.md
+          grep -F 'Built-in writing rules | 11' docs/README.md
+          test -f docs/V3_3_WRITING_HARDENING.md
 
       - name: Verify language expansion metadata
         shell: bash
@@ -45,9 +53,10 @@ jobs:
           test -f web/index.html
           test -f windows/CMakeLists.txt
 
-      - name: Verify V3.2 release documentation
+      - name: Verify current release documentation
         shell: bash
         run: |
-          test -f docs/V3_2_LANGUAGE_EXPANSION.md
+          test -f docs/V3_3_WRITING_HARDENING.md
           grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md
           grep -F 'U+200D ZERO WIDTH JOINER' docs/V3_2_LANGUAGE_EXPANSION.md
+          grep -F 'missing-colon-space' docs/V3_3_WRITING_HARDENING.md
