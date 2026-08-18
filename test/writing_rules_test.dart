@@ -136,7 +136,7 @@ void main() {
 
       expect(result.languageId, 'en-US');
       expect(result.isClean, isFalse);
-      expect(result.analyzedRuleIds, hasLength(10));
+      expect(result.analyzedRuleIds, hasLength(11));
       expect(
         result.issues.map((issue) => issue.start),
         orderedEquals(
@@ -148,6 +148,7 @@ void main() {
       expect(result.issueCountByRule['repeated-space'], 1);
       expect(result.issueCountByRule['repeated-punctuation'], 1);
       expect(result.issueCountByRule['missing-punctuation-space'], isNull);
+      expect(result.issueCountByRule['missing-colon-space'], isNull);
       expect(result.issueCountByRule['punctuation-spacing'], isNull);
       expect(result.issueCountByRule['trailing-whitespace'], isNull);
       expect(result.issueCountByRule['unmatched-parenthesis'], isNull);
@@ -161,7 +162,7 @@ void main() {
         final analyzer = WritingAnalyzer();
 
         final result = analyzer.analyze(
-          'Hello  !\nWorld  Next,word  ',
+          'Hello  !\nWorld  Next,word Label:value  ',
           languagePack: pack,
         );
 
@@ -169,6 +170,7 @@ void main() {
           result.analyzedRuleIds,
           containsAll(<String>{
             'missing-punctuation-space',
+            'missing-colon-space',
             'punctuation-spacing',
             'trailing-whitespace',
             'unmatched-square-bracket',
@@ -176,6 +178,7 @@ void main() {
           }),
         );
         expect(result.issueCountByRule['missing-punctuation-space'], 1);
+        expect(result.issueCountByRule['missing-colon-space'], 1);
         expect(result.issueCountByRule['punctuation-spacing'], 1);
         expect(result.issueCountByRule['trailing-whitespace'], 1);
         expect(result.issueCountByRule['unmatched-square-bracket'], isNull);
@@ -202,6 +205,7 @@ void main() {
         RepeatedWordRule(),
         PunctuationSpacingRule(),
         MissingPunctuationSpaceRule(),
+        MissingColonSpaceRule(),
         TrailingWhitespaceRule(),
         UnmatchedParenthesisRule(),
         UnmatchedSquareBracketRule(),
@@ -224,6 +228,10 @@ void main() {
         isA<MissingPunctuationSpaceRule>(),
       );
       expect(
+        WritingRuleRegistry.byId('missing-colon-space'),
+        isA<MissingColonSpaceRule>(),
+      );
+      expect(
         WritingRuleRegistry.byId('trailing-whitespace'),
         isA<TrailingWhitespaceRule>(),
       );
@@ -239,6 +247,7 @@ void main() {
         WritingRuleRegistry.defaultEnabledRuleIds,
         containsAll(<String>{
           'missing-punctuation-space',
+          'missing-colon-space',
           'punctuation-spacing',
           'trailing-whitespace',
           'unmatched-square-bracket',
