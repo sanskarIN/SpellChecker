@@ -2,8 +2,20 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+String _currentPackageVersion() {
+  final pubspec = File('pubspec.yaml').readAsStringSync();
+  final match = RegExp(
+    r'^version:\s*(\S+)\s*$',
+    multiLine: true,
+  ).firstMatch(pubspec);
+  if (match == null) {
+    throw StateError('pubspec.yaml must declare a package version.');
+  }
+  return match.group(1)!;
+}
+
 void main() {
-  const currentVersion = '3.2.0+25';
+  final currentVersion = _currentPackageVersion();
   const builtInLanguageIds = <String>[
     'en-US',
     'en-GB',
