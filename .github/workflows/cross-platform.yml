@@ -91,10 +91,10 @@ jobs:
           retention-days: 7
 
   android:
-    name: Android release APK
+    name: Android release APK + App Bundle
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
 
     steps:
       - name: Check out repository
@@ -106,13 +106,25 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Verify Android production manifest policy
+        run: |
+          grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
+          if grep -q 'uses-permission android:name="android.permission.INTERNET"' android/app/src/main/AndroidManifest.xml; then
+            echo "Production Android manifest must not request INTERNET."
+            exit 1
+          fi
       - name: Build Android APK
         run: flutter build apk --release
-      - name: Upload Android APK
+      - name: Build Android App Bundle
+        run: flutter build appbundle --release
+      - name: Upload Android APK and App Bundle
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-android-${{ github.sha }}
-          path: build/app/outputs/flutter-apk/*.apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 7
 
