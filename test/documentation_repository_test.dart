@@ -247,6 +247,7 @@ void main() {
       'docs/FEATURES.md',
       'docs/LANGUAGE_PACKS.md',
       'docs/USER_GUIDE.md',
+      'docs/CONFIGURATION.md',
       'docs/FAQ.md',
     ];
 
