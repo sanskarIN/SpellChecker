@@ -16,6 +16,41 @@ String _currentPackageVersion() {
   return match.group(1)!;
 }
 
+List<File> _trackedMarkdownFiles() {
+  final result = Process.runSync(
+    'git',
+    const <String>['ls-files', '*.md'],
+    runInShell: Platform.isWindows,
+  );
+  if (result.exitCode != 0) {
+    throw StateError('git ls-files *.md must succeed for documentation checks.');
+  }
+  return (result.stdout as String)
+      .split(RegExp(r'\r?\n'))
+      .where((path) => path.isNotEmpty)
+      .map(File.new)
+      .toList(growable: false);
+}
+
+String? _repositoryRelativeTarget(String destination) {
+  var value = destination.trim();
+  if (value.isEmpty || value.startsWith('#')) {
+    return null;
+  }
+  if (value.startsWith('<') && value.endsWith('>')) {
+    value = value.substring(1, value.length - 1);
+  }
+
+  final uri = Uri.tryParse(value);
+  if (uri == null || uri.hasScheme || value.startsWith('//')) {
+    return null;
+  }
+  if (uri.path.isEmpty) {
+    return null;
+  }
+  return Uri.decodeComponent(uri.path);
+}
+
 void main() {
   final currentVersion = _currentPackageVersion();
   final builtInLanguageIds = SpellLanguageRegistry.builtIns
@@ -68,6 +103,35 @@ void main() {
         reason: 'docs/README.md must link $fileName.',
       );
     }
+  });
+
+  test('repository-relative Markdown links resolve', () {
+    final failures = <String>[];
+    final linkPattern = RegExp(r'!?\[[^\]]*\]\(([^)]+)\)');
+
+    for (final markdownFile in _trackedMarkdownFiles()) {
+      final content = markdownFile.readAsStringSync();
+      for (final match in linkPattern.allMatches(content)) {
+        final destination = match.group(1)!;
+        final target = _repositoryRelativeTarget(destination);
+        if (target == null) {
+          continue;
+        }
+        final resolvedPath = target.startsWith('/')
+            ? target.substring(1)
+            : '${markdownFile.parent.path}/$target';
+        if (!File(resolvedPath).existsSync() &&
+            !Directory(resolvedPath).existsSync()) {
+          failures.add('${markdownFile.path} -> $destination');
+        }
+      }
+    }
+
+    expect(
+      failures,
+      isEmpty,
+      reason: 'Broken repository-relative Markdown links: $failures',
+    );
   });
 
   test('current feature reference names every language and writing rule', () {
