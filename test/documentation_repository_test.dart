@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:spellchecker/language.dart';
+import 'package:spellchecker/writing.dart';
 
 String _currentPackageVersion() {
   final pubspec = File('pubspec.yaml').readAsStringSync();
@@ -16,33 +18,12 @@ String _currentPackageVersion() {
 
 void main() {
   final currentVersion = _currentPackageVersion();
-  const builtInLanguageIds = <String>[
-    'en-US',
-    'en-GB',
-    'hi-IN',
-    'es-ES',
-    'fr-FR',
-    'de-DE',
-    'pt-BR',
-    'it-IT',
-    'bn-IN',
-    'mr-IN',
-    'ta-IN',
-    'te-IN',
-    'ru-RU',
-  ];
-  const builtInRuleIds = <String>[
-    'repeated-word',
-    'sentence-capitalization',
-    'repeated-space',
-    'punctuation-spacing',
-    'missing-punctuation-space',
-    'trailing-whitespace',
-    'repeated-punctuation',
-    'unmatched-parenthesis',
-    'unmatched-square-bracket',
-    'unmatched-curly-brace',
-  ];
+  final builtInLanguageIds = SpellLanguageRegistry.builtIns
+      .map((pack) => pack.id)
+      .toList(growable: false);
+  final builtInRuleIds = WritingRuleRegistry.builtIns
+      .map((rule) => rule.id)
+      .toList(growable: false);
 
   const evergreenDocs = <String>[
     'GETTING_STARTED.md',
