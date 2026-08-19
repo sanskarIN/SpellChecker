@@ -47,7 +47,7 @@ The editor area provides:
 ## Start a spelling review
 
 1. Enter or paste text.
-2. Choose **English (US)** or **English (UK)**.
+2. Choose any of the thirteen built-in offline spelling packs from the language selector.
 3. Select **Check spelling**, press `Ctrl+Enter`, or press `Command+Enter`.
 4. Review inline underlines and the Results panel.
 
@@ -62,11 +62,22 @@ Current built-ins are:
 ```text
 English (US) — en-US
 English (UK) — en-GB
+Hindi (India) — hi-IN
+Spanish (Spain) — es-ES
+French (France) — fr-FR
+German (Germany) — de-DE
+Portuguese (Brazil) — pt-BR
+Italian (Italy) — it-IT
+Bengali (India) — bn-IN
+Marathi (India) — mr-IN
+Tamil (India) — ta-IN
+Telugu (India) — te-IN
+Russian (Russia) — ru-RU
 ```
 
 `en-US` is the default.
 
-SpellChecker does not auto-detect language. Change the language explicitly when the text uses another supported variant.
+SpellChecker does not auto-detect language. Change the language explicitly when the text uses another supported pack.
 
 Language switching restores that language's saved:
 
