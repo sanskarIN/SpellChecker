@@ -1,8 +1,8 @@
 # Development Guide
 
-This is the current development guide for SpellChecker `2.16.0+21`. Historical release engineering notes are indexed in [Release history](RELEASE_HISTORY.md).
+This is the current development guide for SpellChecker. Historical release engineering notes are indexed in [Release history](RELEASE_HISTORY.md).
 
-For complete executable/release-artifact instructions—including native-runner generation, platform build commands, packaging, signing boundaries, verification, and the machine-checked tracked-file inventory—see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+For complete executable/release-artifact instructions—including platform build commands, packaging, signing boundaries, verification, and the machine-checked tracked-file inventory—see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Prerequisites
 
@@ -11,8 +11,8 @@ Install:
 - Git;
 - Flutter stable;
 - Dart compatible with `>=3.8.0 <4.0.0` (normally supplied by Flutter);
-- Chrome or another usable Flutter target for local application work;
-- platform tooling only when intentionally working on an additional generated Flutter target.
+- at least one usable Flutter target for local application work;
+- the platform toolchain for every additional committed target you plan to run or build.
 
 Verify:
 
@@ -22,7 +22,7 @@ flutter --version
 dart --version
 ```
 
-For platform/executable work, prefer `flutter doctor -v` and verify the specific target toolchain before generating or packaging runner files.
+For platform/executable work, prefer `flutter doctor -v` and verify the specific target toolchain before building or changing runner files.
 
 ## Clone and resolve dependencies
 
@@ -39,13 +39,16 @@ Runtime dependencies are intentionally small:
 
 Do not add a runtime dependency when a small deterministic implementation is sufficient. Any dependency that introduces networking, telemetry, account identity, native permissions, or sensitive-data handling requires explicit architecture/privacy/security review.
 
-## Run the committed target
+## Run a committed target
+
+Choose any committed target available on the current development machine. For example:
 
 ```bash
+flutter devices
 flutter run -d chrome
 ```
 
-The repository commits the web host plus portable Flutter/Dart source. Native Android/iOS/Windows/macOS/Linux runner directories are not currently committed. See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+The repository commits official Flutter runners for Android, iOS, Linux, macOS, Web, and Windows. Target-specific run commands and toolchain requirements are documented in [Getting started](GETTING_STARTED.md), [Platform support](PLATFORM_SUPPORT.md), and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Repository layout
 
@@ -63,7 +66,12 @@ lib/storage/              application-local preference integration
 lib/writing/              writing analyzer, rules, corrections, review helpers
 test/                     regression/unit/widget/persistence/Unicode/stress tests
 tool/                     deterministic benchmark tooling
+android/                  committed Android Flutter runner
+ios/                      committed iOS Flutter runner
+linux/                    committed Linux Flutter runner
+macos/                    committed macOS Flutter runner
 web/                      committed Flutter web host
+windows/                  committed Windows Flutter runner
 docs/                     current documentation and historical release records
 ```
 
@@ -288,18 +296,18 @@ Semantics/live-region changes should be tested using Flutter semantics/widget to
 
 ## Platform runner and executable changes
 
-The current repository has no committed native runner directories. If work intentionally adds `android/`, `ios/`, `windows/`, `macos/`, or `linux/`:
+The repository currently commits Android, iOS, Linux, macOS, Web, and Windows runners. When changing one of those runners or adding another officially supported target:
 
-1. follow the generation and target prerequisites in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
-2. review every generated file rather than accepting generated output blindly;
-3. choose stable application identifiers/metadata;
+1. follow the target prerequisites and packaging guidance in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+2. review generated/native changes rather than accepting tool output blindly;
+3. preserve stable application identifiers/metadata unless a migration is intentional;
 4. keep signing credentials out of Git;
-5. add target build CI and artifact handling;
+5. keep target build CI and artifact handling aligned with support claims;
 6. validate target-specific storage, clipboard, accessibility, keyboard, and startup behavior;
-7. update the tracked-file inventory for every new committed runner file;
+7. update the tracked-file inventory for every committed path addition/deletion/rename;
 8. update [Platform support](PLATFORM_SUPPORT.md), [Releasing](RELEASING.md), privacy/security docs, README, and other affected current-state docs.
 
-A locally generated runner is not official release support by itself.
+A locally modified/generated runner is not proof of distribution-ready signed support by itself.
 
 ## Documentation changes
 
