@@ -221,7 +221,8 @@ The repository includes:
 Current SpellChecker does **not** provide:
 
 - automatic language detection;
-- built-in languages other than English (US) and English (UK);
+- spelling languages beyond the thirteen registered built-in packs without caller-supplied/custom `SpellLanguagePack` integration;
+- built-in non-English writing-rule packs; the ten current built-in writing rules are English-only;
 - a cloud grammar model or generative rewrite service;
 - user accounts or cloud synchronization;
 - remote telemetry from editor analysis;
@@ -230,7 +231,7 @@ Current SpellChecker does **not** provide:
 - syntax-aware programming-language parsing for structural delimiter rules;
 - a promise to find every grammar/style problem;
 - a promise that every finding has an automatic fix;
-- committed Android/iOS/Windows/macOS/Linux runner directories;
-- automated native desktop/mobile release artifacts.
+- automatic publication to app stores, package registries, a hosted web site, or a permanent GitHub Release;
+- bundled production signing/notarization credentials for mobile/desktop distribution.
 
-The absence of those features is intentional current scope, not an implication that Flutter source cannot be adapted to additional targets. See [Platform support](PLATFORM_SUPPORT.md) and [Roadmap](ROADMAP.md).
+The six committed Flutter runners and CI/release build artifacts establish repository build support, but production distribution still requires target-specific signing, packaging, publication, and policy steps. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and [Roadmap](ROADMAP.md).
