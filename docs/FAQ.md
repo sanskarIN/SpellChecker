@@ -184,9 +184,11 @@ It can. Export personal vocabulary and copy Portable settings before clearing ho
 
 ## Platforms
 
-### Is Android/iOS/Windows/macOS/Linux officially released from this repository?
+### What platform support exists in this repository?
 
-No. The current repository commits the web host and portable Flutter/Dart source. The automated release workflow builds and uploads a web artifact. Native runner directories and native release artifacts are not currently committed/produced.
+Android, iOS, Linux, macOS, Web, and Windows runners are committed. Cross-platform CI builds all six targets in release mode, and the release workflow mirrors those builds and uploads validation artifacts.
+
+Those artifacts are not automatically equivalent to production distribution: iOS is built without codesigning, mobile/desktop production signing and macOS notarization remain external, and the workflow does not automatically publish to stores, a hosted website, or a permanent GitHub Release.
 
 ### Can Flutter source be adapted to other targets?
 
