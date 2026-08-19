@@ -136,37 +136,42 @@ void main() {
     );
   });
 
-  test('tracked Markdown has H1 headings, balanced fences, and no conflicts', () {
-    final failures = <String>[];
+  test(
+    'tracked Markdown has H1 headings, balanced fences, and no conflicts',
+    () {
+      final failures = <String>[];
 
-    for (final markdownFile in _trackedMarkdownFiles()) {
-      final lines = markdownFile.readAsLinesSync();
-      if (!markdownFile.path.startsWith('.github/')) {
-        final h1Count = lines.where((line) => line.startsWith('# ')).length;
-        if (h1Count == 0) {
-          failures.add('${markdownFile.path}: expected at least one H1');
+      for (final markdownFile in _trackedMarkdownFiles()) {
+        final lines = markdownFile.readAsLinesSync();
+        if (!markdownFile.path.startsWith('.github/')) {
+          final h1Count = lines.where((line) => line.startsWith('# ')).length;
+          if (h1Count == 0) {
+            failures.add('${markdownFile.path}: expected at least one H1');
+          }
+        }
+
+        final fenceCount = lines
+            .where((line) => line.trimLeft().startsWith('```'))
+            .length;
+        if (fenceCount.isOdd) {
+          failures.add('${markdownFile.path}: unbalanced fenced code block');
+        }
+
+        if (lines.any(
+          (line) =>
+              line.startsWith('<<<<<<< ') ||
+              line == '=======' ||
+              line.startsWith('>>>>>>> '),
+        )) {
+          failures.add(
+            '${markdownFile.path}: unresolved merge conflict marker',
+          );
         }
       }
 
-      final fenceCount = lines
-          .where((line) => line.trimLeft().startsWith('```'))
-          .length;
-      if (fenceCount.isOdd) {
-        failures.add('${markdownFile.path}: unbalanced fenced code block');
-      }
-
-      if (lines.any(
-        (line) =>
-            line.startsWith('<<<<<<< ') ||
-            line == '=======' ||
-            line.startsWith('>>>>>>> '),
-      )) {
-        failures.add('${markdownFile.path}: unresolved merge conflict marker');
-      }
-    }
-
-    expect(failures, isEmpty, reason: 'Malformed Markdown: $failures');
-  });
+      expect(failures, isEmpty, reason: 'Malformed Markdown: $failures');
+    },
+  );
 
   test('current package version stays synchronized', () {
     final expectedByPath = <String, String>{
