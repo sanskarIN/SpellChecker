@@ -8,7 +8,7 @@ SpellChecker is a privacy-first Flutter spelling utility and deterministic writi
 
 ### What version is documented here?
 
-The evergreen documentation describes `2.16.0+21` on the current repository `main` branch unless a page explicitly identifies itself as a historical release document.
+Evergreen documentation describes the current repository `main` behavior unless a page explicitly identifies itself as a historical release document. `pubspec.yaml` is the package-version source of truth, and [Documentation](README.md) identifies the current package alongside the evergreen topic index.
 
 ### Is SpellChecker open source?
 
