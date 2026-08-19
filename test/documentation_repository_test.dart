@@ -149,6 +149,26 @@ void main() {
     }
   });
 
+  test('current language references cover every built-in pack', () {
+    const referencePaths = <String>[
+      'README.md',
+      'docs/README.md',
+      'docs/FEATURES.md',
+      'docs/LANGUAGE_PACKS.md',
+    ];
+
+    for (final path in referencePaths) {
+      final content = File(path).readAsStringSync();
+      for (final languageId in builtInLanguageIds) {
+        expect(
+          content,
+          contains('`$languageId`'),
+          reason: '$path must name current built-in language $languageId.',
+        );
+      }
+    }
+  });
+
   test('configuration documents both current transfer formats', () {
     final configuration = File('docs/CONFIGURATION.md').readAsStringSync();
 
