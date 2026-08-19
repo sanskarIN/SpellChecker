@@ -62,7 +62,7 @@ Application behavior:
 - duplicates collapse after normalization;
 - saved values are sorted before persistence;
 - the selected language's personal words become valid spelling words and suggestion candidates;
-- a US personal word does not automatically appear in the UK personal dictionary.
+- a word saved in one language pack does not automatically appear in any other pack's personal dictionary.
 
 The dictionary manager can add, remove, clear, copy an export, and import words. Import **merges** valid imported words with the current personal dictionary; it does not replace the whole set.
 
