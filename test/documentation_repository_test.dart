@@ -171,6 +171,9 @@ void main() {
     final expectedByPath = <String, String>{
       'README.md': '`$currentVersion`',
       'docs/README.md': '`$currentVersion`',
+      'docs/GETTING_STARTED.md': '`$currentVersion`',
+      'docs/EXECUTABLE_BUILDS.md': '`$currentVersion`',
+      'docs/RELEASING.md': 'version: $currentVersion',
       'docs/RELEASE_HISTORY.md': 'Current package version: `$currentVersion`.',
       'lib/features/editor/spell_checker_page.dart':
           "applicationVersion: '$currentReleaseVersion'",
