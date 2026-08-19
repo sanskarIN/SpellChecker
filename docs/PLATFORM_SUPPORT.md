@@ -2,11 +2,11 @@
 
 This page distinguishes **portable Flutter source**, **committed platform runners**, **automated target builds**, and **distribution-ready signed artifacts**. Those are different support levels and should not be conflated.
 
-For build commands, packaging, signing boundaries, artifact verification, troubleshooting, and release procedures, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+For build commands, packaging, signing boundaries, artifact verification, troubleshooting, and release procedures, see [Executable builds and packaging](EXECUTABLE_BUILDS.md). Android-specific setup, signing, Play packaging, privacy, and device-testing guidance is in [Android support](../android/README.md).
 
 ## Current V3 repository state
 
-The `v3/cross-platform-foundation` line commits official Flutter runners for:
+The V3 cross-platform foundation commits official Flutter runners for:
 
 - Android;
 - iOS;
@@ -24,7 +24,7 @@ The runners were generated with Flutter stable and are tracked by the repository
 | Target | Portable source | Runner committed | Automated release-mode build | CI artifact | Store/distribution signing |
 | --- | --- | --- | --- | --- | --- |
 | Web | yes | yes | yes | yes | not applicable |
-| Android | yes | yes | yes, APK | yes | external signing still required for production distribution |
+| Android | yes | yes | yes, APK + AAB | yes | production signing path supported; private upload key remains external |
 | iOS | yes | yes | yes, `--no-codesign` | yes | Apple signing/provisioning still required |
 | Linux desktop | yes | yes | yes | yes | packaging policy remains distribution-specific |
 | macOS | yes | yes | yes | yes | signing/notarization still required for public distribution |
@@ -49,11 +49,14 @@ After the common quality job succeeds, target jobs run in parallel:
 ```text
 Web      ubuntu-latest   flutter build web --release
 Android  ubuntu-latest   flutter build apk --release
+                         flutter build appbundle --release
 Linux    ubuntu-latest   flutter build linux --release
 Windows  windows-latest  flutter build windows --release
 macOS    macos-latest    flutter build macos --release
 iOS      macos-latest    flutter build ios --release --no-codesign
 ```
+
+The Android job also checks the production manifest privacy boundary before packaging: cloud backup and cleartext traffic must remain disabled, and the main manifest must not request the Internet permission.
 
 Each build uploads a short-lived GitHub Actions artifact so build output can be inspected. These CI artifacts prove buildability; they are not automatically permanent GitHub Releases or store-ready signed packages.
 
@@ -79,7 +82,14 @@ flutter build web --release
 ```bash
 flutter run -d <android-device-id>
 flutter build apk --release
+flutter build appbundle --release
 ```
+
+The Android runner uses `flutter.compileSdkVersion`, `flutter.targetSdkVersion`, and `flutter.minSdkVersion` so it follows Flutter stable's supported Android SDK baseline. Current Flutter stable targets Android 16 / API 36, matching the Google Play target requirement that takes effect on August 31, 2026.
+
+For a production-signed Android artifact, create private `android/key.properties` from `android/key.properties.example` and point it at the private upload keystore. The repository ignores `key.properties`, `*.jks`, and `*.keystore` files. When release credentials are absent, CI/local release-mode validation uses the generated debug key only to prove buildability; that validation artifact is not a store release.
+
+See [Android support](../android/README.md) for the complete Android contract.
 
 ### iOS
 
@@ -132,6 +142,8 @@ Changing package/bundle identifiers later can break upgrades, preference continu
 
 The application uses `shared_preferences` as its local preference abstraction. Its physical backing store is platform/plugin-specific. SpellChecker treats it as local preference storage for selected language, suggestion count, per-language personal words, and per-language writing-rule overrides.
 
+On Android, the production manifest explicitly disables Android cloud backup because shared preferences are normally eligible for Auto Backup. Direct device-to-device migration can still be controlled by Android/device-manufacturer behavior on modern Android versions. See [Privacy](PRIVACY.md) and [Android support](../android/README.md).
+
 Do not rely on physical preference file/registry locations as part of the public SpellChecker API.
 
 Before clearing browser/site/app data, export personal vocabulary and copy Portable settings if they are important.
@@ -156,9 +168,13 @@ SpellChecker registers Control and Meta variants for primary editor actions wher
 
 `F7`, `Shift+F7`, and Escape may also be intercepted by browser/OS/window-manager shortcuts. See [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
 
+On Android phones/tablets, the same editor and review actions remain available through the touch UI even when a hardware keyboard is not attached.
+
 ## Accessibility
 
 The shared Flutter UI uses the same semantic and keyboard contracts across targets, but native accessibility stacks differ. Automated build success does not replace manual checks with TalkBack, VoiceOver, Narrator, Orca, browser screen readers, high-contrast modes, large text, keyboard-only operation, and platform focus conventions.
+
+Android release candidates should include TalkBack, large-font/display-scaling, soft-keyboard, rotation/window-resize, and back-navigation checks on representative devices/emulators.
 
 See [Accessibility](ACCESSIBILITY.md) for the project-wide contract.
 
@@ -175,6 +191,8 @@ Never commit:
 - Windows/macOS code-signing private keys;
 - notarization credentials.
 
+Android is configured to consume a private upload keystore through ignored `android/key.properties`. Public CI deliberately uses non-production signing when credentials are absent so it can validate APK and AAB packaging without exposing secrets.
+
 Unsigned/no-codesign CI is intentional where production credentials are unnecessary to prove that source compiles.
 
 ## Release support versus repository support
@@ -185,16 +203,19 @@ Use these terms precisely:
 - **CI-artifact target** — CI uploads a successful build output for inspection.
 - **Distribution-supported target** — signing, packaging, permanent release assets, and distribution procedures have also been completed for that channel.
 
-V3 establishes repository-supported and CI-artifact coverage across Android, iOS, Linux, macOS, Web, and Windows. Store/notarized/signed distribution remains a separate release-engineering phase.
+V3 establishes repository-supported and CI-artifact coverage across Android, iOS, Linux, macOS, Web, and Windows. Android additionally has a committed production-signing configuration path and Play-compatible AAB build path, while the actual private upload key and Play Console release action remain external security/store operations.
 
 ## Regression protection
 
-`test/documentation_repository_test.dart` now positively requires all six Flutter target directories and representative runner files to remain committed. It also verifies that `.metadata` tracks every supported platform.
+`test/documentation_repository_test.dart` positively requires all six Flutter target directories and representative runner files to remain committed. It also verifies that `.metadata` tracks every supported platform.
 
 Generated native runner trees are treated as Flutter-managed platform roots by the executable-documentation inventory check, while project-owned source, tests, workflows, and documentation remain explicitly controlled.
 
+The Android CI job adds target-specific regression protection by checking production manifest privacy flags and compiling both APK and AAB release artifacts.
+
 ## Related documentation
 
+- [Android support](../android/README.md)
 - [Getting started](GETTING_STARTED.md)
 - [Development](DEVELOPMENT.md)
 - [Testing](TESTING.md)
