@@ -225,7 +225,7 @@ Ctrl+Shift+Enter
 Command+Shift+Enter
 ```
 
-Writing insights analyzes the current editor text with deterministic local rules for the selected language.
+Writing insights currently runs the ten built-in English writing rules for `en-US` and `en-GB`. The eleven non-English spelling packs do not run those English-specific rules; they continue to provide local spelling, suggestions, and personal dictionaries.
 
 ## Current built-in rules
 
