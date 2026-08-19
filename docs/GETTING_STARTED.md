@@ -112,8 +112,8 @@ flutter run -d windows
 ## Perform your first spelling check
 
 1. Open SpellChecker.
-2. Keep **English (US)** selected or choose **English (UK)** from the language selector.
-3. Enter synthetic text such as `Helo world`.
+2. Keep **English (US)** selected or choose any of the thirteen built-in offline spelling packs from the language selector.
+3. Enter a short synthetic typo appropriate to the selected language, such as `Helo world` for English (US).
 4. Select **Check spelling** or press `Ctrl+Enter` / `Command+Enter`.
 5. Review the inline underline and the Results panel.
 6. Choose a suggestion to replace one occurrence, or use **Replace all…** when multiple checked occurrences of the same unknown word exist.
