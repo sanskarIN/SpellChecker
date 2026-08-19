@@ -98,6 +98,10 @@ No. It is a deterministic local rule system. It intentionally does not claim exh
 
 Ten in the current registry.
 
+### Which languages run the built-in Writing insights rules?
+
+The ten built-in writing rules are English rules and run for `en-US` and `en-GB`. The eleven non-English packs currently provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules.
+
 ### Why do some findings have no fix button?
 
 A `WritingIssue` is advisory when `replacement == null`. The unmatched parenthesis, square bracket, and curly brace rules are intentionally advisory because detecting an unmatched delimiter does not prove the correct edit.
