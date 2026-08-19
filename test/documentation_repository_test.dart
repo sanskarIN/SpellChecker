@@ -212,6 +212,7 @@ void main() {
       'docs/FEATURES.md',
       'docs/LANGUAGE_PACKS.md',
       'docs/USER_GUIDE.md',
+      'docs/FAQ.md',
     ];
 
     for (final path in referencePaths) {
