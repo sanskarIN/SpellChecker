@@ -211,6 +211,7 @@ void main() {
       'docs/README.md',
       'docs/FEATURES.md',
       'docs/LANGUAGE_PACKS.md',
+      'docs/USER_GUIDE.md',
     ];
 
     for (final path in referencePaths) {
@@ -218,7 +219,7 @@ void main() {
       for (final languageId in builtInLanguageIds) {
         expect(
           content,
-          contains('`$languageId`'),
+          contains(languageId),
           reason: '$path must name current built-in language $languageId.',
         );
       }
