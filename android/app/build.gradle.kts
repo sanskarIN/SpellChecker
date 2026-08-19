@@ -12,7 +12,9 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 val hasReleaseSigning = keystorePropertiesFile.exists()
 
 if (hasReleaseSigning) {
-    FileInputStream(keystorePropertiesFile).use(keystoreProperties::load)
+    FileInputStream(keystorePropertiesFile).use { stream ->
+        keystoreProperties.load(stream)
+    }
 }
 
 fun requiredSigningProperty(name: String): String =
