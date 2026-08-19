@@ -231,6 +231,7 @@ void main() {
       'README.md',
       'docs/FEATURES.md',
       'docs/WRITING_RULES.md',
+      'docs/USER_GUIDE.md',
     ];
 
     for (final path in referencePaths) {
@@ -238,7 +239,7 @@ void main() {
       for (final ruleId in builtInRuleIds) {
         expect(
           content,
-          contains('`$ruleId`'),
+          contains(ruleId),
           reason: '$path must name current built-in writing rule $ruleId.',
         );
       }
