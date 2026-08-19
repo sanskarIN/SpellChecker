@@ -1,13 +1,13 @@
 # User Guide
 
-This guide describes the current SpellChecker `2.16.0+21` application workflow. Release-specific history is available through [Release history](RELEASE_HISTORY.md).
+This guide describes the current SpellChecker application workflow. Release-specific history is available through [Release history](RELEASE_HISTORY.md).
 
 ## What the application does
 
 SpellChecker provides a local Flutter editor for:
 
 - spelling checks with ranked suggestions;
-- English (US) and English (UK) language selection;
+- thirteen built-in offline spelling packs across English, Hindi, Spanish, French, German, Brazilian Portuguese, Italian, Bengali, Marathi, Tamil, Telugu, and Russian;
 - per-language personal dictionaries;
 - session-only ignored words;
 - deterministic Writing insights rules;
