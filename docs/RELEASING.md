@@ -28,20 +28,20 @@ After quality succeeds, target jobs build in parallel:
 
 ```text
 Web      ubuntu-latest   flutter build web --release
-Android  ubuntu-latest   flutter build apk --release
+Android  ubuntu-latest   flutter build apk --release + flutter build appbundle --release
 Linux    ubuntu-latest   flutter build linux --release
 Windows  windows-latest  flutter build windows --release
 macOS    macos-latest    flutter build macos --release
 iOS      macos-latest    flutter build ios --release --no-codesign
 ```
 
-Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
+The Android target additionally runs the focused Android repository-support contract and verifies the production-manifest privacy policy before packaging. Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
 
 ## Release artifacts
 
-The workflow uploads target-specific artifacts named from the triggering ref or release tag. Web/Linux/Windows are complete runtime bundles/directories; Android is a validation release APK; macOS is an unsigned app build; iOS is a no-codesign app build.
+The workflow uploads target-specific artifacts named from the triggering ref or release tag. Web/Linux/Windows are complete runtime bundles/directories; Android contains both a validation release APK and Android App Bundle (`.aab`); macOS is an unsigned app build; iOS is a no-codesign app build.
 
-Actions artifacts are not permanent GitHub Release assets and are not app-store publication.
+Actions artifacts are not permanent GitHub Release assets and are not app-store publication. Public Android CI artifacts use non-production signing when no private upload key is supplied; official Play distribution must use the secured production signing path documented in the Android and executable-build guides.
 
 ## Pre-release checklist
 
@@ -60,6 +60,7 @@ Before tagging/dispatching a release, verify:
 - full Flutter suite and benchmark smoke pass;
 - the executable-build tracked-file inventory matches the actual repository;
 - all configured cross-platform release-mode build jobs succeed;
+- Android release validation produces both the APK and AAB and preserves the production-manifest policy;
 - historical release/validation record is added when the release needs durable audit evidence.
 
 Before signed/store distribution, also complete the target-specific signing, packaging, accessibility, privacy/security, and clean-environment verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
@@ -114,7 +115,8 @@ For a significant release, consider recording exact evidence:
 - Flutter/Dart versions;
 - format/analyzer/full test results;
 - benchmark smoke result;
-- Android/iOS/Linux/macOS/Web/Windows build results;
+- Android APK and AAB build results plus the Android support-contract result;
+- iOS/Linux/macOS/Web/Windows build results;
 - executable/package verification result;
 - migration/compatibility checks;
 - known limitations;
@@ -220,7 +222,7 @@ Update [Privacy](PRIVACY.md) and [Security](../SECURITY.md) before release when 
 
 All six Flutter runners are committed and cross-platform CI/release builds validate them. Before describing an artifact as production-distribution-ready, verify the relevant signing/notarization/store/installer policy rather than equating a successful CI build with channel approval.
 
-See [Platform support](PLATFORM_SUPPORT.md) for the current matrix and [Executable builds and packaging](EXECUTABLE_BUILDS.md) for target-specific requirements.
+For Android, CI validates both release packaging forms while the production upload keystore remains external to Git. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and the Android runner guide for target-specific requirements.
 
 ## Release artifact verification
 
@@ -229,9 +231,10 @@ After workflow success:
 1. confirm the common quality job succeeded;
 2. confirm every intended platform build job succeeded;
 3. confirm each uploaded artifact exists and uses the expected ref/tag suffix;
-4. inspect or extract the complete bundle rather than only a single executable from desktop targets;
-5. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
-6. keep the workflow run/tag/commit reference in release evidence.
+4. for Android, confirm both the APK and AAB are present and distinguish CI validation signing from the intended production upload certificate;
+5. inspect or extract the complete bundle rather than only a single executable from desktop targets;
+6. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+7. keep the workflow run/tag/commit reference in release evidence.
 
 The workflow artifacts are retained for 30 days and should not be treated as permanent archival storage.
 
