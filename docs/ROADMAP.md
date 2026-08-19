@@ -26,7 +26,7 @@ The current project already ships:
 - language-aware personal-dictionary format version 2 plus legacy readers;
 - privacy/local-storage/accessibility/testing/release documentation;
 - deterministic synthetic benchmark tooling;
-- GitHub Actions CI;
+- GitHub Actions source, focused documentation/metadata, and cross-platform CI;
 - validated release-mode build artifacts for Android, iOS, Linux, macOS, Web, and Windows.
 
 No unchecked V2.16 release requirement remains in the current roadmap.
@@ -43,6 +43,24 @@ The August 16, 2026 post-release audit additionally fixed:
 It also strengthened Buy Me a Coffee visibility and repository regression protection.
 
 See [Post-V2.16 audit](POST_V216_AUDIT_2026_08_16.md).
+
+## Documentation CI hardening completed
+
+The repository now runs a focused documentation/metadata audit for relevant pushes and pull requests. The audit derives current package, language-registry, and writing-rule facts from source-of-truth files/code instead of duplicating release-specific lists.
+
+Current executable coverage includes:
+
+- repository-relative Markdown link resolution;
+- basic Markdown H1/fence/conflict-marker integrity;
+- current package/About/changelog/release-history version synchronization;
+- current built-in language IDs from `SpellLanguageRegistry`;
+- current built-in writing-rule IDs from `WritingRuleRegistry.builtIns`;
+- evergreen documentation-hub coverage;
+- committed platform runner anchors;
+- transfer-format documentation anchors;
+- exact `git ls-files` coverage in the executable-build tracked-file inventory.
+
+Future documentation tooling should only be added when it provides a clear deterministic signal without introducing unnecessary remote services or dependency weight.
 
 # Optional future directions
 
@@ -120,18 +138,6 @@ Optional work could add:
 - GitHub Release creation;
 - web artifact attachment;
 - provenance/signing/checksum strategy.
-
-## Documentation CI
-
-The repository now has a documentation hub and repository test protecting key documentation contracts. Optional further automation could validate:
-
-- relative Markdown links;
-- Markdown style/lint;
-- current package version references;
-- language/rule registry references;
-- duplicate/missing docs-index links.
-
-Any added documentation tooling should remain deterministic and lightweight.
 
 ## Localization of application UI/documentation
 

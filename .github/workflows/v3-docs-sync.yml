@@ -1,14 +1,42 @@
-name: V3 metadata audit
+name: Documentation and metadata audit
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - README.md
+      - CHANGELOG.md
+      - pubspec.yaml
+      - 'docs/**'
+      - 'lib/core/spell_language_pack.dart'
+      - 'lib/features/editor/spell_checker_page.dart'
+      - 'lib/writing/**'
+      - 'test/documentation_repository_test.dart'
+      - '.github/workflows/v3-docs-sync.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - README.md
+      - CHANGELOG.md
+      - pubspec.yaml
+      - 'docs/**'
+      - 'lib/core/spell_language_pack.dart'
+      - 'lib/features/editor/spell_checker_page.dart'
+      - 'lib/writing/**'
+      - 'test/documentation_repository_test.dart'
+      - '.github/workflows/v3-docs-sync.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: docs-audit-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   audit:
-    name: Verify V3 cross-platform metadata
+    name: Verify documentation and repository metadata
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -16,38 +44,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Verify V3 package identity
-        shell: bash
-        run: |
-          grep -F 'version: 3.2.0+25' pubspec.yaml
-          grep -F "applicationVersion: '3.2.0'" lib/features/editor/spell_checker_page.dart
-          grep -F 'Current package version: `3.2.0+25`.' docs/RELEASE_HISTORY.md
-          grep -F '## [3.2.0] - 2026-08-17' CHANGELOG.md
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
-      - name: Verify language expansion metadata
-        shell: bash
-        run: |
-          grep -F "id: 'bn-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'mr-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'ta-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'te-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'ru-RU'" lib/core/spell_language_pack.dart
-          grep -F 'Built-in language packs: 13' docs/V3_2_LANGUAGE_EXPANSION.md
+      - name: Install dependencies
+        run: flutter pub get
 
-      - name: Verify cross-platform runner inventory
-        shell: bash
-        run: |
-          test -f .metadata
-          test -f android/app/src/main/AndroidManifest.xml
-          test -f ios/Runner.xcodeproj/project.pbxproj
-          test -f linux/CMakeLists.txt
-          test -f macos/Runner.xcodeproj/project.pbxproj
-          test -f web/index.html
-          test -f windows/CMakeLists.txt
+      - name: Check audit formatting
+        run: dart format --output=none --set-exit-if-changed test/documentation_repository_test.dart
 
-      - name: Verify V3.2 release documentation
-        shell: bash
-        run: |
-          test -f docs/V3_2_LANGUAGE_EXPANSION.md
-          grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md
-          grep -F 'U+200D ZERO WIDTH JOINER' docs/V3_2_LANGUAGE_EXPANSION.md
+      - name: Run documentation repository audit
+        run: flutter test test/documentation_repository_test.dart --reporter expanded

@@ -1,36 +1,66 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:spellchecker/language.dart';
+import 'package:spellchecker/writing.dart';
+
+String _currentPackageVersion() {
+  final pubspec = File('pubspec.yaml').readAsStringSync();
+  final match = RegExp(
+    r'^version:\s*(\S+)\s*$',
+    multiLine: true,
+  ).firstMatch(pubspec);
+  if (match == null) {
+    throw StateError('pubspec.yaml must declare a package version.');
+  }
+  return match.group(1)!;
+}
+
+List<File> _trackedMarkdownFiles() {
+  final result = Process.runSync('git', const <String>[
+    'ls-files',
+    '*.md',
+  ], runInShell: Platform.isWindows);
+  if (result.exitCode != 0) {
+    throw StateError(
+      'git ls-files *.md must succeed for documentation checks.',
+    );
+  }
+  return (result.stdout as String)
+      .split(RegExp(r'\r?\n'))
+      .where((path) => path.isNotEmpty)
+      .map(File.new)
+      .toList(growable: false);
+}
+
+String? _repositoryRelativeTarget(String destination) {
+  var value = destination.trim();
+  if (value.isEmpty || value.startsWith('#')) {
+    return null;
+  }
+  if (value.startsWith('<') && value.endsWith('>')) {
+    value = value.substring(1, value.length - 1);
+  }
+
+  final uri = Uri.tryParse(value);
+  if (uri == null || uri.hasScheme || value.startsWith('//')) {
+    return null;
+  }
+  if (uri.path.isEmpty) {
+    return null;
+  }
+  return Uri.decodeComponent(uri.path);
+}
 
 void main() {
-  const currentVersion = '3.2.0+25';
-  const builtInLanguageIds = <String>[
-    'en-US',
-    'en-GB',
-    'hi-IN',
-    'es-ES',
-    'fr-FR',
-    'de-DE',
-    'pt-BR',
-    'it-IT',
-    'bn-IN',
-    'mr-IN',
-    'ta-IN',
-    'te-IN',
-    'ru-RU',
-  ];
-  const builtInRuleIds = <String>[
-    'repeated-word',
-    'sentence-capitalization',
-    'repeated-space',
-    'punctuation-spacing',
-    'missing-punctuation-space',
-    'trailing-whitespace',
-    'repeated-punctuation',
-    'unmatched-parenthesis',
-    'unmatched-square-bracket',
-    'unmatched-curly-brace',
-  ];
+  final currentVersion = _currentPackageVersion();
+  final currentReleaseVersion = currentVersion.split('+').first;
+  final builtInLanguageIds = SpellLanguageRegistry.builtIns
+      .map((pack) => pack.id)
+      .toList(growable: false);
+  final builtInRuleIds = WritingRuleRegistry.builtIns
+      .map((rule) => rule.id)
+      .toList(growable: false);
 
   const evergreenDocs = <String>[
     'GETTING_STARTED.md',
@@ -77,6 +107,131 @@ void main() {
     }
   });
 
+  test('repository-relative Markdown links resolve', () {
+    final failures = <String>[];
+    final linkPattern = RegExp(r'!?\[[^\]]*\]\(([^)]+)\)');
+
+    for (final markdownFile in _trackedMarkdownFiles()) {
+      final content = markdownFile.readAsStringSync();
+      for (final match in linkPattern.allMatches(content)) {
+        final destination = match.group(1)!;
+        final target = _repositoryRelativeTarget(destination);
+        if (target == null) {
+          continue;
+        }
+        final resolvedPath = target.startsWith('/')
+            ? target.substring(1)
+            : '${markdownFile.parent.path}/$target';
+        if (!File(resolvedPath).existsSync() &&
+            !Directory(resolvedPath).existsSync()) {
+          failures.add('${markdownFile.path} -> $destination');
+        }
+      }
+    }
+
+    expect(
+      failures,
+      isEmpty,
+      reason: 'Broken repository-relative Markdown links: $failures',
+    );
+  });
+
+  test(
+    'tracked Markdown has H1 headings, balanced fences, and no conflicts',
+    () {
+      final failures = <String>[];
+
+      for (final markdownFile in _trackedMarkdownFiles()) {
+        final lines = markdownFile.readAsLinesSync();
+        if (!markdownFile.path.startsWith('.github/')) {
+          final h1Count = lines.where((line) => line.startsWith('# ')).length;
+          if (h1Count == 0) {
+            failures.add('${markdownFile.path}: expected at least one H1');
+          }
+        }
+
+        final fenceCount = lines
+            .where((line) => line.trimLeft().startsWith('```'))
+            .length;
+        if (fenceCount.isOdd) {
+          failures.add('${markdownFile.path}: unbalanced fenced code block');
+        }
+
+        if (lines.any(
+          (line) =>
+              line.startsWith('<<<<<<< ') ||
+              line == '=======' ||
+              line.startsWith('>>>>>>> '),
+        )) {
+          failures.add(
+            '${markdownFile.path}: unresolved merge conflict marker',
+          );
+        }
+      }
+
+      expect(failures, isEmpty, reason: 'Malformed Markdown: $failures');
+    },
+  );
+
+  test('current package version stays synchronized', () {
+    final expectedByPath = <String, String>{
+      'README.md': '`$currentVersion`',
+      'docs/README.md': '`$currentVersion`',
+      'docs/GETTING_STARTED.md': '`$currentVersion`',
+      'docs/EXECUTABLE_BUILDS.md': '`$currentVersion`',
+      'docs/RELEASING.md': 'version: $currentVersion',
+      'docs/RELEASE_HISTORY.md': 'Current package version: `$currentVersion`.',
+      'lib/features/editor/spell_checker_page.dart':
+          "applicationVersion: '$currentReleaseVersion'",
+      'CHANGELOG.md': '## [$currentReleaseVersion] - ',
+    };
+
+    for (final entry in expectedByPath.entries) {
+      final content = File(entry.key).readAsStringSync();
+      expect(
+        content,
+        contains(entry.value),
+        reason:
+            '${entry.key} must reflect current package version $currentVersion.',
+      );
+    }
+  });
+
+  test('current guides reject known obsolete release claims', () {
+    const currentGuidePaths = <String>[
+      'docs/GETTING_STARTED.md',
+      'docs/USER_GUIDE.md',
+      'docs/DEVELOPMENT.md',
+      'docs/TESTING.md',
+      'docs/RELEASING.md',
+      'docs/FAQ.md',
+    ];
+    const obsoleteMarkers = <String>[
+      '2.16.0+21',
+      '3.0.0+22',
+      'Native runner directories and native release artifacts are not currently committed/produced.',
+      'The current repository has no committed native runner directories',
+      'The release workflow additionally runs `flutter build web --release`.',
+      'The release workflow repeats those gates and additionally builds/uploads the web artifact.',
+    ];
+
+    final failures = <String>[];
+    for (final path in currentGuidePaths) {
+      final content = File(path).readAsStringSync();
+      for (final marker in obsoleteMarkers) {
+        if (content.contains(marker)) {
+          failures.add('$path -> $marker');
+        }
+      }
+    }
+
+    expect(
+      failures,
+      isEmpty,
+      reason: 'Current guides contain obsolete release claims: $failures',
+    );
+  });
+
   test('current feature reference names every language and writing rule', () {
     final features = File('docs/FEATURES.md').readAsStringSync();
 
@@ -89,6 +244,49 @@ void main() {
         contains('`$ruleId`'),
         reason: 'FEATURES.md must name current built-in rule $ruleId.',
       );
+    }
+  });
+
+  test('current language references cover every built-in pack', () {
+    const referencePaths = <String>[
+      'README.md',
+      'docs/README.md',
+      'docs/FEATURES.md',
+      'docs/LANGUAGE_PACKS.md',
+      'docs/USER_GUIDE.md',
+      'docs/CONFIGURATION.md',
+      'docs/FAQ.md',
+    ];
+
+    for (final path in referencePaths) {
+      final content = File(path).readAsStringSync();
+      for (final languageId in builtInLanguageIds) {
+        expect(
+          content,
+          contains(languageId),
+          reason: '$path must name current built-in language $languageId.',
+        );
+      }
+    }
+  });
+
+  test('current writing references cover every built-in rule', () {
+    const referencePaths = <String>[
+      'README.md',
+      'docs/FEATURES.md',
+      'docs/WRITING_RULES.md',
+      'docs/USER_GUIDE.md',
+    ];
+
+    for (final path in referencePaths) {
+      final content = File(path).readAsStringSync();
+      for (final ruleId in builtInRuleIds) {
+        expect(
+          content,
+          contains(ruleId),
+          reason: '$path must name current built-in writing rule $ruleId.',
+        );
+      }
     }
   });
 

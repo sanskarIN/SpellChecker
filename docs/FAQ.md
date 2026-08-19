@@ -8,7 +8,7 @@ SpellChecker is a privacy-first Flutter spelling utility and deterministic writi
 
 ### What version is documented here?
 
-The evergreen documentation describes `2.16.0+21` on the current repository `main` branch unless a page explicitly identifies itself as a historical release document.
+Evergreen documentation describes the current repository `main` behavior unless a page explicitly identifies itself as a historical release document. `pubspec.yaml` is the package-version source of truth, and [Documentation](README.md) identifies the current package alongside the evergreen topic index.
 
 ### Is SpellChecker open source?
 
@@ -38,7 +38,21 @@ See [Privacy](PRIVACY.md) for the complete data-flow contract.
 
 ### Which languages are built in?
 
-English (US), `en-US`, and English (UK), `en-GB`.
+Thirteen offline spelling packs are built in:
+
+- English (US) `en-US`;
+- English (UK) `en-GB`;
+- Hindi (India) `hi-IN`;
+- Spanish (Spain) `es-ES`;
+- French (France) `fr-FR`;
+- German (Germany) `de-DE`;
+- Portuguese (Brazil) `pt-BR`;
+- Italian (Italy) `it-IT`;
+- Bengali (India) `bn-IN`;
+- Marathi (India) `mr-IN`;
+- Tamil (India) `ta-IN`;
+- Telugu (India) `te-IN`;
+- Russian (Russia) `ru-RU`.
 
 ### Does SpellChecker detect the language automatically?
 
@@ -48,15 +62,15 @@ No. Language selection is explicit.
 
 The library is designed around `SpellLanguagePack`, so additional packs can be implemented. A complete pack needs explicit dictionary, tokenization, normalization, valid-word, frequency/suggestion, suffix, and metadata behavior plus tests. See [Language packs](LANGUAGE_PACKS.md).
 
-### Are my personal words shared between US and UK English?
+### Are my personal words shared between language packs?
 
-No. Personal vocabulary is stored separately per language pack.
+No. Personal vocabulary is stored separately per language pack. Saving a word for `en-US`, for example, does not automatically add it to `en-GB`, `hi-IN`, or any other pack.
 
 ## Spelling
 
-### Why is a word marked unknown even though it is valid in another English variant?
+### Why is a word marked unknown even though another language pack accepts it?
 
-The selected language pack controls dictionary behavior. For example, a regional spelling can be accepted by one pack and unknown in the other. Switch the selected language if the text uses a different variant.
+The selected language pack controls dictionary behavior. A word can be valid in one pack and unknown in another, including regional variants such as `en-US` and `en-GB`. Switch the selected language explicitly when the text belongs to a different supported pack.
 
 ### How many suggestions can I show?
 
@@ -83,6 +97,10 @@ No. It is a deterministic local rule system. It intentionally does not claim exh
 ### How many built-in writing rules are there?
 
 Ten in the current registry.
+
+### Which languages run the built-in Writing insights rules?
+
+The ten built-in writing rules are English rules and run for `en-US` and `en-GB`. The eleven non-English packs currently provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules.
 
 ### Why do some findings have no fix button?
 
@@ -166,9 +184,11 @@ It can. Export personal vocabulary and copy Portable settings before clearing ho
 
 ## Platforms
 
-### Is Android/iOS/Windows/macOS/Linux officially released from this repository?
+### What platform support exists in this repository?
 
-No. The current repository commits the web host and portable Flutter/Dart source. The automated release workflow builds and uploads a web artifact. Native runner directories and native release artifacts are not currently committed/produced.
+Android, iOS, Linux, macOS, Web, and Windows runners are committed. Cross-platform CI builds all six targets in release mode, and the release workflow mirrors those builds and uploads validation artifacts.
+
+Those artifacts are not automatically equivalent to production distribution: iOS is built without codesigning, mobile/desktop production signing and macOS notarization remain external, and the workflow does not automatically publish to stores, a hosted website, or a permanent GitHub Release.
 
 ### Can Flutter source be adapted to other targets?
 
@@ -204,7 +224,7 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs a deterministic benchmark command smoke test. The release workflow additionally runs `flutter build web --release`.
+CI also runs deterministic benchmark command smoke. Cross-platform CI repeats source quality validation and builds Android, iOS, Linux, macOS, Web, and Windows in release mode. The release workflow mirrors those six target builds and uploads release-validation artifacts. The focused documentation/metadata workflow runs its repository audit on relevant documentation, registry, version, test, and workflow changes.
 
 ### Why do source ranges use UTF-16 offsets?
 

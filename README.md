@@ -74,7 +74,7 @@ The repository commits official Flutter runners for Android, iOS, Linux, macOS, 
 ## Application workflow
 
 1. Enter or paste text in the editor.
-2. Choose one of the eight built-in offline spelling language packs.
+2. Choose one of the thirteen built-in offline spelling language packs.
 3. Select **Check spelling** or press `Ctrl+Enter` / `Command+Enter`.
 4. Review underlined issues and ranked suggestions.
 5. Use `F7` / `Shift+F7` to move between spelling issues.
@@ -100,7 +100,7 @@ Manual typing invalidates the previous spelling snapshot so stale offsets are no
 | `unmatched-square-bracket` | unpaired literal square bracket | advisory |
 | `unmatched-curly-brace` | unpaired literal curly brace | advisory |
 
-All current built-in writing rules support language code `en`, so they run for the two registered English packs. The six new non-English packs provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.
+All current built-in writing rules support language code `en`, so they run for the two registered English packs. The eleven non-English packs provide spelling, suggestions, and personal dictionaries without applying English-specific writing rules. Structural unmatched-delimiter rules deliberately do not guess whether insertion, deletion, movement, or rewriting is the correct correction.
 
 See [Writing rules](docs/WRITING_RULES.md) for source ownership, severities, categories, bounded analysis, preferences, safe batch correction, diagnostics, and custom-rule guidance.
 

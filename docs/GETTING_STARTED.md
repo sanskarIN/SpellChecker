@@ -6,9 +6,9 @@ For complete executable/release-artifact creation—including Android/iOS/Window
 
 ## What SpellChecker is
 
-SpellChecker is a Flutter application and reusable Dart codebase for local spelling and deterministic writing analysis. The bundled application does not send editor text to a remote spelling or grammar service. It supports English (US) and English (UK), per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic built-in writing rules.
+SpellChecker is a Flutter application and reusable Dart codebase for local spelling and deterministic writing analysis. The bundled application does not send editor text to a remote spelling or grammar service. It supports thirteen built-in offline spelling packs across English, Hindi, Spanish, French, German, Brazilian Portuguese, Italian, Bengali, Marathi, Tamil, Telugu, and Russian, plus per-language personal dictionaries, local writing-rule preferences, bounded large-document review, portable non-document settings, and ten deterministic built-in writing rules.
 
-Current package version: `3.0.0+22`.
+Current package version: `3.2.0+25`.
 
 ## Supported Flutter targets
 
@@ -112,8 +112,8 @@ flutter run -d windows
 ## Perform your first spelling check
 
 1. Open SpellChecker.
-2. Keep **English (US)** selected or choose **English (UK)** from the language selector.
-3. Enter synthetic text such as `Helo world`.
+2. Keep **English (US)** selected or choose any of the thirteen built-in offline spelling packs from the language selector.
+3. Enter a short synthetic typo appropriate to the selected language, such as `Helo world` for English (US).
 4. Select **Check spelling** or press `Ctrl+Enter` / `Command+Enter`.
 5. Review the inline underline and the Results panel.
 6. Choose a suggestion to replace one occurrence, or use **Replace all…** when multiple checked occurrences of the same unknown word exist.
@@ -123,7 +123,9 @@ SpellChecker treats checked issues as a snapshot of the source text. Editing the
 
 ## Perform your first writing review
 
-Open **Writing insights** from the app bar or press `Ctrl+Shift+Enter` / `Command+Shift+Enter`.
+Writing insights currently applies the ten built-in English writing rules only when **English (US)** or **English (UK)** is selected. The eleven non-English packs still provide local spelling, suggestions, and personal dictionaries, but do not run English-specific writing rules.
+
+With an English pack selected, open **Writing insights** from the app bar or press `Ctrl+Shift+Enter` / `Command+Shift+Enter`.
 
 Try text such as:
 

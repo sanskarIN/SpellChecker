@@ -1,6 +1,6 @@
 # Testing Guide
 
-This page describes the current SpellChecker `2.16.0+21` test strategy, quality gates, and regression expectations. Historical release-validation records are indexed in [Release history](RELEASE_HISTORY.md).
+This page describes the current SpellChecker test strategy, quality gates, and regression expectations. Historical release-validation records are indexed in [Release history](RELEASE_HISTORY.md).
 
 For complete build/package validation and target artifact checks, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
@@ -15,7 +15,7 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs deterministic benchmark command smoke. The release workflow repeats the gate and then builds the web release target.
+CI also runs deterministic benchmark command smoke. Cross-platform CI repeats the quality gate and then builds release-mode Android, iOS (without codesigning), Linux, macOS, Web, and Windows targets. The tagged/manual release workflow mirrors those six target builds with longer-lived artifacts.
 
 Do not treat focused tests as a substitute for the complete suite before merge.
 
@@ -100,9 +100,18 @@ Cover benchmark option parsing, deterministic scenario generation/identity, resu
 
 Repository tests protect non-code project contracts such as Buy Me a Coffee surfaces and the complete documentation hub/current capability references.
 
-`test/documentation_repository_test.dart` additionally protects executable-build documentation completeness. It reads the marked inventory in `docs/EXECUTABLE_BUILDS.md`, runs `git ls-files`, and requires the documented path set to match the Git-tracked path set exactly. A newly added, deleted, renamed, or stale tracked path therefore fails the test until the executable-build inventory is updated.
+`test/documentation_repository_test.dart` protects documentation and repository metadata by checking:
 
-This check is intentionally repository-wide: files can affect release readiness even when they are not compiled into the runtime artifact.
+- the documentation hub covers every evergreen topic;
+- repository-relative Markdown links resolve;
+- tracked Markdown files have one H1, balanced fenced code blocks, and no unresolved merge-conflict markers;
+- package/About/changelog/current-release version references remain synchronized;
+- current language documentation names every `SpellLanguageRegistry` built-in;
+- current writing documentation names every `WritingRuleRegistry.builtIns` rule;
+- committed runner anchors remain present;
+- the marked tracked-file inventory in `docs/EXECUTABLE_BUILDS.md` matches `git ls-files` exactly.
+
+The tracked-file inventory check is intentionally repository-wide: files can affect release readiness even when they are not compiled into the runtime artifact. A newly added, deleted, renamed, or stale tracked path therefore fails the test until executable-build documentation is updated.
 
 ## Useful focused commands
 
@@ -150,7 +159,7 @@ flutter test test/bmc_repository_metadata_test.dart
 flutter test test/documentation_repository_test.dart
 ```
 
-The second command also validates the complete tracked-file inventory used by the executable-build documentation.
+The second command performs the focused documentation/metadata audit described above.
 
 Some focused filenames are added as features evolve. Use the `test/` directory and full suite as the final source of truth.
 
@@ -401,27 +410,32 @@ See [Performance](PERFORMANCE.md).
 
 ## CI
 
-`.github/workflows/ci.yml` is the continuous integration source of truth. It runs on an Ubuntu hosted runner and validates:
+`.github/workflows/ci.yml` is the primary source-quality workflow. On pushes and pull requests to `main`, it validates:
 
 1. checkout/tool setup;
 2. Flutter/Dart version visibility;
 3. `flutter pub get`;
 4. canonical format check across `lib test tool`;
 5. `flutter analyze`;
-6. complete Flutter test suite, including executable-build tracked-file inventory validation;
+6. complete Flutter test suite, including repository documentation/metadata validation;
 7. benchmark CLI smoke.
+
+`.github/workflows/v3-docs-sync.yml` is the focused documentation/metadata workflow. For relevant documentation, registry, version, and workflow paths it installs dependencies, verifies formatting of `test/documentation_repository_test.dart`, and runs that audit directly.
+
+`.github/workflows/cross-platform.yml` repeats the complete source quality gate and then builds/uploads short-retention validation artifacts for Android APK, iOS no-codesign app, Linux bundle, macOS app, Web bundle, and Windows bundle on appropriate GitHub-hosted operating systems.
 
 ## Release validation
 
-`.github/workflows/release.yml` runs on `v*` tags or manual dispatch. It repeats the quality gate, benchmark smoke, then runs:
+`.github/workflows/release.yml` runs on `v*` tags or manual dispatch. It repeats formatting, analysis, the complete Flutter test suite, and benchmark smoke before building six release artifacts:
 
-```bash
-flutter build web --release
-```
+- Android release APK;
+- iOS release app without codesigning;
+- Linux release bundle;
+- macOS release app;
+- Web release bundle;
+- Windows release bundle.
 
-and uploads `build/web` as the release artifact.
-
-The repository does not currently run native Android/iOS/Windows/macOS/Linux build jobs. See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+Artifacts are retained by the workflow for validation/distribution staging. Production signing/notarization credentials and external store/publication steps remain outside this repository workflow. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and [Releasing](RELEASING.md).
 
 ## Before opening a PR
 

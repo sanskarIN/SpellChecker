@@ -1,13 +1,13 @@
 # User Guide
 
-This guide describes the current SpellChecker `2.16.0+21` application workflow. Release-specific history is available through [Release history](RELEASE_HISTORY.md).
+This guide describes the current SpellChecker application workflow. Release-specific history is available through [Release history](RELEASE_HISTORY.md).
 
 ## What the application does
 
 SpellChecker provides a local Flutter editor for:
 
 - spelling checks with ranked suggestions;
-- English (US) and English (UK) language selection;
+- thirteen built-in offline spelling packs across English, Hindi, Spanish, French, German, Brazilian Portuguese, Italian, Bengali, Marathi, Tamil, Telugu, and Russian;
 - per-language personal dictionaries;
 - session-only ignored words;
 - deterministic Writing insights rules;
@@ -47,7 +47,7 @@ The editor area provides:
 ## Start a spelling review
 
 1. Enter or paste text.
-2. Choose **English (US)** or **English (UK)**.
+2. Choose any of the thirteen built-in offline spelling packs from the language selector.
 3. Select **Check spelling**, press `Ctrl+Enter`, or press `Command+Enter`.
 4. Review inline underlines and the Results panel.
 
@@ -62,11 +62,22 @@ Current built-ins are:
 ```text
 English (US) — en-US
 English (UK) — en-GB
+Hindi (India) — hi-IN
+Spanish (Spain) — es-ES
+French (France) — fr-FR
+German (Germany) — de-DE
+Portuguese (Brazil) — pt-BR
+Italian (Italy) — it-IT
+Bengali (India) — bn-IN
+Marathi (India) — mr-IN
+Tamil (India) — ta-IN
+Telugu (India) — te-IN
+Russian (Russia) — ru-RU
 ```
 
 `en-US` is the default.
 
-SpellChecker does not auto-detect language. Change the language explicitly when the text uses another supported variant.
+SpellChecker does not auto-detect language. Change the language explicitly when the text uses another supported pack.
 
 Language switching restores that language's saved:
 
@@ -214,7 +225,7 @@ Ctrl+Shift+Enter
 Command+Shift+Enter
 ```
 
-Writing insights analyzes the current editor text with deterministic local rules for the selected language.
+Writing insights currently runs the ten built-in English writing rules for `en-US` and `en-GB`. The eleven non-English spelling packs do not run those English-specific rules; they continue to provide local spelling, suggestions, and personal dictionaries.
 
 ## Current built-in rules
 

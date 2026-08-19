@@ -22,6 +22,17 @@ Current built-in language IDs are:
 ```text
 en-US
 en-GB
+hi-IN
+es-ES
+fr-FR
+de-DE
+pt-BR
+it-IT
+bn-IN
+mr-IN
+ta-IN
+te-IN
+ru-RU
 ```
 
 `en-US` is the default pack. When the application restores a saved language ID, an unsupported or missing value falls back to the default pack.
@@ -51,7 +62,7 @@ Application behavior:
 - duplicates collapse after normalization;
 - saved values are sorted before persistence;
 - the selected language's personal words become valid spelling words and suggestion candidates;
-- a US personal word does not automatically appear in the UK personal dictionary.
+- a word saved in one language pack does not automatically appear in any other pack's personal dictionary.
 
 The dictionary manager can add, remove, clear, copy an export, and import words. Import **merges** valid imported words with the current personal dictionary; it does not replace the whole set.
 
@@ -108,6 +119,8 @@ Use the personal dictionary instead when a word should remain accepted across se
 ## Writing-rule preferences
 
 Writing-rule choices are durable and language-specific. The preference model deliberately has three distinct states.
+
+The ten current built-in writing rules support English and therefore run for `en-US` and `en-GB`. For the eleven non-English built-in spelling packs, the current built-in supported-rule set is empty. An explicit stored/imported rule ID can remain part of preference data for compatibility, but it does not become effective unless that rule exists and supports the selected language.
 
 ### Unset
 

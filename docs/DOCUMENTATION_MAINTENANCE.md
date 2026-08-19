@@ -245,7 +245,7 @@ Implementation-detail example:
 
 The latter can be documented for debugging, but must be labeled as internal.
 
-### Use synthetic examples
+## Safe examples and sensitive data
 
 Documentation and bug-reproduction examples must avoid private documents, credentials, account data, personal messages, or sensitive vocabulary. Prefer short artificial strings such as:
 
@@ -348,7 +348,7 @@ Before merging documentation-heavy work, verify:
 - suggestion bounds match application/storage/codec validation;
 - UI capture limits match code;
 - platform/release claims match workflow files and committed runners;
-- `docs/EXECUTABLE_BUILDS.md` accurately distinguishes current web support from non-committed native runners;
+- `docs/EXECUTABLE_BUILDS.md` accurately reflects the six committed runners/build targets plus signing and distribution boundaries;
 - the executable-build tracked-file inventory matches `git ls-files` exactly;
 - privacy claims match actual storage/network paths;
 - code examples match current signatures;
@@ -358,17 +358,17 @@ Before merging documentation-heavy work, verify:
 
 ## Documentation CI
 
-The repository has executable documentation assertions in `test/documentation_repository_test.dart`. Among other current-state checks, it now verifies that the marked inventory in `docs/EXECUTABLE_BUILDS.md` accounts for every Git-tracked repository file and contains no stale paths.
+`test/documentation_repository_test.dart` is the executable documentation and repository-metadata audit. It verifies evergreen index coverage, repository-relative Markdown links, basic Markdown structure/conflict markers, synchronized current package/About/changelog/release-history versions, registry-driven language/rule references, committed platform runner anchors, transfer-format documentation anchors, and the complete tracked-file inventory in `docs/EXECUTABLE_BUILDS.md`.
 
-A future dedicated Markdown link/lint job may additionally check:
+`.github/workflows/v3-docs-sync.yml` runs this focused audit for relevant documentation, registry, application-version, test, and workflow changes on pushes/pull requests to `main`, and it remains manually dispatchable. The regular CI suite also runs the same repository test as part of the complete test suite.
 
-- broken relative Markdown links;
-- duplicate/missing documentation index entries;
-- stale current version strings;
-- current built-in language/rule IDs in selected evergreen reference files;
-- malformed Markdown.
+Run the focused audit locally with:
 
-Any such tooling should remain deterministic, fast, and dependency-conscious.
+```bash
+flutter test test/documentation_repository_test.dart
+```
+
+The audit is intentionally deterministic, local, and dependency-conscious. It does not fetch remote links or send repository/document content to external validation services.
 
 ## Review responsibility
 
