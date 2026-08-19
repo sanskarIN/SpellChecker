@@ -224,7 +224,7 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs a deterministic benchmark command smoke test. The release workflow additionally runs `flutter build web --release`.
+CI also runs deterministic benchmark command smoke. Cross-platform CI repeats source quality validation and builds Android, iOS, Linux, macOS, Web, and Windows in release mode. The release workflow mirrors those six target builds and uploads release-validation artifacts. The focused documentation/metadata workflow runs its repository audit on relevant documentation, registry, version, test, and workflow changes.
 
 ### Why do source ranges use UTF-16 offsets?
 
