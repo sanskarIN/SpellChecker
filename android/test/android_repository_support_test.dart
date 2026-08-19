@@ -42,7 +42,7 @@ void main() {
       expect(gitignore, contains('**/*.jks'));
     });
 
-    test('production manifest preserves offline privacy boundary', () {
+    test('production manifest preserves Android privacy and navigation', () {
       final mainManifest = File(
         'android/app/src/main/AndroidManifest.xml',
       ).readAsStringSync();
@@ -54,6 +54,11 @@ void main() {
       ).readAsStringSync();
 
       expect(mainManifest, contains('android:allowBackup="false"'));
+      expect(
+        mainManifest,
+        contains('android:enableOnBackInvokedCallback="true"'),
+      );
+      expect(mainManifest, contains('android:supportsRtl="true"'));
       expect(mainManifest, contains('android:usesCleartextTraffic="false"'));
       expect(
         mainManifest,
