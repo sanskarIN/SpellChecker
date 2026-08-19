@@ -89,13 +89,14 @@ void main() {
       }
     });
 
-    test('AGP 9 uses built-in Kotlin instead of the legacy KGP switch', () {
+    test('AGP 9 keeps the Flutter stable Kotlin compatibility path', () {
       final settings = File('android/settings.gradle.kts').readAsStringSync();
       final properties = File('android/gradle.properties').readAsStringSync();
 
       expect(settings, contains('com.android.application'));
-      expect(settings, isNot(contains('org.jetbrains.kotlin.android')));
-      expect(properties, isNot(contains('android.builtInKotlin=false')));
+      expect(settings, contains('org.jetbrains.kotlin.android'));
+      expect(properties, contains('android.builtInKotlin=false'));
+      expect(properties, contains('android.newDsl=false'));
       expect(properties, contains('android.useAndroidX=true'));
     });
   });
