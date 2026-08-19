@@ -169,6 +169,25 @@ void main() {
     }
   });
 
+  test('current writing references cover every built-in rule', () {
+    const referencePaths = <String>[
+      'README.md',
+      'docs/FEATURES.md',
+      'docs/WRITING_RULES.md',
+    ];
+
+    for (final path in referencePaths) {
+      final content = File(path).readAsStringSync();
+      for (final ruleId in builtInRuleIds) {
+        expect(
+          content,
+          contains('`$ruleId`'),
+          reason: '$path must name current built-in writing rule $ruleId.',
+        );
+      }
+    }
+  });
+
   test('configuration documents both current transfer formats', () {
     final configuration = File('docs/CONFIGURATION.md').readAsStringSync();
 
