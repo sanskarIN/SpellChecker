@@ -106,6 +106,8 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Test Android repository support contract
+        run: flutter test android/test/android_repository_support_test.dart --reporter expanded
       - name: Verify Android production manifest policy
         run: |
           grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
