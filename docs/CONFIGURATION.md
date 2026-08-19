@@ -120,6 +120,8 @@ Use the personal dictionary instead when a word should remain accepted across se
 
 Writing-rule choices are durable and language-specific. The preference model deliberately has three distinct states.
 
+The ten current built-in writing rules support English and therefore run for `en-US` and `en-GB`. For the eleven non-English built-in spelling packs, the current built-in supported-rule set is empty. An explicit stored/imported rule ID can remain part of preference data for compatibility, but it does not become effective unless that rule exists and supports the selected language.
+
 ### Unset
 
 No stored key exists for a language. The editor uses `WritingRuleRegistry.defaultEnabledRuleIds`, filtered to supported rules.
