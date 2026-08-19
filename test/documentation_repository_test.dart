@@ -17,13 +17,14 @@ String _currentPackageVersion() {
 }
 
 List<File> _trackedMarkdownFiles() {
-  final result = Process.runSync(
-    'git',
-    const <String>['ls-files', '*.md'],
-    runInShell: Platform.isWindows,
-  );
+  final result = Process.runSync('git', const <String>[
+    'ls-files',
+    '*.md',
+  ], runInShell: Platform.isWindows);
   if (result.exitCode != 0) {
-    throw StateError('git ls-files *.md must succeed for documentation checks.');
+    throw StateError(
+      'git ls-files *.md must succeed for documentation checks.',
+    );
   }
   return (result.stdout as String)
       .split(RegExp(r'\r?\n'))
@@ -185,7 +186,8 @@ void main() {
       expect(
         content,
         contains(entry.value),
-        reason: '${entry.key} must reflect current package version $currentVersion.',
+        reason:
+            '${entry.key} must reflect current package version $currentVersion.',
       );
     }
   });
