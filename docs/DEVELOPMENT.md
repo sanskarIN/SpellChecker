@@ -345,15 +345,25 @@ dart run tool/benchmark_large_document.dart \
   --json
 ```
 
-Build the committed release target:
+Build any committed release target whose toolchain is available on the current machine. Common release commands are:
 
 ```bash
 flutter build web --release
+flutter build apk --release
+flutter build linux --release
+flutter build macos --release
+flutter build windows --release
 ```
 
-The complete build/package verification procedure is in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+For iOS compilation without distribution signing:
 
-CI runs dependency resolution, format check, analyzer, complete tests, and benchmark smoke. The release workflow repeats those gates and additionally builds/uploads the web artifact.
+```bash
+flutter build ios --release --no-codesign
+```
+
+The complete build/package verification procedure, host requirements, signing boundaries, and output paths are in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
+
+The primary CI workflow runs dependency resolution, formatting, analyzer, complete tests, and benchmark smoke. The focused documentation/metadata workflow runs the repository documentation audit on relevant changes. Cross-platform CI repeats source quality gates and builds all six committed targets, while the release workflow mirrors those six target builds and uploads release-validation artifacts.
 
 ## Focused testing
 
