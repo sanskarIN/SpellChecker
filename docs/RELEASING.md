@@ -8,7 +8,7 @@ For the complete local build/package procedure, target-specific artifact expecta
 
 ```text
 name: spellchecker
-version: 3.0.0+22
+version: 3.2.0+25
 Dart SDK: >=3.8.0 <4.0.0
 ```
 
