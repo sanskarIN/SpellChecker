@@ -1,0 +1,7 @@
+# Copy this file to android/key.properties for a production-signed Android build.
+# Never commit android/key.properties or the referenced keystore.
+# Prefer an absolute storeFile path on release machines.
+storePassword=replace-with-store-password
+keyPassword=replace-with-key-password
+keyAlias=upload
+storeFile=/absolute/path/to/upload-keystore.jks
