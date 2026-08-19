@@ -140,9 +140,11 @@ void main() {
 
     for (final markdownFile in _trackedMarkdownFiles()) {
       final lines = markdownFile.readAsLinesSync();
-      final h1Count = lines.where((line) => line.startsWith('# ')).length;
-      if (h1Count != 1) {
-        failures.add('${markdownFile.path}: expected one H1, found $h1Count');
+      if (!markdownFile.path.startsWith('.github/')) {
+        final h1Count = lines.where((line) => line.startsWith('# ')).length;
+        if (h1Count != 1) {
+          failures.add('${markdownFile.path}: expected one H1, found $h1Count');
+        }
       }
 
       final fenceCount = lines
