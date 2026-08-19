@@ -96,6 +96,8 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Check Android support test formatting
+        run: dart format --output=none --set-exit-if-changed android/test
       - name: Test Android repository support contract
         run: flutter test android/test/android_repository_support_test.dart --reporter expanded
       - name: Verify Android production manifest policy
