@@ -74,7 +74,7 @@ The repository commits official Flutter runners for Android, iOS, Linux, macOS, 
 ## Application workflow
 
 1. Enter or paste text in the editor.
-2. Choose one of the eight built-in offline spelling language packs.
+2. Choose one of the thirteen built-in offline spelling language packs.
 3. Select **Check spelling** or press `Ctrl+Enter` / `Command+Enter`.
 4. Review underlined issues and ranked suggestions.
 5. Use `F7` / `Shift+F7` to move between spelling issues.
