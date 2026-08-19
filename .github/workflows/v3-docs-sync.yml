@@ -1,6 +1,30 @@
-name: V3 metadata audit
+name: Documentation and metadata audit
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - README.md
+      - CHANGELOG.md
+      - pubspec.yaml
+      - 'docs/**'
+      - 'lib/core/spell_language_pack.dart'
+      - 'lib/features/editor/spell_checker_page.dart'
+      - 'lib/writing/**'
+      - 'test/documentation_repository_test.dart'
+      - '.github/workflows/v3-docs-sync.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - README.md
+      - CHANGELOG.md
+      - pubspec.yaml
+      - 'docs/**'
+      - 'lib/core/spell_language_pack.dart'
+      - 'lib/features/editor/spell_checker_page.dart'
+      - 'lib/writing/**'
+      - 'test/documentation_repository_test.dart'
+      - '.github/workflows/v3-docs-sync.yml'
   workflow_dispatch:
 
 permissions:
