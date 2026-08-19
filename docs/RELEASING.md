@@ -66,16 +66,16 @@ Before signed/store distribution, also complete the target-specific signing, pac
 
 ## Versioning
 
-SpellChecker currently uses a semantic-looking package version plus Flutter build metadata:
+SpellChecker uses a semantic-looking package version plus Flutter build metadata:
 
 ```text
 MAJOR.MINOR.PATCH+BUILD
 ```
 
-Example:
+Generic example:
 
 ```text
-3.0.0+22
+1.2.3+45
 ```
 
 When incrementing the version:
@@ -94,8 +94,8 @@ Do not rewrite historical files' old versions merely because the current version
 The workflow accepts any tag beginning with `v`. Use a tag that clearly corresponds to the intended package release, for example:
 
 ```bash
-git tag v3.0.0
-git push origin v3.0.0
+git tag v1.2.3
+git push origin v1.2.3
 ```
 
 Before pushing a tag, make sure it points to the reviewed/green release commit. Replacing/moving public release tags damages reproducibility and should be avoided.
