@@ -22,6 +22,17 @@ Current built-in language IDs are:
 ```text
 en-US
 en-GB
+hi-IN
+es-ES
+fr-FR
+de-DE
+pt-BR
+it-IT
+bn-IN
+mr-IN
+ta-IN
+te-IN
+ru-RU
 ```
 
 `en-US` is the default pack. When the application restores a saved language ID, an unsupported or missing value falls back to the default pack.
