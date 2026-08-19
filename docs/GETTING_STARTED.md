@@ -123,7 +123,9 @@ SpellChecker treats checked issues as a snapshot of the source text. Editing the
 
 ## Perform your first writing review
 
-Open **Writing insights** from the app bar or press `Ctrl+Shift+Enter` / `Command+Shift+Enter`.
+Writing insights currently applies the ten built-in English writing rules only when **English (US)** or **English (UK)** is selected. The eleven non-English packs still provide local spelling, suggestions, and personal dictionaries, but do not run English-specific writing rules.
+
+With an English pack selected, open **Writing insights** from the app bar or press `Ctrl+Shift+Enter` / `Command+Shift+Enter`.
 
 Try text such as:
 
