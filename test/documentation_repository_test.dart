@@ -53,6 +53,7 @@ String? _repositoryRelativeTarget(String destination) {
 
 void main() {
   final currentVersion = _currentPackageVersion();
+  final currentReleaseVersion = currentVersion.split('+').first;
   final builtInLanguageIds = SpellLanguageRegistry.builtIns
       .map((pack) => pack.id)
       .toList(growable: false);
@@ -132,6 +133,26 @@ void main() {
       isEmpty,
       reason: 'Broken repository-relative Markdown links: $failures',
     );
+  });
+
+  test('current package version stays synchronized', () {
+    final expectedByPath = <String, String>{
+      'README.md': '`$currentVersion`',
+      'docs/README.md': '`$currentVersion`',
+      'docs/RELEASE_HISTORY.md': 'Current package version: `$currentVersion`.',
+      'lib/features/editor/spell_checker_page.dart':
+          "applicationVersion: '$currentReleaseVersion'",
+      'CHANGELOG.md': '## [$currentReleaseVersion] - ',
+    };
+
+    for (final entry in expectedByPath.entries) {
+      final content = File(entry.key).readAsStringSync();
+      expect(
+        content,
+        contains(entry.value),
+        reason: '${entry.key} must reflect current package version $currentVersion.',
+      );
+    }
   });
 
   test('current feature reference names every language and writing rule', () {
