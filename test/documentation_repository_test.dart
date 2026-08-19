@@ -190,6 +190,41 @@ void main() {
     }
   });
 
+  test('current guides reject known obsolete release claims', () {
+    const currentGuidePaths = <String>[
+      'docs/GETTING_STARTED.md',
+      'docs/USER_GUIDE.md',
+      'docs/DEVELOPMENT.md',
+      'docs/TESTING.md',
+      'docs/RELEASING.md',
+      'docs/FAQ.md',
+    ];
+    const obsoleteMarkers = <String>[
+      '2.16.0+21',
+      '3.0.0+22',
+      'Native runner directories and native release artifacts are not currently committed/produced.',
+      'The current repository has no committed native runner directories',
+      'The release workflow additionally runs `flutter build web --release`.',
+      'The release workflow repeats those gates and additionally builds/uploads the web artifact.',
+    ];
+
+    final failures = <String>[];
+    for (final path in currentGuidePaths) {
+      final content = File(path).readAsStringSync();
+      for (final marker in obsoleteMarkers) {
+        if (content.contains(marker)) {
+          failures.add('$path -> $marker');
+        }
+      }
+    }
+
+    expect(
+      failures,
+      isEmpty,
+      reason: 'Current guides contain obsolete release claims: $failures',
+    );
+  });
+
   test('current feature reference names every language and writing rule', () {
     final features = File('docs/FEATURES.md').readAsStringSync();
 
