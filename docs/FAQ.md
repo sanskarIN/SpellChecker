@@ -38,7 +38,21 @@ See [Privacy](PRIVACY.md) for the complete data-flow contract.
 
 ### Which languages are built in?
 
-English (US), `en-US`, and English (UK), `en-GB`.
+Thirteen offline spelling packs are built in:
+
+- English (US) `en-US`;
+- English (UK) `en-GB`;
+- Hindi (India) `hi-IN`;
+- Spanish (Spain) `es-ES`;
+- French (France) `fr-FR`;
+- German (Germany) `de-DE`;
+- Portuguese (Brazil) `pt-BR`;
+- Italian (Italy) `it-IT`;
+- Bengali (India) `bn-IN`;
+- Marathi (India) `mr-IN`;
+- Tamil (India) `ta-IN`;
+- Telugu (India) `te-IN`;
+- Russian (Russia) `ru-RU`.
 
 ### Does SpellChecker detect the language automatically?
 
