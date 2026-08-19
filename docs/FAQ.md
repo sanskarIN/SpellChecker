@@ -62,15 +62,15 @@ No. Language selection is explicit.
 
 The library is designed around `SpellLanguagePack`, so additional packs can be implemented. A complete pack needs explicit dictionary, tokenization, normalization, valid-word, frequency/suggestion, suffix, and metadata behavior plus tests. See [Language packs](LANGUAGE_PACKS.md).
 
-### Are my personal words shared between US and UK English?
+### Are my personal words shared between language packs?
 
-No. Personal vocabulary is stored separately per language pack.
+No. Personal vocabulary is stored separately per language pack. Saving a word for `en-US`, for example, does not automatically add it to `en-GB`, `hi-IN`, or any other pack.
 
 ## Spelling
 
-### Why is a word marked unknown even though it is valid in another English variant?
+### Why is a word marked unknown even though another language pack accepts it?
 
-The selected language pack controls dictionary behavior. For example, a regional spelling can be accepted by one pack and unknown in the other. Switch the selected language if the text uses a different variant.
+The selected language pack controls dictionary behavior. A word can be valid in one pack and unknown in another, including regional variants such as `en-US` and `en-GB`. Switch the selected language explicitly when the text belongs to a different supported pack.
 
 ### How many suggestions can I show?
 
