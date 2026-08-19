@@ -49,38 +49,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Verify V3 package identity
-        shell: bash
-        run: |
-          grep -F 'version: 3.2.0+25' pubspec.yaml
-          grep -F "applicationVersion: '3.2.0'" lib/features/editor/spell_checker_page.dart
-          grep -F 'Current package version: `3.2.0+25`.' docs/RELEASE_HISTORY.md
-          grep -F '## [3.2.0] - 2026-08-17' CHANGELOG.md
+      - name: Check audit formatting
+        run: dart format --output=none --set-exit-if-changed test/documentation_repository_test.dart
 
-      - name: Verify language expansion metadata
-        shell: bash
-        run: |
-          grep -F "id: 'bn-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'mr-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'ta-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'te-IN'" lib/core/spell_language_pack.dart
-          grep -F "id: 'ru-RU'" lib/core/spell_language_pack.dart
-          grep -F 'Built-in language packs: 13' docs/V3_2_LANGUAGE_EXPANSION.md
-
-      - name: Verify cross-platform runner inventory
-        shell: bash
-        run: |
-          test -f .metadata
-          test -f android/app/src/main/AndroidManifest.xml
-          test -f ios/Runner.xcodeproj/project.pbxproj
-          test -f linux/CMakeLists.txt
-          test -f macos/Runner.xcodeproj/project.pbxproj
-          test -f web/index.html
-          test -f windows/CMakeLists.txt
-
-      - name: Verify V3.2 release documentation
-        shell: bash
-        run: |
-          test -f docs/V3_2_LANGUAGE_EXPANSION.md
-          grep -F 'Android, iOS, Linux, macOS, Web, and Windows' README.md
-          grep -F 'U+200D ZERO WIDTH JOINER' docs/V3_2_LANGUAGE_EXPANSION.md
+      - name: Run documentation repository audit
+        run: flutter test test/documentation_repository_test.dart --reporter expanded
