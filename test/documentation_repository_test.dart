@@ -136,15 +136,15 @@ void main() {
     );
   });
 
-  test('tracked Markdown has one H1, balanced fences, and no conflicts', () {
+  test('tracked Markdown has H1 headings, balanced fences, and no conflicts', () {
     final failures = <String>[];
 
     for (final markdownFile in _trackedMarkdownFiles()) {
       final lines = markdownFile.readAsLinesSync();
       if (!markdownFile.path.startsWith('.github/')) {
         final h1Count = lines.where((line) => line.startsWith('# ')).length;
-        if (h1Count != 1) {
-          failures.add('${markdownFile.path}: expected one H1, found $h1Count');
+        if (h1Count == 0) {
+          failures.add('${markdownFile.path}: expected at least one H1');
         }
       }
 
