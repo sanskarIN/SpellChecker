@@ -211,8 +211,10 @@ The repository includes:
 - Flutter/Dart static analysis configuration;
 - unit, codec, persistence, controller, integration, accessibility, Unicode, stress, and widget tests;
 - deterministic large-document benchmark tooling under `tool/`;
-- GitHub Actions CI for formatting, analysis, tests, and benchmark smoke;
-- a tagged/manual release workflow that additionally builds and uploads a Flutter web artifact.
+- primary GitHub Actions CI for formatting, analysis, complete tests, and benchmark smoke;
+- focused documentation/metadata CI for current-document, registry, version, link, and repository-inventory contracts;
+- cross-platform CI that builds Android, iOS, Linux, macOS, Web, and Windows in release mode;
+- a tagged/manual release workflow that mirrors those six target builds and uploads release-validation artifacts.
 
 ## Explicit non-features and boundaries
 
