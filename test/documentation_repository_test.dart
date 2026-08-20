@@ -176,7 +176,9 @@ void main() {
   test('current package version stays synchronized', () {
     final expectedByPath = <String, String>{
       'README.md': '`$currentVersion`',
+      'CONTRIBUTING.md': '`$currentVersion`',
       'SECURITY.md': '`$currentVersion`',
+      'SUPPORT.md': '`$currentVersion`',
       'docs/README.md': '`$currentVersion`',
       'docs/GETTING_STARTED.md': '`$currentVersion`',
       'docs/EXECUTABLE_BUILDS.md': '`$currentVersion`',
@@ -200,7 +202,9 @@ void main() {
 
   test('current guides reject known obsolete release claims', () {
     const currentGuidePaths = <String>[
+      'CONTRIBUTING.md',
       'SECURITY.md',
+      'SUPPORT.md',
       'docs/GETTING_STARTED.md',
       'docs/USER_GUIDE.md',
       'docs/DEVELOPMENT.md',
@@ -217,6 +221,8 @@ void main() {
       'The release workflow repeats those gates and additionally builds/uploads the web artifact.',
       'Only the web host is committed/release-built today.',
       'The release workflow validates source then builds Flutter web and uploads an Actions artifact.',
+      'For release/web-build changes also run:',
+      'Release issues should also include the `flutter build web --release` result.',
     ];
 
     final failures = <String>[];
