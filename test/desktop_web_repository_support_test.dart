@@ -106,32 +106,38 @@ void main() {
       },
     );
 
-    test('Windows keeps stable executable identity and strict native metadata', () {
-      final cmake = File('windows/CMakeLists.txt').readAsStringSync();
-      final resource = File('windows/runner/Runner.rc').readAsStringSync();
+    test(
+      'Windows keeps stable executable identity and strict native metadata',
+      () {
+        final cmake = File('windows/CMakeLists.txt').readAsStringSync();
+        final resource = File('windows/runner/Runner.rc').readAsStringSync();
 
-      expect(cmake, contains('project(spellchecker LANGUAGES CXX)'));
-      expect(cmake, contains('set(BINARY_NAME "spellchecker")'));
-      expect(
-        cmake,
-        contains(r'target_compile_features(${TARGET} PUBLIC cxx_std_17)'),
-      );
-      expect(
-        cmake,
-        contains(r'target_compile_options(${TARGET} PRIVATE /W4 /WX'),
-      );
-      expect(resource, contains('FLUTTER_VERSION_MAJOR'));
-      expect(resource, contains('FLUTTER_VERSION_BUILD'));
-      expect(resource, contains('VALUE "CompanyName", "Sanskar"'));
-      expect(resource, contains('VALUE "FileDescription", "SpellChecker"'));
-      expect(
-        resource,
-        contains('VALUE "OriginalFilename", "spellchecker.exe"'),
-      );
-      expect(resource, contains('VALUE "ProductName", "SpellChecker"'));
-      expect(resource, contains(r'resources\\app_icon.ico'));
-      expect(File('windows/runner/resources/app_icon.ico').existsSync(), isTrue);
-    });
+        expect(cmake, contains('project(spellchecker LANGUAGES CXX)'));
+        expect(cmake, contains('set(BINARY_NAME "spellchecker")'));
+        expect(
+          cmake,
+          contains(r'target_compile_features(${TARGET} PUBLIC cxx_std_17)'),
+        );
+        expect(
+          cmake,
+          contains(r'target_compile_options(${TARGET} PRIVATE /W4 /WX'),
+        );
+        expect(resource, contains('FLUTTER_VERSION_MAJOR'));
+        expect(resource, contains('FLUTTER_VERSION_BUILD'));
+        expect(resource, contains('VALUE "CompanyName", "Sanskar"'));
+        expect(resource, contains('VALUE "FileDescription", "SpellChecker"'));
+        expect(
+          resource,
+          contains('VALUE "OriginalFilename", "spellchecker.exe"'),
+        );
+        expect(resource, contains('VALUE "ProductName", "SpellChecker"'));
+        expect(resource, contains(r'resources\\app_icon.ico'));
+        expect(
+          File('windows/runner/resources/app_icon.ico').existsSync(),
+          isTrue,
+        );
+      },
+    );
 
     test('normal and release CI validate built Web and desktop artifacts', () {
       for (final path in const <String>[
