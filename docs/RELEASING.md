@@ -29,7 +29,8 @@ The `quality` job runs once on Ubuntu. On tag-triggered runs it first verifies t
 After quality succeeds, target jobs build in parallel:
 
 ```text
-Web      ubuntu-latest   flutter build web --release
+Web      ubuntu-latest   flutter test --platform chrome test/widget_test.dart
+                         flutter build web --release
 Android  ubuntu-latest   flutter build apk --release + flutter build appbundle --release
 Linux    ubuntu-latest   flutter build linux --release
 Windows  windows-latest  flutter build windows --release
@@ -37,13 +38,13 @@ macOS    macos-latest    flutter build macos --release
 iOS      macos-latest    flutter build ios --release --no-codesign
 ```
 
-The Android target additionally runs the focused Android repository-support contract and verifies the production-manifest privacy policy before packaging. The Web target verifies its manifest and install icons after build. Linux, macOS, and iOS outputs are wrapped in tar archives before GitHub artifact upload so Unix executable permission bits and native bundle structure survive artifact transport. Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
+The Android target additionally runs the focused Android repository-support contract and verifies the production-manifest privacy policy before packaging. The Web target runs the existing app-level widget workflow in Chrome before its release build, then verifies its manifest and install icons after build. Linux, macOS, and iOS outputs are wrapped in tar archives before GitHub artifact upload so Unix executable permission bits and native bundle structure survive artifact transport. Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
 
 ## Release artifacts
 
 The workflow uploads target-specific artifacts named from the triggering ref or release tag:
 
-- Web — complete `build/web` directory;
+- Web — complete `build/web` directory after Chrome widget smoke and install-shell verification;
 - Android — validation release APK and Android App Bundle (`.aab`);
 - Linux — permission-preserving tar archive containing the complete release bundle;
 - Windows — complete release directory;
@@ -68,6 +69,7 @@ Before tagging/dispatching a release, verify:
 - writing-rule/language default migrations were reviewed;
 - privacy/security docs match runtime data flows;
 - full Flutter suite and benchmark smoke pass;
+- Web Chrome widget smoke passes;
 - the executable-build tracked-file inventory matches the actual repository;
 - all configured cross-platform release-mode build jobs succeed;
 - Android release validation produces both the APK and AAB and preserves the production-manifest policy;
@@ -127,6 +129,7 @@ For a significant release, consider recording exact evidence:
 - Flutter/Dart versions;
 - format/analyzer/full test results;
 - benchmark smoke result;
+- Chrome Web widget-smoke result;
 - Android APK and AAB build results plus the Android support-contract result;
 - iOS/Linux/macOS/Web/Windows build results;
 - executable/package verification result;
@@ -234,7 +237,7 @@ Update [Privacy](PRIVACY.md) and [Security](../SECURITY.md) before release when 
 
 All six Flutter runners are committed and cross-platform CI/release builds validate them. Before describing an artifact as production-distribution-ready, verify the relevant signing/notarization/store/installer policy rather than equating a successful CI build with channel approval.
 
-For Android, CI validates both release packaging forms while the production upload keystore remains external to Git. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and the Android runner guide for target-specific requirements.
+For Android, CI validates both release packaging forms while the production upload keystore remains external to Git. Web also has a browser-runtime smoke gate in Chrome before packaging. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and the Android runner guide for target-specific requirements.
 
 ## Release artifact verification
 
@@ -242,13 +245,14 @@ After workflow success:
 
 1. confirm the common quality job succeeded;
 2. on a tag-triggered run, confirm the tag/version guard succeeded;
-3. confirm every intended platform build job succeeded;
-4. confirm each uploaded artifact exists and uses the expected ref/tag suffix;
-5. for Android, confirm both the APK and AAB are present and distinguish CI validation signing from the intended production upload certificate;
-6. extract Linux/macOS/iOS tar archives before inspection so their preserved permission/bundle metadata is retained;
-7. inspect or extract the complete bundle rather than only a single executable from desktop targets;
-8. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
-9. keep the workflow run/tag/commit reference in release evidence.
+3. confirm the Web Chrome widget smoke succeeded;
+4. confirm every intended platform build job succeeded;
+5. confirm each uploaded artifact exists and uses the expected ref/tag suffix;
+6. for Android, confirm both the APK and AAB are present and distinguish CI validation signing from the intended production upload certificate;
+7. extract Linux/macOS/iOS tar archives before inspection so their preserved permission/bundle metadata is retained;
+8. inspect or extract the complete bundle rather than only a single executable from desktop targets;
+9. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+10. keep the workflow run/tag/commit reference in release evidence.
 
 The workflow artifacts are retained for 30 days and should not be treated as permanent archival storage.
 
