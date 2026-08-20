@@ -24,9 +24,9 @@ Flutter targets do not all produce the same kind of deliverable.
 | Web | Complete `build/web/` directory | **Supported and release-built** |
 | Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner committed; CI builds release APK + AAB |
 | iOS | `.ipa` plus Xcode archive/signing metadata | Runner committed; CI builds release app without codesign |
-| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner committed; CI builds release bundle |
+| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner committed; CI builds and inspects release bundle |
 | macOS | `.app` application bundle, normally signed/notarized for distribution | Runner committed; CI builds release app |
-| Linux | Executable plus `lib/` and `data/` bundle contents | Runner committed; CI builds release bundle |
+| Linux | Executable plus `lib/` and `data/` bundle contents | Runner committed; CI builds and inspects release bundle |
 
 For Windows and Linux especially, do **not** copy only the executable file and discard its neighboring runtime files. Flutter desktop release output is a bundle.
 
@@ -116,14 +116,16 @@ All six Flutter target runners are committed. Normal builds do not require runne
 | --- | --- | --- | --- |
 | Web | Ubuntu | `flutter build web --release` | complete `build/web` directory |
 | Android | Ubuntu | `flutter build apk --release` + `flutter build appbundle --release` | APK + AAB validation artifacts |
-| Linux | Ubuntu | `flutter build linux --release` | complete desktop bundle |
-| Windows | Windows | `flutter build windows --release` | complete Release runtime directory |
+| Linux | Ubuntu | `flutter build linux --release` | inspected complete desktop bundle |
+| Windows | Windows | `flutter build windows --release` | inspected complete Release runtime directory |
 | macOS | macOS | `flutter build macos --release` | `.app` bundle |
 | iOS | macOS | `flutter build ios --release --no-codesign` | no-codesign `.app` validation bundle |
 
 `.github/workflows/cross-platform.yml` runs these builds for normal V3 validation after shared format/analyze/test/benchmark gates succeed. `.github/workflows/release.yml` mirrors the same six-target build coverage for release tags or manual release-candidate dispatch.
 
-Build success proves that the committed source and runner compile together. It does not replace production signing, notarization, store review, or installer/package-channel policy.
+Build success is only the first target-level check. Web CI also requires the built `index.html`, Flutter bootstrap, compiled `main.dart.js`, manifest, and install icons and structurally checks the copied manifest. Linux CI locates the release bundle, requires an executable `spellchecker` ELF, Flutter runtime library, Flutter asset directory, and no unresolved `ldd` dependencies. Windows CI requires `spellchecker.exe`, `flutter_windows.dll`, Flutter assets, and expected compiled version-resource metadata including product name, file description, original filename, and a non-empty product version. Android and Apple targets retain their own focused privacy/metadata contracts.
+
+These checks prove repository packaging compatibility. They do not replace production signing, notarization, store review, clean-machine launch testing, or installer/package-channel policy.
 
 ### Local target commands
 
@@ -143,7 +145,7 @@ The operating-system restrictions described in the target sections below still a
 
 ### Web deployment boundary
 
-The complete `build/web/` directory is deployable static output. The release workflow uploads it as an artifact but does not currently deploy a hosted website. Optional Wasm mode (`flutter build web --release --wasm`) is not the official automated build mode and requires separate compatibility review.
+The complete `build/web/` directory is deployable static output. CI verifies its generated bootstrap, compiled application script, install manifest, and required install icons before upload. The release workflow uploads it as an artifact but does not currently deploy a hosted website. Optional Wasm mode (`flutter build web --release --wasm`) is not the official automated build mode and requires separate compatibility review.
 
 ### Artifact retention boundary
 
@@ -294,17 +296,18 @@ Flutter produces a release directory containing the application `.exe`, Flutter/
 
 **Package the full release directory**, not only the `.exe`.
 
+Normal and release CI verify the runtime bundle before upload. The checks require `spellchecker.exe`, `flutter_windows.dll`, and `data/flutter_assets`, then read the compiled executable's Windows `VersionInfo` and require `SpellChecker` product/file metadata, `spellchecker.exe` as the original filename, and a non-empty product version. This catches runner-resource or packaging regressions that a successful compiler exit alone would miss.
+
 Before an official Windows release:
 
-- set the intended binary name in the generated Windows runner configuration;
-- set product/file metadata and application icon;
+- preserve the intended binary name and version-resource metadata;
+- preserve/review the application icon;
 - verify any Visual C++ runtime distribution requirement;
 - test clean-machine launch, storage, clipboard, keyboard, high-DPI behavior, accessibility, and upgrade behavior;
 - choose a distribution format such as a reviewed zip/MSIX/installer process;
-- add Windows CI that builds and archives the complete runtime directory;
 - define signing policy if code signing is used.
 
-The Windows runner is committed and CI builds the complete release bundle on `windows-latest`.
+The Windows runner is committed and CI builds and inspects the complete release bundle on `windows-latest`.
 
 ## 10. macOS application bundle
 
@@ -347,15 +350,17 @@ build/linux/<architecture>/release/bundle/
 
 The bundle contains the application executable plus required `lib/` and `data/` content. **Distribute the complete bundle**, not only the executable.
 
+Normal and release CI verify that `spellchecker` exists with executable permission, is an ELF binary, that `lib/libflutter_linux_gtk.so` and `data/flutter_assets` are present, and that `ldd` reports no unresolved shared libraries. The bundle is archived only after those checks pass.
+
 Before an official Linux release:
 
 - test on the intended Linux distribution/runtime baseline;
-- inspect runtime library dependencies;
+- inspect runtime library dependencies beyond the CI-host baseline when targeting older/different distributions;
 - define packaging (`tar`, distro package, Snap, or another reviewed method);
 - validate preferences, clipboard, keyboard, accessibility, font/rendering, and startup behavior;
-- add Linux desktop build CI and archive the complete bundle.
+- keep the permission-preserving archive/package structure intact.
 
-The Linux runner is committed and CI builds the complete release bundle on Ubuntu with the required desktop development packages.
+The Linux runner is committed and CI builds and inspects the complete release bundle on Ubuntu with the required desktop development packages.
 
 ## 12. Build modes
 
@@ -418,6 +423,7 @@ For every artifact, record and verify:
 - benchmark-smoke success when applicable;
 - target release-build success;
 - expected files exist in the output;
+- target-specific artifact metadata/runtime checks pass;
 - artifact launches/loads in a clean target environment;
 - local preference restoration works;
 - personal dictionary export/import works;
@@ -466,11 +472,11 @@ Treat this as an Android release regression. Run both Android release commands a
 
 ### Web output appears incomplete
 
-Deploy/serve the complete `build/web/` directory. Flutter web output is a set of coordinated files and assets.
+Deploy or serve the complete `build/web/` directory. Flutter web output is a set of coordinated files and assets. If CI fails the shell check, inspect `index.html`, `flutter_bootstrap.js`, `main.dart.js`, `manifest.json`, and the install icons before changing the upload step.
 
 ### Windows/Linux executable fails when copied alone
 
-Use the complete generated release bundle. Flutter desktop applications depend on adjacent runtime libraries/data.
+Use the complete generated release bundle. Flutter desktop applications depend on adjacent runtime libraries and data. Windows CI explicitly requires its Flutter DLL/assets, while Linux CI requires its runtime library/assets and resolvable shared-library dependencies.
 
 ### Native signing fails
 
@@ -487,12 +493,13 @@ A complete native release addition should include:
 3. build runner on the correct host OS;
 4. dependency/format/analyze/test gates;
 5. target build command;
-6. artifact upload with failure-on-missing-output;
-7. signing policy if applicable;
-8. retention/provenance policy;
-9. smoke/install validation where practical;
-10. README/platform/release/privacy/security/documentation updates;
-11. regression tests for target-sensitive behavior.
+6. artifact content/metadata validation;
+7. artifact upload with failure-on-missing-output;
+8. signing policy if applicable;
+9. retention/provenance policy;
+10. smoke/install validation where practical;
+11. README/platform/release/privacy/security/documentation updates;
+12. regression tests for target-sensitive behavior.
 
 ## 18. File-by-file repository build inventory
 
@@ -639,8 +646,10 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/analysis_benchmark_result_test.dart`
 - `test/analysis_benchmark_runner_test.dart`
 - `test/analysis_benchmark_scenario_test.dart`
+- `test/apple_repository_support_test.dart`
 - `test/bmc_repository_metadata_test.dart`
 - `test/bounded_analysis_widget_test.dart`
+- `test/desktop_web_repository_support_test.dart`
 - `test/dictionary_preferences_test.dart`
 - `test/documentation_repository_test.dart`
 - `test/edit_distance_test.dart`
@@ -742,7 +751,7 @@ These files contain the application/library implementation and committed host ru
 
 ### Validation source
 
-Every test file participates in the complete `flutter test --reporter expanded` gate. A target package should not be produced by skipping the full suite merely because a focused test passed.
+Every top-level `test/` file participates in the complete `flutter test --reporter expanded` gate. Platform-specific contracts may additionally be run in target jobs before packaging. A target package should not be produced by skipping the full suite merely because a focused test passed.
 
 ### Developer tooling
 
