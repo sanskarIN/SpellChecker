@@ -17,24 +17,25 @@ void main() {
       expect(project, contains('IPHONEOS_DEPLOYMENT_TARGET = 15.0;'));
       expect(project, contains('TARGETED_DEVICE_FAMILY = "1,2";'));
       expect(infoPlist, contains('<string>SpellChecker</string>'));
-      expect(infoPlist, contains('$(FLUTTER_BUILD_NAME)'));
-      expect(infoPlist, contains('$(FLUTTER_BUILD_NUMBER)'));
+      expect(infoPlist, contains(r'$(FLUTTER_BUILD_NAME)'));
+      expect(infoPlist, contains(r'$(FLUTTER_BUILD_NUMBER)'));
     });
 
     test('iOS keeps an explicit offline-first transport policy', () {
       final infoPlist = File('ios/Runner/Info.plist').readAsStringSync();
 
       expect(infoPlist, contains('<key>NSAppTransportSecurity</key>'));
-      expect(infoPlist, contains('<key>NSAllowsArbitraryLoads</key>'));
-      expect(
-        infoPlist,
-        isNot(contains('<key>NSAllowsArbitraryLoads</key>\n\t<true/>')),
-      );
-      expect(
-        infoPlist,
-        contains('<key>NSAllowsArbitraryLoadsInWebContent</key>'),
-      );
-      expect(infoPlist, contains('<key>NSAllowsLocalNetworking</key>'));
+      for (final key in const <String>[
+        'NSAllowsArbitraryLoads',
+        'NSAllowsArbitraryLoadsInWebContent',
+        'NSAllowsLocalNetworking',
+      ]) {
+        expect(
+          RegExp('<key>$key</key>\\s*<false/>').hasMatch(infoPlist),
+          isTrue,
+          reason: '$key must stay explicitly disabled.',
+        );
+      }
     });
 
     test('macOS release is sandboxed without network entitlements', () {
@@ -50,8 +51,12 @@ void main() {
         appInfo,
         contains('PRODUCT_BUNDLE_IDENTIFIER = in.sanskar.spellchecker'),
       );
-      expect(releaseEntitlements, contains('com.apple.security.app-sandbox'));
-      expect(releaseEntitlements, contains('<true/>'));
+      expect(
+        RegExp(
+          r'<key>com\.apple\.security\.app-sandbox</key>\s*<true/>',
+        ).hasMatch(releaseEntitlements),
+        isTrue,
+      );
       expect(
         releaseEntitlements,
         isNot(contains('com.apple.security.network.client')),
