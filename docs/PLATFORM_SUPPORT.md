@@ -23,14 +23,14 @@ The runners were generated with Flutter stable and are tracked by the repository
 
 | Target | Portable source | Runner committed | Automated release-mode build | CI artifact | Store/distribution signing |
 | --- | --- | --- | --- | --- | --- |
-| Web | yes | yes | yes | yes | not applicable |
+| Web | yes | yes | yes + Chrome widget smoke | yes | not applicable |
 | Android | yes | yes | yes, APK + AAB | yes | production signing path supported; private upload key remains external |
-| iOS | yes | yes | yes, `--no-codesign` | yes | Apple signing/provisioning still required |
-| Linux desktop | yes | yes | yes | yes | packaging policy remains distribution-specific |
-| macOS | yes | yes | yes | yes | signing/notarization still required for public distribution |
+| iOS | yes | yes | yes, `--no-codesign` | yes, permission-preserving archive | Apple signing/provisioning still required |
+| Linux desktop | yes | yes | yes | yes, permission-preserving archive | packaging policy remains distribution-specific |
+| macOS | yes | yes | yes | yes, permission-preserving archive | signing/notarization still required for public distribution |
 | Windows | yes | yes | yes | yes | optional/required code signing depends on distribution channel |
 
-The cross-platform CI workflow is `.github/workflows/cross-platform.yml`. It runs source quality gates once and then builds every target on the operating system required by Flutter.
+The cross-platform CI workflow is `.github/workflows/cross-platform.yml`. It runs source quality gates once and then validates every target on the operating system required by Flutter.
 
 ## What cross-platform CI validates
 
@@ -47,7 +47,8 @@ benchmark CLI smoke
 After the common quality job succeeds, target jobs run in parallel:
 
 ```text
-Web      ubuntu-latest   flutter build web --release
+Web      ubuntu-latest   flutter test --platform chrome test/widget_test.dart
+                         flutter build web --release
 Android  ubuntu-latest   flutter build apk --release
                          flutter build appbundle --release
 Linux    ubuntu-latest   flutter build linux --release
@@ -56,9 +57,13 @@ macOS    macos-latest    flutter build macos --release
 iOS      macos-latest    flutter build ios --release --no-codesign
 ```
 
+The Web job runs the existing app-level widget workflow in Chrome before packaging, then verifies that the built install shell contains its manifest and required install icons. This complements the normal Flutter VM widget suite with a browser-runtime smoke path.
+
 The Android job also checks the production manifest privacy boundary before packaging: cloud backup and cleartext traffic must remain disabled, and the main manifest must not request the Internet permission.
 
-Each build uploads a short-lived GitHub Actions artifact so build output can be inspected. These CI artifacts prove buildability; they are not automatically permanent GitHub Releases or store-ready signed packages.
+Linux, macOS, and iOS jobs wrap their native output in `.tar.gz` archives before GitHub artifact upload. This preserves Unix executable permission bits and native bundle structure across artifact transport. Windows, Web, APK, and AAB outputs use their existing directory/file packaging because they do not require the same Unix permission preservation.
+
+Each build uploads a short-lived GitHub Actions artifact so build output can be inspected. These CI artifacts prove buildability and repository packaging compatibility; they are not automatically permanent GitHub Releases or store-ready signed packages.
 
 ## Local run/build commands
 
@@ -74,6 +79,7 @@ Then use the target supported by the current development machine.
 
 ```bash
 flutter run -d chrome
+flutter test --platform chrome test/widget_test.dart
 flutter build web --release
 ```
 
@@ -135,6 +141,7 @@ The native foundation intentionally separates stable machine identity from prese
 - Linux window title: `SpellChecker`.
 - macOS product name: `SpellChecker`.
 - Windows product/file description: `SpellChecker` while the executable filename remains stable as `spellchecker.exe`.
+- Web application/install name: `SpellChecker`, with committed manifest icons, Apple touch icon metadata, and an explicit browser favicon.
 
 Changing package/bundle identifiers later can break upgrades, preference continuity, store identity, deep links, or signing configuration. Treat such changes as migrations rather than cosmetic edits.
 
@@ -207,11 +214,11 @@ V3 establishes repository-supported and CI-artifact coverage across Android, iOS
 
 ## Regression protection
 
-`test/documentation_repository_test.dart` positively requires all six Flutter target directories and representative runner files to remain committed. It also verifies that `.metadata` tracks every supported platform.
+`test/documentation_repository_test.dart` positively requires all six Flutter target directories and representative runner files to remain committed. It also verifies that `.metadata` tracks every supported platform and protects representative platform identity/version/build workflow metadata.
 
-Generated native runner trees are treated as Flutter-managed platform roots by the executable-documentation inventory check, while project-owned source, tests, workflows, and documentation remain explicitly controlled.
+Generated Flutter runner trees are treated as managed platform roots by the executable-documentation inventory check, while project-owned source, tests, workflows, and documentation remain explicitly controlled.
 
-The Android CI job adds target-specific regression protection by checking production manifest privacy flags and compiling both APK and AAB release artifacts.
+The Web job adds browser-runtime and install-shell regression protection. The Android CI job adds target-specific regression protection by checking production manifest privacy flags and compiling both APK and AAB release artifacts. Native Unix/Apple packaging steps fail before upload if their expected bundle/app cannot be located or archived.
 
 ## Related documentation
 
