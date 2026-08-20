@@ -1,6 +1,6 @@
 # Contributing to SpellChecker
 
-Thank you for helping improve SpellChecker. This guide describes the current contribution workflow and compatibility/safety expectations for `2.16.0+21`.
+Thank you for helping improve SpellChecker. This guide describes the current contribution workflow and compatibility/safety expectations for `3.2.0+25`.
 
 For project behavior, start with the [complete documentation hub](docs/README.md). Historical release-specific contributor notes are preserved through [Release history](docs/RELEASE_HISTORY.md), not mixed into this current guide.
 
@@ -35,12 +35,14 @@ Never commit credentials, tokens, signing keys, provisioning profiles, private d
 - Git;
 - Flutter stable;
 - Dart compatible with `>=3.8.0 <4.0.0`;
-- Chrome or another suitable Flutter development target.
+- the host toolchain required by the target being changed.
+
+Chrome is a convenient development target for shared UI work. Native runner changes must also be validated on a host capable of building that target.
 
 Verify:
 
 ```bash
-flutter doctor
+flutter doctor -v
 flutter --version
 dart --version
 ```
@@ -114,13 +116,21 @@ dart run tool/benchmark_large_document.dart \
   --json
 ```
 
-For release/web-build changes also run:
+For build, runner, or release changes, run the relevant target build on a supported host and make sure the matching cross-platform CI job passes:
 
-```bash
-flutter build web --release
+```text
+Web      flutter build web --release
+Android  flutter build apk --release
+         flutter build appbundle --release
+Linux    flutter build linux --release
+Windows  flutter build windows --release
+macOS    flutter build macos --release
+iOS      flutter build ios --release --no-codesign
 ```
 
-Do not suppress analyzer/test failures broadly for convenience. Fix the implementation/test/design mismatch.
+Android runner/release changes should also run `android/test/android_repository_support_test.dart`. Apple runner/release changes should run `test/apple_repository_support_test.dart`; on macOS, lint the affected plist/entitlement sources with `plutil` as documented in [Testing](docs/TESTING.md).
+
+Do not suppress analyzer, test, platform-contract, or artifact-validation failures broadly for convenience. Fix the implementation, test, build, or documentation mismatch.
 
 ## Public API boundaries
 
@@ -180,7 +190,7 @@ Test custom dictionaries, personal candidates, equal-score ties, Unicode candida
 
 The current built-in/default registry contains exactly ten stable rules. See [Writing rules](docs/WRITING_RULES.md).
 
-A new/changed built-in rule must define:
+A new or changed built-in rule must define:
 
 - stable unique ID;
 - display name/description;
@@ -292,7 +302,7 @@ See [User guide](docs/USER_GUIDE.md), [Accessibility](docs/ACCESSIBILITY.md), an
 
 Do not use `pumpAndSettle()` when a test intentionally leaves a Future unresolved. Use controlled `pump()`/completion instead.
 
-For lazy/off-screen dialog content, scroll/ensure visibility rather than assuming every item is mounted.
+For lazy/off-screen dialog content, scroll or ensure visibility rather than assuming every item is mounted.
 
 ## Performance contributions
 
@@ -308,7 +318,9 @@ The current application is local-first and does not require a network analysis s
 
 Any change introducing runtime networking, telemetry, logging upload, user identity, file/document persistence, new permissions, external model/dictionary downloads, dynamic plugin execution, or new sensitive durable data requires explicit review and documentation in the same PR.
 
-Update [Privacy](docs/PRIVACY.md) and [Security](SECURITY.md) before merge when these boundaries change.
+Platform runner changes must preserve or deliberately redesign documented security boundaries such as the Android production network/backup policy, iOS transport policy, macOS release entitlements, and external signing-secret boundary.
+
+Update [Privacy](docs/PRIVACY.md), [Security](SECURITY.md), and platform/release documentation before merge when these boundaries change.
 
 For a vulnerability, do not open a public issue; follow [SECURITY.md](SECURITY.md).
 
@@ -319,6 +331,8 @@ Follow [Documentation maintenance](docs/DOCUMENTATION_MAINTENANCE.md).
 Current behavior belongs in evergreen docs. Release-specific design/audit evidence belongs in historical files indexed by [Release history](docs/RELEASE_HISTORY.md).
 
 When code changes current behavior, update the matching docs in the same PR rather than filing a follow-up documentation task.
+
+The executable-build inventory is machine-checked against `git ls-files`; adding, deleting, or renaming project-controlled files can therefore require an inventory update in [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md).
 
 ## Tests
 
@@ -342,24 +356,26 @@ Do not claim “zero bugs” or “all platforms supported” when the repositor
 
 ## Review checklist
 
-Before requesting/merging review, confirm:
+Before requesting or merging review, confirm:
 
 - format check passes;
 - analyzer passes;
 - complete test suite passes;
 - benchmark smoke passes when applicable;
-- web release build passes for release/build changes;
+- affected target release builds and artifact validations pass for runner/release changes;
+- Android or Apple focused platform contracts pass when those runners change;
 - public API compatibility reviewed;
 - UTF-16/scalar semantics reviewed;
 - persistence/transfer compatibility reviewed;
 - writing-rule/language default compatibility reviewed;
 - privacy/security/accessibility/platform impact reviewed;
 - current docs updated;
+- executable-build inventory updated for tracked-file changes;
 - historical docs remain historically accurate;
 - no secrets/private data/generated build artifacts added.
 
 ## Support and funding
 
-Normal questions/bugs use [SUPPORT.md](SUPPORT.md). Security issues use [SECURITY.md](SECURITY.md).
+Normal questions and bugs use [SUPPORT.md](SUPPORT.md). Security issues use [SECURITY.md](SECURITY.md).
 
-Optional project funding is available at [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN), but funding does not affect whether issues, security reports, contributions, or feature proposals can be submitted/reviewed.
+Optional project funding is available at [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN), but funding does not affect whether issues, security reports, contributions, or feature proposals can be submitted or reviewed.

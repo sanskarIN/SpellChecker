@@ -84,6 +84,10 @@ Use:
 | Telemetry/account/cloud sync | none |
 | Committed host runners | Android, iOS, Linux, macOS, Windows, Web |
 | Automated release artifacts | Android APK + Android App Bundle, iOS no-codesign app, Linux bundle, macOS app, Web bundle, Windows bundle |
+| iOS transport policy | arbitrary, web-content, and local networking exceptions disabled in the production Info.plist |
+| macOS release policy | App Sandbox enabled with no network client/server entitlement and no release JIT entitlement |
+
+Apple release validation is intentionally artifact-based as well as source-based. Both normal cross-platform CI and tagged release CI lint Apple plist/entitlement sources, run the Apple repository support contract, build release-mode iOS/macOS apps, verify the compiled bundle identifier and version metadata, and require at least one embedded `PrivacyInfo.xcprivacy` manifest from the Apple dependency graph. This keeps the privacy-manifest guarantee tied to what would actually be packaged rather than only to a source-tree assumption.
 
 ## Evergreen docs versus historical docs
 

@@ -1,8 +1,8 @@
 # Security Policy
 
-This policy describes the current SpellChecker `2.16.0+21` security model, supported versions, reporting process, trust boundaries, and contributor expectations.
+This policy describes the current SpellChecker `3.2.0+25` security model, supported versions, reporting process, trust boundaries, platform protections, and contributor expectations.
 
-For privacy/data-flow details, see [docs/PRIVACY.md](docs/PRIVACY.md). Historical release-specific security notes remain available through [docs/RELEASE_HISTORY.md](docs/RELEASE_HISTORY.md).
+For privacy/data-flow details, see [docs/PRIVACY.md](docs/PRIVACY.md). For build, signing, and distribution boundaries, see [docs/EXECUTABLE_BUILDS.md](docs/EXECUTABLE_BUILDS.md) and [docs/PLATFORM_SUPPORT.md](docs/PLATFORM_SUPPORT.md). Historical release-specific security notes remain available through [docs/RELEASE_HISTORY.md](docs/RELEASE_HISTORY.md).
 
 ## Supported versions
 
@@ -46,12 +46,13 @@ SpellChecker is designed to:
 - keep editor text/findings/correction history out of durable preference storage;
 - validate imported settings/dictionary metadata strictly;
 - validate current source ownership before automatic text mutation;
-- resolve writing batch overlaps conservatively/deterministically;
+- resolve writing batch overlaps conservatively and deterministically;
 - keep rule/language/persistence identifiers versioned/stable where compatibility matters;
 - avoid dynamic execution of imported dictionary/settings data;
-- avoid downloading/executing untrusted writing rules;
+- avoid downloading or executing untrusted writing rules;
 - surface preference write failures instead of falsely claiming durability;
-- run automated formatting/analyzer/tests/benchmark smoke before merge/release.
+- keep production signing material outside the public repository;
+- run automated formatting, analysis, tests, benchmark smoke, and target builds before release packaging.
 
 ## Current runtime attack surface
 
@@ -61,7 +62,7 @@ The bundled application currently has a deliberately small runtime integration s
 Flutter framework
 shared_preferences local storage
 Flutter clipboard API for explicit copy actions
-browser/host rendering/storage/clipboard behavior
+browser/host rendering, storage, clipboard, and platform runtime behavior
 ```
 
 There is no current runtime dependency for:
@@ -83,7 +84,7 @@ Treat editor text as untrusted data.
 
 Core analyzers:
 
-- tokenize/compare/scan strings;
+- tokenize, compare, and scan strings;
 - do not execute document contents;
 - do not evaluate code/markup;
 - do not interpret strings as commands;
@@ -152,7 +153,9 @@ correction history
 review search/filter/preset state
 ```
 
-Personal vocabulary is user data and should not be exposed/logged unnecessarily.
+Personal vocabulary is user data and should not be exposed or logged unnecessarily.
+
+Physical preference storage is provided by the `shared_preferences` platform implementation. SpellChecker does not treat platform-specific preference file/registry locations as a public API.
 
 ## Preference integrity
 
@@ -187,17 +190,17 @@ version: 1
 
 The codec validates object shape, registered language IDs, suggestion bounds, override shapes, rule-ID syntax, and duplicates.
 
-Settings import does not load/execute rules from imported IDs. Effective enabled rules remain limited to source-controlled current registry rules that support the selected language.
+Settings import does not load or execute rules from imported IDs. Effective enabled rules remain limited to source-controlled current registry rules that support the selected language.
 
 ### Fail-closed parsing
 
-Unsupported/malformed metadata should raise a validation failure rather than silently interpreting an ambiguous format.
+Unsupported or malformed metadata should raise a validation failure rather than silently interpreting an ambiguous format.
 
 ## Import persistence transaction
 
-The application attempts to preserve/restore previous durable settings if Portable settings persistence fails partway through import.
+The application attempts to preserve and restore previous durable settings if Portable settings persistence fails partway through import.
 
-A failed storage write should not be reported as durable success. If restoration cannot be guaranteed, the UI marks storage unavailable/reports the failure.
+A failed storage write should not be reported as durable success. If restoration cannot be guaranteed, the UI marks storage unavailable or reports the failure.
 
 ## Clipboard boundary
 
@@ -205,7 +208,7 @@ Dictionary/settings/diagnostic copy actions require explicit user action.
 
 Copied personal vocabulary or settings can become visible to other software according to host clipboard policy. SpellChecker cannot control clipboard readers after data has been copied.
 
-The metadata-only writing diagnostic excludes editor text/excerpts/replacements/offsets by design, reducing accidental data disclosure in support workflows.
+The metadata-only writing diagnostic excludes editor text, excerpts, replacements, and offsets by design, reducing accidental data disclosure in support workflows.
 
 ## Diagnostic output
 
@@ -227,10 +230,10 @@ The application provides bounded retained issue/finding policies, but these are 
 
 Important distinctions:
 
-- spelling UI captures first 200 issues and avoids suggestion generation after overflow proof;
-- writing UI captures first 200 findings, but enabled rules still scan input to produce exact totals;
-- structural rules are iterative/stress-tested but large input still consumes CPU/memory;
-- public callers can request different/unbounded limits.
+- spelling UI captures the first 200 issues and avoids suggestion generation after overflow proof;
+- writing UI captures the first 200 findings, but enabled rules still scan input to produce exact totals;
+- structural rules are iterative and stress-tested, but large input still consumes CPU/memory;
+- public callers can request different or unbounded limits.
 
 Host applications accepting attacker-controlled very large inputs must apply their own input/resource policies as appropriate.
 
@@ -250,7 +253,7 @@ Any future plugin-loading system must define before implementation:
 - privacy/data access;
 - dependency/supply-chain policy.
 
-## Dependency/supply-chain policy
+## Dependency and supply-chain policy
 
 Runtime dependencies are intentionally minimal. Before adding a dependency, review:
 
@@ -264,54 +267,131 @@ Runtime dependencies are intentionally minimal. Before adding a dependency, revi
 - update cadence;
 - data access.
 
-Dependabot configuration can surface dependency updates, but maintainers still need to review compatibility/security impact.
+`pubspec.lock` is committed so application builds have a reviewed dependency resolution. Dependabot configuration can surface dependency updates, but maintainers still need to review compatibility and security impact.
 
-GitHub Actions should use explicit trusted actions/versions and least permissions practical for the job.
+GitHub Actions should use trusted actions, explicit reviewed versions, and the least permissions practical for each job. A dependency or action update is not considered safe solely because automation proposed it.
 
-## CI/release security
+## Platform security boundaries
 
-Current CI/release workflows use GitHub-hosted runners and read repository contents.
+SpellChecker commits Android, iOS, Linux, macOS, Web, and Windows Flutter runners. Cross-platform CI builds release-mode outputs for all six targets, but platform permission and signing models differ.
 
-The release workflow validates source then builds Flutter web and uploads an Actions artifact. It does not currently use code-signing/app-store secrets or publish native artifacts.
+### Android
 
-If release automation gains deployment/write permissions/secrets, apply least privilege, environment protections where appropriate, and document rollback/provenance/secret handling.
+The production Android manifest is intentionally offline-first:
 
-## Secrets
+- no production `android.permission.INTERNET` request;
+- `android:usesCleartextTraffic="false"`;
+- `android:allowBackup="false"`.
 
-No application secret should be required for local spelling/writing analysis.
+Debug/profile development manifests can request Internet access where Flutter development tooling requires it. CI tests that this development permission does not leak into the production manifest.
+
+Production upload signing is supported through ignored `android/key.properties`. The private keystore, passwords, and Play credentials must remain external. When release credentials are absent, public CI uses non-production signing only to prove APK/AAB buildability; that output is not a store release.
+
+### iOS
+
+The committed production `Info.plist` keeps App Transport Security exceptions explicitly disabled for arbitrary loads, arbitrary web-content loads, and local networking exceptions.
+
+Public CI builds the iOS app with `--no-codesign`, validates bundle identity/version metadata, and requires an embedded Apple privacy manifest before archiving. Certificates, private keys, provisioning, App Store credentials, and production signing remain outside the repository.
+
+### macOS
+
+The release entitlement set enables App Sandbox and does not grant release network client, network server, or JIT entitlements.
+
+CI validates the entitlement/plist syntax, builds the `.app`, checks its bundle identity/version metadata, and requires an embedded Apple privacy manifest. Public distribution still requires an intentional external signing/notarization process.
+
+### Web
+
+Web builds necessarily execute inside a browser origin and fetch their own static application assets from the host serving the application. That transport behavior is different from sending editor content to a remote analysis service.
+
+SpellChecker does not include a network spelling/grammar API, telemetry endpoint, account service, or document upload service. Browser storage, clipboard, extensions, enterprise policy, service infrastructure, and hosting headers remain part of the web host/browser trust boundary.
+
+### Windows and Linux
+
+The current Windows and Linux applications use the shared Flutter/local-preference behavior and do not add a SpellChecker network-analysis service. These operating systems do not use the Android/iOS permission-manifest model for ordinary desktop networking, so release review must rely on code/dependency review, runtime behavior, packaging validation, and any future installer/sandbox policy selected for the distribution channel.
+
+Windows code signing and Linux package/repository signing, if adopted, require external private credentials and explicit distribution policy.
+
+## CI and release security
+
+Current source, cross-platform, and release workflows use GitHub-hosted runners. Public repository validation does not require application secrets.
+
+The primary quality gate performs:
+
+```text
+flutter pub get
+canonical Dart formatting check
+flutter analyze
+complete Flutter test suite
+deterministic benchmark smoke
+```
+
+Cross-platform CI then validates release-mode outputs for:
+
+```text
+Web
+Android APK + Android App Bundle
+Linux desktop bundle
+Windows desktop bundle
+macOS application bundle
+iOS application bundle without codesigning
+```
+
+Target workflows use read-only repository contents permission unless a future publishing operation explicitly requires more. Android and Apple jobs contain additional platform-specific privacy/metadata validation before artifact upload.
+
+The tagged/manual release workflow mirrors the six-target build contract and uploads validation/staging artifacts. It does not currently publish to application stores, notarization services, a package repository, a hosted website, or a permanent GitHub Release record.
+
+GitHub Actions artifacts are build evidence/staging output, not by themselves a cryptographic end-user provenance guarantee. If permanent release publication is added, define checksums/provenance, write permissions, environment protections, rollback, and secret handling explicitly.
+
+## Secrets and signing material
+
+No application secret is required for local spelling or writing analysis.
 
 Never commit:
 
 - API keys;
 - passwords;
 - OAuth tokens;
-- signing keys/keystores;
-- private certificates;
-- provisioning profiles containing secrets;
-- service-account credentials.
+- Android signing keys/keystores or passwords;
+- Apple signing certificates/private keys;
+- provisioning credentials containing sensitive material;
+- Windows/macOS code-signing private keys;
+- notarization credentials;
+- package/store service-account credentials.
 
-Use repository/environment secret stores for future CI integrations and expose only the minimum scope needed.
+Use repository/environment secret stores for future CI publishing integrations and expose only the minimum scope needed.
 
-## Platform security
+Unsigned, debug-signed, or no-codesign CI output must not be presented as a production-signed store artifact.
 
-Only the web host is committed/release-built today. Official native support would require target-specific review for:
+## Application identity and update safety
 
-- preference storage;
-- clipboard;
-- filesystem permissions;
-- network permissions;
-- signing/update mechanism;
-- deep links/URL handlers;
-- crash reporting;
-- package identifiers/distribution.
+Stable application identifiers affect upgrade continuity, preference continuity, signing, and store identity.
 
-See [docs/PLATFORM_SUPPORT.md](docs/PLATFORM_SUPPORT.md).
+The current reverse-domain identity is `in.sanskar.spellchecker` where the platform uses that model, while the user-facing product name is `SpellChecker`.
+
+Changing application/package/bundle identifiers is a migration and requires explicit review. Do not change identifiers as a cosmetic rename or runner-template refresh.
+
+## Release artifact review
+
+A successful compiler invocation is necessary but not sufficient for a trustworthy public release. Release review should verify, as applicable:
+
+- exact source commit and package version;
+- complete quality-gate success;
+- target release build success;
+- expected bundle contents and runtime dependencies;
+- application identity and version metadata;
+- privacy/permission/entitlement boundaries;
+- signing identity for the intended distribution channel;
+- artifact checksum/provenance when published permanently;
+- clean-environment install/startup behavior;
+- no secrets embedded in source, logs, or artifacts.
+
+See [docs/EXECUTABLE_BUILDS.md](docs/EXECUTABLE_BUILDS.md) for the complete packaging boundary.
 
 ## External links and BMC
 
 Repository/support documentation includes external links such as GitHub and [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN).
 
-These are project navigation/funding surfaces, not editor-analysis services. SpellChecker does not send editor text/findings to BMC.
+These are project navigation/funding surfaces, not editor-analysis services. SpellChecker does not send editor text or findings to Buy Me a Coffee.
 
 Funding never changes vulnerability handling or support access.
 
@@ -324,16 +404,18 @@ Before merging a security-relevant change, verify:
 - strict input validation;
 - source-range/index validation;
 - no dynamic execution of imported data;
-- no secret/private data committed/logged;
-- least privilege for workflow/permissions;
-- persistence error behavior truthful;
-- Unicode/large-input behavior tested;
-- privacy/security/docs updated;
-- regression test reproduces the weakness safely.
+- no secret/private data committed or logged;
+- least privilege for workflow permissions;
+- platform manifests/entitlements still match the documented privacy boundary;
+- persistence error behavior is truthful;
+- Unicode and large-input behavior is tested where relevant;
+- signing material remains external;
+- privacy/security/platform/release documentation is updated;
+- regression coverage reproduces the weakness safely.
 
 ## Coordinated disclosure
 
-Maintainers should avoid publishing exploit details before a fix/mitigation is available when early disclosure could harm users.
+Maintainers should avoid publishing exploit details before a fix or mitigation is available when early disclosure could harm users.
 
 A security fix should include regression coverage and appropriate changelog/release notes without unnecessarily publishing sensitive exploit detail.
 
@@ -343,5 +425,7 @@ A security fix should include regression coverage and appropriate changelog/rele
 - [Architecture](docs/ARCHITECTURE.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Testing](docs/TESTING.md)
+- [Platform support](docs/PLATFORM_SUPPORT.md)
+- [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md)
 - [Releasing](docs/RELEASING.md)
 - [Support](SUPPORT.md)

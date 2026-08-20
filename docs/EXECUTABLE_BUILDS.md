@@ -639,6 +639,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/analysis_benchmark_result_test.dart`
 - `test/analysis_benchmark_runner_test.dart`
 - `test/analysis_benchmark_scenario_test.dart`
+- `test/apple_repository_support_test.dart`
 - `test/bmc_repository_metadata_test.dart`
 - `test/bounded_analysis_widget_test.dart`
 - `test/dictionary_preferences_test.dart`
