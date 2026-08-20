@@ -332,6 +332,93 @@ void main() {
     }
   });
 
+  test('platform metadata stays aligned with the six-target support contract', () {
+    final iosInfo = File('ios/Runner/Info.plist').readAsStringSync();
+    expect(iosInfo, contains('<string>SpellChecker</string>'));
+    expect(iosInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
+    expect(iosInfo, contains(r'$(FLUTTER_BUILD_NUMBER)'));
+
+    final linuxConfig = File('linux/CMakeLists.txt').readAsStringSync();
+    expect(linuxConfig, contains('set(BINARY_NAME "spellchecker")'));
+    expect(
+      linuxConfig,
+      contains('set(APPLICATION_ID "in.sanskar.spellchecker")'),
+    );
+
+    final macosInfo = File(
+      'macos/Runner/Configs/AppInfo.xcconfig',
+    ).readAsStringSync();
+    expect(macosInfo, contains('PRODUCT_NAME = SpellChecker'));
+    expect(
+      macosInfo,
+      contains('PRODUCT_BUNDLE_IDENTIFIER = in.sanskar.spellchecker'),
+    );
+
+    final macosReleaseEntitlements = File(
+      'macos/Runner/Release.entitlements',
+    ).readAsStringSync();
+    expect(
+      macosReleaseEntitlements,
+      contains('com.apple.security.app-sandbox'),
+    );
+    expect(
+      macosReleaseEntitlements,
+      isNot(contains('com.apple.security.network.client')),
+    );
+    expect(
+      macosReleaseEntitlements,
+      isNot(contains('com.apple.security.network.server')),
+    );
+
+    final windowsResource = File(
+      'windows/runner/Runner.rc',
+    ).readAsStringSync();
+    expect(windowsResource, contains('FLUTTER_VERSION_MAJOR'));
+    expect(windowsResource, contains('FLUTTER_VERSION_BUILD'));
+    expect(windowsResource, contains('VALUE "ProductName", "SpellChecker"'));
+    expect(
+      windowsResource,
+      contains('VALUE "OriginalFilename", "spellchecker.exe"'),
+    );
+
+    final webIndex = File('web/index.html').readAsStringSync();
+    final webManifest = File('web/manifest.json').readAsStringSync();
+    for (final content in <String>[webIndex, webManifest]) {
+      expect(content, contains('SpellChecker'));
+      expect(content, isNot(contains('V2.16')));
+    }
+    expect(webManifest, contains('"id": "."'));
+    expect(webManifest, contains('"scope": "."'));
+    expect(webManifest, contains('icons/Icon-192.png'));
+    expect(webManifest, contains('icons/Icon-512.png'));
+    expect(File('web/icons/Icon-192.png').existsSync(), isTrue);
+    expect(File('web/icons/Icon-512.png').existsSync(), isTrue);
+
+    const workflowPaths = <String>[
+      '.github/workflows/cross-platform.yml',
+      '.github/workflows/release.yml',
+    ];
+    const buildMarkers = <String>[
+      'flutter build web --release',
+      'flutter build apk --release',
+      'flutter build appbundle --release',
+      'flutter build linux --release',
+      'flutter build windows --release',
+      'flutter build macos --release',
+      'flutter build ios --release --no-codesign',
+    ];
+    for (final workflowPath in workflowPaths) {
+      final workflow = File(workflowPath).readAsStringSync();
+      for (final marker in buildMarkers) {
+        expect(
+          workflow,
+          contains(marker),
+          reason: '$workflowPath must keep the release build step: $marker',
+        );
+      }
+    }
+  });
+
   test('executable build guide accounts for repository-controlled files', () {
     const startMarker = '<!-- tracked-file-inventory:start -->';
     const endMarker = '<!-- tracked-file-inventory:end -->';
@@ -340,6 +427,7 @@ void main() {
       'ios/',
       'linux/',
       'macos/',
+      'web/',
       'windows/',
     ];
     const crossPlatformControlFiles = <String>{
