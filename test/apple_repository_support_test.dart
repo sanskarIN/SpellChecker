@@ -10,7 +10,10 @@ void main() {
       ).readAsStringSync();
       final infoPlist = File('ios/Runner/Info.plist').readAsStringSync();
 
-      expect(project, contains('PRODUCT_BUNDLE_IDENTIFIER = in.sanskar.spellchecker;'));
+      expect(
+        project,
+        contains('PRODUCT_BUNDLE_IDENTIFIER = in.sanskar.spellchecker;'),
+      );
       expect(project, contains('IPHONEOS_DEPLOYMENT_TARGET = 15.0;'));
       expect(project, contains('TARGETED_DEVICE_FAMILY = "1,2";'));
       expect(infoPlist, contains('<string>SpellChecker</string>'));
@@ -27,7 +30,10 @@ void main() {
         infoPlist,
         isNot(contains('<key>NSAllowsArbitraryLoads</key>\n\t<true/>')),
       );
-      expect(infoPlist, contains('<key>NSAllowsArbitraryLoadsInWebContent</key>'));
+      expect(
+        infoPlist,
+        contains('<key>NSAllowsArbitraryLoadsInWebContent</key>'),
+      );
       expect(infoPlist, contains('<key>NSAllowsLocalNetworking</key>'));
     });
 
@@ -54,7 +60,10 @@ void main() {
         releaseEntitlements,
         isNot(contains('com.apple.security.network.server')),
       );
-      expect(releaseEntitlements, isNot(contains('com.apple.security.cs.allow-jit')));
+      expect(
+        releaseEntitlements,
+        isNot(contains('com.apple.security.cs.allow-jit')),
+      );
     });
 
     test('Apple builds retain the privacy-manifest dependency contract', () {
