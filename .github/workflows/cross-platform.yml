@@ -80,6 +80,8 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Run Web widget smoke in Chrome
+        run: flutter test --platform chrome test/widget_test.dart --reporter expanded
       - name: Build web
         run: flutter build web --release
       - name: Verify installable web shell
