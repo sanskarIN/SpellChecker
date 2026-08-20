@@ -44,7 +44,7 @@ flutter test --reporter expanded
 benchmark CLI smoke
 ```
 
-The complete Flutter suite includes source-level repository contracts for Android, Apple, and Desktop/Web platform invariants.
+The complete top-level Flutter suite includes the Apple and Desktop/Web source-level contracts. Android's focused runner contract lives under `android/test/` and is run explicitly in the Android packaging job before either release package is built.
 
 After the common quality job succeeds, target jobs run in parallel:
 
