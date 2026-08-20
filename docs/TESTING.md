@@ -236,7 +236,7 @@ Test:
 
 - deterministic ordering;
 - scalar edit distance;
-- suggestion target/candidate length;
+- suggestion distance bounds;
 - custom frequency data;
 - personal dictionary candidates;
 - custom ranker ties plus lexical fallback;
