@@ -13,7 +13,7 @@ It deliberately distinguishes between:
 
 SpellChecker is currently version `3.2.0+25` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
 
-> **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Production mobile/desktop signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
+> **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Android validates both APK and App Bundle packaging and includes a production signing configuration path; private signing material, Apple signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
 
 ## 1. What counts as an executable artifact
 
@@ -22,7 +22,7 @@ Flutter targets do not all produce the same kind of deliverable.
 | Target | Typical release deliverable | Current repository status |
 | --- | --- | --- |
 | Web | Complete `build/web/` directory | **Supported and release-built** |
-| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner committed; CI builds release APK |
+| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner committed; CI builds release APK + AAB |
 | iOS | `.ipa` plus Xcode archive/signing metadata | Runner committed; CI builds release app without codesign |
 | Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner committed; CI builds release bundle |
 | macOS | `.app` application bundle, normally signed/notarized for distribution | Runner committed; CI builds release app |
@@ -44,7 +44,7 @@ Before producing any artifact, use these repository files as the primary build c
 - `.github/workflows/ci.yml` — canonical source-validation gates.
 - `.github/workflows/release.yml` — current release-build automation and artifact contract.
 
-The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners.
+The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners. Android builds both APK and App Bundle outputs.
 
 ## 3. Required preflight on every build machine
 
@@ -115,7 +115,7 @@ All six Flutter target runners are committed. Normal builds do not require runne
 | Target | Host used by CI | Release-mode command | CI output |
 | --- | --- | --- | --- |
 | Web | Ubuntu | `flutter build web --release` | complete `build/web` directory |
-| Android | Ubuntu | `flutter build apk --release` | release APK validation artifact |
+| Android | Ubuntu | `flutter build apk --release` + `flutter build appbundle --release` | APK + AAB validation artifacts |
 | Linux | Ubuntu | `flutter build linux --release` | complete desktop bundle |
 | Windows | Windows | `flutter build windows --release` | complete Release runtime directory |
 | macOS | macOS | `flutter build macos --release` | `.app` bundle |
@@ -132,6 +132,7 @@ Run only commands supported by the current machine/toolchain:
 ```bash
 flutter build web --release
 flutter build apk --release
+flutter build appbundle --release
 flutter build linux --release
 flutter build macos --release
 flutter build windows --release
@@ -182,7 +183,9 @@ Regenerating runners locally does **not** by itself authorize template changes. 
 
 ## 7. Android release artifacts
 
-Android builds require a configured Android Flutter toolchain. Validate it with `flutter doctor -v`.
+Android builds require a configured Android Flutter toolchain. Validate it with `flutter doctor -v`. The authoritative Android-specific guide is [Android support](../android/README.md).
+
+The runner keeps SDK selection on Flutter's supported defaults through `flutter.compileSdkVersion`, `flutter.targetSdkVersion`, and `flutter.minSdkVersion`. Current Flutter stable targets Android 16 / API 36, matching the Google Play target requirement that takes effect on August 31, 2026.
 
 ### App Bundle
 
@@ -214,19 +217,34 @@ The standard output is under:
 build/app/outputs/flutter-apk/
 ```
 
+### Android release signing
+
+`android/app/build.gradle.kts` supports production upload signing from ignored `android/key.properties`. Start from the committed safe template:
+
+```bash
+cp android/key.properties.example android/key.properties
+```
+
+The private file supplies `storePassword`, `keyPassword`, `keyAlias`, and `storeFile`. `android/.gitignore` excludes `key.properties`, `*.jks`, and `*.keystore` so private credentials do not enter Git.
+
+When `key.properties` is present, release builds use the configured private release signing identity. When it is absent, release-mode CI/local validation falls back to the generated debug key strictly so the public repository can prove buildability. Debug-signed validation artifacts must not be uploaded as official store releases.
+
 ### Android release checklist
 
 Before any official Android release:
 
-- set the intended Android application ID;
-- configure release signing using external/secret-managed credentials;
+- keep the Android application ID `in.sanskar.spellchecker` unless performing a deliberate identity migration;
+- configure release signing using the private upload key through external/secret-managed credentials;
 - never commit keystore passwords or private signing material;
+- verify Flutter's target SDK still meets the current Play target API requirement;
 - verify version/build mapping from `pubspec.yaml`;
-- test install/startup, preferences, dictionary transfer, Portable settings, clipboard actions, accessibility, and keyboard behavior where relevant;
-- add CI that actually builds the Android release artifact;
+- build and validate both APK and AAB outputs;
+- test install/startup, soft-keyboard editing, preferences, dictionary transfer, Portable settings, clipboard actions, TalkBack, large text, rotation/window resizing, and back navigation on representative devices/emulators;
 - document artifact retention and distribution.
 
-The Android runner is committed and CI builds a release APK. Production store signing and channel-specific distribution remain separate release work.
+The production Android manifest requests no Internet permission, disables Android cloud backup, and disables cleartext traffic. CI checks those manifest boundaries before packaging.
+
+The Android runner is committed and CI builds both release APK and App Bundle outputs. The production signing path is committed; the actual private upload key and Play Console credentials remain external security/store operations.
 
 ## 8. iOS release artifacts
 
@@ -347,7 +365,7 @@ Use Flutter build modes deliberately:
 - **profile** — performance measurement; not the normal public release artifact;
 - **release** — optimized distribution build.
 
-The repository release workflow uses release mode for web.
+The repository release workflow uses release mode for every supported target; iOS is intentionally built without production codesigning in public CI.
 
 ## 13. Versioning and artifact naming
 
@@ -380,6 +398,8 @@ Signing is target/distribution specific, but the repository policy is universal:
 - do not print secret values into CI logs;
 - separate public build metadata from private signing material;
 - document who/what can perform a release without documenting the secret itself.
+
+Android's committed signing configuration reads an ignored `android/key.properties` file when a real upload key is supplied. Public Android validation builds use non-production signing when that file is absent.
 
 The current web artifact does not use native application signing.
 
@@ -435,6 +455,14 @@ Review the lockfile diff before accepting it.
 ### Analyzer/test failures after runner generation
 
 Generated platform changes can expose plugin/toolchain constraints. Do not suppress project checks to make packaging succeed. Fix the underlying issue, update tests/documentation, and rerun the full gates.
+
+### Android signing fails
+
+Confirm that `android/key.properties` has all four required values and that `storeFile` points to the intended private upload keystore. Do not solve signing failures by committing credentials. Run `flutter clean` after changing signing configuration when stale Gradle output is suspected.
+
+### Android APK succeeds but App Bundle fails
+
+Treat this as an Android release regression. Run both Android release commands after `flutter clean` and `flutter pub get`; normal and release CI validate both formats.
 
 ### Web output appears incomplete
 
@@ -702,7 +730,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 
 ### Repository/release control
 
-These files generally do not compile into the Dart application, but they define whether the release is reviewable, reproducible, secure, supported, and correctly automated. In particular, the two workflow files define the existing CI/release behavior, while `pubspec.yaml`, `pubspec.lock`, and `analysis_options.yaml` directly affect dependency/tooling behavior.
+These files generally do not compile into the Dart application, but they define whether the release is reviewable, reproducible, secure, supported, and correctly automated. In particular, the workflow files define the existing CI/release behavior, while `pubspec.yaml`, `pubspec.lock`, and `analysis_options.yaml` directly affect dependency/tooling behavior.
 
 ### Documentation and release evidence
 
@@ -710,7 +738,7 @@ These files are not runtime code, but executable claims must match them. A relea
 
 ### Runtime/build source
 
-These files contain the application/library implementation and committed web host. They are the primary source inputs for the current web artifact and the portable Dart/Flutter implementation that future native runners would host.
+These files contain the application/library implementation and committed host runners. They are the primary source inputs for the supported artifacts and the portable Dart/Flutter implementation hosted by each runner.
 
 ### Validation source
 
@@ -718,7 +746,7 @@ Every test file participates in the complete `flutter test --reporter expanded` 
 
 ### Developer tooling
 
-The benchmark files are run by CI/release smoke validation. They are not user telemetry and are not bundled because the release workflow executes them as development tooling before `flutter build web --release`.
+The benchmark files are run by CI/release smoke validation. They are not user telemetry and are not bundled because the release workflow executes them as development tooling before target builds.
 
 ## 20. Keeping this inventory complete
 
@@ -752,6 +780,7 @@ When upstream Flutter behavior changes, update this document and the build autom
 
 ## 22. Related SpellChecker documentation
 
+- [Android support](../android/README.md)
 - [Getting started](GETTING_STARTED.md)
 - [Development](DEVELOPMENT.md)
 - [Testing](TESTING.md)

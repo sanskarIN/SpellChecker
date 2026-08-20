@@ -1,10 +1,31 @@
 {
   "name": "SpellChecker",
   "short_name": "SpellChecker",
+  "description": "Privacy-first, open-source spelling and writing assistance that runs locally on your device.",
+  "id": ".",
   "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#4458D8",
-  "description": "SpellChecker V2.16 final stabilization: privacy-first local spelling and writing analysis with Unicode-scalar unrestricted Damerau-Levenshtein suggestions, decomposed-Unicode word handling, strict local imports, truthful preference persistence errors, synchronized startup state, ten deterministic writing rules, portable non-document preferences, and undo-friendly corrections.",
-  "orientation": "any"
+  "orientation": "any",
+  "lang": "en",
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

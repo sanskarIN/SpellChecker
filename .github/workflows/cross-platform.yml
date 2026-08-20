@@ -80,8 +80,18 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Run Web widget smoke in Chrome
+        run: flutter test --platform chrome test/widget_test.dart --reporter expanded
       - name: Build web
         run: flutter build web --release
+      - name: Verify installable web shell
+        run: |
+          test -f build/web/manifest.json
+          test -f build/web/icons/Icon-192.png
+          test -f build/web/icons/Icon-512.png
+          grep -q '"display": "standalone"' build/web/manifest.json
+          grep -q 'icons/Icon-192.png' build/web/manifest.json
+          grep -q 'icons/Icon-512.png' build/web/manifest.json
       - name: Upload web bundle
         uses: actions/upload-artifact@v7
         with:
@@ -91,10 +101,10 @@ jobs:
           retention-days: 7
 
   android:
-    name: Android release APK
+    name: Android release APK + App Bundle
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
 
     steps:
       - name: Check out repository
@@ -106,13 +116,29 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Check Android support test formatting
+        run: dart format --output=none --set-exit-if-changed android/test
+      - name: Test Android repository support contract
+        run: flutter test android/test/android_repository_support_test.dart --reporter expanded
+      - name: Verify Android production manifest policy
+        run: |
+          grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
+          if grep -q 'uses-permission android:name="android.permission.INTERNET"' android/app/src/main/AndroidManifest.xml; then
+            echo "Production Android manifest must not request INTERNET."
+            exit 1
+          fi
       - name: Build Android APK
         run: flutter build apk --release
-      - name: Upload Android APK
+      - name: Build Android App Bundle
+        run: flutter build appbundle --release
+      - name: Upload Android APK and App Bundle
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-android-${{ github.sha }}
-          path: build/app/outputs/flutter-apk/*.apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 7
 
@@ -140,11 +166,17 @@ jobs:
         run: flutter pub get
       - name: Build Linux
         run: flutter build linux --release
+      - name: Package Linux bundle with permissions
+        shell: bash
+        run: |
+          bundle_dir="$(find build/linux -path '*/release/bundle' -type d -print -quit)"
+          test -n "$bundle_dir"
+          tar -C "$(dirname "$bundle_dir")" -czf spellchecker-linux.tar.gz "$(basename "$bundle_dir")"
       - name: Upload Linux bundle
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-linux-${{ github.sha }}
-          path: build/linux/*/release/bundle
+          path: spellchecker-linux.tar.gz
           if-no-files-found: error
           retention-days: 7
 
@@ -196,11 +228,17 @@ jobs:
         run: flutter pub get
       - name: Build macOS
         run: flutter build macos --release
+      - name: Package macOS app with permissions
+        shell: bash
+        run: |
+          app_path="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          tar -C "$(dirname "$app_path")" -czf spellchecker-macos.tar.gz "$(basename "$app_path")"
       - name: Upload macOS app
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-macos-${{ github.sha }}
-          path: build/macos/Build/Products/Release/*.app
+          path: spellchecker-macos.tar.gz
           if-no-files-found: error
           retention-days: 7
 
@@ -222,10 +260,16 @@ jobs:
         run: flutter pub get
       - name: Build iOS without signing
         run: flutter build ios --release --no-codesign
+      - name: Package iOS app with permissions
+        shell: bash
+        run: |
+          app_path="$(find build/ios/iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          tar -C "$(dirname "$app_path")" -czf spellchecker-ios.tar.gz "$(basename "$app_path")"
       - name: Upload iOS app bundle
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-ios-${{ github.sha }}
-          path: build/ios/iphoneos/*.app
+          path: spellchecker-ios.tar.gz
           if-no-files-found: error
           retention-days: 7

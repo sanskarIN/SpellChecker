@@ -19,6 +19,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
+      - name: Verify release tag matches package version
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          package_version="$(awk '/^version:/ { print $2; exit }' pubspec.yaml)"
+          release_version="${package_version%%+*}"
+          expected_tag="v${release_version}"
+          if [ "$GITHUB_REF_NAME" != "$expected_tag" ]; then
+            echo "Release tag $GITHUB_REF_NAME does not match pubspec.yaml version $package_version; expected $expected_tag."
+            exit 1
+          fi
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -70,8 +82,18 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Run Web widget smoke in Chrome
+        run: flutter test --platform chrome test/widget_test.dart --reporter expanded
       - name: Build Web
         run: flutter build web --release
+      - name: Verify installable Web shell
+        run: |
+          test -f build/web/manifest.json
+          test -f build/web/icons/Icon-192.png
+          test -f build/web/icons/Icon-512.png
+          grep -q '"display": "standalone"' build/web/manifest.json
+          grep -q 'icons/Icon-192.png' build/web/manifest.json
+          grep -q 'icons/Icon-512.png' build/web/manifest.json
       - name: Upload Web artifact
         uses: actions/upload-artifact@v7
         with:
@@ -81,10 +103,10 @@ jobs:
           retention-days: 30
 
   android-release:
-    name: Build Android release APK
+    name: Build Android release APK + App Bundle
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
 
     steps:
       - name: Check out repository
@@ -96,13 +118,29 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Check Android support test formatting
+        run: dart format --output=none --set-exit-if-changed android/test
+      - name: Test Android repository support contract
+        run: flutter test android/test/android_repository_support_test.dart --reporter expanded
+      - name: Verify Android production manifest policy
+        run: |
+          grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
+          if grep -q 'uses-permission android:name="android.permission.INTERNET"' android/app/src/main/AndroidManifest.xml; then
+            echo "Production Android manifest must not request INTERNET."
+            exit 1
+          fi
       - name: Build Android APK
         run: flutter build apk --release
-      - name: Upload Android artifact
+      - name: Build Android App Bundle
+        run: flutter build appbundle --release
+      - name: Upload Android validation artifacts
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-android-validation-${{ github.ref_name }}
-          path: build/app/outputs/flutter-apk/*.apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 30
 
@@ -130,11 +168,17 @@ jobs:
         run: flutter pub get
       - name: Build Linux
         run: flutter build linux --release
+      - name: Package Linux bundle with permissions
+        shell: bash
+        run: |
+          bundle_dir="$(find build/linux -path '*/release/bundle' -type d -print -quit)"
+          test -n "$bundle_dir"
+          tar -C "$(dirname "$bundle_dir")" -czf spellchecker-linux.tar.gz "$(basename "$bundle_dir")"
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-linux-${{ github.ref_name }}
-          path: build/linux/*/release/bundle
+          path: spellchecker-linux.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -186,11 +230,17 @@ jobs:
         run: flutter pub get
       - name: Build macOS
         run: flutter build macos --release
+      - name: Package macOS app with permissions
+        shell: bash
+        run: |
+          app_path="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          tar -C "$(dirname "$app_path")" -czf spellchecker-macos.tar.gz "$(basename "$app_path")"
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-macos-unsigned-${{ github.ref_name }}
-          path: build/macos/Build/Products/Release/*.app
+          path: spellchecker-macos.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -212,10 +262,16 @@ jobs:
         run: flutter pub get
       - name: Build iOS without signing
         run: flutter build ios --release --no-codesign
+      - name: Package iOS app with permissions
+        shell: bash
+        run: |
+          app_path="$(find build/ios/iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          tar -C "$(dirname "$app_path")" -czf spellchecker-ios.tar.gz "$(basename "$app_path")"
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-ios-no-codesign-${{ github.ref_name }}
-          path: build/ios/iphoneos/*.app
+          path: spellchecker-ios.tar.gz
           if-no-files-found: error
           retention-days: 30

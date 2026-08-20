@@ -14,7 +14,7 @@ This directory is the documentation home for SpellChecker `3.2.0+25`. SpellCheck
 
 Start with:
 
-1. [Getting started](GETTING_STARTED.md) — install prerequisites, run the app, perform the first spelling and writing checks, and build the web target.
+1. [Getting started](GETTING_STARTED.md) — install prerequisites, run the app on committed targets, and perform the first spelling and writing checks.
 2. [User guide](USER_GUIDE.md) — complete editor, spelling, Writing insights, dictionary, settings, keyboard, undo, and large-document workflows.
 3. [Feature reference](FEATURES.md) — current capabilities, limits, and intentionally unsupported behavior.
 4. [Configuration and local data](CONFIGURATION.md) — languages, suggestion limits, personal dictionaries, ignored words, writing-rule preferences, Portable settings, and persistence behavior.
@@ -52,14 +52,15 @@ Application widgets and persistence adapters are implementation details unless t
 Use:
 
 1. [Development guide](DEVELOPMENT.md) — prerequisites, repository layout, development commands, and implementation expectations.
-2. [Testing guide](TESTING.md) — test structure, focused suites, CI gates, Unicode/UTF-16 coverage, and benchmark smoke.
+2. [Testing guide](TESTING.md) — test structure, focused suites, CI gates, Android support-contract validation, Unicode/UTF-16 coverage, and benchmark smoke.
 3. [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md) — documentation source-of-truth rules, link policy, versioning, and review checklist.
 4. [Release guide](RELEASING.md) — tagged multi-platform release workflow and release validation.
 5. [Executable builds and packaging](EXECUTABLE_BUILDS.md) — complete build, packaging, signing-boundary, platform-generation, verification, troubleshooting, and tracked-file inventory for release artifacts.
 6. [Platform support](PLATFORM_SUPPORT.md) — what is committed, built, validated, and still external distribution/signing work.
-7. [Roadmap](ROADMAP.md) — completed release scope and optional future directions.
-8. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x design/audit/validation records.
-9. [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md), [support policy](../SUPPORT.md), [governance](../GOVERNANCE.md), and [code of conduct](../CODE_OF_CONDUCT.md).
+7. [Android support guide](../android/README.md) — Android development, privacy, predictive back, APK/AAB packaging, production signing, Google Play preparation, device testing, and troubleshooting.
+8. [Roadmap](ROADMAP.md) — completed release scope and optional future directions.
+9. [Release history index](RELEASE_HISTORY.md) — navigation for V2.x design/audit/validation records.
+10. [Contributing](../CONTRIBUTING.md), [security policy](../SECURITY.md), [support policy](../SUPPORT.md), [governance](../GOVERNANCE.md), and [code of conduct](../CODE_OF_CONDUCT.md).
 
 ## Current product contract
 
@@ -82,7 +83,7 @@ Use:
 | Network spelling/grammar | none |
 | Telemetry/account/cloud sync | none |
 | Committed host runners | Android, iOS, Linux, macOS, Windows, Web |
-| Automated release artifacts | Android APK, iOS no-codesign app, Linux bundle, macOS app, Web bundle, Windows bundle |
+| Automated release artifacts | Android APK + Android App Bundle, iOS no-codesign app, Linux bundle, macOS app, Web bundle, Windows bundle |
 
 ## Evergreen docs versus historical docs
 

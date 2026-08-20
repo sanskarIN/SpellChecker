@@ -15,7 +15,7 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs deterministic benchmark command smoke. Cross-platform CI repeats the quality gate and then builds release-mode Android, iOS (without codesigning), Linux, macOS, Web, and Windows targets. The tagged/manual release workflow mirrors those six target builds with longer-lived artifacts.
+CI also runs deterministic benchmark command smoke. Cross-platform CI repeats the quality gate and then builds release-mode Android, iOS (without codesigning), Linux, macOS, Web, and Windows targets. The Android packaging job additionally runs the Android repository-support contract, verifies the production-manifest privacy boundary, and builds both APK and Android App Bundle outputs. The tagged/manual release workflow mirrors those six target builds with longer-lived artifacts.
 
 Do not treat focused tests as a substitute for the complete suite before merge.
 
@@ -25,7 +25,7 @@ Do not treat focused tests as a substitute for the complete suite before merge.
 dart format lib test tool
 ```
 
-Formatting is part of CI. Documentation-only changes can still touch Dart regression tests, so run the canonical formatter whenever `test/`, `lib/`, or `tool/` changes.
+Formatting is part of CI. Documentation-only changes can still touch Dart regression tests, so run the canonical formatter whenever `test/`, `lib/`, or `tool/` changes. Android runner-contract changes should also keep `android/test/` canonically formatted; the Android packaging jobs enforce that focused formatting boundary before running the Android support test.
 
 ## Test layers
 
@@ -104,7 +104,7 @@ Repository tests protect non-code project contracts such as Buy Me a Coffee surf
 
 - the documentation hub covers every evergreen topic;
 - repository-relative Markdown links resolve;
-- tracked Markdown files have one H1, balanced fenced code blocks, and no unresolved merge-conflict markers;
+- tracked Markdown files outside the GitHub-template exception have at least one H1, balanced fenced code blocks, and no unresolved merge-conflict markers;
 - package/About/changelog/current-release version references remain synchronized;
 - current language documentation names every `SpellLanguageRegistry` built-in;
 - current writing documentation names every `WritingRuleRegistry.builtIns` rule;
@@ -112,6 +112,22 @@ Repository tests protect non-code project contracts such as Buy Me a Coffee surf
 - the marked tracked-file inventory in `docs/EXECUTABLE_BUILDS.md` matches `git ls-files` exactly.
 
 The tracked-file inventory check is intentionally repository-wide: files can affect release readiness even when they are not compiled into the runtime artifact. A newly added, deleted, renamed, or stale tracked path therefore fails the test until executable-build documentation is updated.
+
+### Android repository-support contract
+
+`android/test/android_repository_support_test.dart` protects Android-specific repository invariants that should not be left to documentation review alone. It checks:
+
+- the stable Android namespace/application ID;
+- Flutter-managed compile, target, and minimum SDK values;
+- Java/Kotlin JVM compatibility;
+- production-signing configuration plus safe secret exclusions;
+- production manifest offline/privacy settings;
+- predictive-back integration;
+- debug/profile development Internet permission separation;
+- APK and AAB CI/release packaging coverage;
+- the Flutter-stable AGP/Kotlin compatibility path.
+
+Both the normal cross-platform Android packaging job and tagged/manual Android release job run this contract before creating artifacts.
 
 ## Useful focused commands
 
@@ -159,9 +175,16 @@ flutter test test/bmc_repository_metadata_test.dart
 flutter test test/documentation_repository_test.dart
 ```
 
-The second command performs the focused documentation/metadata audit described above.
+Android repository support:
 
-Some focused filenames are added as features evolve. Use the `test/` directory and full suite as the final source of truth.
+```bash
+dart format --output=none --set-exit-if-changed android/test
+flutter test android/test/android_repository_support_test.dart --reporter expanded
+```
+
+The documentation command performs the focused documentation/metadata audit described above. The Android commands validate and format-check the runner-specific support contract without requiring a production signing key.
+
+Some focused filenames are added as features evolve. Use the `test/` directory and full suite as the final source of truth for shared application behavior, plus the Android support contract for Android runner/release invariants.
 
 ## Spelling-engine test requirements
 
@@ -422,20 +445,20 @@ See [Performance](PERFORMANCE.md).
 
 `.github/workflows/v3-docs-sync.yml` is the focused documentation/metadata workflow. For relevant documentation, registry, version, and workflow paths it installs dependencies, verifies formatting of `test/documentation_repository_test.dart`, and runs that audit directly.
 
-`.github/workflows/cross-platform.yml` repeats the complete source quality gate and then builds/uploads short-retention validation artifacts for Android APK, iOS no-codesign app, Linux bundle, macOS app, Web bundle, and Windows bundle on appropriate GitHub-hosted operating systems.
+`.github/workflows/cross-platform.yml` repeats the complete source quality gate and then builds/uploads short-retention validation artifacts for Android APK + Android App Bundle, iOS no-codesign app, Linux bundle, macOS app, Web bundle, and Windows bundle on appropriate GitHub-hosted operating systems. The Android job additionally format-checks and runs `android/test/android_repository_support_test.dart` and verifies the production manifest before packaging.
 
 ## Release validation
 
-`.github/workflows/release.yml` runs on `v*` tags or manual dispatch. It repeats formatting, analysis, the complete Flutter test suite, and benchmark smoke before building six release artifacts:
+`.github/workflows/release.yml` runs on `v*` tags or manual dispatch. It repeats formatting, analysis, the complete Flutter test suite, and benchmark smoke before building six target release outputs:
 
-- Android release APK;
+- Android release APK and Android App Bundle;
 - iOS release app without codesigning;
 - Linux release bundle;
 - macOS release app;
 - Web release bundle;
 - Windows release bundle.
 
-Artifacts are retained by the workflow for validation/distribution staging. Production signing/notarization credentials and external store/publication steps remain outside this repository workflow. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and [Releasing](RELEASING.md).
+The Android release job also runs the focused support contract and production-manifest policy checks before building. Artifacts are retained by the workflow for validation/distribution staging. Production signing/notarization credentials and external store/publication steps remain outside this repository workflow. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and [Releasing](RELEASING.md).
 
 ## Before opening a PR
 
@@ -450,6 +473,7 @@ Run the complete gate. Also review:
 - current documentation updates;
 - executable-build tracked-file inventory updated for every tracked path addition/deletion/rename;
 - platform/build claims consistent with committed runners and actual CI/release jobs;
+- Android runner changes pass the Android support contract and keep APK/AAB claims synchronized;
 - historical release docs left historically accurate.
 
 ## Related documentation

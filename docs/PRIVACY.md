@@ -1,8 +1,8 @@
 # Privacy
 
-SpellChecker is designed so the bundled spelling and writing-analysis workflow can operate locally without sending editor text to a remote spelling, grammar, AI, analytics, or account service.
+SpellChecker is designed so the bundled spelling and writing-analysis workflow operates locally without sending editor text to a remote spelling, grammar, AI, analytics, advertising, or account service.
 
-This page documents the current `2.16.0+21` application/library privacy model. Security reporting requirements are in [SECURITY.md](../SECURITY.md).
+This page documents the current `3.2.0+25` application/library privacy model. Security reporting requirements are in [SECURITY.md](../SECURITY.md).
 
 ## Summary
 
@@ -32,37 +32,19 @@ Network: not transmitted by the bundled spelling/writing implementation.
 
 Transfer: excluded from Portable settings, personal-dictionary export, and diagnostic summary.
 
-### Spelling issues/suggestions
+### Spelling issues and writing findings
 
-Purpose: current checked result presentation and correction.
+Purpose: current review, suggestion, and correction workflows.
 
 Durability: in-memory result state only.
 
 Network: not transmitted by SpellChecker.
 
-Transfer: not exported by application settings/dictionary formats.
+Transfer: findings, source excerpts, offsets, and replacement text are not exported by Portable settings or personal-dictionary formats.
 
-### Writing findings
+### Selected language and suggestion count
 
-Purpose: current Writing insights review and correction.
-
-Durability: in-memory dialog/analysis result state only.
-
-Network: not transmitted by SpellChecker.
-
-Transfer: findings/excerpts/messages/replacements/offsets are excluded from the metadata-only diagnostic summary and Portable settings.
-
-### Selected language
-
-Purpose: choose the active built-in language pack.
-
-Durability: stored locally when preference storage succeeds.
-
-Portable settings: included.
-
-### Suggestion count
-
-Purpose: configure number of spelling suggestions shown/generated per captured issue in the application.
+Purpose: configure the active built-in language pack and spelling suggestion limit.
 
 Durability: stored locally when preference storage succeeds.
 
@@ -70,7 +52,7 @@ Portable settings: included.
 
 ### Personal vocabulary
 
-Purpose: accept user-specific words and include them as suggestion candidates for a selected language.
+Purpose: accept user-specific words and include them as suggestion candidates for the selected language.
 
 Durability: stored locally per language when preference storage succeeds.
 
@@ -88,31 +70,9 @@ Portable settings: explicit per-language overrides are included.
 
 No editor source/finding data is stored with rule preferences.
 
-### Ignored session words
+### Session-only state
 
-Purpose: temporarily suppress spelling findings for a word.
-
-Durability: engine/session memory only.
-
-Portable settings: excluded.
-
-Personal-dictionary export: excluded.
-
-### Correction undo history
-
-Purpose: restore a previous editing value after an application correction.
-
-Durability: bounded in-memory session stack only.
-
-Portable settings: excluded.
-
-### Writing insights search/filter/preset state
-
-Purpose: temporary local review scope.
-
-Durability: open-dialog memory only.
-
-Portable settings: excluded.
+Ignored words, correction undo history, Writing insights search/filter state, captured issues, and analysis results remain in session memory and are not part of the durable preference contract.
 
 ## Local preference storage
 
@@ -131,15 +91,34 @@ Physical backing-store details depend on the platform/plugin and are not part of
 
 Browser/site/app storage can be cleared by the user, host browser, operating system, enterprise policy, or platform lifecycle. Export vocabulary/settings before clearing host data if those values matter.
 
-## Internal preference keys
+## Android privacy boundary
 
-Internal keys are documented for debugging/migration in [Configuration](CONFIGURATION.md). They are not a public integration API and should not be treated as a stable external database schema.
+Android is an officially committed and release-built target. The production Android manifest intentionally:
+
+- requests **no** `android.permission.INTERNET` permission;
+- sets `android:allowBackup="false"` so Android cloud backup does not copy SpellChecker shared preferences by default;
+- sets `android:usesCleartextTraffic="false"`;
+- requires no runtime permission for the core spelling/writing workflow.
+
+The debug and profile Android manifests can request Internet access because Flutter development tooling needs it for debugging and hot reload. That development-only permission is not declared by the production `android/app/src/main/AndroidManifest.xml`.
+
+Android Auto Backup normally includes shared preferences. Disabling backup prevents cloud-based backup/restore of those preferences. On Android 12 and newer, direct device-to-device migration behavior can vary by Android version and device manufacturer even when cloud backup is disabled.
+
+See [Android support](../android/README.md) for build, signing, Play packaging, and Android device-testing guidance.
+
+## Native platform considerations
+
+Official Flutter runners are committed for Android, iOS, Linux, macOS, Web, and Windows. Native platform behavior can affect physical preference storage, clipboard behavior, accessibility, windowing, signing, and distribution.
+
+The repository does not add analytics, crash-upload SDKs, account SDKs, or remote model clients for any target. Signing credentials and store credentials remain external release secrets and are not runtime data collection mechanisms.
+
+See [Platform support](PLATFORM_SUPPORT.md).
 
 ## Storage failure behavior
 
 SpellChecker treats an unsuccessful preference write/remove as failure rather than silently claiming a value was saved.
 
-When storage is unavailable/fails:
+When storage is unavailable or fails:
 
 - session spelling can continue where possible;
 - the UI reports a persistence warning;
@@ -197,24 +176,9 @@ Portable settings is designed to be non-document configuration only.
 
 Writing insights can copy a `WritingAnalysisDiagnosticSummary` after an explicit user action.
 
-The summary includes metadata such as:
+The summary contains metadata such as language ID, complete/limited state, capture limits, counts, and stable rule identifiers. It deliberately excludes editor text, source excerpts, finding messages, replacements, and source offsets.
 
-- language ID;
-- complete/limited state;
-- capture limit;
-- captured/exact/uncaptured finding counts;
-- stable rule IDs/display names;
-- per-rule captured/exact counts.
-
-It deliberately excludes:
-
-- editor text;
-- source excerpts;
-- finding messages;
-- replacements;
-- source offsets.
-
-This makes it safer for support discussions, but metadata can still reveal which rule types fired and rough counts. Review any copied diagnostic before posting it publicly if that context is sensitive.
+Metadata can still reveal which rule types fired and rough counts, so review copied diagnostics before posting them publicly when the context is sensitive.
 
 ## Clipboard boundary
 
@@ -226,13 +190,13 @@ The application uses Flutter clipboard APIs only for explicit copy actions such 
 
 SpellChecker does not automatically copy editor text to the clipboard.
 
-Once data is on the system clipboard, other software/host policies may be able to read it according to operating-system/browser behavior. Clear the clipboard after copying sensitive personal vocabulary if appropriate for your environment.
+Once data is on the system clipboard, other software or host policies may be able to read it according to operating-system/browser behavior.
 
 ## Network boundary
 
 Core spelling/writing APIs do not perform network requests. The current runtime dependency set is Flutter plus `shared_preferences`; no HTTP client, analytics SDK, ad SDK, remote model client, or account SDK is required for analysis.
 
-Repository documentation contains external links (GitHub, Buy Me a Coffee, etc.). Visiting an external link is a separate user/navigation action and is not part of editor analysis.
+Repository documentation contains external links such as GitHub and Buy Me a Coffee. Visiting an external link is a separate user navigation action and is not part of editor analysis.
 
 Future changes that add runtime networking must update this privacy contract, security review, tests, and user-facing disclosure in the same change.
 
@@ -244,68 +208,41 @@ The canonical optional project funding link is:
 https://buymeacoffee.com/sanskarIN
 ```
 
-It exists in repository/support surfaces. Funding is optional and separate from SpellChecker text analysis. The application does not send editor text or analysis findings to Buy Me a Coffee.
+Funding is optional and separate from SpellChecker text analysis. The application does not send editor text or analysis findings to Buy Me a Coffee.
 
-## Benchmark privacy
+## Benchmark and test privacy
 
-The benchmark tooling under `tool/` generates synthetic text/scenarios and records deterministic analysis metadata/timing. It is a local developer tool, not background telemetry.
+Benchmark tooling under `tool/` generates synthetic text/scenarios and records deterministic analysis metadata/timing. It is local developer tooling, not background telemetry.
 
-Do not replace the synthetic benchmark corpus with private documents in public benchmark reports.
+Project documentation/tests should use synthetic examples. Public bug reports should prefer minimal artificial text rather than private documents or messages.
 
-## Tests and examples
-
-Project documentation/tests should use synthetic examples. Bug reports should prefer minimal artificial text rather than real private documents.
-
-Never include in public issues unless necessary and safe:
-
-- private documents/messages;
-- credentials/secrets;
-- account information;
-- sensitive personal vocabulary;
-- real correction-history snapshots;
-- private finding/source excerpts.
+Never include credentials, secrets, private documents, account information, or sensitive personal vocabulary in public issues unless doing so is necessary and safe.
 
 See [Support](../SUPPORT.md).
 
 ## Browser/web host considerations
 
-The committed/release-built target is Flutter web. Browser behavior can affect:
-
-- local site storage availability/retention;
-- clipboard permissions;
-- private/incognito storage lifetime;
-- enterprise storage policies.
+Browser behavior can affect local site storage availability/retention, clipboard permissions, private/incognito storage lifetime, and enterprise storage policies.
 
 SpellChecker can surface preference-layer failure but cannot override browser privacy/storage policies.
 
-## Native target considerations
-
-Native runners are not currently committed/release-built. If official native support is added, privacy review must cover that platform's preference backing store, clipboard behavior, permissions, file access, crash reporting, update systems, and any signing/distribution integrations.
-
-See [Platform support](PLATFORM_SUPPORT.md).
-
 ## Library integrator responsibility
 
-Reusable `SpellCheckerEngine`, `WritingAnalyzer`, correction helpers, and codecs are local deterministic code. A third-party application can of course choose to send its own text/results elsewhere; that behavior belongs to the integrating application and is not created automatically by SpellChecker's public analysis APIs.
+Reusable `SpellCheckerEngine`, `WritingAnalyzer`, correction helpers, and codecs are local deterministic code. A third-party application can choose to send its own text/results elsewhere; that behavior belongs to the integrating application and is not created automatically by SpellChecker's public analysis APIs.
 
-Integrators should clearly document any additional network/storage/logging paths they add around the library.
+Integrators should clearly document any additional network, storage, or logging paths they add around the library.
 
 ## Logs and exceptions
 
-Core validation can throw local exceptions such as `FormatException`/`ArgumentError` for invalid input/configuration. SpellChecker does not install a remote logging pipeline for those errors.
+Core validation can throw local exceptions such as `FormatException` or `ArgumentError` for invalid input/configuration. SpellChecker does not install a remote logging pipeline for those errors.
 
-Avoid logging raw editor text/personal vocabulary/findings in any future diagnostic integration unless there is an explicit, privacy-reviewed user-controlled design.
+Avoid logging raw editor text, personal vocabulary, or findings in future diagnostics unless there is an explicit, privacy-reviewed, user-controlled design.
 
 ## Data deletion/reset
 
-SpellChecker provides application controls for:
+SpellChecker provides application controls for clearing editor text, clearing ignored session words, removing personal words for the current language, and resetting writing rules to registry defaults.
 
-- clearing editor text;
-- clearing ignored session words;
-- removing/clearing personal words for the current language;
-- resetting writing rules to registry defaults by removing an explicit override.
-
-Complete host preference deletion can also be performed through browser/application data management outside SpellChecker, but that may delete all local settings/vocabulary. Back up first if necessary.
+Complete host preference deletion can also be performed through browser/application data management outside SpellChecker, but that may delete all local settings/vocabulary. Back up intentionally exported data first if necessary.
 
 ## Privacy review checklist for contributors
 
@@ -321,12 +258,14 @@ A change requires explicit privacy review when it introduces or changes:
 - third-party plugin execution;
 - platform permissions;
 - diagnostic/logging content;
-- export/import content.
+- export/import content;
+- platform backup/restore behavior.
 
-For such changes, update this page, [Security](../SECURITY.md), [Architecture](ARCHITECTURE.md), current user docs, and relevant tests before merge.
+For such changes, update this page, [Security](../SECURITY.md), [Architecture](ARCHITECTURE.md), current user docs, and relevant validation before merge.
 
 ## Related documentation
 
+- [Android support](../android/README.md)
 - [Configuration and local data](CONFIGURATION.md)
 - [Architecture](ARCHITECTURE.md)
 - [Security](../SECURITY.md)
