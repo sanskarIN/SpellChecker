@@ -46,9 +46,13 @@ void main() {
       expect(map['display'], 'standalone');
       expect(map['orientation'], 'any');
       expect(map['lang'], 'en');
-      expect(map['categories'], containsAll(<String>['productivity', 'utilities']));
+      expect(
+        map['categories'],
+        containsAll(<String>['productivity', 'utilities']),
+      );
 
-      final icons = (map['icons'] as List<dynamic>).cast<Map<String, dynamic>>();
+      final icons = (map['icons'] as List<dynamic>)
+          .cast<Map<String, dynamic>>();
       final expected = <String, int>{
         'icons/Icon-192.png': 192,
         'icons/Icon-512.png': 512,
@@ -65,20 +69,42 @@ void main() {
       }
     });
 
-    test('Linux keeps stable identity, relocatable runtime, and strict build flags', () {
-      final cmake = File('linux/CMakeLists.txt').readAsStringSync();
-      final runner = File('linux/runner/my_application.cc').readAsStringSync();
+    test(
+      'Linux keeps stable identity, relocatable runtime, and strict build flags',
+      () {
+        final cmake = File('linux/CMakeLists.txt').readAsStringSync();
+        final runner = File(
+          'linux/runner/my_application.cc',
+        ).readAsStringSync();
 
-      expect(cmake, contains('set(BINARY_NAME "spellchecker")'));
-      expect(cmake, contains('set(APPLICATION_ID "in.sanskar.spellchecker")'));
-      expect(cmake, contains('target_compile_features(\${TARGET} PUBLIC cxx_std_14)'));
-      expect(cmake, contains('target_compile_options(\${TARGET} PRIVATE -Wall -Werror)'));
-      expect(cmake, contains(r'set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")'));
-      expect(runner, contains('gtk_header_bar_set_title(header_bar, "SpellChecker")'));
-      expect(runner, contains('gtk_window_set_title(window, "SpellChecker")'));
-      expect(runner, contains('g_set_prgname(APPLICATION_ID)'));
-      expect(runner, contains('"application-id", APPLICATION_ID'));
-    });
+        expect(cmake, contains('set(BINARY_NAME "spellchecker")'));
+        expect(
+          cmake,
+          contains('set(APPLICATION_ID "in.sanskar.spellchecker")'),
+        );
+        expect(
+          cmake,
+          contains(r'target_compile_features(${TARGET} PUBLIC cxx_std_14)'),
+        );
+        expect(
+          cmake,
+          contains(
+            r'target_compile_options(${TARGET} PRIVATE -Wall -Werror)',
+          ),
+        );
+        expect(cmake, contains(r'set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")'));
+        expect(
+          runner,
+          contains('gtk_header_bar_set_title(header_bar, "SpellChecker")'),
+        );
+        expect(
+          runner,
+          contains('gtk_window_set_title(window, "SpellChecker")'),
+        );
+        expect(runner, contains('g_set_prgname(APPLICATION_ID)'));
+        expect(runner, contains('"application-id", APPLICATION_ID'));
+      },
+    );
 
     test('Windows keeps stable executable identity and strict native metadata', () {
       final cmake = File('windows/CMakeLists.txt').readAsStringSync();
@@ -86,15 +112,24 @@ void main() {
 
       expect(cmake, contains('project(spellchecker LANGUAGES CXX)'));
       expect(cmake, contains('set(BINARY_NAME "spellchecker")'));
-      expect(cmake, contains('target_compile_features(\${TARGET} PUBLIC cxx_std_17)'));
-      expect(cmake, contains('target_compile_options(\${TARGET} PRIVATE /W4 /WX'));
+      expect(
+        cmake,
+        contains(r'target_compile_features(${TARGET} PUBLIC cxx_std_17)'),
+      );
+      expect(
+        cmake,
+        contains(r'target_compile_options(${TARGET} PRIVATE /W4 /WX'),
+      );
       expect(resource, contains('FLUTTER_VERSION_MAJOR'));
       expect(resource, contains('FLUTTER_VERSION_BUILD'));
       expect(resource, contains('VALUE "CompanyName", "Sanskar"'));
       expect(resource, contains('VALUE "FileDescription", "SpellChecker"'));
-      expect(resource, contains('VALUE "OriginalFilename", "spellchecker.exe"'));
+      expect(
+        resource,
+        contains('VALUE "OriginalFilename", "spellchecker.exe"'),
+      );
       expect(resource, contains('VALUE "ProductName", "SpellChecker"'));
-      expect(resource, contains('resources\\\\app_icon.ico'));
+      expect(resource, contains(r'resources\\app_icon.ico'));
       expect(File('windows/runner/resources/app_icon.ico').existsSync(), isTrue);
     });
 
