@@ -72,6 +72,14 @@ jobs:
         run: flutter pub get
       - name: Build Web
         run: flutter build web --release
+      - name: Verify installable Web shell
+        run: |
+          test -f build/web/manifest.json
+          test -f build/web/icons/Icon-192.png
+          test -f build/web/icons/Icon-512.png
+          grep -q '"display": "standalone"' build/web/manifest.json
+          grep -q 'icons/Icon-192.png' build/web/manifest.json
+          grep -q 'icons/Icon-512.png' build/web/manifest.json
       - name: Upload Web artifact
         uses: actions/upload-artifact@v7
         with:
