@@ -154,11 +154,17 @@ jobs:
         run: flutter pub get
       - name: Build Linux
         run: flutter build linux --release
+      - name: Package Linux bundle with permissions
+        shell: bash
+        run: |
+          bundle_dir="$(find build/linux -path '*/release/bundle' -type d -print -quit)"
+          test -n "$bundle_dir"
+          tar -C "$(dirname "$bundle_dir")" -czf spellchecker-linux.tar.gz "$(basename "$bundle_dir")"
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-linux-${{ github.ref_name }}
-          path: build/linux/*/release/bundle
+          path: spellchecker-linux.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -210,11 +216,17 @@ jobs:
         run: flutter pub get
       - name: Build macOS
         run: flutter build macos --release
+      - name: Package macOS app with permissions
+        shell: bash
+        run: |
+          app_path="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          tar -C "$(dirname "$app_path")" -czf spellchecker-macos.tar.gz "$(basename "$app_path")"
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-macos-unsigned-${{ github.ref_name }}
-          path: build/macos/Build/Products/Release/*.app
+          path: spellchecker-macos.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -236,10 +248,16 @@ jobs:
         run: flutter pub get
       - name: Build iOS without signing
         run: flutter build ios --release --no-codesign
+      - name: Package iOS app with permissions
+        shell: bash
+        run: |
+          app_path="$(find build/ios/iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          tar -C "$(dirname "$app_path")" -czf spellchecker-ios.tar.gz "$(basename "$app_path")"
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v7
         with:
           name: spellchecker-ios-no-codesign-${{ github.ref_name }}
-          path: build/ios/iphoneos/*.app
+          path: spellchecker-ios.tar.gz
           if-no-files-found: error
           retention-days: 30
