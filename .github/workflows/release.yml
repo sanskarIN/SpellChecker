@@ -228,8 +228,30 @@ jobs:
         run: flutter config --enable-macos-desktop
       - name: Install dependencies
         run: flutter pub get
+      - name: Validate macOS plist and entitlements
+        run: >-
+          plutil -lint
+          macos/Runner/Info.plist
+          macos/Runner/Release.entitlements
+          macos/Runner/DebugProfile.entitlements
+      - name: Test Apple repository support contract
+        run: flutter test test/apple_repository_support_test.dart --reporter expanded
       - name: Build macOS
         run: flutter build macos --release
+      - name: Verify macOS bundle metadata and privacy manifest
+        shell: bash
+        run: |
+          app_path="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          info_plist="$app_path/Contents/Info.plist"
+          test -f "$info_plist"
+          bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")"
+          test "$bundle_id" = "in.sanskar.spellchecker"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist" | grep -Eq '.+'
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist" | grep -Eq '.+'
+          privacy_manifest="$(find "$app_path" -name PrivacyInfo.xcprivacy -type f -print -quit)"
+          test -n "$privacy_manifest"
+          plutil -lint "$privacy_manifest"
       - name: Package macOS app with permissions
         shell: bash
         run: |
@@ -260,8 +282,28 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Validate iOS plist
+        run: plutil -lint ios/Runner/Info.plist
+      - name: Test Apple repository support contract
+        run: flutter test test/apple_repository_support_test.dart --reporter expanded
       - name: Build iOS without signing
         run: flutter build ios --release --no-codesign
+      - name: Verify iOS bundle metadata and privacy manifest
+        shell: bash
+        run: |
+          app_path="$(find build/ios/iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          info_plist="$app_path/Info.plist"
+          test -f "$info_plist"
+          bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")"
+          display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$info_plist")"
+          test "$bundle_id" = "in.sanskar.spellchecker"
+          test "$display_name" = "SpellChecker"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist" | grep -Eq '.+'
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist" | grep -Eq '.+'
+          privacy_manifest="$(find "$app_path" -name PrivacyInfo.xcprivacy -type f -print -quit)"
+          test -n "$privacy_manifest"
+          plutil -lint "$privacy_manifest"
       - name: Package iOS app with permissions
         shell: bash
         run: |
