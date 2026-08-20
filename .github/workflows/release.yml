@@ -19,6 +19,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
+      - name: Verify release tag matches package version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          package_version="$(awk '/^version:/ { print $2; exit }' pubspec.yaml)"
+          release_version="${package_version%%+*}"
+          expected_tag="v${release_version}"
+          if [ "$GITHUB_REF_NAME" != "$expected_tag" ]; then
+            echo "Release tag $GITHUB_REF_NAME does not match pubspec.yaml version $package_version; expected $expected_tag."
+            exit 1
+          fi
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
