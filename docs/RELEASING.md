@@ -1,6 +1,6 @@
 # Releasing
 
-This page documents the current SpellChecker release process. The V3 automated release contract validates source once and produces release-mode build artifacts for **Android, iOS, Linux, macOS, Web, and Windows**. It still does not automatically create a permanent GitHub Release entry or inject private production signing credentials.
+This page documents the current SpellChecker release process. The V3 automated release contract validates source once and produces release-mode build artifacts for **Android, iOS, Linux, macOS, Web, and Windows**. Exact version-tag runs additionally publish a permanent GitHub Release with normalized cross-platform assets, a SHA-256 checksum manifest, and GitHub build-provenance attestations. Private production signing credentials are never injected from the public repository by default.
 
 For the complete local build/package procedure, target-specific artifact expectations, runner migration policy, signing boundaries, release verification, troubleshooting, and repository build inventory, see [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
@@ -18,13 +18,13 @@ Dart SDK: >=3.8.0 <4.0.0
 
 `.github/workflows/release.yml` runs when a Git tag matching `v*` is pushed or when a maintainer manually dispatches the workflow.
 
-For a tag-triggered run, the workflow derives the release version from `pubspec.yaml` by removing Flutter build metadata after `+` and requires the tag to equal `vMAJOR.MINOR.PATCH`. For example, package version `3.2.0+25` requires tag `v3.2.0`. A mismatched `v*` tag fails the quality job before Flutter setup or target packaging. Manual workflow dispatch is intentionally not subject to this tag check because it is also used for release-candidate validation from branches or commits.
+For a tag-triggered run, the workflow derives the release version from `pubspec.yaml` by removing Flutter build metadata after `+` and requires the tag to equal `vMAJOR.MINOR.PATCH`. For example, package version `3.2.0+25` requires tag `v3.2.0`. A mismatched `v*` tag fails the quality job before Flutter setup or target packaging. Manual workflow dispatch is intentionally not subject to this tag check because it is used for release-candidate validation from branches or commits.
 
-Workflow name: `Cross-platform release build`. Repository contents permission remains read-only.
+Workflow name: `Cross-platform release build`. The workflow-level permission remains `contents: read`. Only the final tag-only publishing job elevates to `contents: write`, `id-token: write`, and `attestations: write` so it can publish GitHub Release assets and build provenance after every required platform job succeeds.
 
 ## What the workflow validates
 
-The `quality` job runs once on Ubuntu. On tag-triggered runs it first verifies the release tag against the package version, then performs Flutter/Dart version reporting, dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke.
+The `quality` job runs once on Ubuntu. It resolves the package version, release version, and a filesystem-safe artifact suffix. On tag-triggered runs it verifies the release tag against the package version, then performs Flutter/Dart version reporting, dependency resolution, canonical formatting, `flutter analyze`, the complete Flutter test suite, and deterministic benchmark smoke.
 
 After quality succeeds, target jobs build in parallel:
 
@@ -38,20 +38,39 @@ macOS    macos-latest    flutter build macos --release
 iOS      macos-latest    flutter build ios --release --no-codesign
 ```
 
-The Android target additionally runs the focused Android repository-support contract and verifies the production-manifest privacy policy before packaging. The Web target runs the existing app-level widget workflow in Chrome before its release build, then verifies its manifest and install icons after build. Linux, macOS, and iOS outputs are wrapped in tar archives before GitHub artifact upload so Unix executable permission bits and native bundle structure survive artifact transport. Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
+The Android target additionally runs the focused Android repository-support contract and verifies the production-manifest privacy policy before packaging. The Web target runs the existing app-level widget workflow in Chrome before its release build, then verifies its manifest and install icons after build. Web and Windows outputs are normalized into ZIP archives. Linux, macOS, and iOS outputs are wrapped in tar archives so Unix executable permission bits and native bundle structure survive artifact transport. Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact used by release-candidate validation and the final tag-publishing job.
+
+For exact version tags, `publish-release` downloads the normalized target artifacts only after all six build jobs succeed. It verifies the complete expected asset set, generates a SHA-256 manifest, creates build-provenance attestations, creates or refreshes the matching GitHub Release, uploads all release assets, and verifies that every expected file is present on the published Release.
+
+Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
 
 ## Release artifacts
 
-The workflow uploads target-specific artifacts named from the triggering ref or release tag:
+The build jobs normalize outputs into stable filenames. For a tag such as `v3.2.0`, the permanent GitHub Release contains the equivalent of:
 
-- Web — complete `build/web` directory after Chrome widget smoke and install-shell verification;
-- Android — validation release APK and Android App Bundle (`.aab`);
-- Linux — permission-preserving tar archive containing the complete release bundle;
-- Windows — complete release directory;
-- macOS — permission-preserving tar archive containing the unsigned `.app` bundle;
-- iOS — permission-preserving tar archive containing the no-codesign `.app` bundle.
+```text
+spellchecker-web-v3.2.0.zip
+spellchecker-android-validation-v3.2.0.apk
+spellchecker-android-validation-v3.2.0.aab
+spellchecker-linux-v3.2.0.tar.gz
+spellchecker-windows-v3.2.0.zip
+spellchecker-macos-unsigned-v3.2.0.tar.gz
+spellchecker-ios-no-codesign-v3.2.0.tar.gz
+spellchecker-v3.2.0-SHA256SUMS.txt
+```
 
-Actions artifacts are not permanent GitHub Release assets and are not app-store publication. Public Android CI artifacts use non-production signing when no private upload key is supplied; official Play distribution must use the secured production signing path documented in the Android and executable-build guides.
+The signing words in those names are part of the public trust boundary:
+
+- Android APK/AAB — release-mode **validation** builds; when no private upload keystore is supplied, the repository intentionally uses its fallback signing path. These files must not be represented as Play production-signed artifacts.
+- iOS — release-mode `.app` built with `--no-codesign`; it is not an App Store/TestFlight IPA.
+- macOS — unsigned release `.app` bundle preserved inside a tar archive; signing/notarization is separate.
+- Windows — release runtime bundle; code signing/installer packaging is separate.
+- Linux — complete release bundle preserved inside a tar archive.
+- Web — complete verified `build/web` static site wrapped as a ZIP.
+
+The checksum manifest covers the seven platform asset files before the manifest itself is added. GitHub build-provenance attestations bind the release asset bytes to the workflow run that produced them.
+
+GitHub Actions artifacts remain temporary 30-day workflow storage. Exact tag runs also publish the normalized files to the tag's GitHub Release for durable release distribution. Manual workflow dispatch does **not** publish a GitHub Release.
 
 ## Pre-release checklist
 
@@ -73,6 +92,7 @@ Before tagging/dispatching a release, verify:
 - the executable-build tracked-file inventory matches the actual repository;
 - all configured cross-platform release-mode build jobs succeed;
 - Android release validation produces both the APK and AAB and preserves the production-manifest policy;
+- the final tag-only publish job verifies all normalized assets, checksum generation, provenance attestation, and GitHub Release upload;
 - historical release/validation record is added when the release needs durable audit evidence.
 
 Before signed/store distribution, also complete the target-specific signing, packaging, accessibility, privacy/security, and clean-environment verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
@@ -113,13 +133,13 @@ git push origin v1.2.3
 
 A tag such as `v1.2.4`, `v1.2.3+45`, or another mismatched `v*` value still triggers the workflow but is rejected by the quality job before packaging. This prevents a release artifact from being labeled with a version that disagrees with source metadata.
 
-Before pushing a tag, make sure it points to the reviewed/green release commit. Replacing/moving public release tags damages reproducibility and should be avoided.
+Before pushing a tag, make sure it points to the reviewed/green release commit. Replacing/moving public release tags damages reproducibility and should be avoided. A successful exact version tag is also the publication trigger for the permanent GitHub Release.
 
 ## Manual dispatch
 
-A maintainer can run the workflow manually from GitHub Actions without creating a tag. In that case, `${{ github.ref_name }}` determines the artifact suffix from the dispatched ref.
+A maintainer can run the workflow manually from GitHub Actions without creating a tag. The workflow sanitizes `/` characters in `${{ github.ref_name }}` when it derives the artifact filename suffix so release-candidate builds from namespaced branches remain valid files.
 
-Manual dispatch is useful for release-candidate verification and intentionally bypasses the tag/version equality check. It does not by itself change package version or create a release record.
+Manual dispatch is useful for release-candidate verification and intentionally bypasses the tag/version equality check. It builds and uploads the same normalized platform artifacts to temporary GitHub Actions storage, but the `publish-release` job is tag-only and therefore does not create or modify a GitHub Release for manual runs.
 
 ## Release candidate validation
 
@@ -132,6 +152,10 @@ For a significant release, consider recording exact evidence:
 - Chrome Web widget-smoke result;
 - Android APK and AAB build results plus the Android support-contract result;
 - iOS/Linux/macOS/Web/Windows build results;
+- normalized release asset names;
+- SHA-256 manifest result;
+- GitHub build-provenance attestation result on tag runs;
+- GitHub Release publication verification on tag runs;
 - executable/package verification result;
 - migration/compatibility checks;
 - known limitations;
@@ -231,13 +255,15 @@ Specifically check for new:
 - external plugin/model downloads;
 - logging of document/finding/vocabulary data.
 
+The release workflow's GitHub publishing network activity is repository automation, not application runtime telemetry or document processing. Application runtime behavior remains local/offline unless separately changed and documented.
+
 Update [Privacy](PRIVACY.md) and [Security](../SECURITY.md) before release when behavior changes.
 
 ## Platform support release review
 
 All six Flutter runners are committed and cross-platform CI/release builds validate them. Before describing an artifact as production-distribution-ready, verify the relevant signing/notarization/store/installer policy rather than equating a successful CI build with channel approval.
 
-For Android, CI validates both release packaging forms while the production upload keystore remains external to Git. Web also has a browser-runtime smoke gate in Chrome before packaging. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and the Android runner guide for target-specific requirements.
+For Android, CI validates both release packaging forms while the production upload keystore remains external to Git. Web also has a browser-runtime smoke gate in Chrome before packaging. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds](EXECUTABLE_BUILDS.md), and the Android runner guide for target-specific requirements.
 
 ## Release artifact verification
 
@@ -247,29 +273,31 @@ After workflow success:
 2. on a tag-triggered run, confirm the tag/version guard succeeded;
 3. confirm the Web Chrome widget smoke succeeded;
 4. confirm every intended platform build job succeeded;
-5. confirm each uploaded artifact exists and uses the expected ref/tag suffix;
+5. confirm every normalized platform artifact exists and uses the expected sanitized ref/tag suffix;
 6. for Android, confirm both the APK and AAB are present and distinguish CI validation signing from the intended production upload certificate;
 7. extract Linux/macOS/iOS tar archives before inspection so their preserved permission/bundle metadata is retained;
 8. inspect or extract the complete bundle rather than only a single executable from desktop targets;
-9. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
-10. keep the workflow run/tag/commit reference in release evidence.
+9. on tag runs, verify the SHA-256 manifest contains all seven platform asset filenames and validate downloaded files against it;
+10. on tag runs, confirm GitHub build-provenance attestations were created and the `publish-release` verification step found every `dist/` file on the GitHub Release;
+11. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+12. keep the workflow run/tag/commit reference in release evidence.
 
-The workflow artifacts are retained for 30 days and should not be treated as permanent archival storage.
+Temporary GitHub Actions artifacts are retained for 30 days. The exact version tag's GitHub Release is the durable repository distribution record for these automated assets; store/channel publication still follows each platform's signing and review requirements.
 
 ## Publishing/deployment
 
-The current repository workflow stops at cross-platform artifact upload. Deployment to a web host, GitHub Pages, package registry, app store, installer channel, notarization service, or permanent GitHub Release remains outside the automated release workflow.
+Exact version tags now publish permanent repository release assets to GitHub Releases. This does **not** deploy the Web build to a host and does not publish Android, iOS, macOS, Windows, or Linux artifacts to an app store/package channel.
 
-If a future deployment/publishing system is added, document:
+Still-separate distribution work includes:
 
-- destination;
-- credentials/secrets;
-- approvals;
-- rollback;
-- provenance/signing;
-- retention;
-- privacy/security effects;
-- version/tag mapping.
+- Web hosting/GitHub Pages or another hosting destination;
+- Google Play upload/signing promotion;
+- App Store/TestFlight archive/signing/provisioning;
+- macOS signing/notarization;
+- Windows code signing/installer packaging;
+- Linux package-repository formats and signing.
+
+Any future deployment/publishing system should document destination, credentials/secrets, approvals, rollback, provenance/signing, retention, privacy/security effects, and version/tag mapping.
 
 Target-specific packaging/signing details belong in [Executable builds and packaging](EXECUTABLE_BUILDS.md) and must remain consistent with this release contract.
 
@@ -282,7 +310,7 @@ For a release regression:
 3. run full CI;
 4. increment version when publishing a corrected release rather than silently moving an old tag;
 5. update changelog/release notes;
-6. create a new tag/artifact.
+6. create a new tag so the corrected build receives its own checksums, provenance, and GitHub Release assets.
 
 ## BMC/funding
 
