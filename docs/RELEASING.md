@@ -40,7 +40,7 @@ iOS      macos-latest    flutter build ios --release --no-codesign
 
 The Android target additionally runs the focused Android repository-support contract and verifies the production-manifest privacy policy before packaging. The Web target runs the existing app-level widget workflow in Chrome before its release build, then verifies its manifest and install icons after build. Web and Windows outputs are normalized into ZIP archives. Linux, macOS, and iOS outputs are wrapped in tar archives so Unix executable permission bits and native bundle structure survive artifact transport. Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact used by release-candidate validation and the final tag-publishing job.
 
-For exact version tags, `publish-release` downloads the normalized target artifacts only after all six build jobs succeed. It verifies the complete expected asset set, generates a SHA-256 manifest, creates build-provenance attestations, creates or refreshes the matching GitHub Release, uploads all release assets, and verifies that every expected file is present on the published Release.
+For exact version tags, `publish-release` downloads the normalized target artifacts only after all six build jobs succeed. It verifies the complete expected asset set, generates a SHA-256 manifest, rejects the run if a GitHub Release already exists for that tag, creates build-provenance attestations, creates the matching GitHub Release, uploads all release assets, and verifies that every expected file is present on the published Release. Existing public release assets are therefore not silently overwritten by a workflow rerun.
 
 Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
 
@@ -72,6 +72,14 @@ The checksum manifest covers the seven platform asset files before the manifest 
 
 GitHub Actions artifacts remain temporary 30-day workflow storage. Exact tag runs also publish the normalized files to the tag's GitHub Release for durable release distribution. Manual workflow dispatch does **not** publish a GitHub Release.
 
+### Published-release immutability
+
+Once the automated GitHub Release exists for a version tag, the workflow refuses to overwrite it. This protects the relationship among tag, source commit, checksums, provenance, and public asset bytes.
+
+If a released build needs a code or packaging correction, increment the project version/build as appropriate, review the correction, and publish a new release tag. Do not move the old public tag or use a workflow rerun to replace already-published assets.
+
+If publication infrastructure fails after GitHub has created a Release but before the workflow finishes its final verification, investigate the partial publication before taking action. Do not automatically delete or replace a Release that may already have been consumed; preserve auditability and use a new version/tag when the published bytes cannot be safely treated as an unpublished draft.
+
 ## Pre-release checklist
 
 Before tagging/dispatching a release, verify:
@@ -80,6 +88,7 @@ Before tagging/dispatching a release, verify:
 - CI is green on the exact `main` commit;
 - `pubspec.yaml` version/build number is correct;
 - for a tag-triggered release, the tag equals `v` plus the package version before `+`;
+- no GitHub Release already exists for the intended new tag;
 - README/docs current-version references are updated;
 - About dialog/version tests match the package release intention;
 - `CHANGELOG.md` contains the release entry;
@@ -133,7 +142,7 @@ git push origin v1.2.3
 
 A tag such as `v1.2.4`, `v1.2.3+45`, or another mismatched `v*` value still triggers the workflow but is rejected by the quality job before packaging. This prevents a release artifact from being labeled with a version that disagrees with source metadata.
 
-Before pushing a tag, make sure it points to the reviewed/green release commit. Replacing/moving public release tags damages reproducibility and should be avoided. A successful exact version tag is also the publication trigger for the permanent GitHub Release.
+Before pushing a tag, make sure it points to the reviewed/green release commit and that the corresponding GitHub Release does not already exist. Replacing/moving public release tags damages reproducibility and should be avoided. A successful exact version tag is also the publication trigger for the permanent GitHub Release.
 
 ## Manual dispatch
 
