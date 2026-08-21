@@ -422,6 +422,44 @@ void main() {
     },
   );
 
+  test('tagged release distribution safeguards stay enabled', () {
+    final workflow = File('.github/workflows/release.yml').readAsStringSync();
+    const requiredMarkers = <String>[
+      'publish-release:',
+      "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
+      'actions/download-artifact@v8',
+      'actions/attest-build-provenance@v4',
+      'contents: write',
+      'id-token: write',
+      'attestations: write',
+      'sha256sum',
+      'Reject already-published release tags',
+      'gh release create',
+      '--verify-tag',
+      '--generate-notes',
+      'spellchecker-web-',
+      'spellchecker-android-validation-',
+      'spellchecker-linux-',
+      'spellchecker-windows-',
+      'spellchecker-macos-unsigned-',
+      'spellchecker-ios-no-codesign-',
+      'SHA256SUMS.txt',
+    ];
+
+    for (final marker in requiredMarkers) {
+      expect(
+        workflow,
+        contains(marker),
+        reason: '.github/workflows/release.yml must keep: $marker',
+      );
+    }
+    expect(
+      workflow,
+      isNot(contains('--clobber')),
+      reason: 'Published GitHub Release assets must not be silently replaced.',
+    );
+  });
+
   test('executable build guide accounts for repository-controlled files', () {
     const startMarker = '<!-- tracked-file-inventory:start -->';
     const endMarker = '<!-- tracked-file-inventory:end -->';
