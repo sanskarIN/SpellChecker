@@ -27,7 +27,8 @@ The current project already ships:
 - privacy/local-storage/accessibility/testing/release documentation;
 - deterministic synthetic benchmark tooling;
 - GitHub Actions source, focused documentation/metadata, and cross-platform CI;
-- validated release-mode build artifacts for Android, iOS, Linux, macOS, Web, and Windows.
+- validated release-mode build artifacts for Android, iOS, Linux, macOS, Web, and Windows;
+- exact-tag GitHub Release publication with normalized cross-platform assets, SHA-256 checksums, and build-provenance attestations.
 
 No unchecked V2.16 release requirement remains in the current roadmap.
 
@@ -61,6 +62,24 @@ Current executable coverage includes:
 - exact `git ls-files` coverage in the executable-build tracked-file inventory.
 
 Future documentation tooling should only be added when it provides a clear deterministic signal without introducing unnecessary remote services or dependency weight.
+
+## Tagged release distribution hardening completed
+
+Exact version-tag runs now extend the six-target build matrix into a durable repository release record. The release workflow:
+
+- derives and validates package/tag identity before packaging;
+- normalizes Web, Android, Linux, Windows, macOS, and iOS outputs into stable filenames;
+- preserves Linux/macOS/iOS bundle permissions with tar archives;
+- labels Android artifacts as validation builds, macOS as unsigned, and iOS as no-codesign rather than overstating production signing;
+- requires all six platform jobs before publication;
+- verifies the complete release asset set;
+- generates a SHA-256 checksum manifest;
+- creates GitHub build-provenance attestations;
+- creates or refreshes the exact tag's GitHub Release and verifies every expected asset was published.
+
+Manual workflow dispatch remains a release-candidate path and intentionally does not publish a GitHub Release. Store signing, notarization, installers, and hosted Web deployment remain separate distribution concerns.
+
+See [Releasing](RELEASING.md) and [Executable builds](EXECUTABLE_BUILDS.md).
 
 # Optional future directions
 
@@ -103,9 +122,9 @@ No cloud ranking/model is required for this extension path.
 
 The V3 cross-platform foundation now commits official Flutter runners for Android, iOS, Linux, macOS, Windows, and Web. Cross-platform CI validates release-mode builds on target-appropriate GitHub-hosted operating systems, and the release workflow mirrors those build targets.
 
-Remaining platform work is distribution engineering rather than runner creation:
+Tagged runs now also publish permanent GitHub Release assets with checksums and provenance, so remaining platform work is distribution-channel engineering rather than runner creation or repository release archival:
 
-- Android production keystore/signing and Play-style packaging policy;
+- Android production keystore/signing and Play publication policy;
 - Apple signing/provisioning for iOS;
 - macOS signing/notarization;
 - Windows signing/installer packaging if selected;
@@ -117,27 +136,15 @@ Private signing material must remain outside the repository.
 
 ## Web deployment/public hosting automation
 
-The current release workflow uploads a web artifact but does not deploy it.
+The current release workflow packages and permanently attaches the Web ZIP to exact-tag GitHub Releases but does not deploy a hosted site.
 
 Optional work could add an intentional deployment destination such as GitHub Pages or another host, with:
 
-- build provenance;
 - environment/secret handling;
 - rollback policy;
 - custom-domain/security headers if relevant;
-- deployment documentation.
-
-## GitHub Release automation
-
-The current workflow does not automatically create a GitHub Release record or permanent release asset.
-
-Optional work could add:
-
-- release-note generation policy;
-- tag/version validation;
-- GitHub Release creation;
-- web artifact attachment;
-- provenance/signing/checksum strategy.
+- deployment documentation;
+- explicit mapping between deployed versions and the already-published release provenance/checksum record.
 
 ## Localization of application UI/documentation
 
@@ -199,7 +206,7 @@ There is no committed plan requiring:
 - background document upload/monitoring;
 - untrusted dynamic plugin execution;
 - automatic language detection;
-- native release support without runners/CI/signing.
+- native store/channel release support without the required signing/provisioning/notarization policy.
 
 Any of those could only become project scope through an explicit future design/review, not by implication.
 
@@ -237,7 +244,7 @@ Feature requests can be opened through the repository's GitHub issue templates. 
 
 # Historical roadmap context
 
-Release-specific design/validation files are indexed in [Release history](RELEASE_HISTORY.md). They preserve the sequence by which the current rule catalogue, bounded analysis, diagnostics, accessibility, benchmark, Unicode hardening, and stabilization behavior were added.
+Release-specific design/validation files are indexed in [Release history](RELEASE_HISTORY.md). They preserve the sequence by which the current rule catalogue, bounded analysis, diagnostics, accessibility, benchmark, Unicode hardening, stabilization, multilingual expansion, cross-platform build support, and release distribution hardening were added.
 
 Use this page for future/current planning and historical records for what was planned/validated at a specific release point.
 
