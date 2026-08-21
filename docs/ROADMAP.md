@@ -28,7 +28,7 @@ The current project already ships:
 - deterministic synthetic benchmark tooling;
 - GitHub Actions source, focused documentation/metadata, and cross-platform CI;
 - validated release-mode build artifacts for Android, iOS, Linux, macOS, Web, and Windows;
-- exact-tag GitHub Release publication with normalized cross-platform assets, SHA-256 checksums, and build-provenance attestations.
+- exact-tag GitHub Release publication with normalized cross-platform assets, SHA-256 checksums, build-provenance attestations, and immutable published-tag assets.
 
 No unchecked V2.16 release requirement remains in the current roadmap.
 
@@ -74,10 +74,11 @@ Exact version-tag runs now extend the six-target build matrix into a durable rep
 - requires all six platform jobs before publication;
 - verifies the complete release asset set;
 - generates a SHA-256 checksum manifest;
+- rejects a tag if its GitHub Release already exists, preventing silent replacement of public asset bytes;
 - creates GitHub build-provenance attestations;
-- creates or refreshes the exact tag's GitHub Release and verifies every expected asset was published.
+- creates the exact tag's GitHub Release and verifies every expected asset was published.
 
-Manual workflow dispatch remains a release-candidate path and intentionally does not publish a GitHub Release. Store signing, notarization, installers, and hosted Web deployment remain separate distribution concerns.
+Manual workflow dispatch remains a release-candidate path and intentionally does not publish a GitHub Release. Corrections to an already-published release require a new reviewed version/tag. Store signing, notarization, installers, and hosted Web deployment remain separate distribution concerns.
 
 See [Releasing](RELEASING.md) and [Executable builds](EXECUTABLE_BUILDS.md).
 
