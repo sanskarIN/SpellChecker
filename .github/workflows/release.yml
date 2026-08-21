@@ -390,27 +390,32 @@ jobs:
           )
           test -s "dist/spellchecker-${suffix}-SHA256SUMS.txt"
 
+      - name: Reject already-published release tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "GitHub Release $GITHUB_REF_NAME already exists. Published release assets are immutable; publish corrections under a new version/tag."
+            exit 1
+          fi
+
       - name: Attest release asset provenance
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*
 
-      - name: Create or refresh GitHub Release assets
+      - name: Create immutable GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           release_header=$'Automated cross-platform artifacts built by GitHub Actions from this exact tag.\n\nDistribution boundary: Android APK/AAB files are CI validation builds that use the repository fallback signing path unless private production signing is supplied; iOS is intentionally no-codesign; macOS and Windows assets are unsigned. Verify downloads with the SHA-256 manifest and GitHub build-provenance attestations before further packaging or distribution.'
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
-          else
-            gh release create "$GITHUB_REF_NAME" dist/* \
-              --verify-tag \
-              --title "SpellChecker ${{ needs.quality.outputs.release_version }}" \
-              --generate-notes \
-              --notes "$release_header" \
-              --latest
-          fi
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --verify-tag \
+            --title "SpellChecker ${{ needs.quality.outputs.release_version }}" \
+            --generate-notes \
+            --notes "$release_header"
 
       - name: Verify published GitHub Release assets
         env:
