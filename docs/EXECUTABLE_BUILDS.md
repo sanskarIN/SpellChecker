@@ -44,7 +44,7 @@ Before producing any artifact, use these repository files as the primary build c
 - `.github/workflows/ci.yml` — canonical source-validation gates.
 - `.github/workflows/release.yml` — current release-build, normalized packaging, checksum/provenance, and exact-tag GitHub Release contract.
 
-The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners. Android builds both APK and App Bundle outputs. Web and Windows outputs are normalized to ZIP files; Linux/macOS/iOS use tar archives to preserve bundle structure and executable permission bits. Exact version-tag runs wait for all six platform jobs, verify the full expected asset set, generate SHA-256 checksums, create build-provenance attestations, and publish or refresh the tag's GitHub Release.
+The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners. Android builds both APK and App Bundle outputs. Web and Windows outputs are normalized to ZIP files; Linux/macOS/iOS use tar archives to preserve bundle structure and executable permission bits. Exact version-tag runs wait for all six platform jobs, verify the full expected asset set, generate SHA-256 checksums, reject an already-published tag, create build-provenance attestations, and create the tag's GitHub Release without overwriting existing public assets.
 
 ## 3. Required preflight on every build machine
 
@@ -150,6 +150,8 @@ The complete `build/web/` directory is deployable static output. The release wor
 GitHub Actions artifacts remain temporary workflow storage with the configured 30-day retention and are used for release-candidate inspection and cross-job transport. Exact version-tag runs also publish normalized assets, a SHA-256 checksum manifest, and provenance-backed build outputs to the tag's GitHub Release for durable repository distribution.
 
 Those GitHub Release assets are still not app-store packages, notarized applications, production-signed Android builds by default, or a hosted website. Their filenames deliberately expose important boundaries such as `android-validation`, `macos-unsigned`, and `ios-no-codesign`.
+
+Published GitHub Release assets are treated as immutable by the workflow. A later run for the same tag is rejected once a Release exists, so corrections should use a new reviewed version/tag rather than silently replacing public bytes.
 
 ## 6. Native runner regeneration and migration policy
 
@@ -402,6 +404,8 @@ spellchecker-v3.2.0-SHA256SUMS.txt
 
 Manual dispatch uses the selected ref as the suffix after replacing `/` with `-`, which prevents namespaced branch refs from becoming unintended subdirectories.
 
+Before pushing an exact release tag, confirm its GitHub Release does not already exist. Once a GitHub Release exists, the automated workflow rejects the same tag rather than replacing assets.
+
 Do not move a public release tag to silently replace a published artifact. Correct a release with a new reviewed version/tag.
 
 ## 14. Signing and secrets
@@ -497,7 +501,9 @@ Treat signing as a platform/toolchain configuration problem. Do not solve it by 
 
 ### Final tag publication fails
 
-Do not bypass a failed publication verification. Confirm that all six platform jobs succeeded, all seven expected platform assets were downloaded into `dist/`, checksum generation succeeded, attestation permissions are available, and the repository token can write release assets. Re-run from the same immutable tag only after fixing workflow infrastructure; code changes require a new reviewed release version/tag.
+Do not bypass a failed publication verification. Confirm that all six platform jobs succeeded, all seven expected platform assets were downloaded into `dist/`, checksum generation succeeded, attestation permissions are available, and the repository token can write release assets.
+
+If no GitHub Release was created, the same immutable tag may be rerun after fixing workflow infrastructure because no public asset set has been published yet. If a GitHub Release already exists, the workflow intentionally refuses replacement. Inspect any partial publication carefully; do not automatically overwrite or move the tag, and publish corrections under a new reviewed version/tag when the existing public bytes cannot be treated as safely unpublished.
 
 ## 17. CI/CD requirements for signed/distribution releases
 
