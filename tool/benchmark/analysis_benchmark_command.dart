@@ -27,9 +27,12 @@ int runAnalysisBenchmarkCommand(
       return 0;
     }
     if (!SpellLanguageRegistry.contains(options.languageId)) {
+      final supportedLanguageIds = SpellLanguageRegistry.builtIns
+          .map((SpellLanguagePack pack) => pack.id)
+          .join(', ');
       throw FormatException(
         'Unsupported language "${options.languageId}". '
-        'Use en-US or en-GB.',
+        'Use a built-in language ID: $supportedLanguageIds.',
       );
     }
     languagePack = SpellLanguageRegistry.byId(options.languageId);
