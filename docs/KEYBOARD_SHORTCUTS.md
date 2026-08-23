@@ -74,6 +74,6 @@ See [Accessibility](ACCESSIBILITY.md) for the complete contract and known limita
 
 ## Source of truth
 
-The application-level `F1` shortcut is defined in `lib/app.dart`. Primary editor shortcuts are defined in `lib/features/editor/spell_checker_page.dart`. Writing insights shortcuts are defined in `lib/features/editor/writing_insights_dialog.dart`. The in-app reference is defined in `lib/features/editor/keyboard_shortcuts_dialog.dart`.
+The application-level `F1` shortcut and its in-app reference are defined in `lib/app.dart`. Primary editor shortcuts are defined in `lib/features/editor/spell_checker_page.dart`. Writing insights shortcuts are defined in `lib/features/editor/writing_insights_dialog.dart`.
 
 When adding or changing a shortcut, update this page, the user guide, accessibility documentation, tooltips/semantics where relevant, and widget tests in the same change.
