@@ -175,12 +175,13 @@ See [Privacy](PRIVACY.md) and [Security](../SECURITY.md).
 
 ## Accessibility and keyboard workflow
 
-The application uses Material 3, system light/dark theme selection, responsive wide/narrow layouts, focus traversal, semantics labels, and live-region announcements for important states.
+The application uses Material 3, system light/dark theme selection, responsive wide/narrow layouts, focus traversal, semantics labels, and live-region announcements for important states. Press `F1` on the main application surface to open the in-app primary shortcut reference.
 
 Primary shortcuts:
 
 | Action | Shortcut |
 | --- | --- |
+| Open keyboard shortcut reference | `F1` |
 | Check spelling | `Ctrl+Enter` / `Command+Enter` |
 | Open Writing insights | `Ctrl+Shift+Enter` / `Command+Shift+Enter` |
 | Next spelling issue | `F7` |
