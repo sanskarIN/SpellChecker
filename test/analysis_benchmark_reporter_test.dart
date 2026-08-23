@@ -42,7 +42,8 @@ void main() {
 
     expect(report, contains('SpellChecker deterministic analysis benchmark'));
     expect(report, contains('Language: en-US'));
-    expect(report, contains('Spelling min/median/max: 10/10/10'));
+    expect(report, contains('Spelling min/median/p95/max: 10/10/10/10'));
+    expect(report, contains('Writing min/median/p95/max: 20/20/20/20'));
     expect(report, contains('Writing total findings: 8'));
     expect(report, contains('Writing analyzed rules: rule-a, rule-b'));
     expect(
