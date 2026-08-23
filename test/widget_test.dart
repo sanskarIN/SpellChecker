@@ -41,6 +41,28 @@ void main() {
     expect(find.text('Nothing to check'), findsOneWidget);
   });
 
+  testWidgets('F1 opens the keyboard shortcut reference', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Keyboard shortcuts'), findsOneWidget);
+    expect(find.text('Check spelling'), findsWidgets);
+    expect(find.text('Ctrl/⌘ + Enter'), findsOneWidget);
+    expect(find.text('Ctrl/⌘ + Shift + Enter'), findsOneWidget);
+    expect(find.text('F7'), findsOneWidget);
+    expect(find.text('Shift + F7'), findsOneWidget);
+    expect(find.text('F1'), findsOneWidget);
+
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keyboard shortcuts'), findsNothing);
+  });
+
   testWidgets('F7 moves to the next spelling issue', (
     WidgetTester tester,
   ) async {
