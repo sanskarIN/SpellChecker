@@ -1,6 +1,6 @@
 # Accessibility
 
-SpellChecker aims to make the bundled editor and review workflow usable with keyboard navigation, assistive technologies, responsive layouts, and system light/dark appearance. This page documents the current `2.16.0+21` accessibility contract and known boundaries; it does not claim formal certification against every accessibility standard/platform combination.
+SpellChecker aims to make the bundled editor and review workflow usable with keyboard navigation, assistive technologies, responsive layouts, and system light/dark appearance. This page documents the current `3.2.0+25` accessibility contract and known boundaries; it does not claim formal certification against every accessibility standard/platform combination.
 
 ## Principles
 
