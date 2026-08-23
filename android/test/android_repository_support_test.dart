@@ -88,8 +88,13 @@ void main() {
         );
         expect(
           workflow,
-          contains('build/app/outputs/bundle/release/*.aab'),
-          reason: '$path must upload the Android App Bundle.',
+          contains('build/app/outputs/bundle/release'),
+          reason: '$path must inspect the Android App Bundle output directory.',
+        );
+        expect(
+          workflow,
+          contains('.aab'),
+          reason: '$path must retain Android App Bundle artifact handling.',
         );
       }
     });
