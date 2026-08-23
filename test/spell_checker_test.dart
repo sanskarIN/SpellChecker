@@ -32,6 +32,42 @@ void main() {
       expect(suggestions, isNotEmpty);
     });
 
+    test('keeps suggestion ranking stable across unrelated length buckets', () {
+      final baseline = SpellCheckerEngine(
+        dictionary: <String>{'hello', 'help', 'hero', 'shell'},
+      );
+      final expanded = SpellCheckerEngine(
+        dictionary: <String>{
+          'a',
+          'an',
+          'hello',
+          'help',
+          'hero',
+          'shell',
+          'extraordinary',
+          'characteristically',
+          'intercommunication',
+        },
+      );
+
+      expect(
+        expanded.suggestionsFor('helo'),
+        baseline.suggestionsFor('helo'),
+      );
+    });
+
+    test('preserves affix suggestions with length-indexed candidates', () {
+      final engine = SpellCheckerEngine(
+        dictionary: <String>{
+          'hello',
+          'a',
+          'intercommunication',
+        },
+      );
+
+      expect(engine.suggestionsFor("helo's"), contains("hello's"));
+    });
+
     test('orders lower edit-distance suggestions first', () {
       final engine = SpellCheckerEngine(
         dictionary: <String>{'spell', 'spelling', 'world'},
