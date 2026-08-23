@@ -153,6 +153,8 @@ dart run tool/benchmark_large_document.dart \
 
 Record exact command, Flutter/Dart versions, OS/hardware, commit SHA, and whether the environment was otherwise busy when comparing runs.
 
+The text report summarizes spelling and writing timings as `min/median/p95/max`. The p95 value uses the nearest-rank definition so occasional slow measured iterations are visible without replacing the median as the central comparison statistic.
+
 ## JSON report
 
 Add `--json` for machine-readable/versioned report output:
@@ -162,6 +164,8 @@ dart run tool/benchmark_large_document.dart --json
 ```
 
 The report contains benchmark/scenario/configuration/outcome/timing metadata. It is based on synthetic source and analysis counts, not user documents.
+
+Benchmark JSON format version 2 adds `spellingP95Microseconds` and `writingP95Microseconds` to the aggregate timing object. Consumers should check `formatVersion` before assuming a report schema and should preserve older V1 artifacts when comparing historical runs.
 
 Do not parse human-readable output when the versioned JSON reporter is available for automation.
 
