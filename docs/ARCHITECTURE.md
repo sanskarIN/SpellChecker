@@ -1,19 +1,22 @@
 # Architecture
 
-This page describes the current SpellChecker `2.16.0+21` architecture: reusable Dart layers, Flutter application workflow, local persistence, analysis/correction lifecycle, and important trust/data boundaries.
+This page describes the current SpellChecker `3.2.0+25` architecture: reusable Dart layers, Flutter application workflow, local persistence, analysis/correction lifecycle, cross-platform shell, and important trust/data boundaries.
 
 ## System overview
 
 ```mermaid
 flowchart TD
   App[SpellCheckerApp / MaterialApp]
+  Home[Application shortcut/focus shell]
   Page[SpellCheckerPage]
   Editor[Editor + SpellCheckEditingController]
   Results[Spelling Results UI]
+  ShortcutDialog[KeyboardShortcutsDialog]
   WritingDialog[WritingInsightsDialog]
   DictionaryDialog[DictionaryManagerDialog]
   SettingsDialog[SettingsTransferDialog]
   Engine[SpellCheckerEngine]
+  CandidateIndex[Base suggestion length index]
   Pack[SpellLanguagePack]
   Ranker[SpellSuggestionRanker]
   Analyzer[WritingAnalyzer]
@@ -26,7 +29,9 @@ flowchart TD
   SettingsCodec[SpellCheckerSettingsCodec]
   Diagnostics[WritingAnalysisDiagnosticSummary]
 
-  App --> Page
+  App --> Home
+  Home --> Page
+  Home --> ShortcutDialog
   Page --> Editor
   Page --> Results
   Page --> WritingDialog
@@ -35,6 +40,7 @@ flowchart TD
   Page --> Engine
   Page --> Analyzer
   Page --> Preferences
+  Engine --> CandidateIndex
   Engine --> Pack
   Engine --> Ranker
   Analyzer --> Rules
@@ -60,7 +66,8 @@ The architecture prioritizes:
 - per-language local preferences;
 - versioned transfer formats;
 - testability without network/services;
-- conservative behavior when mutation is ambiguous.
+- conservative behavior when mutation is ambiguous;
+- one Flutter application contract across six committed platform runners.
 
 ## Top-level public libraries
 
@@ -80,7 +87,7 @@ Application process entry point. It launches the Flutter application.
 
 ### `lib/app.dart`
 
-Defines `SpellCheckerApp`, Material 3 theming, system light/dark behavior, and `SpellCheckerPage` as the home surface.
+Defines `SpellCheckerApp`, Material 3 theming, system light/dark behavior, and the application-level shortcut/focus shell around `SpellCheckerPage`. The shell owns cross-surface commands such as `F1` shortcut help without moving spelling/writing logic into the app bootstrap.
 
 ### `lib/features/editor/spell_checker_page.dart`
 
@@ -106,6 +113,8 @@ Owns presentation of inline checked spelling ranges while preserving Flutter com
 
 ### Dialogs
 
+`KeyboardShortcutsDialog` provides the in-app primary shortcut reference and semantic action/key labels.
+
 `DictionaryManagerDialog` manages personal vocabulary and suggestion count.
 
 `WritingInsightsDialog` performs current text writing analysis, local review query/presets, rule switches, finding display, safe-fix requests, and diagnostic-summary copying.
@@ -124,8 +133,10 @@ Language-specific boundary around:
 - tokenization;
 - personal-word validation;
 - normalization;
-- recognized suffixes;
+- recognized prefixes/suffixes;
 - suggestion source/distance policy.
+
+The bundled registry currently contains thirteen offline spelling packs.
 
 ### `SpellCheckerEngine`
 
@@ -133,6 +144,7 @@ Stateful reusable spelling service. It owns:
 
 - selected pack;
 - immutable base dictionary/frequencies;
+- immutable base suggestion-candidate index grouped by Unicode-scalar length;
 - personal dictionary set;
 - ignored-word set;
 - suggestion cache;
@@ -152,8 +164,9 @@ sequenceDiagram
   UI->>E: analyze(text, suggestionLimit, maxIssues)
   E->>P: tokenize(text)
   loop each token
-    E->>P: normalize / validate / suffix policy
+    E->>P: normalize / validate / affix policy
     alt unknown and capture available
+      E->>E: select eligible scalar-length buckets
       E->>R: compare eligible candidates
       E-->>UI: SpellIssue with UTF-16 range + suggestions
     else capture limit reached
@@ -169,19 +182,20 @@ The bundled page uses a 200-issue capture limit. The public engine can be unboun
 
 For an unknown normalized target:
 
-1. split recognized suffix where applicable;
+1. split recognized affixes where applicable;
 2. use scalar length to determine maximum suggestion distance;
-3. iterate base and personal candidates;
-4. skip inappropriate candidate forms in the current engine implementation;
-5. skip scalar length differences beyond the maximum;
-6. calculate unrestricted scalar Damerau-Levenshtein distance;
-7. create candidate metadata;
-8. sort through `SpellSuggestionRanker`;
-9. apply final lexical fallback;
-10. reattach recognized suffix;
-11. cache detailed result by normalized unknown word.
+3. derive the minimum/maximum candidate scalar lengths that can qualify;
+4. visit only matching immutable base-dictionary length buckets;
+5. visit dynamic personal-dictionary candidates;
+6. skip inappropriate candidate forms and scalar-length differences beyond the maximum;
+7. calculate unrestricted scalar Damerau-Levenshtein distance;
+8. create candidate metadata;
+9. sort through `SpellSuggestionRanker`;
+10. apply final lexical fallback;
+11. reattach recognized affixes;
+12. cache detailed result by normalized unknown word.
 
-Personal-dictionary mutation clears the cache because candidate membership changes.
+The base length index is an optimization only: candidates outside the permitted length difference could not pass edit-distance eligibility. Personal-dictionary mutation clears the suggestion cache because candidate membership changes; the dynamic personal set is intentionally not frozen into the base index.
 
 ## Unicode coordinate architecture
 
@@ -211,7 +225,7 @@ Plugin abstraction defining stable ID, metadata, language support, category, and
 
 ### `WritingRuleRegistry`
 
-Owns the current ten built-in rule objects and default-enabled ID set.
+Owns the current ten built-in rule objects and default-enabled ID set. Current built-in Writing insights rules are English-specific even though spelling supports thirteen packs.
 
 ### `WritingAnalyzer`
 
@@ -381,16 +395,18 @@ External/system boundaries are limited to expected Flutter/project integration s
 
 - local `shared_preferences`;
 - explicit clipboard operations;
-- host Flutter/browser rendering/storage behavior;
+- host Flutter/browser/native rendering and storage behavior;
 - GitHub/project links outside analysis.
 
 See [Privacy](PRIVACY.md) and [Security](../SECURITY.md).
 
 ## Platform boundary
 
-Only the web host is committed and release-built. Portable application logic is written in Flutter, but native runner/build/signing behavior is outside the current repository release contract.
+Official Flutter runners are committed for Android, iOS, Linux, macOS, Web, and Windows. Cross-platform CI builds release-mode artifacts on target-appropriate GitHub-hosted operating systems, while release workflows mirror those targets.
 
-See [Platform support](PLATFORM_SUPPORT.md).
+Successful CI builds do not imply production signing, notarization, store approval, installer/channel packaging, or deployment. Private signing material remains outside the repository and distribution-specific policy stays in the release-engineering layer.
+
+See [Platform support](PLATFORM_SUPPORT.md) and [Executable builds and packaging](EXECUTABLE_BUILDS.md).
 
 ## Test architecture
 
@@ -404,7 +420,8 @@ Tests intentionally mirror layer ownership:
 - stress tests;
 - Flutter widget/semantics/keyboard tests;
 - benchmark tool/command tests;
-- repository metadata/documentation tests.
+- repository metadata/documentation tests;
+- target-specific repository/artifact contracts for supported native/web runners.
 
 See [Testing](TESTING.md).
 
