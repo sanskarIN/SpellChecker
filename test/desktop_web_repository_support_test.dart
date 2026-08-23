@@ -148,7 +148,7 @@ void main() {
           'flutter_bootstrap.js',
           'main.dart.js',
           'Verify Linux release bundle contents',
-          'ldd "$binary_path"',
+          r'ldd "$binary_path"',
           'Verify Windows release bundle metadata',
           'VersionInfo',
           'spellchecker.exe',
