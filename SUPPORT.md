@@ -8,7 +8,7 @@
 
 > SpellChecker is free and open source. Financial support is optional; bug reports, security reports, feature requests, and contributions do not depend on funding.
 
-This page explains how to get help with SpellChecker `2.16.0+21` and what information makes a report useful without exposing private documents.
+This page explains how to get help with SpellChecker `3.2.0+25` and what information makes a report useful without exposing private documents.
 
 ## Start here
 
@@ -22,7 +22,7 @@ Before opening an issue:
 
 ## Security vulnerabilities
 
-Do **not** report a security vulnerability as a normal public bug when disclosure could put users/data at risk.
+Do **not** report a security vulnerability as a normal public bug when disclosure could put users or data at risk.
 
 Follow [SECURITY.md](SECURITY.md) and use GitHub private security reporting when available.
 
@@ -33,7 +33,7 @@ Include:
 - SpellChecker version/commit;
 - platform/browser;
 - Flutter/Dart version when development/tooling related;
-- selected language (`en-US` or `en-GB`);
+- selected language ID, for example `en-US`, `hi-IN`, `es-ES`, or another registered built-in pack;
 - exact feature/workflow;
 - minimal synthetic input;
 - expected behavior;
@@ -43,7 +43,7 @@ Include:
 - whether the result was limited/truncated;
 - steps that reproduce consistently.
 
-Screenshots can help with layout/accessibility problems, but remove/redact private text/account information first.
+Screenshots can help with layout/accessibility problems, but remove or redact private text and account information first.
 
 ## Privacy-sensitive reporting
 
@@ -70,16 +70,18 @@ word word
 
 Useful fields:
 
-- selected language;
-- exact unknown word/synthetic sentence;
+- selected language ID;
+- exact unknown word or synthetic sentence;
 - whether the word is base, personal, or ignored;
 - suggestion limit;
 - returned suggestion order;
-- whether behavior changes after switching `en-US`/`en-GB`;
+- whether behavior changes after switching to a relevant language pack or regional variant;
 - whether the issue appears only after dictionary import/restart;
 - whether the spelling result is limited to the first 200 issues.
 
-For suggestion-ranking bugs, include the expected/actual ordered candidate words and whether a custom `SpellSuggestionRanker` is involved.
+For suggestion-ranking bugs, include the expected and actual ordered candidate words and whether a custom `SpellSuggestionRanker` is involved.
+
+For multilingual problems, name both the expected pack and the actual selected pack. Writing rules currently apply only to the English packs; non-English packs provide spelling, suggestions, and personal dictionaries without silently applying English-specific writing rules.
 
 ## Unicode/source-range problem report
 
@@ -89,7 +91,8 @@ Include the exact synthetic Unicode string and say whether it uses:
 - combining marks/decomposed accents;
 - curly/straight apostrophes;
 - Unicode hyphens;
-- quote/bracket boundaries.
+- quote/bracket boundaries;
+- script-specific join controls or boundaries when relevant.
 
 Source offsets in SpellChecker APIs are UTF-16 code-unit offsets. If reporting a wrong range, include the expected substring and `start/end` rather than describing only visible character positions.
 
@@ -113,7 +116,7 @@ Include:
 
 - whether failure occurs during decode/validation or persistence/application;
 - selected language before import;
-- suggestion count before/after;
+- suggestion count before and after;
 - explicit rule override states involved;
 - a minimized synthetic settings JSON document;
 - whether the UI reported rollback/restoration of prior durable settings.
@@ -155,7 +158,7 @@ Remember that advisory, stale, invalid, and later-overlapping findings are delib
 
 For writing-analysis count/ordering issues, copy the built-in metadata-only diagnostic summary when safe.
 
-It includes counts/rule/language metadata and excludes editor text, source excerpts, messages, replacements, and offsets.
+It includes counts, rule, and language metadata and excludes editor text, source excerpts, messages, replacements, and offsets.
 
 If exact totals are unavailable, note whether the `WritingAnalysisResult` was manually/directly constructed rather than returned by `WritingAnalyzer.analyze()`.
 
@@ -232,11 +235,13 @@ See [Performance](docs/PERFORMANCE.md).
 
 Include:
 
-- failing command/step;
+- failing workflow/job/command;
+- target platform;
 - Flutter/Dart versions;
-- exact analyzer/test/build error;
+- exact analyzer/test/build/package error;
 - whether the failure reproduces locally after `flutter pub get`;
-- changed files/area.
+- changed files/area;
+- for native packaging failures, whether the source-quality stage passed before the target build began.
 
 Canonical local gate:
 
@@ -246,7 +251,21 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-Release issues should also include the `flutter build web --release` result.
+For target/release problems, also include the relevant release build result:
+
+```text
+Web      flutter build web --release
+Android  flutter build apk --release
+         flutter build appbundle --release
+Linux    flutter build linux --release
+Windows  flutter build windows --release
+macOS    flutter build macos --release
+iOS      flutter build ios --release --no-codesign
+```
+
+Android runner/signing problems should also include the focused Android support-contract result where applicable. Apple runner/metadata/privacy-manifest problems should include the Apple support-contract result and any failing plist/entitlement or compiled-bundle validation step.
+
+See [Platform support](docs/PLATFORM_SUPPORT.md), [Executable builds and packaging](docs/EXECUTABLE_BUILDS.md), and [Testing](docs/TESTING.md).
 
 ## Feature requests
 
@@ -264,7 +283,7 @@ The roadmap lists optional future directions but is not a guarantee. See [Roadma
 
 ## Documentation problems
 
-For missing/stale/incorrect docs, identify:
+For missing, stale, or incorrect docs, identify:
 
 - page/section;
 - current code behavior/source when known;
