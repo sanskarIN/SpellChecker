@@ -49,8 +49,7 @@ class _SpellCheckerHome extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.f1): () {
           showDialog<void>(
             context: context,
-            builder: (BuildContext context) =>
-                const _KeyboardShortcutsDialog(),
+            builder: (BuildContext context) => const _KeyboardShortcutsDialog(),
           );
         },
       },
