@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import 'features/editor/keyboard_shortcuts_dialog.dart';
 import 'features/editor/spell_checker_page.dart';
 
 class SpellCheckerApp extends StatelessWidget {
@@ -33,7 +35,26 @@ class SpellCheckerApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const SpellCheckerPage(),
+      home: const _SpellCheckerHome(),
+    );
+  }
+}
+
+class _SpellCheckerHome extends StatelessWidget {
+  const _SpellCheckerHome();
+
+  @override
+  Widget build(BuildContext context) {
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.f1): () {
+          showDialog<void>(
+            context: context,
+            builder: (BuildContext context) => const KeyboardShortcutsDialog(),
+          );
+        },
+      },
+      child: const Focus(autofocus: true, child: SpellCheckerPage()),
     );
   }
 }
