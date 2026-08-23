@@ -88,9 +88,7 @@ void main() {
         );
         expect(
           cmake,
-          contains(
-            r'target_compile_options(${TARGET} PRIVATE -Wall -Werror)',
-          ),
+          contains(r'target_compile_options(${TARGET} PRIVATE -Wall -Werror)'),
         );
         expect(cmake, contains(r'set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")'));
         expect(
