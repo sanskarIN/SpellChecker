@@ -100,9 +100,7 @@ void main() {
     });
 
     test('tagged releases normalize Android validation artifact names', () {
-      final release = File(
-        '.github/workflows/release.yml',
-      ).readAsStringSync();
+      final release = File('.github/workflows/release.yml').readAsStringSync();
 
       expect(release, contains('Normalize Android validation asset names'));
       expect(release, contains('spellchecker-android-validation-'));
