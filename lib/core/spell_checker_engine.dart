@@ -192,6 +192,7 @@ class SpellCheckerEngine {
           target: target,
           targetRuneLength: targetRuneLength,
           candidate: candidate,
+          candidateRuneLength: candidateLength,
           maxDistance: maxDistance,
           source: languagePack.suggestionSource,
         );
@@ -302,6 +303,7 @@ class SpellCheckerEngine {
     required String target,
     required int targetRuneLength,
     required String candidate,
+    int? candidateRuneLength,
     required int maxDistance,
     required String source,
   }) {
@@ -309,7 +311,9 @@ class SpellCheckerEngine {
       return;
     }
 
-    final lengthDifference = (candidate.runes.length - targetRuneLength).abs();
+    final lengthDifference =
+        ((candidateRuneLength ?? candidate.runes.length) - targetRuneLength)
+            .abs();
     if (lengthDifference > maxDistance) {
       return;
     }
