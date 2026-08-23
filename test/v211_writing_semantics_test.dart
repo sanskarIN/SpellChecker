@@ -1,8 +1,22 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spellchecker/features/editor/writing_insights_dialog.dart';
 import 'package:spellchecker/language.dart';
 import 'package:spellchecker/writing.dart';
+
+String _currentPackageVersion() {
+  final pubspec = File('pubspec.yaml').readAsStringSync();
+  final match = RegExp(
+    r'^version:\s*(\S+)\s*$',
+    multiLine: true,
+  ).firstMatch(pubspec);
+  if (match == null) {
+    throw StateError('pubspec.yaml must declare a package version.');
+  }
+  return match.group(1)!;
+}
 
 void main() {
   final analyzer = WritingAnalyzer();
@@ -24,6 +38,25 @@ void main() {
     }
     expect(finder, findsOneWidget);
   }
+
+  test('accessibility guide stays aligned with the current release contract', () {
+    final accessibility = File('docs/ACCESSIBILITY.md').readAsStringSync();
+    final currentVersion = _currentPackageVersion();
+
+    expect(accessibility, contains('`$currentVersion`'));
+    expect(accessibility, isNot(contains('`2.16.0+21`')));
+    expect(
+      accessibility,
+      contains(
+        'Android, iOS, Linux, macOS, Web, and Windows runners are committed '
+        'and release-build validated.',
+      ),
+    );
+    expect(
+      accessibility,
+      isNot(contains('Only the web host is committed/release-built.')),
+    );
+  });
 
   test('Writing insights rejects a non-positive issue limit at runtime', () {
     expect(
