@@ -44,6 +44,8 @@ The editor area provides:
 - word, character, and sentence statistics;
 - storage/loading status where relevant.
 
+Press `F1` while the main SpellChecker surface has focus to open the in-app **Keyboard shortcuts** reference. It lists the primary editor commands and their Control/Command equivalents.
+
 ## Start a spelling review
 
 1. Enter or paste text.
@@ -418,7 +420,7 @@ SpellChecker uses Material 3 and follows the system light/dark theme selection.
 
 The UI includes focus traversal, semantics labels, and live-region announcements for important review/result states. Wide/narrow layouts keep both editor and results usable without changing the underlying workflow.
 
-Keyboard shortcuts can be intercepted by a browser, operating system, assistive technology, or extension; visible controls remain available.
+Keyboard shortcuts can be intercepted by a browser, operating system, assistive technology, or extension; visible controls remain available. Press `F1` to open the in-app primary-shortcut reference when the host delivers that key to Flutter.
 
 See [Accessibility](ACCESSIBILITY.md) and [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
 
@@ -448,6 +450,7 @@ Read [Troubleshooting](TROUBLESHOOTING.md) and [Support](../SUPPORT.md) before o
 
 | Action | Shortcut |
 | --- | --- |
+| Open keyboard shortcut reference | `F1` |
 | Check spelling | `Ctrl+Enter` / `Command+Enter` |
 | Open Writing insights | `Ctrl+Shift+Enter` / `Command+Shift+Enter` |
 | Next spelling issue | `F7` |
