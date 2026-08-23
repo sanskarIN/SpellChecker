@@ -99,6 +99,19 @@ void main() {
       }
     });
 
+    test('tagged releases normalize Android validation artifact names', () {
+      final release = File(
+        '.github/workflows/release.yml',
+      ).readAsStringSync();
+
+      expect(release, contains('Normalize Android validation asset names'));
+      expect(release, contains('spellchecker-android-validation-'));
+      expect(release, contains('apk_path='));
+      expect(release, contains('aab_path='));
+      expect(release, contains('cp "$apk_path"'));
+      expect(release, contains('cp "$aab_path"'));
+    });
+
     test('AGP 9 keeps the Flutter stable Kotlin compatibility path', () {
       final settings = File('android/settings.gradle.kts').readAsStringSync();
       final properties = File('android/gradle.properties').readAsStringSync();
