@@ -16,7 +16,9 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Open language picker'));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('language-selector')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Choose spelling language'), findsOneWidget);
@@ -62,7 +64,9 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Open language picker'));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('language-selector')),
+    );
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey<String>('language-picker-search')),
@@ -90,7 +94,9 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Open language picker'));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('language-selector')),
+    );
     await tester.pumpAndSettle();
 
     final search = find.byKey(
@@ -134,28 +140,19 @@ class _LanguagePickerHarness extends StatefulWidget {
 class _LanguagePickerHarnessState extends State<_LanguagePickerHarness> {
   String? _selectedLanguageId;
 
-  Future<void> _openPicker() async {
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) => SpellingLanguagePickerDialog(
-        languagePacks: widget.languagePacks,
-        selectedLanguageId: widget.selectedLanguageId,
-      ),
-    );
-    if (!mounted || selected == null) {
-      return;
-    }
-    setState(() => _selectedLanguageId = selected);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final selectedPack = SpellLanguageRegistry.byId(widget.selectedLanguageId);
     return Scaffold(
       body: Column(
         children: <Widget>[
-          TextButton(
-            onPressed: _openPicker,
-            child: const Text('Open language picker'),
+          SpellingLanguageSelector(
+            selectorKey: const ValueKey<String>('language-selector'),
+            languagePacks: widget.languagePacks,
+            selectedLanguage: selectedPack,
+            onChanged: (String languageId) {
+              setState(() => _selectedLanguageId = languageId);
+            },
           ),
           Text('Selected: ${_selectedLanguageId ?? 'none'}'),
         ],
