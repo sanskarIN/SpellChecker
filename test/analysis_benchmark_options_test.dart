@@ -16,6 +16,7 @@ void main() {
       expect(options.languageId, 'en-US');
       expect(options.json, isFalse);
       expect(options.help, isFalse);
+      expect(options.toScenario().name, 'large-document');
     });
 
     test('parses every supported option and maps scenario bounds', () {
@@ -40,6 +41,7 @@ void main() {
       expect(options.json, isTrue);
 
       final scenario = options.toScenario();
+      expect(scenario.name, 'large-document');
       expect(scenario.repeats, 30);
       expect(scenario.spellingIssueLimit, 40);
       expect(scenario.writingIssueLimit, 50);
