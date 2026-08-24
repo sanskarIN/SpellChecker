@@ -129,7 +129,7 @@ void main() {
       expect(errors, isEmpty);
       expect(output, hasLength(1));
       final report = jsonDecode(output.single) as Map<String, dynamic>;
-      expect(report['formatVersion'], 1);
+      expect(report['formatVersion'], 2);
       expect(report['language'], 'en-US');
       expect(report['measuredIterations'], 1);
       expect(output.single, isNot(contains('hello wrld')));
