@@ -56,10 +56,7 @@ void main() {
         AnalysisBenchmarkOptions.usage,
         contains('Built-in spelling language ID'),
       );
-      expect(
-        AnalysisBenchmarkOptions.usage,
-        isNot(contains('en-US or en-GB')),
-      );
+      expect(AnalysisBenchmarkOptions.usage, isNot(contains('en-US or en-GB')));
     });
 
     test('rejects malformed unknown duplicate and invalid values', () {
