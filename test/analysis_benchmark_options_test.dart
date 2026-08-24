@@ -54,10 +54,7 @@ void main() {
         AnalysisBenchmarkOptions.usage,
         contains('Any built-in language ID'),
       );
-      expect(
-        AnalysisBenchmarkOptions.usage,
-        isNot(contains('en-US or en-GB')),
-      );
+      expect(AnalysisBenchmarkOptions.usage, isNot(contains('en-US or en-GB')));
     });
 
     test('parses a non-English built-in-shaped language ID', () {
