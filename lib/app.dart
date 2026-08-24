@@ -84,10 +84,7 @@ class _KeyboardShortcutsDialog extends StatelessWidget {
                 action: 'Open Writing insights',
                 shortcut: 'Ctrl/⌘ + Shift + Enter',
               ),
-              _ShortcutRow(
-                action: 'Next spelling issue',
-                shortcut: 'F7',
-              ),
+              _ShortcutRow(action: 'Next spelling issue', shortcut: 'F7'),
               _ShortcutRow(
                 action: 'Previous spelling issue',
                 shortcut: 'Shift + F7',
