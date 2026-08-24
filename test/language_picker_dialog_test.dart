@@ -8,9 +8,11 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      _LanguagePickerHarness(
-        languagePacks: SpellLanguageRegistry.builtIns,
-        selectedLanguageId: 'en-US',
+      MaterialApp(
+        home: _LanguagePickerHarness(
+          languagePacks: SpellLanguageRegistry.builtIns,
+          selectedLanguageId: 'en-US',
+        ),
       ),
     );
 
@@ -18,7 +20,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Choose spelling language'), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('language-option-en-US')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('language-option-en-US')),
+      findsOneWidget,
+    );
 
     final search = find.byKey(
       const ValueKey<String>('language-picker-search'),
@@ -26,13 +31,22 @@ void main() {
     await tester.enterText(search, 'Tamil');
     await tester.pump();
 
-    expect(find.byKey(const ValueKey<String>('language-option-ta-IN')), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('language-option-en-US')), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('language-option-ta-IN')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('language-option-en-US')),
+      findsNothing,
+    );
 
     await tester.enterText(search, 'pt-BR');
     await tester.pump();
 
-    expect(find.byKey(const ValueKey<String>('language-option-pt-BR')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('language-option-pt-BR')),
+      findsOneWidget,
+    );
     expect(find.text('Portuguese (Brazil)'), findsOneWidget);
   });
 
@@ -40,9 +54,11 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      _LanguagePickerHarness(
-        languagePacks: SpellLanguageRegistry.builtIns,
-        selectedLanguageId: 'en-US',
+      MaterialApp(
+        home: _LanguagePickerHarness(
+          languagePacks: SpellLanguageRegistry.builtIns,
+          selectedLanguageId: 'en-US',
+        ),
       ),
     );
 
@@ -53,7 +69,9 @@ void main() {
       'hi-IN',
     );
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey<String>('language-option-hi-IN')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('language-option-hi-IN')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Selected: hi-IN'), findsOneWidget);
@@ -64,9 +82,11 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      _LanguagePickerHarness(
-        languagePacks: SpellLanguageRegistry.builtIns,
-        selectedLanguageId: 'en-GB',
+      MaterialApp(
+        home: _LanguagePickerHarness(
+          languagePacks: SpellLanguageRegistry.builtIns,
+          selectedLanguageId: 'en-GB',
+        ),
       ),
     );
 
@@ -86,7 +106,10 @@ void main() {
     await tester.pump();
 
     expect(find.text('No matching languages'), findsNothing);
-    expect(find.byKey(const ValueKey<String>('language-option-en-GB')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('language-option-en-GB')),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
@@ -127,19 +150,15 @@ class _LanguagePickerHarnessState extends State<_LanguagePickerHarness> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (BuildContext context) => Column(
-            children: <Widget>[
-              TextButton(
-                onPressed: _openPicker,
-                child: const Text('Open language picker'),
-              ),
-              Text('Selected: ${_selectedLanguageId ?? 'none'}'),
-            ],
+    return Scaffold(
+      body: Column(
+        children: <Widget>[
+          TextButton(
+            onPressed: _openPicker,
+            child: const Text('Open language picker'),
           ),
-        ),
+          Text('Selected: ${_selectedLanguageId ?? 'none'}'),
+        ],
       ),
     );
   }
