@@ -44,16 +44,20 @@ class _SpellCheckerHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.f1): () {
-          showDialog<void>(
-            context: context,
-            builder: (BuildContext context) => const _KeyboardShortcutsDialog(),
-          );
-        },
+    return Focus(
+      canRequestFocus: false,
+      onKeyEvent: (FocusNode node, KeyEvent event) {
+        if (event is! KeyDownEvent ||
+            event.logicalKey != LogicalKeyboardKey.f1) {
+          return KeyEventResult.ignored;
+        }
+        showDialog<void>(
+          context: context,
+          builder: (BuildContext context) => const _KeyboardShortcutsDialog(),
+        );
+        return KeyEventResult.handled;
       },
-      child: const Focus(autofocus: true, child: SpellCheckerPage()),
+      child: const SpellCheckerPage(),
     );
   }
 }
