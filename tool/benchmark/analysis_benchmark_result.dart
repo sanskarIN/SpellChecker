@@ -199,7 +199,7 @@ class AnalysisBenchmarkSummary {
     _validateStableAnalysisOutcome();
   }
 
-  static const int formatVersion = 1;
+  static const int formatVersion = 2;
 
   final AnalysisBenchmarkScenario scenario;
   final String languageId;
@@ -208,6 +208,8 @@ class AnalysisBenchmarkSummary {
 
   Duration get medianSpellingElapsed =>
       _median(samples.map((sample) => sample.spellingElapsed));
+  Duration get p95SpellingElapsed =>
+      _percentile(samples.map((sample) => sample.spellingElapsed), 95);
   Duration get minSpellingElapsed =>
       _minimum(samples.map((sample) => sample.spellingElapsed));
   Duration get maxSpellingElapsed =>
@@ -215,6 +217,8 @@ class AnalysisBenchmarkSummary {
 
   Duration get medianWritingElapsed =>
       _median(samples.map((sample) => sample.writingElapsed));
+  Duration get p95WritingElapsed =>
+      _percentile(samples.map((sample) => sample.writingElapsed), 95);
   Duration get minWritingElapsed =>
       _minimum(samples.map((sample) => sample.writingElapsed));
   Duration get maxWritingElapsed =>
@@ -230,9 +234,11 @@ class AnalysisBenchmarkSummary {
     'measuredIterations': samples.length,
     'aggregate': <String, Object>{
       'spellingMedianMicroseconds': medianSpellingElapsed.inMicroseconds,
+      'spellingP95Microseconds': p95SpellingElapsed.inMicroseconds,
       'spellingMinMicroseconds': minSpellingElapsed.inMicroseconds,
       'spellingMaxMicroseconds': maxSpellingElapsed.inMicroseconds,
       'writingMedianMicroseconds': medianWritingElapsed.inMicroseconds,
+      'writingP95Microseconds': p95WritingElapsed.inMicroseconds,
       'writingMinMicroseconds': minWritingElapsed.inMicroseconds,
       'writingMaxMicroseconds': maxWritingElapsed.inMicroseconds,
     },
@@ -361,6 +367,19 @@ Duration _median(Iterable<Duration> values) {
     return Duration(microseconds: sorted[middle]);
   }
   return Duration(microseconds: (sorted[middle - 1] + sorted[middle]) ~/ 2);
+}
+
+Duration _percentile(Iterable<Duration> values, int percentile) {
+  if (percentile <= 0 || percentile > 100) {
+    throw ArgumentError.value(
+      percentile,
+      'percentile',
+      'must be between 1 and 100',
+    );
+  }
+  final sorted = values.map((value) => value.inMicroseconds).toList()..sort();
+  final rank = ((sorted.length * percentile) + 99) ~/ 100;
+  return Duration(microseconds: sorted[rank - 1]);
 }
 
 Duration _minimum(Iterable<Duration> values) {

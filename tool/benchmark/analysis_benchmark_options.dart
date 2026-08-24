@@ -66,7 +66,7 @@ class AnalysisBenchmarkOptions {
   final bool help;
 
   AnalysisBenchmarkScenario toScenario() => AnalysisBenchmarkScenario(
-    name: 'large-document-v2.10',
+    name: 'large-document',
     repeats: repeats,
     spellingIssueLimit: spellingIssueLimit,
     writingIssueLimit: writingIssueLimit,
@@ -154,7 +154,7 @@ Options:
   --spelling-limit=N   Captured spelling issue limit (default: 200)
   --writing-limit=N    Captured writing finding limit (default: 200)
   --suggestions=N      Suggestions requested per spelling issue (default: 5)
-  --language=ID        Built-in language ID: en-US or en-GB (default: en-US)
+  --language=ID        Built-in spelling language ID (default: en-US)
   --json               Print the versioned JSON report
   --help               Print this help text
 ''';

@@ -87,10 +87,10 @@ The scenario repeats that chunk with newline separators. It intentionally contai
 Default scenario name:
 
 ```text
-large-document-v2.10
+large-document
 ```
 
-The historical name is retained for report identity compatibility even though the current application/writing registry has evolved after V2.10.
+The name is intentionally release-neutral. Historical release-specific benchmark records preserve their original workload identity separately.
 
 ## Benchmark options
 
@@ -101,7 +101,7 @@ The historical name is retained for report identity compatibility even though th
 --spelling-limit=N   Captured spelling issue limit (default: 200)
 --writing-limit=N    Captured writing finding limit (default: 200)
 --suggestions=N      Suggestions requested per spelling issue (default: 5)
---language=ID        Built-in language: en-US or en-GB (default: en-US)
+--language=ID        Built-in spelling language ID (default: en-US)
 --json               Print versioned JSON report
 --help               Print help
 ```
@@ -153,6 +153,8 @@ dart run tool/benchmark_large_document.dart \
 
 Record exact command, Flutter/Dart versions, OS/hardware, commit SHA, and whether the environment was otherwise busy when comparing runs.
 
+The text report summarizes spelling and writing timings as `min/median/p95/max`. The p95 value uses the nearest-rank definition so occasional slow measured iterations are visible without replacing the median as the central comparison statistic.
+
 ## JSON report
 
 Add `--json` for machine-readable/versioned report output:
@@ -162,6 +164,8 @@ dart run tool/benchmark_large_document.dart --json
 ```
 
 The report contains benchmark/scenario/configuration/outcome/timing metadata. It is based on synthetic source and analysis counts, not user documents.
+
+Benchmark JSON format version 2 adds `spellingP95Microseconds` and `writingP95Microseconds` to the aggregate timing object. Consumers should check `formatVersion` before assuming a report schema and should preserve older V1 artifacts when comparing historical runs.
 
 Do not parse human-readable output when the versioned JSON reporter is available for automation.
 
