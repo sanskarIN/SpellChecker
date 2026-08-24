@@ -39,24 +39,27 @@ void main() {
     expect(finder, findsOneWidget);
   }
 
-  test('accessibility guide stays aligned with the current release contract', () {
-    final accessibility = File('docs/ACCESSIBILITY.md').readAsStringSync();
-    final currentVersion = _currentPackageVersion();
+  test(
+    'accessibility guide stays aligned with the current release contract',
+    () {
+      final accessibility = File('docs/ACCESSIBILITY.md').readAsStringSync();
+      final currentVersion = _currentPackageVersion();
 
-    expect(accessibility, contains('`$currentVersion`'));
-    expect(accessibility, isNot(contains('`2.16.0+21`')));
-    expect(
-      accessibility,
-      contains(
-        'Android, iOS, Linux, macOS, Web, and Windows runners are committed '
-        'and release-build validated.',
-      ),
-    );
-    expect(
-      accessibility,
-      isNot(contains('Only the web host is committed/release-built.')),
-    );
-  });
+      expect(accessibility, contains('`$currentVersion`'));
+      expect(accessibility, isNot(contains('`2.16.0+21`')));
+      expect(
+        accessibility,
+        contains(
+          'Android, iOS, Linux, macOS, Web, and Windows runners are committed '
+          'and release-build validated.',
+        ),
+      );
+      expect(
+        accessibility,
+        isNot(contains('Only the web host is committed/release-built.')),
+      );
+    },
+  );
 
   test('Writing insights rejects a non-positive issue limit at runtime', () {
     expect(
