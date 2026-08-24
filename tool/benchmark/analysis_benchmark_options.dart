@@ -154,7 +154,7 @@ Options:
   --spelling-limit=N   Captured spelling issue limit (default: 200)
   --writing-limit=N    Captured writing finding limit (default: 200)
   --suggestions=N      Suggestions requested per spelling issue (default: 5)
-  --language=ID        Built-in spelling language ID (default: en-US)
+  --language=ID        Any built-in language ID (default: en-US)
   --json               Print the versioned JSON report
   --help               Print this help text
 ''';

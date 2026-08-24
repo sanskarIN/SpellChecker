@@ -54,9 +54,17 @@ void main() {
       expect(AnalysisBenchmarkOptions.usage, contains('--iterations=N'));
       expect(
         AnalysisBenchmarkOptions.usage,
-        contains('Built-in spelling language ID'),
+        contains('Any built-in language ID'),
       );
       expect(AnalysisBenchmarkOptions.usage, isNot(contains('en-US or en-GB')));
+    });
+
+    test('parses a non-English built-in-shaped language ID', () {
+      final options = AnalysisBenchmarkOptions.parse(const <String>[
+        '--language=hi-IN',
+      ]);
+
+      expect(options.languageId, 'hi-IN');
     });
 
     test('rejects malformed unknown duplicate and invalid values', () {

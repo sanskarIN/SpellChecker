@@ -35,7 +35,11 @@ class SpellCheckerEngine {
        _wordFrequencies = _normalizeWordFrequencies(
          wordFrequencies ?? languagePack.wordFrequencies,
          languagePack,
-       );
+       ) {
+    _baseSuggestionCandidatesByRuneLength = _indexSuggestionCandidates(
+      _baseDictionary,
+    );
+  }
 
   final SpellLanguagePack languagePack;
 
@@ -47,6 +51,7 @@ class SpellCheckerEngine {
 
   final Set<String> _baseDictionary;
   final Map<String, int> _wordFrequencies;
+  late final Map<int, List<String>> _baseSuggestionCandidatesByRuneLength;
   final Set<String> _personalDictionary = <String>{};
   final Set<String> _ignoredWords = <String>{};
   final Map<String, List<SpellSuggestion>> _suggestionCache =
@@ -167,15 +172,31 @@ class SpellCheckerEngine {
     );
     final candidates = <SpellSuggestionCandidate>[];
 
-    for (final candidate in _baseDictionary) {
-      _addCandidate(
-        candidates: candidates,
-        target: target,
-        targetRuneLength: targetRuneLength,
-        candidate: candidate,
-        maxDistance: maxDistance,
-        source: languagePack.suggestionSource,
-      );
+    final minimumCandidateLength = targetRuneLength - maxDistance;
+    final maximumCandidateLength = targetRuneLength + maxDistance;
+    for (
+      var candidateLength = minimumCandidateLength < 0
+          ? 0
+          : minimumCandidateLength;
+      candidateLength <= maximumCandidateLength;
+      candidateLength += 1
+    ) {
+      final baseCandidates =
+          _baseSuggestionCandidatesByRuneLength[candidateLength];
+      if (baseCandidates == null) {
+        continue;
+      }
+      for (final candidate in baseCandidates) {
+        _addCandidate(
+          candidates: candidates,
+          target: target,
+          targetRuneLength: targetRuneLength,
+          candidate: candidate,
+          candidateRuneLength: candidateLength,
+          maxDistance: maxDistance,
+          source: languagePack.suggestionSource,
+        );
+      }
     }
 
     for (final candidate in _personalDictionary) {
@@ -282,6 +303,7 @@ class SpellCheckerEngine {
     required String target,
     required int targetRuneLength,
     required String candidate,
+    int? candidateRuneLength,
     required int maxDistance,
     required String source,
   }) {
@@ -289,7 +311,9 @@ class SpellCheckerEngine {
       return;
     }
 
-    final lengthDifference = (candidate.runes.length - targetRuneLength).abs();
+    final lengthDifference =
+        ((candidateRuneLength ?? candidate.runes.length) - targetRuneLength)
+            .abs();
     if (lengthDifference > maxDistance) {
       return;
     }
@@ -362,6 +386,26 @@ class SpellCheckerEngine {
   }
 
   String _normalize(String word) => languagePack.normalizeWord(word);
+}
+
+Map<int, List<String>> _indexSuggestionCandidates(Set<String> dictionary) {
+  final candidatesByLength = <int, List<String>>{};
+  for (final candidate in dictionary) {
+    if (candidate.contains("'") || candidate.contains('-')) {
+      continue;
+    }
+    candidatesByLength
+        .putIfAbsent(candidate.runes.length, () => <String>[])
+        .add(candidate);
+  }
+  return Map<int, List<String>>.unmodifiable(
+    candidatesByLength.map(
+      (int length, List<String> candidates) => MapEntry<int, List<String>>(
+        length,
+        List<String>.unmodifiable(candidates),
+      ),
+    ),
+  );
 }
 
 Map<String, int> _normalizeWordFrequencies(
