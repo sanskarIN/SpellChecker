@@ -33,7 +33,38 @@ class SpellCheckerApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const SpellCheckerPage(),
+      home: const _AdaptiveSpellCheckerHome(),
+    );
+  }
+}
+
+class _AdaptiveSpellCheckerHome extends StatelessWidget {
+  const _AdaptiveSpellCheckerHome();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        const page = SpellCheckerPage();
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final needsScrollableCanvas =
+            constraints.maxWidth < 900 && textScale > 1.3;
+
+        if (!needsScrollableCanvas || !constraints.hasBoundedHeight) {
+          return page;
+        }
+
+        final extraScale = (textScale - 1).clamp(0.0, 2.0);
+        final canvasHeight = constraints.maxHeight * (1 + extraScale);
+
+        return SingleChildScrollView(
+          child: SizedBox(
+            width: constraints.maxWidth,
+            height: canvasHeight,
+            child: page,
+          ),
+        );
+      },
     );
   }
 }
