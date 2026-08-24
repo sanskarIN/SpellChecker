@@ -301,7 +301,10 @@ class _AvoidVeryRule extends WritingRule {
     String text,
     SpellLanguagePack languagePack,
   ) sync* {
-    for (final match in RegExp(r'\bvery\b', caseSensitive: false).allMatches(text)) {
+    for (final match in RegExp(
+      r'\bvery\b',
+      caseSensitive: false,
+    ).allMatches(text)) {
       yield WritingIssue(
         ruleId: id,
         ruleName: displayName,
