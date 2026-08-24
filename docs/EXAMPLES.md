@@ -401,8 +401,8 @@ Review-query objects are pure filtering helpers; the bundled application chooses
 ## Implement a custom suggestion ranker
 
 ```dart
-class ShorterFirstRanker implements SpellSuggestionRanker {
-  const ShorterFirstRanker();
+class DistanceThenLengthRanker implements SpellSuggestionRanker {
+  const DistanceThenLengthRanker();
 
   @override
   int compare(
@@ -410,53 +410,68 @@ class ShorterFirstRanker implements SpellSuggestionRanker {
     SpellSuggestionCandidate a,
     SpellSuggestionCandidate b,
   ) {
-    final byLength = a.word.runes.length.compareTo(b.word.runes.length);
+    final byDistance = a.distance.compareTo(b.distance);
+    if (byDistance != 0) {
+      return byDistance;
+    }
+
+    final targetLength = context.target.runes.length;
+    final aLengthDelta = (a.word.runes.length - targetLength).abs();
+    final bLengthDelta = (b.word.runes.length - targetLength).abs();
+    final byLength = aLengthDelta.compareTo(bLengthDelta);
     if (byLength != 0) {
       return byLength;
     }
-    return a.distance.compareTo(b.distance);
+
+    return a.frequencyRank.compareTo(b.frequencyRank);
   }
 }
 
 final engine = SpellCheckerEngine(
-  suggestionRanker: const ShorterFirstRanker(),
+  suggestionRanker: const DistanceThenLengthRanker(),
 );
 ```
 
-Custom rankers should be deterministic and side-effect-free. The engine applies a final lexical word tie-break when the ranker returns zero.
+Custom rankers should be deterministic and side-effect-free. They receive only candidates that already passed the engine's eligibility checks; they should define an intentional ordering rather than attempting to reintroduce rejected candidates. The engine applies a final lexical word tie-break when the ranker returns zero.
+
+The executable ranking regression in `test/suggestion_ranker_test.dart` uses a synthetic dictionary to prove that the custom policy can change ordering without changing eligibility.
 
 ## Implement a custom writing rule
 
 ```dart
-class ExampleRule extends WritingRule {
-  const ExampleRule();
+class AvoidVeryRule extends WritingRule {
+  const AvoidVeryRule();
 
   @override
-  String get id => 'example-rule';
+  String get id => 'example.avoid-very';
 
   @override
-  String get displayName => 'Example rule';
+  String get displayName => 'Review “very”';
 
   @override
-  String get description => 'Finds the exact token TODO in English text.';
+  String get description =>
+      'Flags “very” so the writer can consider a more precise phrase.';
 
   @override
   Set<String> get supportedLanguageIds => const <String>{'en'};
+
+  @override
+  WritingRuleCategory get category => WritingRuleCategory.clarity;
 
   @override
   Iterable<WritingIssue> analyze(
     String text,
     SpellLanguagePack languagePack,
   ) sync* {
-    for (final match in RegExp(r'\bTODO\b').allMatches(text)) {
+    final matches = RegExp(r'\bvery\b', caseSensitive: false).allMatches(text);
+    for (final match in matches) {
       yield WritingIssue(
         ruleId: id,
         ruleName: displayName,
-        message: 'Review this placeholder.',
+        message: 'Consider whether a more precise word would be clearer.',
         start: match.start,
         end: match.end,
         originalText: match.group(0)!,
-        replacement: null,
         languageId: languagePack.id,
         severity: WritingIssueSeverity.info,
       );
@@ -465,11 +480,13 @@ class ExampleRule extends WritingRule {
 }
 
 final analyzer = WritingAnalyzer(
-  rules: const <WritingRule>[ExampleRule()],
+  rules: const <WritingRule>[AvoidVeryRule()],
 );
 ```
 
-A rule ID must be unique within one `WritingAnalyzer`. Duplicate IDs are rejected.
+Use stable, namespaced IDs for caller-supplied rules so they cannot accidentally collide with built-in or other integration IDs. A rule ID must be unique within one `WritingAnalyzer`; duplicate IDs are rejected. Language-family IDs such as `en` can deliberately support multiple compatible variants when the rule's logic is truly variant-independent.
+
+Do not provide an automatic `replacement` for an ambiguous style suggestion just to make it fixable. The executable example in `test/writing_rules_test.dart` remains advisory and verifies that `hasAutomaticFix` is false.
 
 ## Source offset warning
 

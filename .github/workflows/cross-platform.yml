@@ -86,12 +86,28 @@ jobs:
         run: flutter build web --release
       - name: Verify installable web shell
         run: |
+          test -f build/web/index.html
+          test -f build/web/flutter_bootstrap.js
+          test -f build/web/main.dart.js
           test -f build/web/manifest.json
           test -f build/web/icons/Icon-192.png
           test -f build/web/icons/Icon-512.png
-          grep -q '"display": "standalone"' build/web/manifest.json
-          grep -q 'icons/Icon-192.png' build/web/manifest.json
-          grep -q 'icons/Icon-512.png' build/web/manifest.json
+          grep -q 'flutter_bootstrap.js' build/web/index.html
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path('build/web/manifest.json').read_text())
+          assert manifest['name'] == 'SpellChecker'
+          assert manifest['short_name'] == 'SpellChecker'
+          assert manifest['id'] == '.'
+          assert manifest['start_url'] == '.'
+          assert manifest['scope'] == '.'
+          assert manifest['display'] == 'standalone'
+          icons = {item['src']: item for item in manifest['icons']}
+          assert icons['icons/Icon-192.png']['sizes'] == '192x192'
+          assert icons['icons/Icon-512.png']['sizes'] == '512x512'
+          PY
       - name: Upload web bundle
         uses: actions/upload-artifact@v7
         with:
@@ -166,6 +182,22 @@ jobs:
         run: flutter pub get
       - name: Build Linux
         run: flutter build linux --release
+      - name: Verify Linux release bundle contents
+        shell: bash
+        run: |
+          bundle_dir="$(find build/linux -path '*/release/bundle' -type d -print -quit)"
+          test -n "$bundle_dir"
+          binary_path="$bundle_dir/spellchecker"
+          test -x "$binary_path"
+          test -f "$bundle_dir/lib/libflutter_linux_gtk.so"
+          test -d "$bundle_dir/data/flutter_assets"
+          file "$binary_path" | grep -q 'ELF'
+          ldd_output="$(ldd "$binary_path")"
+          printf '%s\n' "$ldd_output"
+          if printf '%s\n' "$ldd_output" | grep -q 'not found'; then
+            echo "Linux release bundle has unresolved shared-library dependencies."
+            exit 1
+          fi
       - name: Package Linux bundle with permissions
         shell: bash
         run: |
@@ -200,6 +232,26 @@ jobs:
         run: flutter pub get
       - name: Build Windows
         run: flutter build windows --release
+      - name: Verify Windows release bundle metadata
+        shell: pwsh
+        run: |
+          $releaseDir = Get-ChildItem -Path build/windows -Directory -Recurse |
+            Where-Object { $_.FullName -match '[\\/]runner[\\/]Release$' } |
+            Select-Object -First 1
+          if (-not $releaseDir) { throw 'Windows Release directory was not produced.' }
+
+          $exe = Join-Path $releaseDir.FullName 'spellchecker.exe'
+          $flutterDll = Join-Path $releaseDir.FullName 'flutter_windows.dll'
+          $assets = Join-Path $releaseDir.FullName 'data/flutter_assets'
+          if (-not (Test-Path -Path $exe -PathType Leaf)) { throw 'spellchecker.exe is missing.' }
+          if (-not (Test-Path -Path $flutterDll -PathType Leaf)) { throw 'flutter_windows.dll is missing.' }
+          if (-not (Test-Path -Path $assets -PathType Container)) { throw 'Flutter assets are missing.' }
+
+          $version = (Get-Item $exe).VersionInfo
+          if ($version.ProductName -ne 'SpellChecker') { throw "Unexpected ProductName: $($version.ProductName)" }
+          if ($version.FileDescription -ne 'SpellChecker') { throw "Unexpected FileDescription: $($version.FileDescription)" }
+          if ($version.OriginalFilename -ne 'spellchecker.exe') { throw "Unexpected OriginalFilename: $($version.OriginalFilename)" }
+          if ([string]::IsNullOrWhiteSpace($version.ProductVersion)) { throw 'ProductVersion is empty.' }
       - name: Upload Windows bundle
         uses: actions/upload-artifact@v7
         with:
@@ -226,8 +278,30 @@ jobs:
         run: flutter config --enable-macos-desktop
       - name: Install dependencies
         run: flutter pub get
+      - name: Validate macOS plist and entitlements
+        run: >-
+          plutil -lint
+          macos/Runner/Info.plist
+          macos/Runner/Release.entitlements
+          macos/Runner/DebugProfile.entitlements
+      - name: Test Apple repository support contract
+        run: flutter test test/apple_repository_support_test.dart --reporter expanded
       - name: Build macOS
         run: flutter build macos --release
+      - name: Verify macOS bundle metadata and privacy manifest
+        shell: bash
+        run: |
+          app_path="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          info_plist="$app_path/Contents/Info.plist"
+          test -f "$info_plist"
+          bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")"
+          test "$bundle_id" = "in.sanskar.spellchecker"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist" | grep -Eq '.+'
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist" | grep -Eq '.+'
+          privacy_manifest="$(find "$app_path" -name PrivacyInfo.xcprivacy -type f -print -quit)"
+          test -n "$privacy_manifest"
+          plutil -lint "$privacy_manifest"
       - name: Package macOS app with permissions
         shell: bash
         run: |
@@ -258,8 +332,28 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Validate iOS plist
+        run: plutil -lint ios/Runner/Info.plist
+      - name: Test Apple repository support contract
+        run: flutter test test/apple_repository_support_test.dart --reporter expanded
       - name: Build iOS without signing
         run: flutter build ios --release --no-codesign
+      - name: Verify iOS bundle metadata and privacy manifest
+        shell: bash
+        run: |
+          app_path="$(find build/ios/iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$app_path"
+          info_plist="$app_path/Info.plist"
+          test -f "$info_plist"
+          bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist")"
+          display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$info_plist")"
+          test "$bundle_id" = "in.sanskar.spellchecker"
+          test "$display_name" = "SpellChecker"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist" | grep -Eq '.+'
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist" | grep -Eq '.+'
+          privacy_manifest="$(find "$app_path" -name PrivacyInfo.xcprivacy -type f -print -quit)"
+          test -n "$privacy_manifest"
+          plutil -lint "$privacy_manifest"
       - name: Package iOS app with permissions
         shell: bash
         run: |

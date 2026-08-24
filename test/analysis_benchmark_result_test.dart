@@ -223,6 +223,29 @@ void main() {
       expect(summary.medianWritingElapsed.inMicroseconds, 250);
     });
 
+    test('uses nearest-rank p95 and exports format version 2', () {
+      final summary = AnalysisBenchmarkSummary(
+        scenario: scenario,
+        languageId: 'en-US',
+        warmupIterations: 0,
+        samples: List<AnalysisBenchmarkSample>.generate(20, (index) {
+          final ordinal = index + 1;
+          return sample(
+            index: index,
+            spellingMicros: ordinal,
+            writingMicros: ordinal * 100,
+          );
+        }),
+      );
+      final aggregate = summary.toJson()['aggregate'] as Map<String, Object>;
+
+      expect(AnalysisBenchmarkSummary.formatVersion, 2);
+      expect(summary.p95SpellingElapsed.inMicroseconds, 19);
+      expect(summary.p95WritingElapsed.inMicroseconds, 1900);
+      expect(aggregate['spellingP95Microseconds'], 19);
+      expect(aggregate['writingP95Microseconds'], 1900);
+    });
+
     test('rejects non-contiguous indexes and changing analysis outcomes', () {
       expect(
         () => AnalysisBenchmarkSummary(

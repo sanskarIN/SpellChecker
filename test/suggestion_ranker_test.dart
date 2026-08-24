@@ -56,6 +56,21 @@ void main() {
       expect(engine.suggestionsFor('cot'), <String>['cut', 'cat']);
     });
 
+    test('length-first extension example changes deterministic ordering', () {
+      final custom = SpellCheckerEngine(
+        dictionary: const <String>{'cat', 'coat'},
+        wordFrequencies: const <String, int>{'cat': 100, 'coat': 1},
+        suggestionRanker: const _LengthFirstSuggestionRanker(),
+      );
+      final standard = SpellCheckerEngine(
+        dictionary: const <String>{'cat', 'coat'},
+        wordFrequencies: const <String, int>{'cat': 100, 'coat': 1},
+      );
+
+      expect(custom.suggestionsFor('cot', limit: 2), <String>['cat', 'coat']);
+      expect(standard.suggestionsFor('cot', limit: 2), <String>['coat', 'cat']);
+    });
+
     test(
       'engine provides a stable lexical tie-break for custom ranker ties',
       () {
@@ -126,6 +141,32 @@ class _ReverseAlphabeticalRanker implements SpellSuggestionRanker {
     SpellSuggestionCandidate b,
   ) {
     return b.word.compareTo(a.word);
+  }
+}
+
+class _LengthFirstSuggestionRanker implements SpellSuggestionRanker {
+  const _LengthFirstSuggestionRanker();
+
+  @override
+  int compare(
+    SpellSuggestionRankingContext context,
+    SpellSuggestionCandidate a,
+    SpellSuggestionCandidate b,
+  ) {
+    final byDistance = a.distance.compareTo(b.distance);
+    if (byDistance != 0) {
+      return byDistance;
+    }
+
+    final targetLength = context.target.runes.length;
+    final aLengthDelta = (a.word.runes.length - targetLength).abs();
+    final bLengthDelta = (b.word.runes.length - targetLength).abs();
+    final byLength = aLengthDelta.compareTo(bLengthDelta);
+    if (byLength != 0) {
+      return byLength;
+    }
+
+    return a.frequencyRank.compareTo(b.frequencyRank);
   }
 }
 

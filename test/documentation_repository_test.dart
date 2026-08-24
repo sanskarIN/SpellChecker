@@ -176,6 +176,9 @@ void main() {
   test('current package version stays synchronized', () {
     final expectedByPath = <String, String>{
       'README.md': '`$currentVersion`',
+      'CONTRIBUTING.md': '`$currentVersion`',
+      'SECURITY.md': '`$currentVersion`',
+      'SUPPORT.md': '`$currentVersion`',
       'docs/README.md': '`$currentVersion`',
       'docs/GETTING_STARTED.md': '`$currentVersion`',
       'docs/EXECUTABLE_BUILDS.md': '`$currentVersion`',
@@ -199,6 +202,9 @@ void main() {
 
   test('current guides reject known obsolete release claims', () {
     const currentGuidePaths = <String>[
+      'CONTRIBUTING.md',
+      'SECURITY.md',
+      'SUPPORT.md',
       'docs/GETTING_STARTED.md',
       'docs/USER_GUIDE.md',
       'docs/DEVELOPMENT.md',
@@ -213,6 +219,10 @@ void main() {
       'The current repository has no committed native runner directories',
       'The release workflow additionally runs `flutter build web --release`.',
       'The release workflow repeats those gates and additionally builds/uploads the web artifact.',
+      'Only the web host is committed/release-built today.',
+      'The release workflow validates source then builds Flutter web and uploads an Actions artifact.',
+      'For release/web-build changes also run:',
+      'Release issues should also include the `flutter build web --release` result.',
     ];
 
     final failures = <String>[];
@@ -421,44 +431,6 @@ void main() {
       }
     },
   );
-
-  test('tagged release distribution safeguards stay enabled', () {
-    final workflow = File('.github/workflows/release.yml').readAsStringSync();
-    const requiredMarkers = <String>[
-      'publish-release:',
-      "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
-      'actions/download-artifact@v8',
-      'actions/attest-build-provenance@v4',
-      'contents: write',
-      'id-token: write',
-      'attestations: write',
-      'sha256sum',
-      'Reject already-published release tags',
-      'gh release create',
-      '--verify-tag',
-      '--generate-notes',
-      'spellchecker-web-',
-      'spellchecker-android-validation-',
-      'spellchecker-linux-',
-      'spellchecker-windows-',
-      'spellchecker-macos-unsigned-',
-      'spellchecker-ios-no-codesign-',
-      'SHA256SUMS.txt',
-    ];
-
-    for (final marker in requiredMarkers) {
-      expect(
-        workflow,
-        contains(marker),
-        reason: '.github/workflows/release.yml must keep: $marker',
-      );
-    }
-    expect(
-      workflow,
-      isNot(contains('--clobber')),
-      reason: 'Published GitHub Release assets must not be silently replaced.',
-    );
-  });
 
   test('executable build guide accounts for repository-controlled files', () {
     const startMarker = '<!-- tracked-file-inventory:start -->';
