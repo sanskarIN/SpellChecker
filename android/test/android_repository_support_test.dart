@@ -88,10 +88,73 @@ void main() {
         );
         expect(
           workflow,
-          contains('build/app/outputs/bundle/release/*.aab'),
-          reason: '$path must upload the Android App Bundle.',
+          contains('build/app/outputs/bundle/release'),
+          reason: '$path must inspect the Android App Bundle output directory.',
+        );
+        expect(
+          workflow,
+          contains('.aab'),
+          reason: '$path must retain Android App Bundle artifact handling.',
         );
       }
+    });
+
+    test('tagged releases normalize Android validation artifact names', () {
+      final release = File('.github/workflows/release.yml').readAsStringSync();
+
+      expect(release, contains('Normalize Android validation asset names'));
+      expect(release, contains('spellchecker-android-validation-'));
+      expect(release, contains('apk_path='));
+      expect(release, contains('aab_path='));
+      expect(release, contains('cp "\$apk_path"'));
+      expect(release, contains('cp "\$aab_path"'));
+    });
+
+    test('tagged release publishing keeps integrity safeguards', () {
+      final release = File('.github/workflows/release.yml').readAsStringSync();
+      final releasing = File('docs/RELEASING.md').readAsStringSync();
+      final roadmap = File('docs/ROADMAP.md').readAsStringSync();
+
+      for (final marker in const <String>[
+        'publish-release:',
+        "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
+        'actions/download-artifact@v8',
+        'actions/attest-build-provenance@v4',
+        'contents: write',
+        'id-token: write',
+        'attestations: write',
+        'sha256sum',
+        'Reject already-published release tags',
+        'gh release create',
+        '--verify-tag',
+        '--generate-notes',
+        'spellchecker-web-',
+        'spellchecker-android-validation-',
+        'spellchecker-linux-',
+        'spellchecker-windows-',
+        'spellchecker-macos-unsigned-',
+        'spellchecker-ios-no-codesign-',
+        'SHA256SUMS.txt',
+      ]) {
+        expect(
+          release,
+          contains(marker),
+          reason: '.github/workflows/release.yml must keep: $marker',
+        );
+      }
+
+      expect(
+        release,
+        isNot(contains('--clobber')),
+        reason: 'Published GitHub Release assets must not be silently replaced.',
+      );
+      expect(releasing, contains('permanent GitHub Release'));
+      expect(releasing, contains('SHA-256'));
+      expect(releasing, contains('build-provenance'));
+      expect(
+        roadmap,
+        contains('Tagged release distribution hardening completed'),
+      );
     });
 
     test('AGP 9 keeps the Flutter stable Kotlin compatibility path', () {
