@@ -42,22 +42,19 @@ Implication: writing `maxIssues` is a retained-result bound, not a rule-runtime 
 
 ## Suggestion cost
 
-Spelling suggestions can be the most expensive spelling path because edit distance and ranking are performed for unknown captured words.
+Spelling suggestions can be the most expensive spelling path because candidate dictionaries are iterated for unknown captured words.
 
 The engine reduces work by:
 
 1. normalizing the target;
-2. splitting recognized affixes where applicable;
-3. indexing immutable base-dictionary suggestion candidates by Unicode-scalar length when an engine is created;
-4. visiting only base-dictionary length buckets that can fall within the language pack's maximum edit-distance bound;
-5. applying the same Unicode-scalar candidate length guard to visited base/personal candidates;
-6. calculating unrestricted scalar Damerau-Levenshtein only for remaining candidates;
-7. ranking eligible candidates deterministically;
-8. caching detailed suggestions by normalized unknown word.
+2. splitting recognized suffixes where applicable;
+3. comparing Unicode-scalar candidate length difference against maximum distance;
+4. skipping candidates outside that bound;
+5. calculating unrestricted scalar Damerau-Levenshtein only for remaining candidates;
+6. ranking eligible candidates;
+7. caching detailed suggestions by normalized unknown word.
 
-The length index is an implementation optimization, not a ranking change: candidates whose scalar-length difference exceeds the maximum edit distance could never qualify. Personal-dictionary candidates remain dynamic and are checked directly because that set can change after engine construction.
-
-Personal-dictionary changes clear the suggestion cache because candidate membership changes.
+Personal-dictionary changes clear the cache because candidate membership changes.
 
 ## Writing-rule cost
 
@@ -90,12 +87,10 @@ The scenario repeats that chunk with newline separators. It intentionally contai
 Default scenario name:
 
 ```text
-large-document-v2.10
+large-document
 ```
 
-The historical name is retained for report identity compatibility even though the current application/writing registry has evolved after V2.10.
-
-The current standard chunk is English/Latin-script synthetic input. The CLI accepts every registered built-in language ID so tokenization/spelling behavior can be exercised with any current pack, but results for non-English packs are not semantically equivalent to the English Writing-insights workload. Do not compare timings between different language IDs as if they were the same benchmark population.
+The name is intentionally release-neutral. Historical release-specific benchmark records preserve their original workload identity separately.
 
 ## Benchmark options
 
@@ -106,7 +101,7 @@ The current standard chunk is English/Latin-script synthetic input. The CLI acce
 --spelling-limit=N   Captured spelling issue limit (default: 200)
 --writing-limit=N    Captured writing finding limit (default: 200)
 --suggestions=N      Suggestions requested per spelling issue (default: 5)
---language=ID        Any built-in language ID (default: en-US)
+--language=ID        Built-in spelling language ID (default: en-US)
 --json               Print versioned JSON report
 --help               Print help
 ```
@@ -118,7 +113,7 @@ Validation:
 - measured iterations > 0;
 - spelling/writing limits > 0;
 - suggestions >= 0;
-- language option must be non-blank and command execution validates it against `SpellLanguageRegistry.builtIns`;
+- language option must be non-blank and command execution validates supported built-in language IDs;
 - duplicate/unknown/malformed options fail.
 
 Unlike the application UI, benchmark suggestion count can be zero so timing can isolate analysis with no suggestion generation.
@@ -158,6 +153,8 @@ dart run tool/benchmark_large_document.dart \
 
 Record exact command, Flutter/Dart versions, OS/hardware, commit SHA, and whether the environment was otherwise busy when comparing runs.
 
+The text report summarizes spelling and writing timings as `min/median/p95/max`. The p95 value uses the nearest-rank definition so occasional slow measured iterations are visible without replacing the median as the central comparison statistic.
+
 ## JSON report
 
 Add `--json` for machine-readable/versioned report output:
@@ -167,6 +164,8 @@ dart run tool/benchmark_large_document.dart --json
 ```
 
 The report contains benchmark/scenario/configuration/outcome/timing metadata. It is based on synthetic source and analysis counts, not user documents.
+
+Benchmark JSON format version 2 adds `spellingP95Microseconds` and `writingP95Microseconds` to the aggregate timing object. Consumers should check `formatVersion` before assuming a report schema and should preserve older V1 artifacts when comparing historical runs.
 
 Do not parse human-readable output when the versioned JSON reporter is available for automation.
 
@@ -255,7 +254,6 @@ When investigating a slowdown, separate:
 
 - tokenization/normalization;
 - dictionary membership;
-- base-candidate length-bucket lookup;
 - suggestion candidate distance/ranking;
 - repeated unknown-word cache behavior;
 - writing rule scans;

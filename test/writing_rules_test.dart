@@ -247,4 +247,74 @@ void main() {
       );
     });
   });
+
+  group('third-party rule example', () {
+    test('caller-supplied clarity rule is deterministic and advisory', () {
+      const rule = _AvoidVeryRule();
+      final analyzer = WritingAnalyzer(rules: const <WritingRule>[rule]);
+
+      final result = analyzer.analyze(
+        'Very clear and very useful.',
+        languagePack: pack,
+      );
+
+      expect(rule.category, WritingRuleCategory.clarity);
+      expect(rule.supports(pack), isTrue);
+      expect(result.analyzedRuleIds, const <String>{'example.avoid-very'});
+      expect(result.totalIssueCount, 2);
+      expect(
+        result.issues.map((issue) => issue.originalText),
+        orderedEquals(const <String>['Very', 'very']),
+      );
+      expect(
+        result.issues.every(
+          (issue) => issue.severity == WritingIssueSeverity.info,
+        ),
+        isTrue,
+      );
+      expect(result.issues.every((issue) => !issue.hasAutomaticFix), isTrue);
+    });
+  });
+}
+
+class _AvoidVeryRule extends WritingRule {
+  const _AvoidVeryRule();
+
+  @override
+  String get id => 'example.avoid-very';
+
+  @override
+  String get displayName => 'Review “very”';
+
+  @override
+  String get description =>
+      'Flags “very” so the writer can consider a more precise phrase.';
+
+  @override
+  Set<String> get supportedLanguageIds => const <String>{'en'};
+
+  @override
+  WritingRuleCategory get category => WritingRuleCategory.clarity;
+
+  @override
+  Iterable<WritingIssue> analyze(
+    String text,
+    SpellLanguagePack languagePack,
+  ) sync* {
+    for (final match in RegExp(
+      r'\bvery\b',
+      caseSensitive: false,
+    ).allMatches(text)) {
+      yield WritingIssue(
+        ruleId: id,
+        ruleName: displayName,
+        message: 'Consider whether a more precise word would be clearer.',
+        start: match.start,
+        end: match.end,
+        originalText: match.group(0)!,
+        languageId: languagePack.id,
+        severity: WritingIssueSeverity.info,
+      );
+    }
+  }
 }

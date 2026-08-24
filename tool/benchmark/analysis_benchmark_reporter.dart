@@ -27,13 +27,15 @@ String formatAnalysisBenchmarkSummary(AnalysisBenchmarkSummary summary) {
     '  Writing exact totals by rule: ${writingTotals.isEmpty ? '(none)' : writingTotals}',
     '',
     'Timing (microseconds)',
-    '  Spelling min/median/max: '
+    '  Spelling min/median/p95/max: '
         '${summary.minSpellingElapsed.inMicroseconds}/'
         '${summary.medianSpellingElapsed.inMicroseconds}/'
+        '${summary.p95SpellingElapsed.inMicroseconds}/'
         '${summary.maxSpellingElapsed.inMicroseconds}',
-    '  Writing min/median/max: '
+    '  Writing min/median/p95/max: '
         '${summary.minWritingElapsed.inMicroseconds}/'
         '${summary.medianWritingElapsed.inMicroseconds}/'
+        '${summary.p95WritingElapsed.inMicroseconds}/'
         '${summary.maxWritingElapsed.inMicroseconds}',
     '',
     'Note: timings are machine-dependent. The benchmark corpus is generated '

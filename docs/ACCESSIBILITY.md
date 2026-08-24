@@ -1,6 +1,6 @@
 # Accessibility
 
-SpellChecker aims to make the bundled editor and review workflow usable with keyboard navigation, assistive technologies, responsive layouts, and system light/dark appearance. This page documents the current `3.2.0+25` V3 cross-platform accessibility contract and known boundaries; it does not claim formal certification against every accessibility standard/platform combination.
+SpellChecker aims to make the bundled editor and review workflow usable with keyboard navigation, assistive technologies, responsive layouts, and system light/dark appearance. This page documents the current `3.2.0+25` accessibility contract and known boundaries; it does not claim formal certification against every accessibility standard/platform combination.
 
 ## Principles
 
@@ -25,7 +25,6 @@ Primary editor shortcuts:
 | Open Writing insights | `Ctrl+Shift+Enter` | `Command+Shift+Enter` |
 | Next spelling issue | `F7` | `F7` |
 | Previous spelling issue | `Shift+F7` | `Shift+F7` |
-| Open keyboard shortcut reference | `F1` | `F1` |
 
 Writing insights:
 
@@ -35,7 +34,7 @@ Writing insights:
 | Clear active transient query | `Escape` | `Escape` |
 | Close when query already empty | `Escape` | `Escape` |
 
-`F1` opens an in-app shortcut reference that lists the primary editor commands and reminds users that visible controls remain available. Visible buttons/fields remain available for users who cannot or do not use shortcuts.
+Visible buttons/fields remain available for users who cannot or do not use shortcuts.
 
 See [Keyboard shortcuts](KEYBOARD_SHORTCUTS.md).
 
@@ -53,7 +52,7 @@ When the query is already empty, Escape closes Writing insights through its norm
 
 ## Focus management
 
-The editor and Writing insights use Flutter focus/shortcut scopes so keyboard commands can remain available while focus moves among controls. The application-level focus scope also keeps the `F1` shortcut reference available while the main SpellChecker surface is active.
+The editor and Writing insights use Flutter focus/shortcut scopes so keyboard commands can remain available while focus moves among controls.
 
 Writing insights owns a dedicated search `FocusNode`. Ctrl/Command+F requests focus on that search field rather than relying on browser page search.
 
@@ -64,8 +63,6 @@ Dialog/list content can be lazy/off-screen. Users may need to scroll to reach la
 ## Semantics and announcements
 
 SpellChecker uses Flutter semantics for important application states/controls. Dynamic status/error messages in dialogs use live-region semantics where appropriate so assistive technology can announce changes without requiring manual focus movement.
-
-The keyboard shortcut reference gives each shortcut row an explicit semantic label pairing the action with its key combination rather than relying only on visual alignment.
 
 Writing insights count/result summaries distinguish captured/total/limited state instead of relying on visual badge styling alone.
 
@@ -131,11 +128,10 @@ Browsers, operating systems, hardware function-key modes, extensions, and assist
 Examples:
 
 - `Ctrl+F` / `Command+F` is commonly browser search;
-- `F1` can open host/browser help;
 - F-keys can be mapped to media/system functions;
 - screen readers can reserve navigation combinations.
 
-Because visible controls remain available, host interception should not make a core workflow shortcut-only. If `F1` itself is intercepted, the primary commands listed by the reference are still exposed through their normal visible controls and tooltips.
+Because visible controls remain available, host interception should not make a core workflow shortcut-only.
 
 ## Text zoom and browser scaling
 
@@ -153,7 +149,6 @@ Recommended scenarios:
 - editor language selector and text field;
 - Check spelling state changes;
 - F7 active issue navigation;
-- F1 shortcut-reference dialog labels and close behavior;
 - suggestion/correction controls;
 - personal dictionary dialog success/error states;
 - Writing insights search/filter counts;
@@ -173,7 +168,6 @@ Ctrl+Enter / Command+Enter
 Ctrl+Shift+Enter / Command+Shift+Enter
 F7
 Shift+F7
-F1 shortcut reference
 Ctrl+F / Command+F inside Writing insights
 Escape transient-query clear/close behavior
 ```
@@ -194,9 +188,9 @@ Error text should state what failed and whether the current session can continue
 
 ## Known boundaries
 
-Current repository validation is primarily Flutter widget/semantics testing on the CI environment plus project-specific accessibility regressions. It does not claim exhaustive manual testing across every browser, screen reader, mobile accessibility service, keyboard layout, or native platform.
+Current repository validation combines Flutter widget/semantics testing with six-platform release-build CI and project-specific accessibility regressions. It does not claim exhaustive manual testing across every browser, screen reader, mobile accessibility service, keyboard layout, or native platform.
 
-Official Flutter runners are committed and release-built for Android, iOS, Linux, macOS, Web, and Windows. That build coverage proves platform integration and packaging, not an exhaustive assistive-technology certification matrix. Native screen-reader/service testing remains an important manual expansion area.
+Android, iOS, Linux, macOS, Web, and Windows runners are committed and release-build validated. Target-specific assistive-technology validation still requires representative devices, operating systems, browsers, and screen readers before making stronger accessibility-certification claims.
 
 See [Platform support](PLATFORM_SUPPORT.md).
 
