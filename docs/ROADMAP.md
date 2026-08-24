@@ -82,6 +82,22 @@ Manual workflow dispatch remains a release-candidate path and intentionally does
 
 See [Releasing](RELEASING.md) and [Executable builds](EXECUTABLE_BUILDS.md).
 
+## V3.3 multilingual UI workstream
+
+V3.3 is now being prepared as the next minor line under issue `#102`. The package version intentionally remains `3.2.0+25` until the first V3.3 behavior is stable and the complete current-version documentation set can be advanced atomically.
+
+The initial V3.3 sequence is:
+
+1. replace the crowded thirteen-language spelling dropdown with an accessible searchable picker that matches both display names and stable language IDs;
+2. preserve selected spelling-language persistence, automatic recheck behavior, keyboard navigation, narrow layouts, and large-text usability;
+3. introduce Flutter's source-generated localization architecture for application UI strings without overloading `SpellLanguagePack`;
+4. keep UI locale independent from spelling/document language so changing one never silently changes the other;
+5. retain English as the UI fallback and add a non-English UI locale only when its chosen user-facing scope is complete rather than partially translated;
+6. preserve the local/offline privacy boundary, transfer formats, writing-rule IDs, language IDs, and deterministic analysis behavior;
+7. run the complete source, documentation, benchmark, accessibility, and six-platform release-build gates before advancing the package identity to `3.3.0+26`.
+
+V3.3 does **not** introduce automatic language detection, cloud translation, generative rewriting, runtime translation downloads, accounts, telemetry, or document upload.
+
 # Optional future directions
 
 The items below are opportunities, not committed release dates.
@@ -149,9 +165,9 @@ Optional work could add an intentional deployment destination such as GitHub Pag
 
 ## Localization of application UI/documentation
 
-Language packs currently control spelling data, not UI localization. Optional future work could localize labels/messages/documentation separately from spelling language packs.
+Language packs currently control spelling data, not UI localization. V3.3 begins this work as a dedicated presentation concern rather than coupling it to `SpellLanguagePack`.
 
-This would require a Flutter localization architecture rather than overloading `SpellLanguagePack` with UI strings.
+The implementation should follow Flutter's source-generated localization model, keep locale resolution testable, and avoid a partially translated interface that would make accessibility/help text inconsistent.
 
 ## More advanced writing analysis
 
