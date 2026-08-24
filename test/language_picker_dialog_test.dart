@@ -122,6 +122,45 @@ void main() {
 
     expect(find.text('Selected: none'), findsOneWidget);
   });
+
+  testWidgets('stays usable at large text on a narrow viewport', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 900);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: _LanguagePickerHarness(
+          languagePacks: SpellLanguageRegistry.builtIns,
+          selectedLanguageId: 'en-US',
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('language-selector')),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('language-picker-search')),
+      'Russian',
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey<String>('language-option-ru-RU')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _LanguagePickerHarness extends StatefulWidget {
