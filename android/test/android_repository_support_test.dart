@@ -106,8 +106,8 @@ void main() {
       expect(release, contains('spellchecker-android-validation-'));
       expect(release, contains('apk_path='));
       expect(release, contains('aab_path='));
-      expect(release, contains('cp "$apk_path"'));
-      expect(release, contains('cp "$aab_path"'));
+      expect(release, contains('cp "\$apk_path"'));
+      expect(release, contains('cp "\$aab_path"'));
     });
 
     test('AGP 9 keeps the Flutter stable Kotlin compatibility path', () {
