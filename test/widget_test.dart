@@ -29,6 +29,32 @@ void main() {
     expect(find.text('Issue 1 of 1'), findsOneWidget);
   });
 
+  testWidgets('core review stays usable with large text on a narrow viewport', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 900);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await tester.pumpWidget(const SpellCheckerApp());
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    await tester.enterText(find.byType(TextField), 'Helo world');
+
+    final checkSpelling = find.text('Check spelling');
+    await tester.ensureVisible(checkSpelling);
+    await tester.tap(checkSpelling);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Issue 1 of 1'), findsOneWidget);
+    expect(find.text('Suggestions'), findsOneWidget);
+  });
+
   testWidgets('shows a dedicated blank-input result state', (
     WidgetTester tester,
   ) async {

@@ -1,6 +1,6 @@
 # Accessibility
 
-SpellChecker aims to make the bundled editor and review workflow usable with keyboard navigation, assistive technologies, responsive layouts, and system light/dark appearance. This page documents the current `2.16.0+21` accessibility contract and known boundaries; it does not claim formal certification against every accessibility standard/platform combination.
+SpellChecker aims to make the bundled editor and review workflow usable with keyboard navigation, assistive technologies, responsive layouts, and system light/dark appearance. This page documents the current `3.2.0+25` accessibility contract and known boundaries; it does not claim formal certification against every accessibility standard/platform combination.
 
 ## Principles
 
@@ -188,9 +188,9 @@ Error text should state what failed and whether the current session can continue
 
 ## Known boundaries
 
-Current repository validation is primarily Flutter widget/semantics testing on the CI environment plus project-specific accessibility regressions. It does not claim exhaustive manual testing across every browser, screen reader, mobile accessibility service, keyboard layout, or native platform.
+Current repository validation combines Flutter widget/semantics testing with six-platform release-build CI and project-specific accessibility regressions. It does not claim exhaustive manual testing across every browser, screen reader, mobile accessibility service, keyboard layout, or native platform.
 
-Only the web host is committed/release-built. Official native runner accessibility validation is future work if native targets become repository-supported.
+Android, iOS, Linux, macOS, Web, and Windows runners are committed and release-build validated. Target-specific assistive-technology validation still requires representative devices, operating systems, browsers, and screen readers before making stronger accessibility-certification claims.
 
 See [Platform support](PLATFORM_SUPPORT.md).
 
