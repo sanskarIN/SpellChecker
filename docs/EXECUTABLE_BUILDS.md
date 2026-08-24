@@ -13,7 +13,7 @@ It deliberately distinguishes between:
 
 SpellChecker is currently version `3.2.0+25` and requires Dart `>=3.8.0 <4.0.0` through `pubspec.yaml`.
 
-> **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Android validates both APK and App Bundle packaging and includes a production signing configuration path; private signing material, Apple signing, notarization, store credentials, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
+> **Current support boundary:** the V3 cross-platform foundation commits `android/`, `ios/`, `linux/`, `macos/`, `web/`, and `windows/` runners and validates release-mode builds in CI. Exact version tags additionally publish normalized platform archives/files to a permanent GitHub Release with SHA-256 checksums and GitHub build-provenance attestations. Android validates both APK and App Bundle packaging and includes a production signing configuration path; private signing material, Apple signing, notarization, store credentials, hosted Web deployment, and channel-specific installers remain external release-engineering concerns and must never be committed as secrets.
 
 ## 1. What counts as an executable artifact
 
@@ -21,12 +21,12 @@ Flutter targets do not all produce the same kind of deliverable.
 
 | Target | Typical release deliverable | Current repository status |
 | --- | --- | --- |
-| Web | Complete `build/web/` directory | **Supported and release-built** |
-| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner committed; CI builds release APK + AAB |
-| iOS | `.ipa` plus Xcode archive/signing metadata | Runner committed; CI builds release app without codesign |
-| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner committed; CI builds and inspects release bundle |
-| macOS | `.app` application bundle, normally signed/notarized for distribution | Runner committed; CI builds release app |
-| Linux | Executable plus `lib/` and `data/` bundle contents | Runner committed; CI builds and inspects release bundle |
+| Web | Complete `build/web/` directory | **Supported, release-built, and tag-archived as ZIP** |
+| Android | `.aab` for Play distribution and/or `.apk` for direct install/testing | Runner committed; CI builds release APK + AAB validation assets |
+| iOS | `.ipa` plus Xcode archive/signing metadata | Runner committed; CI builds release app without codesign and preserves it in tar |
+| Windows | `.exe` plus adjacent DLLs/data, normally distributed as a directory/package | Runner committed; CI builds, inspects, and ZIPs release bundle |
+| macOS | `.app` application bundle, normally signed/notarized for distribution | Runner committed; CI builds unsigned release app and preserves it in tar |
+| Linux | Executable plus `lib/` and `data/` bundle contents | Runner committed; CI builds, inspects, and preserves release bundle in tar |
 
 For Windows and Linux especially, do **not** copy only the executable file and discard its neighboring runtime files. Flutter desktop release output is a bundle.
 
@@ -42,9 +42,9 @@ Before producing any artifact, use these repository files as the primary build c
 - `web/index.html` and `web/manifest.json` — committed web host metadata/bootstrap inputs.
 - `analysis_options.yaml` — analyzer/lint configuration.
 - `.github/workflows/ci.yml` — canonical source-validation gates.
-- `.github/workflows/release.yml` — current release-build automation and artifact contract.
+- `.github/workflows/release.yml` — current release-build, normalized packaging, checksum/provenance, and exact-tag GitHub Release contract.
 
-The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners. Android builds both APK and App Bundle outputs.
+The release workflow installs dependencies, checks formatting, analyzes, runs the complete Flutter test suite, runs the benchmark smoke command, and then builds Android, iOS (without codesign), Linux, macOS, Web, and Windows in release mode on target-appropriate runners. Android builds both APK and App Bundle outputs. Web and Windows outputs are normalized to ZIP files; Linux/macOS/iOS use tar archives to preserve bundle structure and executable permission bits. Exact version-tag runs wait for all six platform jobs, verify the full expected asset set, generate SHA-256 checksums, reject an already-published tag, create build-provenance attestations, and create the tag's GitHub Release without overwriting existing public assets.
 
 ## 3. Required preflight on every build machine
 
@@ -114,18 +114,18 @@ All six Flutter target runners are committed. Normal builds do not require runne
 
 | Target | Host used by CI | Release-mode command | CI output |
 | --- | --- | --- | --- |
-| Web | Ubuntu | `flutter build web --release` | complete `build/web` directory |
+| Web | Ubuntu | `flutter build web --release` | verified `build/web` contents, normalized to ZIP |
 | Android | Ubuntu | `flutter build apk --release` + `flutter build appbundle --release` | APK + AAB validation artifacts |
-| Linux | Ubuntu | `flutter build linux --release` | inspected complete desktop bundle |
-| Windows | Windows | `flutter build windows --release` | inspected complete Release runtime directory |
-| macOS | macOS | `flutter build macos --release` | `.app` bundle |
-| iOS | macOS | `flutter build ios --release --no-codesign` | no-codesign `.app` validation bundle |
+| Linux | Ubuntu | `flutter build linux --release` | inspected complete desktop bundle, preserved in tar.gz |
+| Windows | Windows | `flutter build windows --release` | inspected complete Release runtime directory, normalized to ZIP |
+| macOS | macOS | `flutter build macos --release` | unsigned `.app` bundle, preserved in tar.gz |
+| iOS | macOS | `flutter build ios --release --no-codesign` | no-codesign `.app` validation bundle, preserved in tar.gz |
 
-`.github/workflows/cross-platform.yml` runs these builds for normal V3 validation after shared format/analyze/test/benchmark gates succeed. `.github/workflows/release.yml` mirrors the same six-target build coverage for release tags or manual release-candidate dispatch.
+`.github/workflows/cross-platform.yml` runs these builds for normal V3 validation after shared format/analyze/test/benchmark gates succeed. `.github/workflows/release.yml` mirrors the same six-target build coverage for release tags or manual release-candidate dispatch. Exact version tags additionally run the final publication job; manual dispatch intentionally stops at temporary release-candidate artifacts.
 
 Build success is only the first target-level check. Web CI also requires the built `index.html`, Flutter bootstrap, compiled `main.dart.js`, manifest, and install icons and structurally checks the copied manifest. Linux CI locates the release bundle, requires an executable `spellchecker` ELF, Flutter runtime library, Flutter asset directory, and no unresolved `ldd` dependencies. Windows CI requires `spellchecker.exe`, `flutter_windows.dll`, Flutter assets, and expected compiled version-resource metadata including product name, file description, original filename, and a non-empty product version. Android and Apple targets retain their own focused privacy/metadata contracts.
 
-These checks prove repository packaging compatibility. They do not replace production signing, notarization, store review, clean-machine launch testing, or installer/package-channel policy.
+These checks prove repository packaging compatibility. Exact-tag GitHub Release publication proves the automated asset set was archived for the exact tag. Neither replaces production signing, notarization, store review, clean-machine launch testing, hosted deployment, or installer/package-channel policy.
 
 ### Local target commands
 
@@ -145,11 +145,15 @@ The operating-system restrictions described in the target sections below still a
 
 ### Web deployment boundary
 
-The complete `build/web/` directory is deployable static output. CI verifies its generated bootstrap, compiled application script, install manifest, and required install icons before upload. The release workflow uploads it as an artifact but does not currently deploy a hosted website. Optional Wasm mode (`flutter build web --release --wasm`) is not the official automated build mode and requires separate compatibility review.
+The complete `build/web/` directory is deployable static output. CI verifies its generated bootstrap, compiled application script, install manifest, and required install icons before upload. The release workflow packages it as `spellchecker-web-<tag>.zip` for exact-tag GitHub Releases, but it does not currently deploy a hosted website. Optional Wasm mode (`flutter build web --release --wasm`) is not the official automated build mode and requires separate compatibility review.
 
 ### Artifact retention boundary
 
-GitHub Actions artifacts are temporary workflow storage. They are not automatically permanent GitHub Releases, app-store packages, notarized applications, or hosted websites.
+GitHub Actions artifacts remain temporary workflow storage with the configured retention and are used for release-candidate inspection and cross-job transport. Exact version-tag runs additionally publish normalized platform assets, a SHA-256 checksum manifest, and provenance-backed build outputs to the tag's GitHub Release for durable repository distribution.
+
+Those GitHub Release assets are still not app-store packages, notarized applications, production-signed Android builds by default, or a hosted website. Their filenames deliberately expose important boundaries such as `android-validation`, `macos-unsigned`, and `ios-no-codesign`.
+
+Published GitHub Release assets are treated as immutable by the workflow. A later run for the same tag is rejected once a Release exists, so corrections should use a new reviewed version/tag rather than silently replacing public bytes.
 
 ## 6. Native runner regeneration and migration policy
 
@@ -229,7 +233,7 @@ cp android/key.properties.example android/key.properties
 
 The private file supplies `storePassword`, `keyPassword`, `keyAlias`, and `storeFile`. `android/.gitignore` excludes `key.properties`, `*.jks`, and `*.keystore` so private credentials do not enter Git.
 
-When `key.properties` is present, release builds use the configured private release signing identity. When it is absent, release-mode CI/local validation falls back to the generated debug key strictly so the public repository can prove buildability. Debug-signed validation artifacts must not be uploaded as official store releases.
+When `key.properties` is present, release builds use the configured private release signing identity. When it is absent, release-mode CI/local validation falls back to the generated debug key strictly so the public repository can prove buildability. Debug-signed validation artifacts must not be uploaded as official store releases. The automated GitHub Release therefore names public Android assets `spellchecker-android-validation-<tag>.apk` and `.aab` instead of implying production signing.
 
 ### Android release checklist
 
@@ -280,7 +284,7 @@ Before an official iOS release:
 - define CI/CD on a macOS runner;
 - document TestFlight/App Store or other approved distribution procedure.
 
-The iOS runner is committed and CI builds it in release mode with `--no-codesign`. Apple signing/provisioning is required for device/store distribution.
+The iOS runner is committed and CI builds it in release mode with `--no-codesign`. Exact tag releases preserve that `.app` inside `spellchecker-ios-no-codesign-<tag>.tar.gz`; Apple signing/provisioning is required for device/store distribution.
 
 ## 9. Windows executable bundle
 
@@ -307,7 +311,7 @@ Before an official Windows release:
 - choose a distribution format such as a reviewed zip/MSIX/installer process;
 - define signing policy if code signing is used.
 
-The Windows runner is committed and CI builds and inspects the complete release bundle on `windows-latest`.
+The Windows runner is committed and CI builds and inspects the complete release bundle on `windows-latest`. Release automation wraps the runtime directory as `spellchecker-windows-<tag>.zip`; that ZIP remains unsigned unless a separate signing policy is added.
 
 ## 10. macOS application bundle
 
@@ -330,7 +334,7 @@ Before an official macOS release:
 - add macOS CI that builds the actual `.app` artifact;
 - document packaging and distribution destination.
 
-The macOS runner is committed and CI builds the release `.app`; public distribution still requires the intended signing/notarization policy.
+The macOS runner is committed and CI builds the release `.app`. Release automation preserves the bundle in `spellchecker-macos-unsigned-<tag>.tar.gz`; public distribution still requires the intended signing/notarization policy.
 
 ## 11. Linux executable bundle
 
@@ -360,7 +364,7 @@ Before an official Linux release:
 - validate preferences, clipboard, keyboard, accessibility, font/rendering, and startup behavior;
 - keep the permission-preserving archive/package structure intact.
 
-The Linux runner is committed and CI builds and inspects the complete release bundle on Ubuntu with the required desktop development packages.
+The Linux runner is committed and CI builds and inspects the complete release bundle on Ubuntu with the required desktop development packages. Release automation preserves it as `spellchecker-linux-<tag>.tar.gz`.
 
 ## 12. Build modes
 
@@ -370,7 +374,7 @@ Use Flutter build modes deliberately:
 - **profile** — performance measurement; not the normal public release artifact;
 - **release** — optimized distribution build.
 
-The repository release workflow uses release mode for every supported target; iOS is intentionally built without production codesigning in public CI.
+The repository release workflow uses release mode for every supported target; iOS is intentionally built without production codesigning in public CI. Android release mode is not equivalent to production store signing when the private upload key is absent.
 
 ## 13. Versioning and artifact naming
 
@@ -390,7 +394,24 @@ The version in `pubspec.yaml` is the project source of truth. Before producing a
 6. tag the reviewed commit consistently;
 7. preserve the commit SHA/tool versions with the release evidence.
 
-Do not move a public release tag to silently replace a published artifact.
+Exact tag publication requires `vMAJOR.MINOR.PATCH`, matching the package version before `+BUILD`. For tag `v3.2.0`, normalized automated assets follow this contract:
+
+```text
+spellchecker-web-v3.2.0.zip
+spellchecker-android-validation-v3.2.0.apk
+spellchecker-android-validation-v3.2.0.aab
+spellchecker-linux-v3.2.0.tar.gz
+spellchecker-windows-v3.2.0.zip
+spellchecker-macos-unsigned-v3.2.0.tar.gz
+spellchecker-ios-no-codesign-v3.2.0.tar.gz
+spellchecker-v3.2.0-SHA256SUMS.txt
+```
+
+Manual dispatch uses the selected ref as the suffix after replacing `/` with `-`, which prevents namespaced branch refs from becoming unintended subdirectories.
+
+Before pushing an exact release tag, confirm its GitHub Release does not already exist. Once a GitHub Release exists, the automated workflow rejects the same tag rather than replacing assets.
+
+Do not move a public release tag to silently replace a published artifact. Correct a release with a new reviewed version/tag.
 
 ## 14. Signing and secrets
 
@@ -406,7 +427,7 @@ Signing is target/distribution specific, but the repository policy is universal:
 
 Android's committed signing configuration reads an ignored `android/key.properties` file when a real upload key is supplied. Public Android validation builds use non-production signing when that file is absent.
 
-The current web artifact does not use native application signing.
+The current Web artifact does not use native application signing. SHA-256 manifests provide integrity checking, and GitHub build-provenance attestations provide workflow provenance; neither should be confused with platform-native code signing or store notarization.
 
 ## 15. Release verification checklist
 
@@ -431,7 +452,9 @@ For every artifact, record and verify:
 - no editor text is unexpectedly persisted or transmitted;
 - clipboard actions remain explicit;
 - keyboard/accessibility paths remain usable;
-- artifact checksum/provenance is recorded when used by the distribution process;
+- on exact tag runs, every expected normalized platform asset is present before publication;
+- on exact tag runs, the SHA-256 manifest covers all seven platform asset files;
+- on exact tag runs, GitHub build-provenance attestation succeeds and published Release assets are verified after upload;
 - signing/notarization/store validation is complete when the target requires it.
 
 ## 16. Failure recovery and common fixes
@@ -472,7 +495,7 @@ Treat this as an Android release regression. Run both Android release commands a
 
 ### Web output appears incomplete
 
-Deploy or serve the complete `build/web/` directory. Flutter web output is a set of coordinated files and assets. If CI fails the shell check, inspect `index.html`, `flutter_bootstrap.js`, `main.dart.js`, `manifest.json`, and the install icons before changing the upload step.
+Deploy or serve the complete `build/web/` directory. Flutter web output is a set of coordinated files and assets. If CI fails the shell check, inspect `index.html`, `flutter_bootstrap.js`, `main.dart.js`, `manifest.json`, and the install icons before changing the upload step. The automated ZIP must contain the complete built shell, not an arbitrary subset.
 
 ### Windows/Linux executable fails when copied alone
 
@@ -481,6 +504,12 @@ Use the complete generated release bundle. Flutter desktop applications depend o
 ### Native signing fails
 
 Treat signing as a platform/toolchain configuration problem. Do not solve it by committing private credentials to the repository.
+
+### Final tag publication fails
+
+Do not bypass a failed publication verification. Confirm that all six platform jobs succeeded, all seven expected platform assets were downloaded into `dist/`, checksum generation succeeded, attestation permissions are available, and the repository token can write release assets.
+
+If no GitHub Release was created, the same immutable tag may be rerun after fixing workflow infrastructure because no public asset set has been published yet. If a GitHub Release already exists, the workflow intentionally refuses replacement. Inspect any partial publication carefully; do not automatically overwrite or move the tag, and publish corrections under a new reviewed version/tag when the existing public bytes cannot be treated as safely unpublished.
 
 ## 17. CI/CD requirements for signed/distribution releases
 
@@ -496,10 +525,11 @@ A complete native release addition should include:
 6. artifact content/metadata validation;
 7. artifact upload with failure-on-missing-output;
 8. signing policy if applicable;
-9. retention/provenance policy;
+9. retention/checksum/provenance policy;
 10. smoke/install validation where practical;
 11. README/platform/release/privacy/security/documentation updates;
-12. regression tests for target-sensitive behavior.
+12. regression tests for target-sensitive behavior;
+13. a truthful distinction between repository release archival and store/channel distribution.
 
 ## 18. File-by-file repository build inventory
 
@@ -610,6 +640,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `lib/data/tamil_dictionary.dart`
 - `lib/data/telugu_dictionary.dart`
 - `lib/features/editor/dictionary_manager_dialog.dart`
+- `lib/features/editor/language_picker_dialog.dart`
 - `lib/features/editor/settings_transfer_dialog.dart`
 - `lib/features/editor/spell_check_editing_controller.dart`
 - `lib/features/editor/spell_checker_page.dart`
@@ -655,6 +686,7 @@ The marked list remains machine-checked for project-controlled files. Flutter-ge
 - `test/edit_distance_test.dart`
 - `test/language_dictionary_codec_test.dart`
 - `test/language_pack_test.dart`
+- `test/language_picker_dialog_test.dart`
 - `test/language_preferences_test.dart`
 - `test/language_widget_test.dart`
 - `test/missing_punctuation_space_rule_test.dart`
