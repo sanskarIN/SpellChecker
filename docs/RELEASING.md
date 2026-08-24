@@ -38,18 +38,26 @@ macOS    macos-latest    flutter build macos --release
 iOS      macos-latest    flutter build ios --release --no-codesign
 ```
 
-The Android target additionally runs the focused Android repository-support contract and verifies the production-manifest privacy policy before packaging. The Web target runs the existing app-level widget workflow in Chrome before its release build, then verifies its manifest and install icons after build. Linux, macOS, and iOS outputs are wrapped in tar archives before GitHub artifact upload so Unix executable permission bits and native bundle structure survive artifact transport. Each job fails if its expected output is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
+The build command is not the end of target validation:
+
+- **Web** runs the browser widget smoke, then requires the generated `index.html`, `flutter_bootstrap.js`, compiled `main.dart.js`, install manifest/icons, and expected structural manifest values.
+- **Android** runs the focused Android repository-support contract, verifies the production-manifest privacy policy, and produces both APK and App Bundle outputs.
+- **Linux** requires the executable `spellchecker` ELF, Flutter runtime library/assets, and no unresolved `ldd` dependencies on the CI runtime baseline before creating its permission-preserving archive.
+- **Windows** requires `spellchecker.exe`, `flutter_windows.dll`, Flutter assets, and expected compiled executable `VersionInfo` values before upload.
+- **macOS/iOS** lint native metadata, run the focused Apple repository-support contract, inspect compiled bundle identity/version data, and require an embedded `PrivacyInfo.xcprivacy`; iOS remains intentionally no-codesign in public CI.
+
+Linux, macOS, and iOS outputs are wrapped in tar archives before GitHub artifact upload so Unix executable permission bits and native bundle structure survive artifact transport. Each job fails if its expected output or artifact-level contract is missing and uploads a 30-day GitHub Actions artifact. Android/iOS/macOS/Windows distribution signing remains intentionally separate from source/build validation.
 
 ## Release artifacts
 
 The workflow uploads target-specific artifacts named from the triggering ref or release tag:
 
-- Web — complete `build/web` directory after Chrome widget smoke and install-shell verification;
+- Web — complete `build/web` directory after Chrome widget smoke and generated shell/manifest verification;
 - Android — validation release APK and Android App Bundle (`.aab`);
-- Linux — permission-preserving tar archive containing the complete release bundle;
-- Windows — complete release directory;
-- macOS — permission-preserving tar archive containing the unsigned `.app` bundle;
-- iOS — permission-preserving tar archive containing the no-codesign `.app` bundle.
+- Linux — permission-preserving tar archive containing the verified complete release bundle;
+- Windows — verified complete release directory with executable/runtime/assets and compiled version metadata;
+- macOS — permission-preserving tar archive containing the validated unsigned `.app` bundle;
+- iOS — permission-preserving tar archive containing the validated no-codesign `.app` bundle.
 
 Actions artifacts are not permanent GitHub Release assets and are not app-store publication. Public Android CI artifacts use non-production signing when no private upload key is supplied; official Play distribution must use the secured production signing path documented in the Android and executable-build guides.
 
@@ -69,10 +77,13 @@ Before tagging/dispatching a release, verify:
 - writing-rule/language default migrations were reviewed;
 - privacy/security docs match runtime data flows;
 - full Flutter suite and benchmark smoke pass;
-- Web Chrome widget smoke passes;
+- Web Chrome widget smoke and built-shell/manifest checks pass;
 - the executable-build tracked-file inventory matches the actual repository;
-- all configured cross-platform release-mode build jobs succeed;
+- all configured cross-platform release-mode build jobs and target artifact checks succeed;
 - Android release validation produces both the APK and AAB and preserves the production-manifest policy;
+- Linux dynamic dependency validation reports no unresolved CI-baseline libraries;
+- Windows compiled version-resource validation matches the intended product identity;
+- Apple compiled bundle/privacy-manifest validation passes;
 - historical release/validation record is added when the release needs durable audit evidence.
 
 Before signed/store distribution, also complete the target-specific signing, packaging, accessibility, privacy/security, and clean-environment verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md).
@@ -129,9 +140,11 @@ For a significant release, consider recording exact evidence:
 - Flutter/Dart versions;
 - format/analyzer/full test results;
 - benchmark smoke result;
-- Chrome Web widget-smoke result;
+- Chrome Web widget-smoke result and generated Web shell/manifest verification;
 - Android APK and AAB build results plus the Android support-contract result;
-- iOS/Linux/macOS/Web/Windows build results;
+- iOS/macOS bundle metadata/privacy-manifest validation;
+- Linux bundle content/ELF/`ldd` validation;
+- Windows bundle content/compiled `VersionInfo` validation;
 - executable/package verification result;
 - migration/compatibility checks;
 - known limitations;
@@ -237,7 +250,7 @@ Update [Privacy](PRIVACY.md) and [Security](../SECURITY.md) before release when 
 
 All six Flutter runners are committed and cross-platform CI/release builds validate them. Before describing an artifact as production-distribution-ready, verify the relevant signing/notarization/store/installer policy rather than equating a successful CI build with channel approval.
 
-For Android, CI validates both release packaging forms while the production upload keystore remains external to Git. Web also has a browser-runtime smoke gate in Chrome before packaging. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and the Android runner guide for target-specific requirements.
+Repository validation is layered: Android has focused manifest/package checks; Apple has source metadata plus compiled bundle/privacy-manifest checks; Web has browser smoke plus built shell/manifest verification; Linux checks bundle/runtime/dynamic dependencies; Windows checks runtime content plus compiled version metadata. These checks improve artifact confidence without claiming store/channel approval. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and the Android runner guide for target-specific requirements.
 
 ## Release artifact verification
 
@@ -245,14 +258,17 @@ After workflow success:
 
 1. confirm the common quality job succeeded;
 2. on a tag-triggered run, confirm the tag/version guard succeeded;
-3. confirm the Web Chrome widget smoke succeeded;
-4. confirm every intended platform build job succeeded;
+3. confirm the Web Chrome widget smoke and built shell/manifest validation succeeded;
+4. confirm every intended platform build job and its artifact-inspection step succeeded;
 5. confirm each uploaded artifact exists and uses the expected ref/tag suffix;
 6. for Android, confirm both the APK and AAB are present and distinguish CI validation signing from the intended production upload certificate;
-7. extract Linux/macOS/iOS tar archives before inspection so their preserved permission/bundle metadata is retained;
-8. inspect or extract the complete bundle rather than only a single executable from desktop targets;
-9. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
-10. keep the workflow run/tag/commit reference in release evidence.
+7. for Linux, confirm the ELF/runtime/assets and `ldd` checks passed before archive creation;
+8. for Windows, confirm runtime/assets and compiled `VersionInfo` checks passed;
+9. for Apple, confirm compiled bundle identity/version and privacy-manifest checks passed;
+10. extract Linux/macOS/iOS tar archives before inspection so their preserved permission/bundle metadata is retained;
+11. inspect or extract the complete bundle rather than only a single executable from desktop targets;
+12. complete the target release verification checklist in [Executable builds and packaging](EXECUTABLE_BUILDS.md);
+13. keep the workflow run/tag/commit reference in release evidence.
 
 The workflow artifacts are retained for 30 days and should not be treated as permanent archival storage.
 

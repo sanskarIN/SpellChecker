@@ -15,7 +15,7 @@ flutter analyze
 flutter test --reporter expanded
 ```
 
-CI also runs deterministic benchmark command smoke. Cross-platform CI repeats the quality gate and then builds release-mode Android, iOS (without codesigning), Linux, macOS, Web, and Windows targets. The Android packaging job additionally runs the Android repository-support contract, verifies the production-manifest privacy boundary, and builds both APK and Android App Bundle outputs. The iOS and macOS jobs run the Apple repository-support contract, lint Apple metadata, inspect compiled bundle identity/version data, and require an embedded privacy manifest before packaging. The tagged/manual release workflow mirrors those six target builds with longer-lived artifacts.
+CI also runs deterministic benchmark command smoke. Cross-platform CI repeats the quality gate and then builds release-mode Android, iOS (without codesigning), Linux, macOS, Web, and Windows targets. The Android packaging job additionally runs the Android repository-support contract, verifies the production-manifest privacy boundary, and builds both APK and Android App Bundle outputs. The iOS and macOS jobs run the Apple repository-support contract, lint Apple metadata, inspect compiled bundle identity/version data, and require an embedded privacy manifest before packaging. Web, Linux, and Windows jobs additionally inspect their built runtime artifacts rather than treating a successful compiler exit as sufficient packaging validation. The tagged/manual release workflow mirrors those six target builds with longer-lived artifacts.
 
 Do not treat focused tests as a substitute for the complete suite before merge.
 
@@ -145,6 +145,23 @@ Both the normal cross-platform Android packaging job and tagged/manual Android r
 
 The iOS and macOS jobs then validate the compiled artifacts, not only the repository text. They require the expected bundle ID, non-empty version metadata, and at least one embedded `PrivacyInfo.xcprivacy` before the `.app` is packaged.
 
+### Desktop and Web repository-support contract
+
+`test/desktop_web_repository_support_test.dart` protects the remaining cross-platform runner/release invariants in a host-independent source test. It checks:
+
+- Web install-manifest identity, scope, standalone mode, language, categories, icon metadata, PNG signatures, and exact 192×192/512×512 icon dimensions;
+- Linux stable binary/application identity, C++ standard, strict warning policy, relocatable `$ORIGIN/lib` runtime path, window branding, and GTK application identity;
+- Windows project/binary identity, C++ standard, strict warning policy, version-resource branding/original filename, and committed application icon;
+- both normal and tagged release workflows retaining the built Web/Linux/Windows artifact-validation steps.
+
+The target CI jobs then validate generated outputs:
+
+- Web requires `index.html`, `flutter_bootstrap.js`, compiled `main.dart.js`, the manifest/icons, and structural built-manifest values;
+- Linux requires an executable ELF, Flutter runtime library/assets, and no unresolved `ldd` dependencies on the CI runtime baseline;
+- Windows requires the executable, Flutter runtime DLL/assets, and expected compiled Windows `VersionInfo` values.
+
+This source-plus-artifact split is deliberate: repository tests catch accidental runner/metadata drift quickly, while host-specific jobs prove the generated package still contains the expected runtime material.
+
 ## Useful focused commands
 
 Core spelling/correction:
@@ -204,6 +221,12 @@ Apple repository support:
 flutter test test/apple_repository_support_test.dart --reporter expanded
 ```
 
+Desktop and Web repository support:
+
+```bash
+flutter test test/desktop_web_repository_support_test.dart --reporter expanded
+```
+
 On macOS, native metadata can also be linted directly:
 
 ```bash
@@ -211,9 +234,9 @@ plutil -lint ios/Runner/Info.plist
 plutil -lint macos/Runner/Info.plist macos/Runner/Release.entitlements macos/Runner/DebugProfile.entitlements
 ```
 
-The documentation command performs the focused documentation/metadata audit described above. The Android commands validate and format-check the runner-specific support contract without requiring a production signing key. The Apple contract is host-independent at source-test time; the macOS GitHub-hosted build jobs additionally inspect the real compiled `.app` bundles.
+The documentation command performs the focused documentation/metadata audit described above. The Android commands validate and format-check the runner-specific support contract without requiring a production signing key. The Apple and Desktop/Web source contracts are host-independent; target GitHub-hosted build jobs additionally inspect the real generated artifacts.
 
-Some focused filenames are added as features evolve. Use the `test/` directory and full suite as the final source of truth for shared application behavior, plus the Android and Apple support contracts for platform runner/release invariants.
+Some focused filenames are added as features evolve. Use the `test/` directory and full suite as the final source of truth for shared application behavior, plus the focused platform contracts for runner/release invariants.
 
 ## Spelling-engine test requirements
 
@@ -469,12 +492,12 @@ See [Performance](PERFORMANCE.md).
 3. `flutter pub get`;
 4. canonical format check across `lib test tool`;
 5. `flutter analyze`;
-6. complete Flutter test suite, including repository documentation/metadata validation;
+6. complete Flutter test suite, including repository documentation/metadata validation and source-level platform contracts;
 7. benchmark CLI smoke.
 
 `.github/workflows/v3-docs-sync.yml` is the focused documentation/metadata workflow. For relevant documentation, registry, version, and workflow paths it installs dependencies, verifies formatting of `test/documentation_repository_test.dart`, and runs that audit directly.
 
-`.github/workflows/cross-platform.yml` repeats the complete source quality gate and then builds/uploads short-retention validation artifacts for Android APK + Android App Bundle, iOS no-codesign app, Linux bundle, macOS app, Web bundle, and Windows bundle on appropriate GitHub-hosted operating systems. The Android job additionally format-checks and runs `android/test/android_repository_support_test.dart` and verifies the production manifest before packaging. The iOS/macOS jobs lint native metadata, run `test/apple_repository_support_test.dart`, verify the compiled `CFBundleIdentifier` and version fields, and require an embedded `PrivacyInfo.xcprivacy` before packaging.
+`.github/workflows/cross-platform.yml` repeats the complete source quality gate and then builds/uploads short-retention validation artifacts for Android APK + Android App Bundle, iOS no-codesign app, Linux bundle, macOS app, Web bundle, and Windows bundle on appropriate GitHub-hosted operating systems. Android runs its focused repository support/privacy checks. iOS/macOS lint native metadata, run the Apple support test, verify compiled bundle identity/version fields, and require an embedded privacy manifest. Web verifies its generated bootstrap/main script/install manifest and icons. Linux verifies executable/runtime/assets plus dynamic dependency resolution. Windows verifies runtime files/assets plus compiled executable `VersionInfo`.
 
 ## Release validation
 
@@ -487,7 +510,7 @@ See [Performance](PERFORMANCE.md).
 - Web release bundle;
 - Windows release bundle.
 
-The Android release job also runs the focused support contract and production-manifest policy checks before building. The Apple release jobs mirror the normal CI contract: plist/entitlement linting, focused Apple repository-support tests, compiled bundle identity/version checks, and embedded privacy-manifest validation are required before iOS/macOS artifacts are archived. Artifacts are retained by the workflow for validation/distribution staging. Production signing/notarization credentials and external store/publication steps remain outside this repository workflow. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and [Releasing](RELEASING.md).
+The tagged/manual workflow mirrors the target-specific artifact contracts from normal cross-platform CI before upload. Android validates the production manifest and both package forms. Apple validates native metadata, compiled identity/version data, and embedded privacy manifests. Web validates the generated runnable/install shell. Linux validates its ELF/runtime/assets/dynamic dependencies. Windows validates its executable/runtime/assets and compiled version resource. Artifacts are retained by the workflow for validation/distribution staging. Production signing/notarization credentials and external store/publication steps remain outside this repository workflow. See [Platform support](PLATFORM_SUPPORT.md), [Executable builds and packaging](EXECUTABLE_BUILDS.md), and [Releasing](RELEASING.md).
 
 ## Before opening a PR
 
@@ -504,6 +527,7 @@ Run the complete gate. Also review:
 - platform/build claims consistent with committed runners and actual CI/release jobs;
 - Android runner changes pass the Android support contract and keep APK/AAB claims synchronized;
 - Apple runner/release changes pass the Apple support contract and preserve artifact-level bundle/privacy validation;
+- Desktop/Web runner or packaging changes pass `test/desktop_web_repository_support_test.dart` and preserve built-artifact validation;
 - historical release docs left historically accurate.
 
 ## Related documentation
