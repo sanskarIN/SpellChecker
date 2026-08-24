@@ -2,6 +2,69 @@ import 'package:flutter/material.dart';
 
 import '../../core/spell_language_pack.dart';
 
+class SpellingLanguageSelector extends StatelessWidget {
+  const SpellingLanguageSelector({
+    required this.languagePacks,
+    required this.selectedLanguage,
+    required this.onChanged,
+    this.enabled = true,
+    this.selectorKey,
+    super.key,
+  });
+
+  final List<SpellLanguagePack> languagePacks;
+  final SpellLanguagePack selectedLanguage;
+  final ValueChanged<String> onChanged;
+  final bool enabled;
+  final Key? selectorKey;
+
+  Future<void> _openPicker(BuildContext context) async {
+    final selectedLanguageId = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => SpellingLanguagePickerDialog(
+        languagePacks: languagePacks,
+        selectedLanguageId: selectedLanguage.id,
+      ),
+    );
+    if (selectedLanguageId == null ||
+        selectedLanguageId == selectedLanguage.id) {
+      return;
+    }
+    onChanged(selectedLanguageId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label:
+          'Spelling language. Current language ${selectedLanguage.displayName}, ${selectedLanguage.id}.',
+      child: OutlinedButton(
+        key: selectorKey,
+        onPressed: enabled ? () => _openPicker(context) : null,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.language, size: 18),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                selectedLanguage.displayName,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_drop_down),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class SpellingLanguagePickerDialog extends StatefulWidget {
   const SpellingLanguagePickerDialog({
     required this.languagePacks,
