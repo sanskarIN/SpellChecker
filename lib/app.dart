@@ -65,9 +65,9 @@ class _KeyboardShortcutsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Keyboard shortcuts'),
-      content: const ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 520),
-        child: SingleChildScrollView(
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
