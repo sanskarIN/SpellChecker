@@ -50,19 +50,12 @@ void main() {
         },
       );
 
-      expect(
-        expanded.suggestionsFor('helo'),
-        baseline.suggestionsFor('helo'),
-      );
+      expect(expanded.suggestionsFor('helo'), baseline.suggestionsFor('helo'));
     });
 
     test('preserves affix suggestions with length-indexed candidates', () {
       final engine = SpellCheckerEngine(
-        dictionary: <String>{
-          'hello',
-          'a',
-          'intercommunication',
-        },
+        dictionary: <String>{'hello', 'a', 'intercommunication'},
       );
 
       expect(engine.suggestionsFor("helo's"), contains("hello's"));
