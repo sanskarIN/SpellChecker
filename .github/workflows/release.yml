@@ -14,20 +14,35 @@ jobs:
     name: Validate source before packaging
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    outputs:
+      artifact_suffix: ${{ steps.release_metadata.outputs.artifact_suffix }}
+      package_version: ${{ steps.release_metadata.outputs.package_version }}
+      release_version: ${{ steps.release_metadata.outputs.release_version }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Verify release tag matches package version
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      - name: Resolve release metadata
+        id: release_metadata
         shell: bash
         run: |
           package_version="$(awk '/^version:/ { print $2; exit }' pubspec.yaml)"
           release_version="${package_version%%+*}"
-          expected_tag="v${release_version}"
+          artifact_suffix="${GITHUB_REF_NAME//\//-}"
+          {
+            echo "package_version=$package_version"
+            echo "release_version=$release_version"
+            echo "artifact_suffix=$artifact_suffix"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Verify release tag matches package version
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          expected_tag="v${{ steps.release_metadata.outputs.release_version }}"
           if [ "$GITHUB_REF_NAME" != "$expected_tag" ]; then
-            echo "Release tag $GITHUB_REF_NAME does not match pubspec.yaml version $package_version; expected $expected_tag."
+            echo "Release tag $GITHUB_REF_NAME does not match pubspec.yaml version ${{ steps.release_metadata.outputs.package_version }}; expected $expected_tag."
             exit 1
           fi
 
@@ -110,11 +125,17 @@ jobs:
           assert icons['icons/Icon-192.png']['sizes'] == '192x192'
           assert icons['icons/Icon-512.png']['sizes'] == '512x512'
           PY
-      - name: Upload Web artifact
+      - name: Package Web release
+        shell: bash
+        run: |
+          asset="$GITHUB_WORKSPACE/spellchecker-web-${{ needs.quality.outputs.artifact_suffix }}.zip"
+          (cd build/web && zip -qr "$asset" .)
+          test -s "$asset"
+      - name: Upload Web release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: spellchecker-web-${{ github.ref_name }}
-          path: build/web
+          name: spellchecker-release-web-${{ needs.quality.outputs.artifact_suffix }}
+          path: spellchecker-web-${{ needs.quality.outputs.artifact_suffix }}.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -150,13 +171,22 @@ jobs:
         run: flutter build apk --release
       - name: Build Android App Bundle
         run: flutter build appbundle --release
+      - name: Normalize Android validation asset names
+        shell: bash
+        run: |
+          apk_path="$(find build/app/outputs/flutter-apk -maxdepth 1 -name '*.apk' -type f -print -quit)"
+          aab_path="$(find build/app/outputs/bundle/release -maxdepth 1 -name '*.aab' -type f -print -quit)"
+          test -n "$apk_path"
+          test -n "$aab_path"
+          cp "$apk_path" "spellchecker-android-validation-${{ needs.quality.outputs.artifact_suffix }}.apk"
+          cp "$aab_path" "spellchecker-android-validation-${{ needs.quality.outputs.artifact_suffix }}.aab"
       - name: Upload Android validation artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: spellchecker-android-validation-${{ github.ref_name }}
+          name: spellchecker-release-android-${{ needs.quality.outputs.artifact_suffix }}
           path: |
-            build/app/outputs/flutter-apk/*.apk
-            build/app/outputs/bundle/release/*.aab
+            spellchecker-android-validation-${{ needs.quality.outputs.artifact_suffix }}.apk
+            spellchecker-android-validation-${{ needs.quality.outputs.artifact_suffix }}.aab
           if-no-files-found: error
           retention-days: 30
 
@@ -205,12 +235,12 @@ jobs:
         run: |
           bundle_dir="$(find build/linux -path '*/release/bundle' -type d -print -quit)"
           test -n "$bundle_dir"
-          tar -C "$(dirname "$bundle_dir")" -czf spellchecker-linux.tar.gz "$(basename "$bundle_dir")"
-      - name: Upload Linux artifact
+          tar -C "$(dirname "$bundle_dir")" -czf "spellchecker-linux-${{ needs.quality.outputs.artifact_suffix }}.tar.gz" "$(basename "$bundle_dir")"
+      - name: Upload Linux release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: spellchecker-linux-${{ github.ref_name }}
-          path: spellchecker-linux.tar.gz
+          name: spellchecker-release-linux-${{ needs.quality.outputs.artifact_suffix }}
+          path: spellchecker-linux-${{ needs.quality.outputs.artifact_suffix }}.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -254,11 +284,25 @@ jobs:
           if ($version.FileDescription -ne 'SpellChecker') { throw "Unexpected FileDescription: $($version.FileDescription)" }
           if ($version.OriginalFilename -ne 'spellchecker.exe') { throw "Unexpected OriginalFilename: $($version.OriginalFilename)" }
           if ([string]::IsNullOrWhiteSpace($version.ProductVersion)) { throw 'ProductVersion is empty.' }
-      - name: Upload Windows artifact
+      - name: Package Windows release bundle
+        shell: pwsh
+        run: |
+          $releaseDir = Get-ChildItem -Path build/windows -Directory -Recurse |
+            Where-Object { $_.FullName -match '[\\/]runner[\\/]Release$' } |
+            Select-Object -First 1
+          if (-not $releaseDir) {
+            throw 'Windows release directory was not found.'
+          }
+          $asset = "spellchecker-windows-${{ needs.quality.outputs.artifact_suffix }}.zip"
+          Compress-Archive -Path "$($releaseDir.FullName)\*" -DestinationPath $asset -Force
+          if (-not (Test-Path $asset)) {
+            throw 'Windows release archive was not created.'
+          }
+      - name: Upload Windows release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: spellchecker-windows-${{ github.ref_name }}
-          path: build/windows/*/runner/Release
+          name: spellchecker-release-windows-${{ needs.quality.outputs.artifact_suffix }}
+          path: spellchecker-windows-${{ needs.quality.outputs.artifact_suffix }}.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -309,12 +353,12 @@ jobs:
         run: |
           app_path="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -type d -print -quit)"
           test -n "$app_path"
-          tar -C "$(dirname "$app_path")" -czf spellchecker-macos.tar.gz "$(basename "$app_path")"
-      - name: Upload macOS artifact
+          tar -C "$(dirname "$app_path")" -czf "spellchecker-macos-unsigned-${{ needs.quality.outputs.artifact_suffix }}.tar.gz" "$(basename "$app_path")"
+      - name: Upload macOS release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: spellchecker-macos-unsigned-${{ github.ref_name }}
-          path: spellchecker-macos.tar.gz
+          name: spellchecker-release-macos-${{ needs.quality.outputs.artifact_suffix }}
+          path: spellchecker-macos-unsigned-${{ needs.quality.outputs.artifact_suffix }}.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -361,11 +405,122 @@ jobs:
         run: |
           app_path="$(find build/ios/iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
           test -n "$app_path"
-          tar -C "$(dirname "$app_path")" -czf spellchecker-ios.tar.gz "$(basename "$app_path")"
-      - name: Upload iOS artifact
+          tar -C "$(dirname "$app_path")" -czf "spellchecker-ios-no-codesign-${{ needs.quality.outputs.artifact_suffix }}.tar.gz" "$(basename "$app_path")"
+      - name: Upload iOS release artifact
         uses: actions/upload-artifact@v7
         with:
-          name: spellchecker-ios-no-codesign-${{ github.ref_name }}
-          path: spellchecker-ios.tar.gz
+          name: spellchecker-release-ios-${{ needs.quality.outputs.artifact_suffix }}
+          path: spellchecker-ios-no-codesign-${{ needs.quality.outputs.artifact_suffix }}.tar.gz
           if-no-files-found: error
           retention-days: 30
+
+  publish-release:
+    name: Publish GitHub Release and provenance
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - quality
+      - web-release
+      - android-release
+      - linux-release
+      - windows-release
+      - macos-release
+      - ios-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Download packaged release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: spellchecker-release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Verify complete release asset set
+        shell: bash
+        run: |
+          suffix="${{ needs.quality.outputs.artifact_suffix }}"
+          expected_assets=(
+            "spellchecker-web-${suffix}.zip"
+            "spellchecker-android-validation-${suffix}.apk"
+            "spellchecker-android-validation-${suffix}.aab"
+            "spellchecker-linux-${suffix}.tar.gz"
+            "spellchecker-windows-${suffix}.zip"
+            "spellchecker-macos-unsigned-${suffix}.tar.gz"
+            "spellchecker-ios-no-codesign-${suffix}.tar.gz"
+          )
+          for asset in "${expected_assets[@]}"; do
+            test -s "dist/$asset" || {
+              echo "Missing or empty release asset: $asset"
+              exit 1
+            }
+          done
+          actual_count="$(find dist -maxdepth 1 -type f | wc -l | tr -d ' ')"
+          if [ "$actual_count" -ne "${#expected_assets[@]}" ]; then
+            echo "Expected ${#expected_assets[@]} release assets before checksum generation, found $actual_count."
+            find dist -maxdepth 1 -type f -print
+            exit 1
+          fi
+
+      - name: Generate SHA-256 checksum manifest
+        shell: bash
+        run: |
+          suffix="${{ needs.quality.outputs.artifact_suffix }}"
+          (
+            cd dist
+            sha256sum \
+              "spellchecker-web-${suffix}.zip" \
+              "spellchecker-android-validation-${suffix}.apk" \
+              "spellchecker-android-validation-${suffix}.aab" \
+              "spellchecker-linux-${suffix}.tar.gz" \
+              "spellchecker-windows-${suffix}.zip" \
+              "spellchecker-macos-unsigned-${suffix}.tar.gz" \
+              "spellchecker-ios-no-codesign-${suffix}.tar.gz" \
+              > "spellchecker-${suffix}-SHA256SUMS.txt"
+          )
+          test -s "dist/spellchecker-${suffix}-SHA256SUMS.txt"
+
+      - name: Reject already-published release tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "GitHub Release $GITHUB_REF_NAME already exists. Published release assets are immutable; publish corrections under a new version/tag."
+            exit 1
+          fi
+
+      - name: Attest release asset provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*
+
+      - name: Create immutable GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          release_header=$'Automated cross-platform artifacts built by GitHub Actions from this exact tag.\n\nDistribution boundary: Android APK/AAB files are CI validation builds that use the repository fallback signing path unless private production signing is supplied; iOS is intentionally no-codesign; macOS and Windows assets are unsigned. Verify downloads with the SHA-256 manifest and GitHub build-provenance attestations before further packaging or distribution.'
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --verify-tag \
+            --title "SpellChecker ${{ needs.quality.outputs.release_version }}" \
+            --generate-notes \
+            --notes "$release_header"
+
+      - name: Verify published GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          published_assets="$(gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name')"
+          while IFS= read -r asset; do
+            asset_name="$(basename "$asset")"
+            if ! grep -Fxq "$asset_name" <<< "$published_assets"; then
+              echo "GitHub Release is missing asset: $asset_name"
+              exit 1
+            fi
+          done < <(find dist -maxdepth 1 -type f -print | sort)

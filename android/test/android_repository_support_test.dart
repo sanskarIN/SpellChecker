@@ -88,10 +88,26 @@ void main() {
         );
         expect(
           workflow,
-          contains('build/app/outputs/bundle/release/*.aab'),
-          reason: '$path must upload the Android App Bundle.',
+          contains('build/app/outputs/bundle/release'),
+          reason: '$path must inspect the Android App Bundle output directory.',
+        );
+        expect(
+          workflow,
+          contains('.aab'),
+          reason: '$path must retain Android App Bundle artifact handling.',
         );
       }
+    });
+
+    test('tagged releases normalize Android validation artifact names', () {
+      final release = File('.github/workflows/release.yml').readAsStringSync();
+
+      expect(release, contains('Normalize Android validation asset names'));
+      expect(release, contains('spellchecker-android-validation-'));
+      expect(release, contains('apk_path='));
+      expect(release, contains('aab_path='));
+      expect(release, contains('cp "\$apk_path"'));
+      expect(release, contains('cp "\$aab_path"'));
     });
 
     test('AGP 9 keeps the Flutter stable Kotlin compatibility path', () {
