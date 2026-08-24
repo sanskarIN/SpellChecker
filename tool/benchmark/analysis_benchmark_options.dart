@@ -66,7 +66,7 @@ class AnalysisBenchmarkOptions {
   final bool help;
 
   AnalysisBenchmarkScenario toScenario() => AnalysisBenchmarkScenario(
-    name: 'large-document-v2.10',
+    name: 'large-document',
     repeats: repeats,
     spellingIssueLimit: spellingIssueLimit,
     writingIssueLimit: writingIssueLimit,
