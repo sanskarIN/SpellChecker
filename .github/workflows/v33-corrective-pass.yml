@@ -46,13 +46,15 @@ jobs:
                   raise SystemExit('language-picker import anchor not found')
               text = text.replace(anchor, anchor + picker_import, 1)
 
-          start_marker = """                SizedBox(
-                  width: 170,
-                  child: Semantics(
-                    label: 'Spelling language',
-                    child: DropdownButton<String>(
-"""
-          end_marker = "                if (!preferencesLoaded) ...<Widget>["
+          start_lines = [
+              '                SizedBox(',
+              '                  width: 170,',
+              '                  child: Semantics(',
+              "                    label: 'Spelling language',",
+              '                    child: DropdownButton<String>(',
+          ]
+          start_marker = '\n'.join(start_lines) + '\n'
+          end_marker = '                if (!preferencesLoaded) ...<Widget>['
           start = text.find(start_marker)
           if start < 0:
               raise SystemExit('legacy language-selector block not found')
@@ -60,28 +62,30 @@ jobs:
           if end < 0:
               raise SystemExit('language-selector end marker not found')
 
-          replacement = """                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 240),
-                  child: SpellingLanguageSelector(
-                    languagePacks: languagePacks,
-                    selectedLanguage: languagePack,
-                    enabled: preferencesLoaded,
-                    selectorKey: const ValueKey<String>('language-selector'),
-                    onChanged: (String languageId) =>
-                        onLanguageChanged(languageId),
-                  ),
-                ),
-"""
+          replacement_lines = [
+              '                ConstrainedBox(',
+              '                  constraints: const BoxConstraints(maxWidth: 240),',
+              '                  child: SpellingLanguageSelector(',
+              '                    languagePacks: languagePacks,',
+              '                    selectedLanguage: languagePack,',
+              '                    enabled: preferencesLoaded,',
+              "                    selectorKey: const ValueKey<String>('language-selector'),",
+              '                    onChanged: (String languageId) =>',
+              '                        onLanguageChanged(languageId),',
+              '                  ),',
+              '                ),',
+          ]
+          replacement = '\n'.join(replacement_lines) + '\n'
           text = text[:start] + replacement + text[end:]
           page.write_text(text)
 
           inventory = Path('docs/EXECUTABLE_BUILDS.md')
           guide = inventory.read_text()
-          start_marker = '<!-- tracked-file-inventory:start -->'
-          end_marker = '<!-- tracked-file-inventory:end -->'
-          start = guide.index(start_marker)
-          end = guide.index(end_marker, start)
-          body = guide[start + len(start_marker):end]
+          inventory_start = '<!-- tracked-file-inventory:start -->'
+          inventory_end = '<!-- tracked-file-inventory:end -->'
+          start = guide.index(inventory_start)
+          end = guide.index(inventory_end, start)
+          body = guide[start + len(inventory_start):end]
           paths = set()
           for line in body.splitlines():
               stripped = line.strip()
@@ -99,7 +103,7 @@ jobs:
               f'- `{path}`' for path in sorted(paths)
           ) + '\n\n'
           guide = (
-              guide[:start + len(start_marker)]
+              guide[:start + len(inventory_start)]
               + replacement_inventory
               + guide[end:]
           )
