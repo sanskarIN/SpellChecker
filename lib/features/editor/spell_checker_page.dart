@@ -14,10 +14,11 @@ import '../../storage/settings_transfer_service.dart';
 import '../../writing/writing_analyzer.dart';
 import '../../writing/writing_correction.dart';
 import '../../writing/writing_issue.dart';
-import 'settings_transfer_dialog.dart';
-import 'writing_insights_dialog.dart';
 import 'dictionary_manager_dialog.dart';
+import 'language_picker_dialog.dart';
+import 'settings_transfer_dialog.dart';
 import 'spell_check_editing_controller.dart';
+import 'writing_insights_dialog.dart';
 
 class SpellCheckerPage extends StatefulWidget {
   const SpellCheckerPage({this.preferences, super.key});
@@ -948,26 +949,15 @@ class _EditorPanel extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                SizedBox(
-                  width: 170,
-                  child: Semantics(
-                    label: 'Spelling language',
-                    child: DropdownButton<String>(
-                      key: const ValueKey<String>('language-selector'),
-                      value: languagePack.id,
-                      isDense: true,
-                      isExpanded: true,
-                      items: languagePacks
-                          .map(
-                            (SpellLanguagePack pack) =>
-                                DropdownMenuItem<String>(
-                                  value: pack.id,
-                                  child: Text(pack.displayName),
-                                ),
-                          )
-                          .toList(growable: false),
-                      onChanged: preferencesLoaded ? onLanguageChanged : null,
-                    ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  child: SpellingLanguageSelector(
+                    languagePacks: languagePacks,
+                    selectedLanguage: languagePack,
+                    enabled: preferencesLoaded,
+                    selectorKey: const ValueKey<String>('language-selector'),
+                    onChanged: (String languageId) =>
+                        onLanguageChanged(languageId),
                   ),
                 ),
                 if (!preferencesLoaded) ...<Widget>[
@@ -992,8 +982,7 @@ class _EditorPanel extends StatelessWidget {
             Expanded(
               child: Semantics(
                 textField: true,
-                label:
-                    'SpellChecker editor. Checked spelling issues are underlined after a spelling check.',
+                label: 'SpellChecker editor. Checked spelling issues are underlined after a spelling check.',
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
@@ -1053,8 +1042,7 @@ class _StorageWarning extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Semantics(
       liveRegion: true,
-      label:
-          'Warning: local dictionary storage is unavailable. Spelling still works in session mode.',
+      label: 'Warning: local dictionary storage is unavailable. Spelling still works in session mode.',
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(

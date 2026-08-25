@@ -1,0 +1,157 @@
+name: V3.3 strict corrective pass
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  correct-and-validate:
+    if: github.head_ref == 'v3.3/localization-release-prep'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out working branch
+        uses: actions/checkout@v7
+        with:
+          ref: v3.3/localization-release-prep
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Correct picker integration and inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "sanskarIN"
+          git config user.email "sanskarIN@outlook.in"
+
+          python3 <<'PY'
+          from pathlib import Path
+
+          page = Path('lib/features/editor/spell_checker_page.dart')
+          text = page.read_text()
+
+          picker_import = "import 'language_picker_dialog.dart';\n"
+          if picker_import not in text:
+              anchor = "import 'dictionary_manager_dialog.dart';\n"
+              if anchor not in text:
+                  raise SystemExit('language-picker import anchor not found')
+              text = text.replace(anchor, anchor + picker_import, 1)
+
+          has_picker = 'SpellingLanguageSelector(' in text
+          has_legacy_dropdown = 'DropdownButton<String>(' in text
+          if not has_picker:
+              start_lines = [
+                  '                SizedBox(',
+                  '                  width: 170,',
+                  '                  child: Semantics(',
+                  "                    label: 'Spelling language',",
+                  '                    child: DropdownButton<String>(',
+              ]
+              start_marker = '\n'.join(start_lines) + '\n'
+              end_marker = '                if (!preferencesLoaded) ...<Widget>['
+              start = text.find(start_marker)
+              if start < 0:
+                  raise SystemExit('legacy language-selector block not found')
+              end = text.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit('language-selector end marker not found')
+
+              replacement_lines = [
+                  '                ConstrainedBox(',
+                  '                  constraints: const BoxConstraints(maxWidth: 240),',
+                  '                  child: SpellingLanguageSelector(',
+                  '                    languagePacks: languagePacks,',
+                  '                    selectedLanguage: languagePack,',
+                  '                    enabled: preferencesLoaded,',
+                  "                    selectorKey: const ValueKey<String>('language-selector'),",
+                  '                    onChanged: (String languageId) =>',
+                  '                        onLanguageChanged(languageId),',
+                  '                  ),',
+                  '                ),',
+              ]
+              replacement = '\n'.join(replacement_lines) + '\n'
+              text = text[:start] + replacement + text[end:]
+          elif has_legacy_dropdown:
+              raise SystemExit('both searchable picker and legacy dropdown are present')
+
+          page.write_text(text)
+
+          inventory = Path('docs/EXECUTABLE_BUILDS.md')
+          guide = inventory.read_text()
+          inventory_start = '<!-- tracked-file-inventory:start -->'
+          inventory_end = '<!-- tracked-file-inventory:end -->'
+          start = guide.index(inventory_start)
+          end = guide.index(inventory_end, start)
+          body = guide[start + len(inventory_start):end]
+          paths = set()
+          for line in body.splitlines():
+              stripped = line.strip()
+              if stripped.startswith('- `') and stripped.endswith('`'):
+                  paths.add(stripped[3:-1])
+          paths.update({
+              'docs/LOCALIZATION.md',
+              'l10n.yaml',
+              'lib/l10n/app_en.arb',
+              'lib/l10n/app_localizations.dart',
+              'lib/l10n/app_localizations_en.dart',
+              'test/localization_foundation_test.dart',
+          })
+          replacement_inventory = '\n\n' + '\n'.join(
+              f'- `{path}`' for path in sorted(paths)
+          ) + '\n\n'
+          guide = (
+              guide[:start + len(inventory_start)]
+              + replacement_inventory
+              + guide[end:]
+          )
+          inventory.write_text(guide)
+
+          docs_index = Path('docs/README.md')
+          docs = docs_index.read_text()
+          old = '| Runtime dependencies | Flutter SDK and `shared_preferences` |'
+          new = '| Runtime dependencies | Flutter SDK (`flutter`, `flutter_localizations`), `intl`, and `shared_preferences` |'
+          if old in docs:
+              docs_index.write_text(docs.replace(old, new, 1))
+          elif new not in docs:
+              raise SystemExit('runtime dependency documentation anchor not found')
+          PY
+
+          dart format lib/features/editor/spell_checker_page.dart
+          grep -q "import 'language_picker_dialog.dart';" lib/features/editor/spell_checker_page.dart
+          grep -q "SpellingLanguageSelector" lib/features/editor/spell_checker_page.dart
+          if grep -q "DropdownButton<String>" lib/features/editor/spell_checker_page.dart; then
+            echo "Legacy language dropdown is still present" >&2
+            exit 1
+          fi
+
+          git rm .github/workflows/v33-corrective-pass.yml
+          git add lib/features/editor/spell_checker_page.dart docs/EXECUTABLE_BUILDS.md docs/README.md
+          git commit -m "Correct V3.3 picker integration and release inventory"
+
+      - name: Run strict V3.3 gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          flutter gen-l10n
+          dart format lib test tool
+          git diff --exit-code
+          flutter analyze
+          flutter test test/language_picker_dialog_test.dart test/language_widget_test.dart test/localization_foundation_test.dart --reporter expanded
+          flutter test --reporter expanded
+          dart run tool/benchmark_large_document.dart --repeats=4 --warmup=0 --iterations=1 --spelling-limit=2 --writing-limit=5 --suggestions=0 --language=en-US --json
+
+      - name: Push validated corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin HEAD:v3.3/localization-release-prep
