@@ -73,6 +73,7 @@ void main() {
     'EXAMPLES.md',
     'API.md',
     'LANGUAGE_PACKS.md',
+    'LOCALIZATION.md',
     'WRITING_RULES.md',
     'ARCHITECTURE.md',
     'PLATFORM_SUPPORT.md',
