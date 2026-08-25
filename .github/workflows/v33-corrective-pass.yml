@@ -46,37 +46,43 @@ jobs:
                   raise SystemExit('language-picker import anchor not found')
               text = text.replace(anchor, anchor + picker_import, 1)
 
-          start_lines = [
-              '                SizedBox(',
-              '                  width: 170,',
-              '                  child: Semantics(',
-              "                    label: 'Spelling language',",
-              '                    child: DropdownButton<String>(',
-          ]
-          start_marker = '\n'.join(start_lines) + '\n'
-          end_marker = '                if (!preferencesLoaded) ...<Widget>['
-          start = text.find(start_marker)
-          if start < 0:
-              raise SystemExit('legacy language-selector block not found')
-          end = text.find(end_marker, start)
-          if end < 0:
-              raise SystemExit('language-selector end marker not found')
+          has_picker = 'SpellingLanguageSelector(' in text
+          has_legacy_dropdown = 'DropdownButton<String>(' in text
+          if not has_picker:
+              start_lines = [
+                  '                SizedBox(',
+                  '                  width: 170,',
+                  '                  child: Semantics(',
+                  "                    label: 'Spelling language',",
+                  '                    child: DropdownButton<String>(',
+              ]
+              start_marker = '\n'.join(start_lines) + '\n'
+              end_marker = '                if (!preferencesLoaded) ...<Widget>['
+              start = text.find(start_marker)
+              if start < 0:
+                  raise SystemExit('legacy language-selector block not found')
+              end = text.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit('language-selector end marker not found')
 
-          replacement_lines = [
-              '                ConstrainedBox(',
-              '                  constraints: const BoxConstraints(maxWidth: 240),',
-              '                  child: SpellingLanguageSelector(',
-              '                    languagePacks: languagePacks,',
-              '                    selectedLanguage: languagePack,',
-              '                    enabled: preferencesLoaded,',
-              "                    selectorKey: const ValueKey<String>('language-selector'),",
-              '                    onChanged: (String languageId) =>',
-              '                        onLanguageChanged(languageId),',
-              '                  ),',
-              '                ),',
-          ]
-          replacement = '\n'.join(replacement_lines) + '\n'
-          text = text[:start] + replacement + text[end:]
+              replacement_lines = [
+                  '                ConstrainedBox(',
+                  '                  constraints: const BoxConstraints(maxWidth: 240),',
+                  '                  child: SpellingLanguageSelector(',
+                  '                    languagePacks: languagePacks,',
+                  '                    selectedLanguage: languagePack,',
+                  '                    enabled: preferencesLoaded,',
+                  "                    selectorKey: const ValueKey<String>('language-selector'),",
+                  '                    onChanged: (String languageId) =>',
+                  '                        onLanguageChanged(languageId),',
+                  '                  ),',
+                  '                ),',
+              ]
+              replacement = '\n'.join(replacement_lines) + '\n'
+              text = text[:start] + replacement + text[end:]
+          elif has_legacy_dropdown:
+              raise SystemExit('both searchable picker and legacy dropdown are present')
+
           page.write_text(text)
 
           inventory = Path('docs/EXECUTABLE_BUILDS.md')
@@ -113,9 +119,10 @@ jobs:
           docs = docs_index.read_text()
           old = '| Runtime dependencies | Flutter SDK and `shared_preferences` |'
           new = '| Runtime dependencies | Flutter SDK (`flutter`, `flutter_localizations`), `intl`, and `shared_preferences` |'
-          if old not in docs:
+          if old in docs:
+              docs_index.write_text(docs.replace(old, new, 1))
+          elif new not in docs:
               raise SystemExit('runtime dependency documentation anchor not found')
-          docs_index.write_text(docs.replace(old, new, 1))
           PY
 
           dart format lib/features/editor/spell_checker_page.dart
