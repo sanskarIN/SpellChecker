@@ -172,7 +172,7 @@ class _SpellingLanguagePickerDialogState
                             title: Text(pack.displayName),
                             subtitle: Text(pack.id),
                             trailing: selected
-                                ? const Icon(
+                                ? Icon(
                                     Icons.check_circle,
                                     semanticLabel: l10n.selectedLanguage,
                                   )
@@ -201,16 +201,12 @@ class _NoLanguageMatches extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Builder(
-        builder: (BuildContext context) {
-          final l10n = AppLocalizations.of(context);
-          return Semantics(
-            liveRegion: true,
-            label: l10n.noSpellingLanguagesMatch,
-            child: Text(l10n.noMatchingLanguages, textAlign: TextAlign.center),
-          );
-        },
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Semantics(
+        liveRegion: true,
+        label: l10n.noSpellingLanguagesMatch,
+        child: Text(l10n.noMatchingLanguages, textAlign: TextAlign.center),
       ),
     );
   }
