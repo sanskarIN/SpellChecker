@@ -1,0 +1,80 @@
+name: V3.3 PR integration driver
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.head_ref == 'v3.3/localization-release-prep'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out working branch
+        uses: actions/checkout@v7
+        with:
+          ref: v3.3/localization-release-prep
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Execute guarded V3.3 integration steps
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          workflow = Path('.github/workflows/v33-bootstrap.yml')
+          lines = workflow.read_text().splitlines()
+          scripts = []
+          index = 0
+          while index < len(lines):
+              line = lines[index]
+              if line.strip() != 'run: |':
+                  index += 1
+                  continue
+              base_indent = len(line) - len(line.lstrip())
+              index += 1
+              block = []
+              while index < len(lines):
+                  candidate = lines[index]
+                  if candidate.strip():
+                      indent = len(candidate) - len(candidate.lstrip())
+                      if indent <= base_indent:
+                          break
+                      block.append(candidate[base_indent + 2:])
+                  else:
+                      block.append('')
+                  index += 1
+              scripts.append('\n'.join(block))
+
+          if len(scripts) != 6:
+              raise SystemExit(f'expected 6 guarded run blocks, found {len(scripts)}')
+
+          for number, script in enumerate(scripts, start=1):
+              print(f'::group::bootstrap run block {number}')
+              subprocess.run(
+                  script,
+                  shell=True,
+                  executable='/bin/bash',
+                  check=True,
+              )
+              print('::endgroup::')
+          PY
+
+      - name: Remove one-time PR driver
+        run: |
+          git config user.name "sanskarIN"
+          git config user.email "sanskarIN@outlook.in"
+          rm .github/workflows/v33-pr-driver.yml
+          git add .github/workflows/v33-pr-driver.yml
+          git commit -m "Remove one-time V3.3 PR driver"
+          git push origin HEAD:v3.3/localization-release-prep
