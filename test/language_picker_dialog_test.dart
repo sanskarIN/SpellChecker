@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spellchecker/core/spell_language_pack.dart';
 import 'package:spellchecker/features/editor/language_picker_dialog.dart';
+import 'package:spellchecker/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('searches spelling languages by display name and stable ID', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: _LanguagePickerHarness(
+      _buildTestApp(
+        _LanguagePickerHarness(
           languagePacks: SpellLanguageRegistry.builtIns,
           selectedLanguageId: 'en-US',
         ),
@@ -56,8 +57,8 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: _LanguagePickerHarness(
+      _buildTestApp(
+        _LanguagePickerHarness(
           languagePacks: SpellLanguageRegistry.builtIns,
           selectedLanguageId: 'en-US',
         ),
@@ -86,8 +87,8 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: _LanguagePickerHarness(
+      _buildTestApp(
+        _LanguagePickerHarness(
           languagePacks: SpellLanguageRegistry.builtIns,
           selectedLanguageId: 'en-GB',
         ),
@@ -134,8 +135,8 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: _LanguagePickerHarness(
+      _buildTestApp(
+        _LanguagePickerHarness(
           languagePacks: SpellLanguageRegistry.builtIns,
           selectedLanguageId: 'en-US',
         ),
@@ -161,6 +162,14 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+}
+
+Widget _buildTestApp(Widget home) {
+  return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: home,
+  );
 }
 
 class _LanguagePickerHarness extends StatefulWidget {

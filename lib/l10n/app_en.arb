@@ -1,0 +1,66 @@
+{
+  "@@locale": "en",
+  "appTitle": "SpellChecker",
+  "@appTitle": {"description": "Application title."},
+  "keyboardShortcutsTitle": "Keyboard shortcuts",
+  "@keyboardShortcutsTitle": {"description": "Title of the keyboard shortcut help dialog."},
+  "keyboardShortcutsIntro": "Use these shortcuts while SpellChecker has focus. On macOS, ⌘ replaces Ctrl for the primary command shortcuts.",
+  "@keyboardShortcutsIntro": {"description": "Introductory text for keyboard shortcut help."},
+  "shortcutCheckSpelling": "Check spelling",
+  "@shortcutCheckSpelling": {"description": "Keyboard shortcut action label for spelling analysis."},
+  "shortcutOpenWritingInsights": "Open Writing insights",
+  "@shortcutOpenWritingInsights": {"description": "Keyboard shortcut action label for Writing insights."},
+  "shortcutNextSpellingIssue": "Next spelling issue",
+  "@shortcutNextSpellingIssue": {"description": "Keyboard shortcut action label for moving to the next spelling issue."},
+  "shortcutPreviousSpellingIssue": "Previous spelling issue",
+  "@shortcutPreviousSpellingIssue": {"description": "Keyboard shortcut action label for moving to the previous spelling issue."},
+  "shortcutOpenHelp": "Open keyboard shortcut help",
+  "@shortcutOpenHelp": {"description": "Keyboard shortcut action label for opening help."},
+  "keyboardShortcutsVisibleActions": "All commands also remain available through visible buttons so keyboard access is never required.",
+  "@keyboardShortcutsVisibleActions": {"description": "Accessibility note in keyboard shortcut help."},
+  "close": "Close",
+  "@close": {"description": "Generic close action."},
+  "shortcutSemantics": "{action} shortcut: {shortcut}",
+  "@shortcutSemantics": {
+    "description": "Screen-reader label for a shortcut row.",
+    "placeholders": {
+      "action": {"type": "String"},
+      "shortcut": {"type": "String"}
+    }
+  },
+  "spellingLanguageSemantics": "Spelling language. Current language {displayName}, {languageId}.",
+  "@spellingLanguageSemantics": {
+    "description": "Screen-reader label for the spelling-language selector.",
+    "placeholders": {
+      "displayName": {"type": "String"},
+      "languageId": {"type": "String"}
+    }
+  },
+  "chooseSpellingLanguage": "Choose spelling language",
+  "@chooseSpellingLanguage": {"description": "Title of the searchable spelling-language picker."},
+  "searchLanguages": "Search languages",
+  "@searchLanguages": {"description": "Label for the language-picker search field."},
+  "languageSearchHint": "Name or language ID",
+  "@languageSearchHint": {"description": "Hint for searchable language identifiers."},
+  "clearLanguageSearch": "Clear language search",
+  "@clearLanguageSearch": {"description": "Tooltip for clearing the language search query."},
+  "spellingLanguageOptionSemantics": "{displayName}, spelling language {languageId}{selectedSuffix}",
+  "@spellingLanguageOptionSemantics": {
+    "description": "Screen-reader label for one spelling-language option.",
+    "placeholders": {
+      "displayName": {"type": "String"},
+      "languageId": {"type": "String"},
+      "selectedSuffix": {"type": "String"}
+    }
+  },
+  "selectedSuffix": ", selected",
+  "@selectedSuffix": {"description": "Suffix appended to the selected language option semantics."},
+  "selectedLanguage": "Selected language",
+  "@selectedLanguage": {"description": "Semantic label for the selected-language check icon."},
+  "cancel": "Cancel",
+  "@cancel": {"description": "Generic cancel action."},
+  "noSpellingLanguagesMatch": "No spelling languages match the current search.",
+  "@noSpellingLanguagesMatch": {"description": "Live-region text when language search has no matches."},
+  "noMatchingLanguages": "No matching languages",
+  "@noMatchingLanguages": {"description": "Visible empty-state text for language search."}
+}

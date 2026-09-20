@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/spell_language_pack.dart';
+import '../../l10n/app_localizations.dart';
 
 class SpellingLanguageSelector extends StatelessWidget {
   const SpellingLanguageSelector({
@@ -35,10 +36,13 @@ class SpellingLanguageSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Semantics(
       button: true,
-      label:
-          'Spelling language. Current language ${selectedLanguage.displayName}, ${selectedLanguage.id}.',
+      label: l10n.spellingLanguageSemantics(
+        selectedLanguage.displayName,
+        selectedLanguage.id,
+      ),
       child: OutlinedButton(
         key: selectorKey,
         onPressed: enabled ? () => _openPicker(context) : null,
@@ -116,9 +120,10 @@ class _SpellingLanguagePickerDialogState
   @override
   Widget build(BuildContext context) {
     final visiblePacks = _visibleLanguagePacks;
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
-      title: const Text('Choose spelling language'),
+      title: Text(l10n.chooseSpellingLanguage),
       content: SizedBox(
         width: 520,
         height: 520,
@@ -132,13 +137,13 @@ class _SpellingLanguagePickerDialogState
               textInputAction: TextInputAction.search,
               onChanged: (String value) => setState(() => _query = value),
               decoration: InputDecoration(
-                labelText: 'Search languages',
-                hintText: 'Name or language ID',
+                labelText: l10n.searchLanguages,
+                hintText: l10n.languageSearchHint,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _query.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Clear language search',
+                        tooltip: l10n.clearLanguageSearch,
                         onPressed: _clearSearch,
                         icon: const Icon(Icons.clear),
                       ),
@@ -156,17 +161,20 @@ class _SpellingLanguagePickerDialogState
                         return Semantics(
                           selected: selected,
                           button: true,
-                          label:
-                              '${pack.displayName}, spelling language ${pack.id}${selected ? ', selected' : ''}',
+                          label: l10n.spellingLanguageOptionSemantics(
+                            pack.displayName,
+                            pack.id,
+                            selected ? l10n.selectedSuffix : '',
+                          ),
                           child: ListTile(
                             key: ValueKey<String>('language-option-${pack.id}'),
                             selected: selected,
                             title: Text(pack.displayName),
                             subtitle: Text(pack.id),
                             trailing: selected
-                                ? const Icon(
+                                ? Icon(
                                     Icons.check_circle,
-                                    semanticLabel: 'Selected language',
+                                    semanticLabel: l10n.selectedLanguage,
                                   )
                                 : null,
                             onTap: () => Navigator.of(context).pop(pack.id),
@@ -181,7 +189,7 @@ class _SpellingLanguagePickerDialogState
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
       ],
     );
@@ -193,14 +201,12 @@ class _NoLanguageMatches extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final l10n = AppLocalizations.of(context);
+    return Center(
       child: Semantics(
         liveRegion: true,
-        label: 'No spelling languages match the current search.',
-        child: Text(
-          'No matching languages',
-          textAlign: TextAlign.center,
-        ),
+        label: l10n.noSpellingLanguagesMatch,
+        child: Text(l10n.noMatchingLanguages, textAlign: TextAlign.center),
       ),
     );
   }

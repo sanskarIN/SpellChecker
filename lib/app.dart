@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'features/editor/spell_checker_page.dart';
+import 'l10n/app_localizations.dart';
 
 class SpellCheckerApp extends StatelessWidget {
   const SpellCheckerApp({super.key});
@@ -15,6 +17,15 @@ class SpellCheckerApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'SpellChecker',
+      onGenerateTitle: (BuildContext context) =>
+          AppLocalizations.of(context).appTitle,
+      localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: colorScheme,
@@ -98,40 +109,37 @@ class _KeyboardShortcutsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('Keyboard shortcuts'),
+      title: Text(l10n.keyboardShortcutsTitle),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
-        child: const SingleChildScrollView(
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                'Use these shortcuts while SpellChecker has focus. On macOS, ⌘ replaces Ctrl for the primary command shortcuts.',
-              ),
+              Text(l10n.keyboardShortcutsIntro),
               SizedBox(height: 16),
               _ShortcutRow(
-                action: 'Check spelling',
+                action: l10n.shortcutCheckSpelling,
                 shortcut: 'Ctrl/⌘ + Enter',
               ),
               _ShortcutRow(
-                action: 'Open Writing insights',
+                action: l10n.shortcutOpenWritingInsights,
                 shortcut: 'Ctrl/⌘ + Shift + Enter',
               ),
-              _ShortcutRow(action: 'Next spelling issue', shortcut: 'F7'),
               _ShortcutRow(
-                action: 'Previous spelling issue',
+                action: l10n.shortcutNextSpellingIssue,
+                shortcut: 'F7',
+              ),
+              _ShortcutRow(
+                action: l10n.shortcutPreviousSpellingIssue,
                 shortcut: 'Shift + F7',
               ),
-              _ShortcutRow(
-                action: 'Open keyboard shortcut help',
-                shortcut: 'F1',
-              ),
+              _ShortcutRow(action: l10n.shortcutOpenHelp, shortcut: 'F1'),
               SizedBox(height: 12),
-              Text(
-                'All commands also remain available through visible buttons so keyboard access is never required.',
-              ),
+              Text(l10n.keyboardShortcutsVisibleActions),
             ],
           ),
         ),
@@ -139,7 +147,7 @@ class _KeyboardShortcutsDialog extends StatelessWidget {
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(l10n.close),
         ),
       ],
     );
@@ -156,6 +164,7 @@ class _ShortcutRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -165,7 +174,7 @@ class _ShortcutRow extends StatelessWidget {
           Expanded(child: Text(action)),
           const SizedBox(width: 16),
           Semantics(
-            label: '$action shortcut: $shortcut',
+            label: l10n.shortcutSemantics(action, shortcut),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
